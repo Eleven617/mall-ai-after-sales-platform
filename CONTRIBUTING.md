@@ -28,3 +28,5 @@ docker compose config --quiet
 ## 提交与发布
 
 先在私有 staging 完成人工许可证、密钥、合成数据、测试和 Docker 演示审查。不要自动发布、不要上传镜像或凭据。对外描述仅可使用已经运行并记录在 [测试与演示证据](docs/TEST_AND_DEMO_EVIDENCE.md) 中的能力。
+
+每个重大 Build 完成后，必须创建一个清晰的 Git 提交，并追加 [重大升级变更记录](docs/UPGRADE_CHANGELOG.md)：目标、实际改动、验证、已知边界和回退依据缺一不可。提交不代表验收通过；未运行项必须如实记录。

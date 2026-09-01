@@ -145,6 +145,7 @@ docker compose config --quiet
 - [隐私、数据可见性与非目标](docs/privacy-and-boundaries.md)
 - [上游/二次开发/AI 辅助贡献矩阵](docs/CONTRIBUTION_MATRIX.md)
 - [公开发布记录与验证边界](docs/PUBLIC_RELEASE_RECORD.md)
+- [重大升级变更记录](docs/UPGRADE_CHANGELOG.md)
 - [公开前人工检查清单](docs/PUBLIC_RELEASE_CHECKLIST.md)
 - [贡献与本地验证](CONTRIBUTING.md)
 
