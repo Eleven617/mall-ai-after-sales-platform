@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.macro.mall.portal.dao.AiAfterSalesFulfillmentCallbackDao">
+    <resultMap id="callbackRecordMap" type="com.macro.mall.portal.domain.AiAfterSalesFulfillmentCallbackRecord">
+        <id column="id" property="id"/>
+        <result column="callback_event_id" property="callbackEventId"/>
+        <result column="application_id" property="applicationId"/>
+        <result column="fulfillment_status" property="fulfillmentStatus"/>
+        <result column="source" property="source"/>
+        <result column="note" property="note"/>
+        <result column="callback_time" property="callbackTime"/>
+        <result column="create_time" property="createTime"/>
+    </resultMap>
+
+    <select id="findByCallbackEventId" resultMap="callbackRecordMap">
+        select id, callback_event_id, application_id, fulfillment_status, source,
+               note, callback_time, create_time
+        from ai_after_sales_fulfillment_callback
+        where callback_event_id = #{callbackEventId}
+        limit 1
+    </select>
+
+    <insert id="insertIgnore" parameterType="com.macro.mall.portal.domain.AiAfterSalesFulfillmentCallbackRecord"
+            useGeneratedKeys="true" keyProperty="id">
+        insert ignore into ai_after_sales_fulfillment_callback (
+            callback_event_id, application_id, fulfillment_status, source, note,
+            callback_time, create_time
+        ) values (
+            #{callbackEventId}, #{applicationId}, #{fulfillmentStatus}, #{source}, #{note},
+            now(), now()
+        )
+    </insert>
+</mapper>

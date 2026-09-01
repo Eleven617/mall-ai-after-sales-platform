@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.macro.mall.serviceoperations.dao.AiServiceOperationsDao">
+    <resultMap id="processorCaseMap" type="com.macro.mall.serviceoperations.domain.AiServiceCaseProcessorRecord">
+        <id column="id" property="id"/>
+        <result column="case_id" property="caseId"/><result column="member_id" property="memberId"/>
+        <result column="queue_ref" property="queueRef"/><result column="diagnosis_category" property="diagnosisCategory"/>
+        <result column="priority" property="priority"/><result column="state" property="state"/>
+        <result column="state_version" property="stateVersion"/><result column="assignee_ref" property="assigneeRef"/>
+        <result column="public_status" property="publicStatus"/>
+        <result column="customer_information_type" property="customerInformationType"/>
+        <result column="customer_information" property="customerInformation"/>
+        <result column="last_public_message" property="lastPublicMessage"/><result column="updated_at" property="updatedAt"/>
+    </resultMap>
+
+    <select id="listVisibleForProcessor" resultMap="processorCaseMap">
+        select id, case_id, member_id, queue_ref, diagnosis_category, priority, state, state_version,
+               assignee_ref, public_status, customer_information_type, customer_information,
+               last_public_message, updated_at
+        from ai_service_case
+        where state = 'QUEUED' or assignee_ref = #{username}
+        order by case when state = 'QUEUED' then 0 else 1 end, updated_at desc, id desc
+        limit #{limit}
+    </select>
+
+    <select id="findByCaseId" resultMap="processorCaseMap">
+        select id, case_id, member_id, queue_ref, diagnosis_category, priority, state, state_version,
+               assignee_ref, public_status, customer_information_type, customer_information,
+               last_public_message, updated_at
+        from ai_service_case where case_id = #{caseId} limit 1
+    </select>
+
+    <select id="findActionIdempotent" resultType="java.lang.Integer">
+        select id from ai_service_case_action
+        where case_id=#{caseId} and actor_kind=#{actorKind} and actor_ref=#{actorRef}
+          and idempotency_key=#{idempotencyKey}
+        limit 1
+    </select>
+
+    <update id="claimIfVersion">
+        update ai_service_case
+        set state='CLAIMED', state_version=state_version+1, assignee_ref=#{processor},
+            public_status=#{publicStatus}, last_public_message=#{publicMessage}, updated_at=now()
+        where case_id=#{caseId} and state='QUEUED' and assignee_ref is null
+          and state_version=#{expectedVersion}
+    </update>
+
+    <update id="transitionAssignedIfVersion">
+        update ai_service_case
+        set state=#{targetState}, state_version=state_version+1,
+            <if test="informationType != null">
+                customer_information_type=#{informationType}, customer_information=null,
+            </if>
+            public_status=#{publicStatus}, last_public_message=#{publicMessage}, updated_at=now()
+        where case_id=#{caseId} and assignee_ref=#{processor}
+          and state=#{expectedState} and state_version=#{expectedVersion}
+    </update>
+
+    <insert id="insertAction">
+        insert into ai_service_case_action (
+          action_id, case_id, actor_kind, actor_ref, action_type, expected_version, result_code,
+          public_message, internal_note, idempotency_key, correlation_ref, created_at
+        ) values (
+          #{actionId}, #{caseId}, 'processor', #{actorRef}, #{actionType}, #{expectedVersion}, #{resultCode},
+          #{publicMessage}, #{internalNote}, #{idempotencyKey}, #{correlationRef}, now()
+        )
+    </insert>
+
+    <insert id="insertOutbox">
+        insert into ai_service_case_outbox (
+          event_id, case_id, member_id, event_type, state_version, correlation_ref, status, attempt_count,
+          available_at, lease_until, published_at, last_error, created_at, updated_at
+        ) values (
+          #{eventId}, #{caseId}, #{memberId}, #{eventType}, #{stateVersion}, #{correlationRef}, 'PENDING', 0,
+          null, null, null, null, now(), now()
+        )
+    </insert>
+</mapper>

@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.macro.mall.portal.dao.AiCaseHandoffDao">
+    <resultMap id="caseHandoffRecordMap" type="com.macro.mall.portal.domain.AiCaseHandoffRecord">
+        <id column="id" property="id"/>
+        <result column="case_id" property="caseId"/>
+        <result column="member_id" property="memberId"/>
+        <result column="case_key" property="caseKey"/>
+        <result column="source_flow" property="sourceFlow"/>
+        <result column="diagnosis_category" property="diagnosisCategory"/>
+        <result column="evidence_status" property="evidenceStatus"/>
+        <result column="handoff_reason" property="handoffReason"/>
+        <result column="requires_human_review" property="requiresHumanReview"/>
+        <result column="case_status" property="caseStatus"/>
+        <result column="schema_version" property="schemaVersion"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+    </resultMap>
+
+    <select id="findByMemberIdAndCaseKey" resultMap="caseHandoffRecordMap">
+        select id, case_id, member_id, case_key, source_flow, diagnosis_category,
+               evidence_status, handoff_reason, requires_human_review, case_status,
+               schema_version, create_time, update_time
+        from ai_case_handoff
+        where member_id = #{memberId}
+          and case_key = #{caseKey}
+        limit 1
+    </select>
+
+    <insert id="insertIgnore" parameterType="com.macro.mall.portal.domain.AiCaseHandoffRecord">
+        insert ignore into ai_case_handoff (
+            case_id, member_id, case_key, source_flow, diagnosis_category,
+            evidence_status, handoff_reason, requires_human_review, case_status,
+            schema_version, create_time, update_time
+        ) values (
+            #{caseId}, #{memberId}, #{caseKey}, #{sourceFlow}, #{diagnosisCategory},
+            #{evidenceStatus}, #{handoffReason}, #{requiresHumanReview}, #{caseStatus},
+            #{schemaVersion}, now(), now()
+        )
+    </insert>
+</mapper>

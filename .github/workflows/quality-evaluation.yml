@@ -1,0 +1,36 @@
+name: quality-evaluation
+
+on:
+  pull_request:
+  push:
+  workflow_dispatch:
+
+jobs:
+  isolated-quality-evaluation:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: mall-ai-service
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: mall-ai-web/package-lock.json
+      - name: Install AI service dependencies
+        run: python -m pip install --upgrade pip && python -m pip install -r requirements.txt
+      - name: Run Build 22 contract_mock trajectory and red-team gate
+        run: python scripts/run_quality_agent_evaluation.py
+      - name: Run quality Agent contract tests
+        run: python -m pytest tests/test_quality_evaluation_agent.py tests/test_quality_router.py tests/test_quality_developer_client.py
+      - name: Validate versioned RAG 2.0 contracts
+        run: python -m pytest tests/test_rag2_evaluation.py tests/test_policy_query.py tests/test_bm25_retriever.py tests/test_policy_retrieval.py tests/test_cross_encoder_reranker.py tests/test_rag_service.py tests/test_rag_evidence_verifier.py tests/test_chunking_service.py tests/test_embedding_and_vector_store.py tests/test_policy_metadata.py tests/test_chunk_metadata_evaluation.py tests/test_knowledge_contract.py
+      - name: Validate RAG chunk and metadata pre-filter contract
+        run: python scripts/evaluate_chunk_metadata.py --summary
+      - name: Build developer quality page
+        working-directory: mall-ai-web
+        run: npm ci && npm run build

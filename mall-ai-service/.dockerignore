@@ -1,0 +1,17 @@
+.env
+.venv
+.venv-python314-broken-20260724
+__pycache__
+*.pyc
+*.log
+chroma_data/
+models/
+snapshots/
+docs
+scripts
+tests
+evals/*
+!evals/quality_agent_cases.v1.json
+!evals/quality_agent_cases.v2.json
+!evals/live_model_synthetic_cases.v1.json
+!evals/rag2_golden_cases.v1.json

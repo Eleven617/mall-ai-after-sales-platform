@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.macro.mall.portal.dao.AiAfterSalesActionDao">
+    <resultMap id="actionRecordMap" type="com.macro.mall.portal.domain.AiAfterSalesActionRecord">
+        <id column="id" property="id"/>
+        <result column="member_id" property="memberId"/>
+        <result column="application_id" property="applicationId"/>
+        <result column="action_id" property="actionId"/>
+        <result column="action_type" property="actionType"/>
+        <result column="content_hash" property="contentHash"/>
+        <result column="result_status" property="resultStatus"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+    </resultMap>
+
+    <select id="findByMemberIdAndActionId" resultMap="actionRecordMap">
+        select id, member_id, application_id, action_id, action_type, content_hash,
+               result_status, create_time, update_time
+        from ai_after_sales_action
+        where member_id = #{memberId} and action_id = #{actionId}
+        limit 1
+    </select>
+
+    <insert id="insertIgnore" parameterType="com.macro.mall.portal.domain.AiAfterSalesActionRecord"
+            useGeneratedKeys="true" keyProperty="id">
+        insert ignore into ai_after_sales_action (
+            member_id, application_id, action_id, action_type, content_hash,
+            result_status, create_time, update_time
+        ) values (
+            #{memberId}, #{applicationId}, #{actionId}, #{actionType}, #{contentHash},
+            #{resultStatus}, now(), now()
+        )
+    </insert>
+</mapper>

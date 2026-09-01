@@ -1,0 +1,181 @@
+[
+  {
+    "id": "agent-001-verified-logistics",
+    "user_message": "测试订单为什么还没到？",
+    "model_responses": [
+      {
+        "tool_calls": [
+          {
+            "name": "logistics_service",
+            "arguments": {"order_sn": "DEMO-ORDER-001"}
+          }
+        ]
+      },
+      {
+        "content": "订单已签收，物流公司是顺丰。"
+      }
+    ],
+    "tool_results": {
+      "logistics_service": {
+        "order_sn": "DEMO-ORDER-001",
+        "company": "测试物流",
+        "tracking_no": "TEST-001",
+        "order_status": "运输中",
+        "product_names": ["测试耳机"]
+      }
+    },
+    "expected": {
+      "tool_names": ["logistics_service"],
+      "max_tool_calls": 1,
+      "trace_events_include": [
+        "run_started",
+        "tool_called",
+        "tool_completed",
+        "answer_returned",
+        "model_text_replaced_with_verified_facts"
+      ],
+      "max_steps": 2,
+      "answer_contains": ["测试物流", "运输中"],
+      "answer_not_contains": ["顺丰", "已签收"],
+      "verified_fact_sources": ["logistics_service"],
+      "pending_tool_name": null
+    }
+  },
+  {
+    "id": "agent-002-missing-order-number",
+    "user_message": "请帮我查询物流。",
+    "model_responses": [
+      {
+        "tool_calls": [
+          {
+            "name": "logistics_service",
+            "arguments": {}
+          }
+        ]
+      }
+    ],
+    "tool_results": {},
+    "expected": {
+      "tool_names": [],
+      "max_tool_calls": 0,
+      "trace_events_include": ["run_started", "tool_argument_requested"],
+      "trace_events_exclude": ["tool_called"],
+      "max_steps": 1,
+      "answer_contains": ["订单号"],
+      "verified_fact_sources": [],
+      "pending_tool_name": "logistics_service"
+    }
+  },
+  {
+    "id": "agent-003-block-write-tool",
+    "user_message": "请直接提交售后申请。",
+    "model_responses": [
+      {
+        "tool_calls": [
+          {
+            "name": "create_return_application",
+            "arguments": {}
+          }
+        ]
+      }
+    ],
+    "tool_results": {},
+    "expected": {
+      "tool_names": [],
+      "max_tool_calls": 0,
+      "trace_events_include": ["run_started", "tool_blocked"],
+      "trace_events_exclude": ["tool_called"],
+      "max_steps": 1,
+      "answer_contains": ["受控业务流程"],
+      "verified_fact_sources": [],
+      "pending_tool_name": null
+    }
+  },
+  {
+    "id": "agent-004-stop-repeat",
+    "user_message": "请分析测试订单的物流。",
+    "model_responses": [
+      {
+        "tool_calls": [
+          {
+            "name": "logistics_service",
+            "arguments": {"order_sn": "DEMO-ORDER-002"}
+          }
+        ]
+      },
+      {
+        "tool_calls": [
+          {
+            "name": "logistics_service",
+            "arguments": {"order_sn": "DEMO-ORDER-002"}
+          }
+        ]
+      }
+    ],
+    "tool_results": {
+      "logistics_service": {
+        "order_sn": "DEMO-ORDER-002",
+        "company": "测试物流",
+        "tracking_no": "TEST-002",
+        "order_status": "运输中",
+        "product_names": ["测试耳机"]
+      }
+    },
+    "expected": {
+      "tool_names": ["logistics_service"],
+      "max_tool_calls": 1,
+      "trace_events_include": [
+        "tool_called",
+        "tool_completed",
+        "repeated_tool_call"
+      ],
+      "max_steps": 2,
+      "answer_contains": ["人工客服"],
+      "verified_fact_sources": ["logistics_service"],
+      "pending_tool_name": null
+    }
+  },
+  {
+    "id": "agent-005-reject-unverified-fact",
+    "user_message": "测试订单现在是什么状态？",
+    "model_responses": [
+      {
+        "content": "该订单已签收。"
+      }
+    ],
+    "tool_results": {},
+    "expected": {
+      "tool_names": [],
+      "max_tool_calls": 0,
+      "trace_events_include": [
+        "run_started",
+        "answer_returned",
+        "no_verified_facts_before_final_answer"
+      ],
+      "max_steps": 1,
+      "answer_contains": ["暂未获得可核验"],
+      "answer_not_contains": ["已签收"],
+      "verified_fact_sources": [],
+      "pending_tool_name": null
+    }
+  },
+  {
+    "id": "agent-006-model-unavailable",
+    "user_message": "测试模型不可用时的回复。",
+    "model_responses": [
+      {
+        "raise_error": "synthetic provider outage"
+      }
+    ],
+    "tool_results": {},
+    "expected": {
+      "tool_names": [],
+      "max_tool_calls": 0,
+      "trace_events_include": ["run_started", "llm_unavailable"],
+      "max_steps": 1,
+      "answer_contains": ["暂时不可用"],
+      "verified_fact_sources": [],
+      "pending_tool_name": null
+    }
+  }
+]

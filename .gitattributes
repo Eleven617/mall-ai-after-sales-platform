@@ -1,0 +1,10 @@
+# Keep source diffs portable across Windows and GitHub. Binary design assets
+# stay binary; locally generated model weights are excluded by .gitignore.
+* text=auto eol=lf
+*.ps1 text eol=crlf
+*.bat text eol=crlf
+*.rp binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary

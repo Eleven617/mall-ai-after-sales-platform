@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.macro.mall.portal.dao.AiServiceCaseDao">
+    <resultMap id="serviceCaseRecordMap" type="com.macro.mall.portal.domain.AiServiceCaseRecord">
+        <id column="id" property="id"/>
+        <result column="case_id" property="caseId"/><result column="member_id" property="memberId"/>
+        <result column="case_key" property="caseKey"/><result column="queue_ref" property="queueRef"/>
+        <result column="diagnosis_category" property="diagnosisCategory"/><result column="priority" property="priority"/>
+        <result column="state" property="state"/><result column="state_version" property="stateVersion"/>
+        <result column="assignee_ref" property="assigneeRef"/><result column="public_status" property="publicStatus"/>
+        <result column="customer_information_type" property="customerInformationType"/>
+        <result column="customer_information" property="customerInformation"/>
+        <result column="last_public_message" property="lastPublicMessage"/>
+        <result column="created_at" property="createdAt"/><result column="updated_at" property="updatedAt"/>
+    </resultMap>
+    <resultMap id="routingRuleMap" type="com.macro.mall.portal.domain.AiServiceCaseRoutingRule">
+        <result column="diagnosis_category" property="diagnosisCategory"/><result column="priority" property="priority"/>
+        <result column="eligible_queue_ref" property="eligibleQueueRef"/><result column="required_facts" property="requiredFacts"/>
+        <result column="policy_version" property="policyVersion"/><result column="active" property="active"/>
+    </resultMap>
+    <resultMap id="timelineMap" type="com.macro.mall.portal.domain.AiServiceCaseTimelineEntry">
+        <result column="action_type" property="actionType"/><result column="result_code" property="resultCode"/>
+        <result column="public_message" property="publicMessage"/><result column="created_at" property="createdAt"/>
+    </resultMap>
+
+    <select id="findActiveRoutingRule" resultMap="routingRuleMap">
+        select diagnosis_category, priority, eligible_queue_ref, required_facts, policy_version, active
+        from ai_service_case_routing_rule
+        where diagnosis_category = #{category} and active = 1 and policy_version = 'v1'
+        limit 1
+    </select>
+    <insert id="insertIgnoreCase" parameterType="com.macro.mall.portal.domain.AiServiceCaseRecord">
+        insert ignore into ai_service_case (
+          case_id, member_id, case_key, queue_ref, diagnosis_category, priority, state, state_version,
+          assignee_ref, public_status, customer_information_type, customer_information, last_public_message, created_at, updated_at
+        ) values (
+          #{caseId}, #{memberId}, #{caseKey}, #{queueRef}, #{diagnosisCategory}, #{priority}, #{state}, #{stateVersion},
+          #{assigneeRef}, #{publicStatus}, #{customerInformationType}, #{customerInformation}, #{lastPublicMessage}, now(), now()
+        )
+    </insert>
+    <select id="findByMemberIdAndCaseKey" resultMap="serviceCaseRecordMap">
+        select * from ai_service_case where member_id = #{memberId} and case_key = #{caseKey} limit 1
+    </select>
+    <select id="findByCaseIdAndMemberId" resultMap="serviceCaseRecordMap">
+        select * from ai_service_case where case_id = #{caseId} and member_id = #{memberId} limit 1
+    </select>
+    <select id="listByMemberId" resultMap="serviceCaseRecordMap">
+        select *
+        from ai_service_case where member_id = #{memberId} order by updated_at desc, id desc limit 50
+    </select>
+    <select id="listPublicTimeline" resultMap="timelineMap">
+        select action_type, result_code, public_message, created_at
+        from ai_service_case_action where case_id = #{caseId} and public_message is not null
+        order by id asc limit 50
+    </select>
+    <select id="findActionIdempotent" resultType="java.lang.Integer">
+        select id from ai_service_case_action
+        where case_id=#{caseId} and actor_kind=#{actorKind} and actor_ref=#{actorRef} and idempotency_key=#{idempotencyKey}
+        limit 1
+    </select>
+    <update id="updateCustomerInformationIfVersion">
+        update ai_service_case set state='IN_REVIEW', state_version=state_version+1,
+          customer_information_type=#{informationType}, customer_information=#{information},
+          public_status=#{publicStatus}, last_public_message=#{publicMessage}, updated_at=now()
+        where case_id=#{caseId} and member_id=#{memberId} and state_version=#{expectedVersion}
+          and state='AWAITING_CUSTOMER_INFORMATION' and customer_information_type=#{informationType}
+    </update>
+    <update id="cancelIfVersion">
+        update ai_service_case set state='CANCELLED', state_version=state_version+1,
+          public_status=#{publicStatus}, last_public_message=#{publicMessage}, updated_at=now()
+        where case_id=#{caseId} and member_id=#{memberId} and state_version=#{expectedVersion}
+          and state in ('QUEUED','CLAIMED','AWAITING_CUSTOMER_INFORMATION','IN_REVIEW')
+    </update>
+    <update id="reopenIfVersion">
+        update ai_service_case set state='REOPENED', state_version=state_version+1,
+          customer_information_type='problem_description', customer_information=#{reason},
+          public_status=#{publicStatus}, last_public_message=#{publicMessage}, updated_at=now()
+        where case_id=#{caseId} and member_id=#{memberId} and state_version=#{expectedVersion}
+          and state='RESOLVED' and updated_at &gt;= date_sub(now(), interval 7 day)
+    </update>
+    <insert id="insertAction">
+        insert into ai_service_case_action (
+          action_id, case_id, actor_kind, actor_ref, action_type, expected_version, result_code,
+          public_message, internal_note, idempotency_key, correlation_ref, created_at
+        ) values (
+          #{actionId}, #{caseId}, #{actorKind}, #{actorRef}, #{actionType}, #{expectedVersion}, #{resultCode},
+          #{publicMessage}, null, #{idempotencyKey}, #{correlationRef}, now()
+        )
+    </insert>
+    <insert id="insertOutbox">
+        insert into ai_service_case_outbox (
+          event_id, case_id, member_id, event_type, state_version, correlation_ref, status, attempt_count,
+          available_at, lease_until, published_at, last_error, created_at, updated_at
+        ) values (
+          #{eventId}, #{caseId}, #{memberId}, #{eventType}, #{stateVersion}, #{correlationRef}, 'PENDING', 0,
+          null, null, null, null, now(), now()
+        )
+    </insert>
+</mapper>

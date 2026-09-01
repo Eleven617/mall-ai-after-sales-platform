@@ -1,0 +1,13 @@
+.venv/
+.venv-*/
+**/.langgraph-venv/
+.env
+__pycache__/
+*.pyc
+uvicorn.out.log
+uvicorn.err.log
+# Local embedding and Cross-Encoder weights are downloaded during reviewed
+# local setup. They are runtime assets, not source code, and must never be
+# committed to the project repository.
+models/embedding/
+models/reranker/

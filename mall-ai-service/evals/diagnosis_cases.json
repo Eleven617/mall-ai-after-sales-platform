@@ -1,0 +1,86 @@
+[
+  {
+    "id": "diagnosis-complete-delivery",
+    "user_message": "订单为什么一直没到，我现在怎么办？",
+    "model_responses": [
+      {"tool_calls": [{"name": "order_service", "arguments": {"order_sn": "DEMO-ORDER-001"}}]},
+      {"tool_calls": [{"name": "logistics_service", "arguments": {"order_sn": "DEMO-ORDER-001"}}]},
+      {"tool_calls": [{"name": "rag_search", "arguments": {"query": "物流运输中未收到货怎么办"}}]},
+      {"content": "已完成查询。"}
+    ],
+    "tool_results": {
+      "order_service": {"order_sn": "DEMO-ORDER-001", "status": "已发货", "product_names": ["测试耳机"], "delivery_company": "测试物流", "tracking_no": "TEST-001"},
+      "logistics_service": {"order_sn": "DEMO-ORDER-001", "company": "测试物流", "tracking_no": "TEST-001", "order_status": "运输中", "product_names": ["测试耳机"]},
+      "rag_search": {"sources": [{"document_name": "售后政策知识库", "section_path": "物流异常处理"}], "no_evidence": false}
+    },
+    "expected": {
+      "tool_names": ["order_service", "logistics_service", "rag_search"],
+      "category": "delivery_in_transit",
+      "evidence_status": "complete",
+      "handoff": true,
+      "pending_tool_name": null,
+      "trace_events_include": ["diagnosis_completed"],
+      "answer_contains": ["运输中"]
+    }
+  },
+  {
+    "id": "diagnosis-policy-no-evidence",
+    "user_message": "这个订单一直没到，能不能直接退货？",
+    "model_responses": [
+      {"tool_calls": [{"name": "order_service", "arguments": {"order_sn": "DEMO-ORDER-002"}}]},
+      {"tool_calls": [{"name": "logistics_service", "arguments": {"order_sn": "DEMO-ORDER-002"}}]},
+      {"tool_calls": [{"name": "rag_search", "arguments": {"query": "该订单是否可以直接退货"}}]},
+      {"content": "我认为可以直接退货。"}
+    ],
+    "tool_results": {
+      "order_service": {"order_sn": "DEMO-ORDER-002", "status": "已发货", "product_names": ["测试手机壳"]},
+      "logistics_service": {"order_sn": "DEMO-ORDER-002", "company": "测试物流", "tracking_no": "TEST-002", "order_status": "运输中", "product_names": ["测试手机壳"]},
+      "rag_search": {"sources": [], "no_evidence": true}
+    },
+    "expected": {
+      "tool_names": ["order_service", "logistics_service", "rag_search"],
+      "category": "policy_insufficient",
+      "evidence_status": "insufficient",
+      "handoff": true,
+      "pending_tool_name": null,
+      "trace_events_include": ["handoff_prepared"],
+      "answer_contains": ["政策证据"]
+    }
+  },
+  {
+    "id": "diagnosis-missing-order",
+    "user_message": "帮我诊断物流为什么没到。",
+    "model_responses": [
+      {"tool_calls": [{"name": "logistics_service", "arguments": {}}]}
+    ],
+    "tool_results": {},
+    "expected": {
+      "tool_names": [],
+      "category": "needs_order_identifier",
+      "evidence_status": "partial",
+      "handoff": false,
+      "pending_tool_name": "logistics_service",
+      "trace_events_include": ["tool_argument_requested"],
+      "answer_contains": ["订单号"]
+    }
+  },
+  {
+    "id": "diagnosis-tool-failure",
+    "user_message": "订单为什么没到？",
+    "model_responses": [
+      {"tool_calls": [{"name": "order_service", "arguments": {"order_sn": "DEMO-ORDER-003"}}]}
+    ],
+    "tool_results": {
+      "order_service": {"error": "订单服务暂时不可用"}
+    },
+    "expected": {
+      "tool_names": ["order_service"],
+      "category": "tool_failure",
+      "evidence_status": "unavailable",
+      "handoff": true,
+      "pending_tool_name": null,
+      "trace_events_include": ["handoff_prepared"],
+      "answer_contains": ["已停止自动诊断"]
+    }
+  }
+]

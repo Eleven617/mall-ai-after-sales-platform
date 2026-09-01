@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.macro.mall.operations.dao.AiOperationsDao">
+    <resultMap id="operationsCaseMap" type="com.macro.mall.operations.domain.AiOperationsCaseView">
+        <result column="case_id" property="caseId"/>
+        <result column="source_flow" property="sourceFlow"/>
+        <result column="diagnosis_category" property="diagnosisCategory"/>
+        <result column="evidence_status" property="evidenceStatus"/>
+        <result column="handoff_reason" property="handoffReason"/>
+        <result column="requires_human_review" property="requiresHumanReview"/>
+        <result column="case_status" property="caseStatus"/>
+        <result column="schema_version" property="schemaVersion"/>
+        <result column="create_time" property="createdAt"/>
+        <result column="update_time" property="updatedAt"/>
+    </resultMap>
+
+    <resultMap id="metricCountMap" type="com.macro.mall.operations.domain.OperationsMetricCount">
+        <result column="metric_key" property="metricKey"/>
+        <result column="total" property="total"/>
+    </resultMap>
+
+    <resultMap id="handoffCategoryCountMap" type="com.macro.mall.operations.domain.OperationsHandoffCategoryCount">
+        <result column="metric_key" property="metricKey"/>
+        <result column="total" property="total"/>
+    </resultMap>
+
+    <select id="listRecentCases" resultMap="operationsCaseMap">
+        select case_id, source_flow, diagnosis_category, evidence_status,
+               handoff_reason, requires_human_review, case_status,
+               schema_version, create_time, update_time
+        from ai_case_handoff
+        order by create_time desc
+        limit #{limit}
+    </select>
+
+    <select id="findCaseByCaseId" resultMap="operationsCaseMap">
+        select case_id, source_flow, diagnosis_category, evidence_status,
+               handoff_reason, requires_human_review, case_status,
+               schema_version, create_time, update_time
+        from ai_case_handoff
+        where case_id = #{caseId}
+        limit 1
+    </select>
+
+    <select id="countAfterSalesByStatus" resultMap="metricCountMap">
+        select metric_key, count(*) as total
+        from (
+            select case status
+                when 0 then 'pending_review'
+                when 1 then 'approved_return'
+                when 2 then 'completed'
+                when 3 then 'rejected'
+                else 'unknown'
+            end as metric_key
+            from oms_order_return_apply
+            where create_time &gt;= #{fromTime}
+            union all
+            select case status
+                when 'PENDING_REVIEW' then 'pending_review'
+                when 'ACCEPTED' then 'accepted'
+                when 'COMPLETED' then 'completed'
+                when 'REJECTED' then 'rejected'
+                when 'CANCELLED' then 'cancelled'
+                else 'unknown'
+            end as metric_key
+            from ai_after_sales_application
+            where create_time &gt;= #{fromTime}
+        ) as all_after_sales
+        group by metric_key
+    </select>
+
+    <select id="countReasons" resultMap="metricCountMap">
+        select metric_key, count(*) as total
+        from (
+            select case
+                when reason in ('质量问题', '商品存在质量问题', '商品瑕疵') then '质量问题'
+                when reason = '商品错发或漏发' then '商品错发或漏发'
+                when reason = '商品与描述不符' then '商品与描述不符'
+                when reason in ('七天无理由', '七天无理由退货', '不再需要商品') then '七天无理由'
+                else '其他'
+            end as metric_key
+            from oms_order_return_apply
+            where create_time &gt;= #{fromTime}
+            union all
+            select case
+                when reason in ('质量问题', '商品存在质量问题', '商品瑕疵') then '质量问题'
+                when reason = '商品错发或漏发' then '商品错发或漏发'
+                when reason = '商品与描述不符' then '商品与描述不符'
+                when reason in ('七天无理由', '七天无理由退货', '不再需要商品') then '七天无理由'
+                else '其他'
+            end as metric_key
+            from ai_after_sales_application
+            where create_time &gt;= #{fromTime}
+        ) as all_after_sales_reasons
+        group by metric_key
+    </select>
+
+    <select id="countOutboxByStatus" resultMap="metricCountMap">
+        select case
+            when status in ('PENDING', 'PUBLISHING', 'PUBLISHED', 'FAILED') then status
+            else 'UNKNOWN'
+        end as metric_key, count(*) as total
+        from ai_after_sales_outbox
+        where create_time &gt;= #{fromTime}
+        group by metric_key
+    </select>
+
+    <select id="countDeliveryByStatus" resultMap="metricCountMap">
+        select case
+            when delivery_status = 'DELIVERED' then 'DELIVERED'
+            else 'UNKNOWN'
+        end as metric_key, count(*) as total
+        from ai_after_sales_event_delivery
+        where create_time &gt;= #{fromTime}
+        group by metric_key
+    </select>
+
+    <!-- Explicit member + case_key grouping keeps the aggregate correct even
+         if historical imports contain duplicate coordination records. -->
+    <select id="countUniqueHandoffs" resultType="java.lang.Long">
+        select count(*)
+        from (
+            select member_id, case_key
+            from ai_case_handoff
+            where create_time &gt;= #{fromTime} and create_time &lt; #{toTime}
+            group by member_id, case_key
+        ) as deduplicated_handoffs
+    </select>
+
+    <select id="countUniqueHandoffsByCategory" resultMap="handoffCategoryCountMap">
+        select case
+            when diagnosis_category in (
+                'delivery_in_transit', 'delivery_exception', 'order_state_review',
+                'facts_incomplete', 'policy_consultation', 'policy_insufficient',
+                'tool_failure', 'needs_order_identifier'
+            ) then diagnosis_category
+            else 'other_pending_classification'
+        end as metric_key,
+        count(*) as total
+        from (
+            select member_id, case_key, max(diagnosis_category) as diagnosis_category
+            from ai_case_handoff
+            where create_time &gt;= #{fromTime} and create_time &lt; #{toTime}
+            group by member_id, case_key
+        ) as deduplicated_handoffs
+        group by metric_key
+    </select>
+</mapper>

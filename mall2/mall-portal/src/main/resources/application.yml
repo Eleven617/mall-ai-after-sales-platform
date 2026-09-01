@@ -1,0 +1,71 @@
+spring:
+  application:
+    name: mall-portal
+  profiles:
+    active: dev #默认为开发环境
+  mvc:
+    pathmatch:
+      matching-strategy: ant_path_matcher
+
+mybatis:
+  mapper-locations:
+    - classpath:dao/*.xml
+    - classpath*:com/**/mapper/*.xml
+
+jwt:
+  tokenHeader: Authorization #JWT存储的请求头
+  secret: mall-portal-secret #JWT加解密使用的密钥
+  expiration: 604800 #JWT的超期限时间(60*60*24*7)
+  tokenHead: 'Bearer '  #JWT负载中拿到开头
+
+secure:
+  ignored:
+    urls: #安全路径白名单
+      - /swagger-ui/
+      - /swagger-resources/**
+      - /**/v2/api-docs
+      - /**/*.html
+      - /**/*.js
+      - /**/*.css
+      - /**/*.png
+      - /**/*.map
+      - /favicon.ico
+      - /druid/**
+      - /actuator/**
+      - /sso/**
+      - /home/**
+      - /product/**
+      - /brand/**
+      - /alipay/**
+
+# 自定义redis key
+redis:
+  database: mall
+  key:
+    authCode: 'ums:authCode'
+    orderId: 'oms:orderId'
+    member: 'ums:member'
+  expire:
+    authCode: 90 # 验证码超期时间
+    common: 86400 # 24小时
+
+mongo:
+  insert:
+    sqlEnable: true # 用于控制是否通过数据库数据来插入mongo
+
+# 消息队列定义
+rabbitmq:
+  queue:
+    name:
+      cancelOrder: cancelOrderQueue
+
+ai:
+  case-handoff:
+    # Shared by the paired FastAPI service and Java only. Docker and deployed
+    # environments override this default through AI_CASE_HANDOFF_SERVICE_KEY.
+    service-key: ${AI_CASE_HANDOFF_SERVICE_KEY:local-build19-service-key}
+  after-sales:
+    # Only FastAPI holds this internal capability key. Member JWT scopes
+    # ownership; this key prevents browsers from bypassing confirmation state.
+    service-key: ${AI_AFTER_SALES_SERVICE_KEY:local-build21-after-sales-key}
+

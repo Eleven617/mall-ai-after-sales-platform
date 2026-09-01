@@ -1,0 +1,95 @@
+name: mall-ci
+
+on:
+  pull_request:
+  push:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: mall-ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  python:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: mall-ai-service
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install dependencies
+        run: python -m pip install --upgrade pip && python -m pip install -r requirements.txt
+      - name: Compile FastAPI sources
+        run: python -m compileall -q app
+      - name: Run FastAPI regression suite
+        run: python -m pytest -q
+
+  java:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: mall2
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "8"
+          cache: maven
+      - name: Compile affected Java modules
+        run: mvn -pl mall-portal,mall-admin -am -DskipTests package
+      - name: Run portal collaboration and event tests
+        run: >-
+          mvn -pl mall-portal -am
+          -Dtest=AiCaseHandoffServiceImplTest,AiServiceCaseServiceImplTest,AiServiceCaseOutboxPublisherTest,AiServiceCaseEventReceiverTest
+          -DskipTests=false -Dsurefire.failIfNoSpecifiedTests=false test
+      - name: Run service-operations tests
+        run: >-
+          mvn -pl mall-admin -am
+          -Dtest=AiServiceOperationsServiceImplTest,AiServiceOperationsControllerTest
+          -DskipTests=false -Dsurefire.failIfNoSpecifiedTests=false test
+
+  web:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: mall-ai-web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: mall-ai-web/package-lock.json
+      - name: Install locked dependencies
+        run: npm ci
+      - name: Type-check and build
+        run: npm run build
+
+  compose-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate Compose contract without starting data services
+        env:
+          DEEPSEEK_API_KEY: ci-placeholder-not-a-secret
+        run: docker compose config --quiet
+
+  dependency-and-secret-risk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Scan committed content for secrets
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Scan dependency manifests and lockfiles for known vulnerabilities
+        uses: google/osv-scanner-action/osv-scanner-action@v2.0.2

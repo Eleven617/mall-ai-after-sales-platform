@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.macro.mall.portal.dao.AiServiceCaseOutboxDao">
+    <resultMap id="serviceCaseOutboxEventMap" type="com.macro.mall.portal.domain.AiServiceCaseOutboxEvent">
+        <id column="id" property="id"/>
+        <result column="event_id" property="eventId"/><result column="case_id" property="caseId"/>
+        <result column="member_id" property="memberId"/><result column="event_type" property="eventType"/>
+        <result column="state_version" property="stateVersion"/><result column="correlation_ref" property="correlationRef"/>
+        <result column="status" property="status"/><result column="attempt_count" property="attemptCount"/>
+        <result column="available_at" property="availableAt"/><result column="lease_until" property="leaseUntil"/>
+        <result column="published_at" property="publishedAt"/><result column="last_error" property="lastError"/>
+        <result column="created_at" property="createdAt"/>
+    </resultMap>
+
+    <select id="findReadyForPublishing" resultMap="serviceCaseOutboxEventMap">
+        select id, event_id, case_id, member_id, event_type, state_version, correlation_ref,
+               status, attempt_count, available_at, lease_until, published_at, last_error, created_at
+        from ai_service_case_outbox
+        where (status = 'PENDING' and (available_at is null or available_at &lt;= now()))
+           or (status = 'PUBLISHING' and lease_until is not null and lease_until &lt;= now())
+        order by id asc
+        limit #{limit}
+    </select>
+
+    <update id="claimForPublishing">
+        update ai_service_case_outbox
+        set status = 'PUBLISHING', attempt_count = attempt_count + 1,
+            lease_until = date_add(now(), interval #{leaseSeconds} second), updated_at = now()
+        where id = #{id} and (
+          (status = 'PENDING' and (available_at is null or available_at &lt;= now()))
+          or (status = 'PUBLISHING' and lease_until is not null and lease_until &lt;= now())
+        )
+    </update>
+
+    <update id="markPublished">
+        update ai_service_case_outbox
+        set status = 'PUBLISHED', lease_until = null, published_at = now(), last_error = null, updated_at = now()
+        where id = #{id} and status = 'PUBLISHING'
+    </update>
+
+    <update id="markPublishFailure">
+        update ai_service_case_outbox
+        set status = #{status},
+            <choose>
+                <when test="retryDelaySeconds == null">available_at = null,</when>
+                <otherwise>available_at = date_add(now(), interval #{retryDelaySeconds} second),</otherwise>
+            </choose>
+            lease_until = null, last_error = #{lastError}, updated_at = now()
+        where id = #{id} and status = 'PUBLISHING'
+    </update>
+</mapper>

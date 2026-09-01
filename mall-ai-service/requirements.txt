@@ -1,0 +1,9 @@
+fastapi
+uvicorn[standard]
+pydantic
+httpx
+python-dotenv
+chromadb
+redis>=5.0,<6
+langgraph>=1.2,<2
+fastembed==0.8.0

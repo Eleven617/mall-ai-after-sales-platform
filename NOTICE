@@ -1,0 +1,10 @@
+Mall 可信 AI 售后与 AgentOps 平台
+
+This distribution contains a modified Java commerce foundation in `mall2/`
+derived from macrozheng/mall. The upstream project is distributed under the
+Apache License, Version 2.0; see the root `LICENSE`, `mall2/LICENSE` and
+`UPSTREAM.md`.
+
+The AI orchestration, local demo wiring, evaluation fixtures, and UI additions
+are demonstration code. They do not grant access to DeepSeek, Docker images,
+model weights, or third-party services beyond their own applicable terms.

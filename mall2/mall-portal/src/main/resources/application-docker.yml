@@ -1,0 +1,85 @@
+server:
+  port: ${SERVER_PORT:8085}
+
+spring:
+  datasource:
+    url: jdbc:mysql://mysql:3306/mall?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai&useSSL=false
+    username: ${MALL_DB_USERNAME:mall_app}
+    password: ${MALL_DB_PASSWORD:mall_app}
+    druid:
+      initial-size: 2
+      min-idle: 2
+      max-active: 10
+      web-stat-filter:
+        exclusions: "*.js,*.gif,*.jpg,*.png,*.css,*.ico,/druid/*"
+      stat-view-servlet:
+        login-username: druid
+        login-password: druid
+  data:
+    mongodb:
+      uri: mongodb://mongo:27017/mall-port
+  redis:
+    host: redis
+    database: 0
+    port: 6379
+    password:
+    timeout: 300ms
+  rabbitmq:
+    host: rabbitmq
+    port: 5672
+    virtual-host: /mall
+    username: mall
+    password: mall
+    publisher-confirm-type: correlated
+    publisher-returns: true
+    template:
+      mandatory: true
+    listener:
+      simple:
+        # A failed cancellation must not be requeued forever. The receiver
+        # publishes business failures to its durable failure queue first.
+        default-requeue-rejected: false
+        retry:
+          enabled: true
+          initial-interval: 1s
+          max-attempts: 3
+          max-interval: 10s
+          multiplier: 2.0
+
+after-sales:
+  outbox:
+    batch-size: 20
+    publish-fixed-delay-ms: 2000
+    lease-ms: 30000
+    confirm-timeout-ms: 3000
+    max-publish-attempts: 5
+
+service-case:
+  outbox:
+    batch-size: 20
+    publish-fixed-delay-ms: 2000
+    lease-ms: 30000
+    confirm-timeout-ms: 3000
+    max-publish-attempts: 5
+
+ai:
+  case-handoff:
+    # Only FastAPI holds this internal capability key. The member JWT still
+    # decides whose case is persisted; the key only blocks direct browser use.
+    service-key: ${AI_CASE_HANDOFF_SERVICE_KEY:local-build19-service-key}
+
+logging:
+  file:
+    path: /var/logs
+  logback:
+    rollingpolicy:
+      max-file-size: 10MB
+      max-history: 7
+      total-size-cap: 100MB
+      clean-history-on-start: true
+  level:
+    root: info
+    com.macro.mall: info
+
+logstash:
+  enableInnerLog: false

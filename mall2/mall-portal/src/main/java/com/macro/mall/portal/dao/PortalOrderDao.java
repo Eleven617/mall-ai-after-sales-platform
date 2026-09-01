@@ -1,0 +1,46 @@
+package com.macro.mall.portal.dao;
+
+import com.macro.mall.model.OmsOrderItem;
+import com.macro.mall.portal.domain.OmsOrderDetail;
+import org.apache.ibatis.annotations.Param;
+
+import java.util.List;
+
+/**
+ * 前台订单管理自定义Dao
+ * Created by macro on 2018/9/4.
+ */
+public interface PortalOrderDao {
+    /**
+     * 获取订单及下单商品详情
+     */
+    OmsOrderDetail getDetail(@Param("orderId") Long orderId);
+
+    /**
+     * 获取超时订单
+     * @param minute 超时时间（分）
+     */
+    List<OmsOrderDetail> getTimeOutOrders(@Param("minute") Integer minute);
+
+    /**
+     * Atomically claim one still-pending order for cancellation.
+     * A concurrent consumer that loses the claim must not release inventory.
+     */
+    int markPendingOrderCancelled(@Param("orderId") Long orderId);
+
+    /**
+     * 解除取消订单的库存锁定
+     */
+    int releaseSkuStockLock(@Param("itemList") List<OmsOrderItem> orderItemList);
+
+    /**
+     * 根据商品的skuId来锁定库存
+     */
+    int lockStockBySkuId(@Param("productSkuId")Long productSkuId,@Param("quantity") Integer quantity);
+
+    /**
+     * 根据商品的skuId扣减真实库存
+     */
+    int reduceSkuStock(@Param("productSkuId")Long productSkuId,@Param("quantity") Integer quantity);
+
+}

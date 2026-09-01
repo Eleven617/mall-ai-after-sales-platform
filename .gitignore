@@ -1,0 +1,66 @@
+# Never publish local Git metadata, editor state, personal materials or
+# recoverable working copies. `mall2` is an upstream working tree locally;
+# the public-release staging process copies its source without its nested Git
+# directory so the published repository has one intentional history.
+/.git/
+/mall2/.git/
+/.claude/
+/.local/
+/.vscode/
+/output/
+/snapshots/
+/tmp/
+/mall-master/
+/AI应用实习简历/
+/客户端应用实习简历/
+/AI-Learning-Plan.md
+/AI应用开发工程师学习协议.md
+
+# Local secrets, credentials and browser/runtime state. Templates are source;
+# concrete `.env` files and private keys never are.
+.env
+.env.*
+**/.env
+**/.env.*
+!.env.example
+!**/.env.example
+*.pem
+*.key
+id_rsa*
+*.log
+*.pid
+*.sqlite
+*.sqlite3
+*.sql.bak
+
+# Python / FastAPI runtime artifacts and locally generated RAG assets.
+mall-ai-service/.venv/
+mall-ai-service/.venv-*/
+mall-ai-service/.pytest_cache/
+mall-ai-service/**/__pycache__/
+mall-ai-service/**/.mypy_cache/
+mall-ai-service/**/.claude/
+mall-ai-service/**/.langgraph-venv/
+mall-ai-service/chroma_data/
+mall-ai-service/models/
+mall-ai-service/snapshots/
+mall-ai-service/runtime-*.log
+mall-ai-service/uvicorn.*.log
+
+# Vue artifacts
+mall-ai-web/node_modules/
+mall-ai-web/dist/
+mall-ai-web/.npm-cache/
+
+# Java / IDE artifacts and local process output
+mall2/**/target/
+mall2/**/local/
+mall2/**/logs/
+mall2/**/.idea/
+mall2/**/.settings/
+mall2/**/*.iml
+
+# Docker/backup exports should not become repository content.
+*.tar
+*.tar.gz
+*.zip

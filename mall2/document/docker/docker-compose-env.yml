@@ -1,0 +1,99 @@
+version: '3'
+services:
+  mysql:
+    image: mysql:5.7
+    container_name: mysql
+    command: mysqld --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root #设置root帐号密码
+    ports:
+      - 3306:3306
+    volumes:
+      - /mydata/mysql/data:/var/lib/mysql #数据文件目录挂载
+      - /mydata/mysql/conf:/etc/mysql #配置文件目录挂载
+      - /mydata/mysql/log:/var/log/mysql #日志文件目录挂载
+  redis:
+    image: redis:7
+    container_name: redis
+    command: redis-server --appendonly yes
+    volumes:
+      - /mydata/redis/data:/data #数据文件目录挂载
+    ports:
+      - 6379:6379
+  nginx:
+    image: nginx:1.22
+    container_name: nginx
+    volumes:
+      - /mydata/nginx/conf:/etc/nginx #配置文件目录挂载
+      - /mydata/nginx/html:/usr/share/nginx/html #静态资源根目录挂载
+      - /mydata/nginx/logs:/var/log/nginx #日志文件目录挂载
+    ports:
+      - 80:80
+  rabbitmq:
+    image: rabbitmq:3.9.11-management
+    container_name: rabbitmq
+    volumes:
+      - /mydata/rabbitmq/data:/var/lib/rabbitmq #数据文件目录挂载
+    ports:
+      - 5672:5672
+      - 15672:15672
+  elasticsearch:
+    image: elasticsearch:7.17.3
+    container_name: elasticsearch
+    environment:
+      - "cluster.name=elasticsearch" #设置集群名称为elasticsearch
+      - "discovery.type=single-node" #以单一节点模式启动
+      - "ES_JAVA_OPTS=-Xms512m -Xmx1024m" #设置es使用的jvm内存大小
+    volumes:
+      - /mydata/elasticsearch/plugins:/usr/share/elasticsearch/plugins #插件文件目录挂载
+      - /mydata/elasticsearch/data:/usr/share/elasticsearch/data #数据文件目录挂载
+    ports:
+      - 9200:9200
+      - 9300:9300
+  logstash:
+    image: logstash:7.17.3
+    container_name: logstash
+    environment:
+      - TZ=Asia/Shanghai
+    volumes:
+      - /mydata/logstash/logstash.conf:/usr/share/logstash/pipeline/logstash.conf #配置文件挂载
+    depends_on:
+      - elasticsearch #kibana在elasticsearch启动之后再启动
+    links:
+      - elasticsearch:es #可以用es这个域名访问elasticsearch服务
+    ports:
+      - 4560:4560
+      - 4561:4561
+      - 4562:4562
+      - 4563:4563
+  kibana:
+    image: kibana:7.17.3
+    container_name: kibana
+    links:
+      - elasticsearch:es #可以用es这个域名访问elasticsearch服务
+    depends_on:
+      - elasticsearch #kibana在elasticsearch启动之后再启动
+    environment:
+      - "elasticsearch.hosts=http://es:9200" #设置访问elasticsearch的地址
+    ports:
+      - 5601:5601
+  mongo:
+    image: mongo:4
+    container_name: mongo
+    volumes:
+      - /mydata/mongo/db:/data/db #数据文件目录挂载
+    ports:
+      - 27017:27017
+  minio:
+    image: minio/minio
+    container_name: minio
+    command: server /data --console-address ":9001" #指定数据目录及console运行端口启动
+    volumes:
+      - /mydata/minio/data:/data #数据目录挂载
+    environment:
+      - "MINIO_ROOT_USER=minioadmin"
+      - "MINIO_ROOT_PASSWORD=minioadmin"
+    ports:
+      - 9090:9000
+      - 9001:9001

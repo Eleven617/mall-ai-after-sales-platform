@@ -1,0 +1,243 @@
+name: mall-ai-demo
+
+x-default-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+services:
+  mysql:
+    image: mysql:5.7.44
+    logging: *default-logging
+    command:
+      - mysqld
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --default-authentication-plugin=mysql_native_password
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MALL_DB_ROOT_PASSWORD:-mall-demo-root}
+      MYSQL_DATABASE: mall
+      MYSQL_USER: ${MALL_DB_USERNAME:-mall_app}
+      MYSQL_PASSWORD: ${MALL_DB_PASSWORD:-mall_app}
+    ports:
+      - "3307:3306"
+    volumes:
+      - mall_mysql_data:/var/lib/mysql
+      - ./mall2/document/sql/mall.sql:/docker-entrypoint-initdb.d/01-mall.sql:ro
+      - ./mall2/document/sql/migrations/V20260814__ai_after_sales_outbox.sql:/docker-entrypoint-initdb.d/03-build18-outbox.sql:ro
+      - ./mall2/document/sql/migrations/V20260818__ai_case_handoff.sql:/docker-entrypoint-initdb.d/04-build19-case-handoff.sql:ro
+      - ./mall2/document/sql/migrations/V20260819__ai_customer_conversation_history.sql:/docker-entrypoint-initdb.d/05-build19-1-conversation-history.sql:ro
+      - ./mall2/document/sql/migrations/V20260820__build19_2_operations_overview_demo_records.sql:/docker-entrypoint-initdb.d/06-build19-2-operations-overview-demo-records.sql:ro
+      - ./mall2/document/sql/migrations/V20260820__ai_quality_developer_account.sql:/docker-entrypoint-initdb.d/07-build19-quality-developer.sql:ro
+      - ./mall2/document/sql/migrations/V20260821__unified_after_sales_application.sql:/docker-entrypoint-initdb.d/08-build21-unified-after-sales.sql:ro
+      - ./mall2/document/sql/migrations/V20260821__after_sales_review_and_outbox_source.sql:/docker-entrypoint-initdb.d/09-build21-after-sales-review.sql:ro
+      - ./mall2/document/sql/migrations/V20260824__unified_after_sales_finalization.sql:/docker-entrypoint-initdb.d/10-unified-after-sales-finalization.sql:ro
+      - ./mall2/document/sql/migrations/V20260831__ai_service_case_collaboration.sql:/docker-entrypoint-initdb.d/11-service-case-collaboration.sql:ro
+    healthcheck:
+      # During first-run initialization the official image briefly serves a
+      # temporary MySQL process.  PID 1 becomes `mysqld` only after that
+      # process is replaced by the final TCP-serving database process.
+      test: ["CMD-SHELL", "test \"$$(cat /proc/1/comm)\" = mysqld && mysql --protocol=TCP --host=127.0.0.1 --port=3306 --user=root --password=$${MYSQL_ROOT_PASSWORD} --execute='SELECT 1' >/dev/null 2>&1"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+      start_period: 45s
+
+  redis:
+    image: redis:7.2-alpine
+    logging: *default-logging
+    command: ["redis-server", "--appendonly", "yes"]
+    ports:
+      - "6380:6379"
+    volumes:
+      - mall_redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  # Runs an idempotent, auditable schema migration for both fresh and existing
+  # local MySQL volumes. The final unified-after-sales migration maps old AI
+  # submissions/events only after row, owner and status reconciliation; an
+  # unresolved mapping fails this service and blocks the new runtime cutover.
+  mysql-migrate:
+    image: mysql:5.7.44
+    logging: *default-logging
+    restart: "no"
+    environment:
+      MYSQL_PWD: ${MALL_DB_ROOT_PASSWORD:-mall-demo-root}
+    volumes:
+      - ./mall2/document/sql/migrations/V20260814__ai_after_sales_outbox.sql:/migrations/V20260814__ai_after_sales_outbox.sql:ro
+      - ./mall2/document/sql/migrations/V20260818__ai_case_handoff.sql:/migrations/V20260818__ai_case_handoff.sql:ro
+      - ./mall2/document/sql/migrations/V20260819__ai_customer_conversation_history.sql:/migrations/V20260819__ai_customer_conversation_history.sql:ro
+      - ./mall2/document/sql/migrations/V20260820__build19_2_operations_overview_demo_records.sql:/migrations/V20260820__build19_2_operations_overview_demo_records.sql:ro
+      - ./mall2/document/sql/migrations/V20260820__ai_quality_developer_account.sql:/migrations/V20260820__ai_quality_developer_account.sql:ro
+      - ./mall2/document/sql/migrations/V20260821__unified_after_sales_application.sql:/migrations/V20260821__unified_after_sales_application.sql:ro
+      - ./mall2/document/sql/migrations/V20260821__after_sales_review_and_outbox_source.sql:/migrations/V20260821__after_sales_review_and_outbox_source.sql:ro
+      - ./mall2/document/sql/migrations/V20260824__unified_after_sales_finalization.sql:/migrations/V20260824__unified_after_sales_finalization.sql:ro
+      - ./mall2/document/sql/migrations/V20260831__ai_service_case_collaboration.sql:/migrations/V20260831__ai_service_case_collaboration.sql:ro
+    command:
+      - /bin/sh
+      - -ec
+      - mysql --protocol=TCP --host=mysql --port=3306 --user=root --default-character-set=utf8 mall < /migrations/V20260814__ai_after_sales_outbox.sql && mysql --protocol=TCP --host=mysql --port=3306 --user=root --default-character-set=utf8 mall < /migrations/V20260818__ai_case_handoff.sql && mysql --protocol=TCP --host=mysql --port=3306 --user=root --default-character-set=utf8 mall < /migrations/V20260819__ai_customer_conversation_history.sql && mysql --protocol=TCP --host=mysql --port=3306 --user=root --default-character-set=utf8 mall < /migrations/V20260820__build19_2_operations_overview_demo_records.sql && mysql --protocol=TCP --host=mysql --port=3306 --user=root --default-character-set=utf8 mall < /migrations/V20260820__ai_quality_developer_account.sql && mysql --protocol=TCP --host=mysql --port=3306 --user=root --default-character-set=utf8 mall < /migrations/V20260821__unified_after_sales_application.sql && mysql --protocol=TCP --host=mysql --port=3306 --user=root --default-character-set=utf8 mall < /migrations/V20260821__after_sales_review_and_outbox_source.sql && mysql --protocol=TCP --host=mysql --port=3306 --user=root --default-character-set=utf8 mall < /migrations/V20260824__unified_after_sales_finalization.sql && mysql --protocol=TCP --host=mysql --port=3306 --user=root --default-character-set=utf8 mall < /migrations/V20260831__ai_service_case_collaboration.sql
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+  mongo:
+    image: mongo:4.4
+    logging: *default-logging
+    volumes:
+      - mall_mongo_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongo", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 10s
+
+  rabbitmq:
+    image: rabbitmq:3.13-management-alpine
+    logging: *default-logging
+    environment:
+      RABBITMQ_DEFAULT_USER: mall
+      RABBITMQ_DEFAULT_PASS: mall
+      RABBITMQ_DEFAULT_VHOST: /mall
+    volumes:
+      - mall_rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 15s
+
+  mall-portal:
+    # A finite retry protects the demo from a transient database restart
+    # without masking a permanent configuration failure indefinitely.
+    restart: on-failure:5
+    logging: *default-logging
+    build:
+      context: ./mall2
+      dockerfile: mall-portal/Dockerfile
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      MALL_DB_USERNAME: ${MALL_DB_USERNAME:-mall_app}
+      MALL_DB_PASSWORD: ${MALL_DB_PASSWORD:-mall_app}
+      AI_CASE_HANDOFF_SERVICE_KEY: ${AI_CASE_HANDOFF_SERVICE_KEY:-local-build19-service-key}
+      AI_AFTER_SALES_SERVICE_KEY: ${AI_AFTER_SALES_SERVICE_KEY:-local-build21-after-sales-key}
+    ports:
+      - "8085:8085"
+    volumes:
+      - mall_portal_logs:/var/logs
+    depends_on:
+      mysql:
+        condition: service_healthy
+      mysql-migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+      mongo:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:8085/actuator/health >/dev/null"]
+      interval: 10s
+      timeout: 5s
+      retries: 24
+      start_period: 30s
+
+  mall-admin:
+    restart: on-failure:5
+    logging: *default-logging
+    build:
+      context: ./mall2
+      dockerfile: mall-admin/Dockerfile
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      MALL_DB_USERNAME: ${MALL_DB_USERNAME:-mall_app}
+      MALL_DB_PASSWORD: ${MALL_DB_PASSWORD:-mall_app}
+    depends_on:
+      mysql:
+        condition: service_healthy
+      mysql-migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:8080/actuator/health >/dev/null"]
+      interval: 10s
+      timeout: 5s
+      retries: 24
+      start_period: 30s
+
+  mall-ai-service:
+    build:
+      context: ./mall-ai-service
+    logging: *default-logging
+    env_file:
+      # A fresh public clone can still start the non-model parts of the demo
+      # without a key. `Prepare-PublicDemo.ps1` creates this ignored file for
+      # live DeepSeek calls; model failures then safely stop customer actions.
+      - path: ./mall-ai-service/.env
+        required: false
+    environment:
+      MALL_API_BASE_URL: http://mall-portal:8085
+      MALL_ADMIN_API_BASE_URL: http://mall-admin:8080
+      AI_CASE_HANDOFF_SERVICE_KEY: ${AI_CASE_HANDOFF_SERVICE_KEY:-local-build19-service-key}
+      AI_AFTER_SALES_SERVICE_KEY: ${AI_AFTER_SALES_SERVICE_KEY:-local-build21-after-sales-key}
+      CONVERSATION_STORE_BACKEND: redis
+      REDIS_URL: redis://redis:6379/0
+      DIAGNOSIS_CHECKPOINT_BACKEND: redis
+      DIAGNOSIS_CHECKPOINT_TTL_SECONDS: "1800"
+      EMBEDDING_PROVIDER: local
+      LOCAL_EMBEDDING_MODEL: BAAI/bge-small-zh-v1.5
+      LOCAL_EMBEDDING_MODEL_PATH: /app/models/embedding/bge-small-zh-v1.5
+      LOCAL_EMBEDDING_DIMENSION: 512
+      RAG_RETRIEVAL_MODE: ${RAG_RETRIEVAL_MODE:-dense}
+      RAG_RERANKER_MODEL_PATH: /app/models/reranker/bge-reranker-base
+      RELIABILITY_BACKEND: redis
+      RELIABILITY_KEY_PREFIX: mall-ai:reliability
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./mall-ai-service/chroma_data:/app/chroma_data
+      - ./mall-ai-service/models:/app/models:ro
+    depends_on:
+      redis:
+        condition: service_healthy
+      mall-portal:
+        condition: service_healthy
+      mall-admin:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "from urllib.request import urlopen; assert urlopen('http://127.0.0.1:8000/health/ready', timeout=3).status == 200"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
+
+  mall-ai-web:
+    build:
+      context: ./mall-ai-web
+    logging: *default-logging
+    ports:
+      - "5173:80"
+    depends_on:
+      mall-ai-service:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1/"]
+      interval: 10s
+      timeout: 3s
+      retries: 12
+
+volumes:
+  mall_mysql_data:
+  mall_redis_data:
+  mall_mongo_data:
+  mall_rabbitmq_data:
+  mall_portal_logs:

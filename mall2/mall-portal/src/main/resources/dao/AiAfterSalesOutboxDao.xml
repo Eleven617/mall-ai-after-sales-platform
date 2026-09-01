@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.macro.mall.portal.dao.AiAfterSalesOutboxDao">
+    <resultMap id="outboxEventMap" type="com.macro.mall.portal.domain.AiAfterSalesOutboxEvent">
+        <id column="id" property="id"/>
+        <result column="event_id" property="eventId"/>
+        <result column="application_id" property="applicationId"/>
+        <result column="member_id" property="memberId"/>
+        <result column="application_source" property="applicationSource"/>
+        <result column="event_type" property="eventType"/>
+        <result column="status" property="status"/>
+        <result column="attempt_count" property="attemptCount"/>
+        <result column="available_at" property="availableAt"/>
+        <result column="lease_until" property="leaseUntil"/>
+        <result column="published_at" property="publishedAt"/>
+        <result column="last_error" property="lastError"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+    </resultMap>
+
+    <insert id="insert" parameterType="com.macro.mall.portal.domain.AiAfterSalesOutboxEvent"
+            useGeneratedKeys="true" keyProperty="id">
+        insert into ai_after_sales_outbox (
+            event_id, application_id, member_id, application_source, event_type, status, attempt_count,
+            available_at, lease_until, published_at, last_error, create_time, update_time
+        ) values (
+            #{eventId}, #{applicationId}, #{memberId}, #{applicationSource}, #{eventType}, #{status}, #{attemptCount},
+            #{availableAt}, #{leaseUntil}, #{publishedAt}, #{lastError}, now(), now()
+        )
+    </insert>
+
+    <select id="findReadyForPublishing" resultMap="outboxEventMap">
+        select id, event_id, application_id, member_id, application_source, event_type, status, attempt_count,
+               available_at, lease_until, published_at, last_error, create_time, update_time
+        from ai_after_sales_outbox
+        where (status = 'PENDING' and (available_at is null or available_at &lt;= now()))
+           or (status = 'PUBLISHING' and lease_until is not null and lease_until &lt;= now())
+        order by id asc
+        limit #{limit}
+    </select>
+
+    <update id="claimForPublishing">
+        update ai_after_sales_outbox
+        set status = 'PUBLISHING',
+            attempt_count = attempt_count + 1,
+            lease_until = date_add(now(), interval #{leaseSeconds} second),
+            update_time = now()
+        where id = #{id}
+          and (
+              (status = 'PENDING' and (available_at is null or available_at &lt;= now()))
+              or (status = 'PUBLISHING' and lease_until is not null and lease_until &lt;= now())
+          )
+    </update>
+
+    <update id="markPublished">
+        update ai_after_sales_outbox
+        set status = 'PUBLISHED',
+            lease_until = null,
+            published_at = now(),
+            last_error = null,
+            update_time = now()
+        where id = #{id}
+          and status = 'PUBLISHING'
+    </update>
+
+    <update id="markPublishFailure">
+        update ai_after_sales_outbox
+        set status = #{status},
+            <choose>
+                <when test="retryDelaySeconds == null">
+                    available_at = null,
+                </when>
+                <otherwise>
+                    available_at = date_add(now(), interval #{retryDelaySeconds} second),
+                </otherwise>
+            </choose>
+            lease_until = null,
+            last_error = #{lastError},
+            update_time = now()
+        where id = #{id}
+          and status = 'PUBLISHING'
+    </update>
+</mapper>

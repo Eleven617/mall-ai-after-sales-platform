@@ -1,0 +1,103 @@
+[
+  {
+    "id": "oe-001",
+    "category": "happy_path",
+    "verification": "unit",
+    "turns": [
+      "订单号：202607240001 的耳机无法充电，申请退货"
+    ],
+    "preconditions": ["当前登录用户拥有该订单", "订单只有该商品", "政策知识库命中质量问题退货规则"],
+    "expected": ["查询受 JWT 保护的订单摘要", "返回带政策来源的待确认方案", "此时 Java 写接口调用次数为 0"]
+  },
+  {
+    "id": "oe-002",
+    "category": "multi_turn_product_selection",
+    "verification": "unit",
+    "turns": [
+      "订单号：202607240001，商品坏了，申请退货",
+      "我要退耳机"
+    ],
+    "preconditions": ["该订单包含无线耳机和手机壳", "政策知识库命中"],
+    "expected": ["第一轮仅返回安全商品标签并追问", "第二轮只匹配一个真实订单商品", "生成待确认方案但不写售后单"]
+  },
+  {
+    "id": "oe-003",
+    "category": "missing_reason",
+    "verification": "unit",
+    "turns": ["订单号：202607240001，帮我退耳机"],
+    "preconditions": ["当前用户拥有该订单"],
+    "expected": ["保留售后草稿", "追问退货原因", "不检索无关政策、不调用写接口"]
+  },
+  {
+    "id": "oe-004",
+    "category": "identifier_safety",
+    "verification": "unit",
+    "turns": ["我的手机号是 13812345678，商品坏了想退货"],
+    "preconditions": ["已进入退货流程"],
+    "expected": ["手机号不能作为订单号", "追问明确订单号", "不查询订单、不创建售后单"]
+  },
+  {
+    "id": "oe-005",
+    "category": "identifier_safety",
+    "verification": "unit",
+    "turns": ["订单号：202607240001，订单号：202607240002，我要退货"],
+    "preconditions": ["已进入退货流程"],
+    "expected": ["要求用户明确选择一个订单号", "不猜测其中任意一个订单", "不调用订单查询或写接口"]
+  },
+  {
+    "id": "oe-006",
+    "category": "rag_no_evidence",
+    "verification": "unit",
+    "turns": ["订单号：202607240001 的耳机无法充电，申请退货"],
+    "preconditions": ["订单和商品均可验证", "检索结果没有满足距离阈值的政策证据"],
+    "expected": ["转人工客服", "不生成待确认方案", "不调用 Java 写接口"]
+  },
+  {
+    "id": "oe-007",
+    "category": "explicit_confirmation",
+    "verification": "unit",
+    "turns": ["先生成待确认方案", "确认"],
+    "preconditions": ["方案与当前登录用户绑定且尚未过期"],
+    "expected": ["确认前写接口调用次数为 0", "确认后只发送 orderSn、orderItemId、reason、description", "Java 服务重新校验归属、商品和订单状态"]
+  },
+  {
+    "id": "oe-008",
+    "category": "single_use_confirmation",
+    "verification": "unit",
+    "turns": ["先生成待确认方案", "确认", "确认"],
+    "preconditions": ["第一次确认已成功"],
+    "expected": ["同一 proposal 只能消费一次", "Java 写接口最多调用一次", "第二次确认不产生新售后单"]
+  },
+  {
+    "id": "oe-009",
+    "category": "authorization_binding",
+    "verification": "unit",
+    "turns": ["用户 A 生成待确认方案", "用户 B 在同一 session 回复确认"],
+    "preconditions": ["两个 Bearer Token 代表不同登录用户"],
+    "expected": ["拒绝确认", "保留或要求重新发起方案", "不调用 Java 写接口"]
+  },
+  {
+    "id": "oe-010",
+    "category": "agent_guardrail",
+    "verification": "unit",
+    "turns": ["模型尝试调用 create_return_application"],
+    "preconditions": ["请求被路由到只读 Agent"],
+    "expected": ["Agent 阻止工具调用", "提示进入受控售后流程", "记录不含用户原话的 tool_blocked trace"]
+  },
+  {
+    "id": "oe-011",
+    "category": "agent_guardrail",
+    "verification": "unit",
+    "turns": ["模型连续两次请求相同参数的 logistics_service"],
+    "preconditions": ["第一次工具调用已返回"],
+    "expected": ["第二次相同调用在执行前停止", "转人工客服兜底", "记录 repeated_tool_call trace"]
+  },
+  {
+    "id": "oe-012",
+    "category": "live_integration",
+    "verification": "manual_live",
+    "turns": ["使用真实前端登录用户完成 oe-001 到 oe-008"],
+    "preconditions": ["Java、MySQL、Redis、FastAPI、向量库和模型服务均已启动"],
+    "expected": ["核对真实订单归属校验", "核对售后单只创建一次", "保存脱敏演示录屏和配置版本，不记录真实令牌或订单号"]
+  }
+]

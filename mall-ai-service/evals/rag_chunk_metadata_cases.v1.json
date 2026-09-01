@@ -1,0 +1,126 @@
+{
+  "suite_version": "rag-chunk-metadata.v1",
+  "schema_version": "1",
+  "description": "仅用于 RAG Chunking 与 Metadata Filtering 的版本化合成回放；不含真实客户、订单或生产政策。它测量结构契约和预过滤，不替代 Dense 52 条黄金集的语义排序评测。",
+  "documents": [
+    {
+      "file_name": "electronics_returns_v1.md",
+      "content": "# 合成电子商品售后政策\n\n> 业务规则 V1.0，更新于 2026-01-01。\n\n类别：electronics\n文档类型：policy\n\n## 耳机退货运费\n\n耳机存在质量问题且审核通过时，退货运费由商家承担。\n"
+    },
+    {
+      "file_name": "electronics_returns_v2.md",
+      "content": "# 合成电子商品售后政策\n\n> 业务规则 V2.0，更新于 2026-08-20。\n\n类别：electronics\n文档类型：policy\n\n## 耳机退货运费\n\n耳机出现质量问题时，需先核验订单和故障证据；审核通过后退货运费由商家承担。\n"
+    },
+    {
+      "file_name": "apparel_returns_v2.md",
+      "content": "# 合成服饰商品售后政策\n\n> 业务规则 V2.0，更新于 2026-08-20。\n\n类别：apparel\n文档类型：policy\n\n## 尺码退货运费\n\n服饰尺码不合适属于个人原因时，退货运费通常由用户承担。\n"
+    },
+    {
+      "file_name": "electronics_structured_v3.md",
+      "content": "# 合成电子商品售后政策\n\n> 业务规则 V3.0，更新于 2026-08-22。\n\n类别：electronics\n文档类型：policy\n\n## 质量问题售后规则\n\n结论：质量问题需经订单和证据审核后处理。\n\n### 条件\n\n- 需要订单、商品状态和故障凭证。\n\n### 例外\n\n- 商品已明显使用并影响二次销售时，不能直接承诺退款。\n\n### 处理表\n\n| 商品状态 | 可申请方式 |\n| --- | --- |\n| 未发货 | 取消退款 |\n| 已发货 | 退货退款 |\n"
+    },
+    {
+      "file_name": "electronics_returns_en_v2.md",
+      "content": "# Synthetic electronics policy\n\n> Business rule V2.0, effective from 2026-08-20.\n\ncategory: electronics\ndocument type: policy\n\n## Headphone return shipping\n\nAfter an approved quality review, the merchant pays return shipping.\n"
+    }
+  ],
+  "cases": [
+    {
+      "case_id": "version-conflict-selects-current-electronics-policy",
+      "metadata_filter": {
+        "policy_version": "V2.0",
+        "effective_on_or_before": "2026-08-28",
+        "category": "electronics",
+        "language": "zh-CN",
+        "document_type": "policy"
+      },
+      "expected_document_ids": ["electronics_returns_v2"],
+      "expected_section_titles": ["耳机退货运费"],
+      "query": "耳机坏了想退，运费谁出？",
+      "expected_top_document_id": "electronics_returns_v2"
+    },
+    {
+      "case_id": "trusted-historical-version-is-explicit-not-model-chosen",
+      "metadata_filter": {
+        "policy_version": "V1.0",
+        "effective_on_or_before": "2026-08-28",
+        "category": "electronics",
+        "language": "zh-CN",
+        "document_type": "policy"
+      },
+      "expected_document_ids": ["electronics_returns_v1"],
+      "expected_section_titles": ["耳机退货运费"]
+    },
+    {
+      "case_id": "future-policy-is-excluded-before-effective-date",
+      "metadata_filter": {
+        "policy_version": "V2.0",
+        "effective_on_or_before": "2026-08-19",
+        "category": "electronics",
+        "language": "zh-CN",
+        "document_type": "policy"
+      },
+      "expected_document_ids": []
+    },
+    {
+      "case_id": "same-theme-apparel-category-is-not-electronics-policy",
+      "metadata_filter": {
+        "policy_version": "V2.0",
+        "effective_on_or_before": "2026-08-28",
+        "category": "apparel",
+        "language": "zh-CN",
+        "document_type": "policy"
+      },
+      "expected_document_ids": ["apparel_returns_v2"],
+      "expected_section_titles": ["尺码退货运费"]
+    },
+    {
+      "case_id": "rule-condition-exception-stay-together",
+      "metadata_filter": {
+        "policy_version": "V3.0",
+        "effective_on_or_before": "2026-08-28",
+        "category": "electronics",
+        "language": "zh-CN",
+        "document_type": "policy"
+      },
+      "expected_document_ids": ["electronics_structured_v3"],
+      "must_keep_together": ["结论", "条件", "例外", "不能直接承诺退款"]
+    },
+    {
+      "case_id": "markdown-table-is-not-cut-from-its-rule",
+      "metadata_filter": {
+        "policy_version": "V3.0",
+        "effective_on_or_before": "2026-08-28",
+        "category": "electronics",
+        "language": "zh-CN",
+        "document_type": "policy"
+      },
+      "expected_document_ids": ["electronics_structured_v3"],
+      "must_keep_together": ["商品状态", "可申请方式", "未发货", "退货退款"]
+    },
+    {
+      "case_id": "language-is-a-hard-server-filter",
+      "metadata_filter": {
+        "policy_version": "V2.0",
+        "effective_on_or_before": "2026-08-28",
+        "category": "electronics",
+        "language": "en",
+        "document_type": "policy"
+      },
+      "expected_document_ids": ["electronics_returns_en_v2"],
+      "expected_section_titles": ["Headphone return shipping"]
+    },
+    {
+      "case_id": "unknown-category-yields-empty-pre-filter-result",
+      "metadata_filter": {
+        "policy_version": "V2.0",
+        "effective_on_or_before": "2026-08-28",
+        "category": "fresh_food",
+        "language": "zh-CN",
+        "document_type": "policy"
+      },
+      "expected_document_ids": [],
+      "query": "食品打开后还能退吗？"
+    }
+  ]
+}

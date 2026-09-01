@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.macro.mall.portal.dao.AiCustomerConversationDao">
+    <resultMap id="conversationRecordMap" type="com.macro.mall.portal.domain.AiCustomerConversationRecord">
+        <id column="id" property="id"/>
+        <result column="conversation_id" property="conversationId"/>
+        <result column="member_id" property="memberId"/>
+        <result column="title" property="title"/>
+        <result column="message_count" property="messageCount"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+    </resultMap>
+
+    <resultMap id="conversationMessageMap" type="com.macro.mall.portal.domain.AiCustomerConversationMessage">
+        <id column="id" property="id"/>
+        <result column="message_id" property="messageId"/>
+        <result column="conversation_id" property="conversationId"/>
+        <result column="sequence_no" property="sequenceNo"/>
+        <result column="role" property="role"/>
+        <result column="content" property="content"/>
+        <result column="public_response_json" property="publicResponseJson"/>
+        <result column="create_time" property="createTime"/>
+    </resultMap>
+
+    <sql id="conversationColumns">
+        c.id, c.conversation_id, c.member_id, c.title, c.create_time, c.update_time,
+        (select count(1) from ai_customer_conversation_message m
+          where m.conversation_id = c.conversation_id) as message_count
+    </sql>
+
+    <insert id="insertIgnore" parameterType="com.macro.mall.portal.domain.AiCustomerConversationRecord">
+        insert ignore into ai_customer_conversation (
+            conversation_id, member_id, title, create_time, update_time
+        ) values (
+            #{conversationId}, #{memberId}, #{title}, now(), now()
+        )
+    </insert>
+
+    <select id="findByConversationIdAndMemberId" resultMap="conversationRecordMap">
+        select <include refid="conversationColumns"/>
+        from ai_customer_conversation c
+        where c.conversation_id = #{conversationId}
+          and c.member_id = #{memberId}
+        limit 1
+    </select>
+
+    <select id="listByMemberId" resultMap="conversationRecordMap">
+        select <include refid="conversationColumns"/>
+        from ai_customer_conversation c
+        where c.member_id = #{memberId}
+        order by c.update_time desc, c.id desc
+        limit 100
+    </select>
+
+    <select id="nextSequenceNo" resultType="int">
+        select coalesce(max(sequence_no), 0) + 1
+        from ai_customer_conversation_message
+        where conversation_id = #{conversationId}
+    </select>
+
+    <insert id="insertIgnoreMessage" parameterType="com.macro.mall.portal.domain.AiCustomerConversationMessage">
+        insert ignore into ai_customer_conversation_message (
+            message_id, conversation_id, sequence_no, role, content,
+            public_response_json, create_time
+        ) values (
+            #{messageId}, #{conversationId}, #{sequenceNo}, #{role}, #{content},
+            #{publicResponseJson}, now()
+        )
+    </insert>
+
+    <select id="listMessagesByConversationId" resultMap="conversationMessageMap">
+        select id, message_id, conversation_id, sequence_no, role, content,
+               public_response_json, create_time
+        from ai_customer_conversation_message
+        where conversation_id = #{conversationId}
+        order by sequence_no asc, id asc
+        limit 500
+    </select>
+
+    <update id="updateTitleIfDefault">
+        update ai_customer_conversation
+        set title = #{title}, update_time = now()
+        where conversation_id = #{conversationId}
+          and member_id = #{memberId}
+          and title = #{defaultTitle}
+    </update>
+
+    <update id="touch">
+        update ai_customer_conversation
+        set update_time = now()
+        where conversation_id = #{conversationId}
+          and member_id = #{memberId}
+    </update>
+
+    <delete id="deleteMessagesByConversationId">
+        delete from ai_customer_conversation_message
+        where conversation_id = #{conversationId}
+    </delete>
+
+    <delete id="deleteByConversationIdAndMemberId">
+        delete from ai_customer_conversation
+        where conversation_id = #{conversationId}
+          and member_id = #{memberId}
+    </delete>
+</mapper>

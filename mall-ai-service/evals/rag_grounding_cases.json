@@ -1,0 +1,179 @@
+[
+  {
+    "id": "grounding-001-quality-shipping",
+    "category": "supported",
+    "question": "商品有质量问题，退货运费谁承担？",
+    "expected": {
+      "outcome": "answered",
+      "source_sections_include": ["退货运费"],
+      "sources_empty": false,
+      "answer_fact_marker_groups": [["商家承担", "由商家承担", "商家负责"]],
+      "answer_not_contains": ["自动发优惠券", "所有退货免运费"]
+    }
+  },
+  {
+    "id": "grounding-002-personal-return-shipping",
+    "category": "supported",
+    "question": "拍错尺码想退货，运费该谁出？",
+    "expected": {
+      "outcome": "answered",
+      "source_sections_include": ["退货运费"],
+      "sources_empty": false,
+      "answer_fact_marker_groups": [["用户承担", "由用户承担", "用户负责", "您承担", "由您承担", "买家承担", "自行承担"]],
+      "answer_not_contains": ["商家一定承担", "自动发优惠券"]
+    }
+  },
+  {
+    "id": "grounding-003-refund-timing",
+    "category": "supported",
+    "question": "售后审核通过后，退款多久到账？",
+    "expected": {
+      "outcome": "answered",
+      "source_sections_include": ["退款到账"],
+      "sources_empty": false,
+      "answer_fact_marker_groups": [["1 到 3 个工作日", "1-3个工作日", "1 至 3 个工作日", "一到三个工作日"]],
+      "answer_not_contains": ["保证当天到账", "立即到账", "自动发优惠券"]
+    }
+  },
+  {
+    "id": "grounding-004-return-window",
+    "category": "supported",
+    "question": "签收后七天内不喜欢可以退吗？",
+    "expected": {
+      "outcome": "answered",
+      "source_sections_include": ["七天无理由退货"],
+      "sources_empty": false,
+      "answer_fact_marker_groups": [["7 天", "七天"]],
+      "answer_not_contains": ["所有商品都支持", "自动发优惠券"]
+    }
+  },
+  {
+    "id": "grounding-005-cancel-unshipped",
+    "category": "supported",
+    "question": "订单还没发货，可以取消吗？",
+    "expected": {
+      "outcome": "answered",
+      "source_sections_include": ["未发货订单取消"],
+      "sources_empty": false,
+      "answer_fact_marker_groups": [["未发货", "订单状态"]],
+      "answer_not_contains": ["直接取消成功", "无需核验"]
+    }
+  },
+  {
+    "id": "grounding-006-delivery-delay",
+    "category": "supported",
+    "question": "物流好几天没有更新，你能保证明天送到吗？",
+    "expected": {
+      "outcome": "answered",
+      "source_sections_include": ["配送延误"],
+      "sources_empty": false,
+      "answer_fact_marker_groups": [["查询物流", "人工跟进", "不能保证", "无法保证", "不承诺"]],
+      "answer_not_contains": ["保证明天送到", "自动赔偿"]
+    }
+  },
+  {
+    "id": "grounding-007-return-method",
+    "category": "supported",
+    "question": "退货会自动安排免费上门取件吗？",
+    "expected": {
+      "outcome": "answered",
+      "source_sections_include": ["退货寄回方式"],
+      "sources_empty": false,
+      "answer_fact_marker_groups": [["不自动安排", "审核通过", "售后流程"]],
+      "answer_not_contains": ["自动安排免费上门取件", "编造退货地址"]
+    }
+  },
+  {
+    "id": "grounding-008-price-protection",
+    "category": "supported",
+    "question": "买完商品降价了，肯定能补差价吗？",
+    "expected": {
+      "outcome": "answered",
+      "source_sections_include": ["价保"],
+      "sources_empty": false,
+      "answer_fact_marker_groups": [["活动规则", "订单价格", "核验"]],
+      "answer_not_contains": ["肯定能补差价", "无条件价保"]
+    }
+  },
+  {
+    "id": "grounding-009-coupon-compensation",
+    "category": "supported",
+    "question": "申请售后会自动发优惠券或现金补偿吗？",
+    "expected": {
+      "outcome": "answered",
+      "source_sections_include": ["优惠券与补偿"],
+      "sources_empty": false,
+      "answer_fact_marker_groups": [["不自动", "人工客服", "审核"]],
+      "answer_not_contains": ["自动发优惠券", "自动现金补偿"]
+    }
+  },
+  {
+    "id": "grounding-010-member-points",
+    "category": "supported",
+    "question": "退货后会自动赠送积分或积分翻倍吗？",
+    "expected": {
+      "outcome": "answered",
+      "source_sections_include": ["会员积分"],
+      "sources_empty": false,
+      "answer_fact_marker_groups": [["不提供", "不自动", "不能承诺"]],
+      "answer_not_contains": ["自动赠送积分", "积分翻倍"]
+    }
+  },
+  {
+    "id": "grounding-011-warranty",
+    "category": "supported",
+    "question": "还在质保期内，所有损坏都能免费维修吗？",
+    "expected": {
+      "outcome": "answered",
+      "source_sections_include": ["质保与维修"],
+      "sources_empty": false,
+      "answer_fact_marker_groups": [["质量问题", "审核", "商品页面"]],
+      "answer_not_contains": ["所有损坏都免费维修", "跳过审核"]
+    }
+  },
+  {
+    "id": "grounding-012-invoice",
+    "category": "supported",
+    "question": "订单能不能开指定类型的电子发票？",
+    "expected": {
+      "outcome": "answered",
+      "source_sections_include": ["发票"],
+      "sources_empty": false,
+      "answer_fact_marker_groups": [["订单", "开票系统", "校验"]],
+      "answer_not_contains": ["任意订单都能", "保证开具"]
+    }
+  },
+  {
+    "id": "grounding-013-storefront-no-evidence",
+    "category": "no_evidence",
+    "question": "商城有哪些线下体验店？",
+    "expected": {
+      "outcome": "no_evidence",
+      "sources_empty": true,
+      "answer_fact_marker_groups": [["没有足够依据", "无法确认"]],
+      "answer_not_contains": ["有线下体验店", "线下门店地址"]
+    }
+  },
+  {
+    "id": "grounding-014-supplier-no-evidence",
+    "category": "no_evidence",
+    "question": "怎么申请成为商城供应商？",
+    "expected": {
+      "outcome": "no_evidence",
+      "sources_empty": true,
+      "answer_fact_marker_groups": [["没有足够依据", "无法确认"]],
+      "answer_not_contains": ["可以申请成为商城供应商", "供应商入驻流程"]
+    }
+  },
+  {
+    "id": "grounding-015-password-no-evidence",
+    "category": "no_evidence",
+    "question": "账号忘记密码后怎么找回？",
+    "expected": {
+      "outcome": "no_evidence",
+      "sources_empty": true,
+      "answer_fact_marker_groups": [["没有足够依据", "无法确认"]],
+      "answer_not_contains": ["重置密码", "找回账号"]
+    }
+  }
+]

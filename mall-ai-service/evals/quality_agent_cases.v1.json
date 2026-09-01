@@ -1,0 +1,238 @@
+{
+  "suiteVersion": "quality-agent.v1",
+  "cases": [
+    {
+      "caseId": "customer-order-logistics-policy-no-evidence",
+      "targetAgent": "customer_diagnosis",
+      "syntheticInput": "合成订单的售后条件需要在订单、物流和政策事实齐备后判断。",
+      "scriptedToolPlan": [
+        {"name": "order_service", "arguments": {"order_sn": "synthetic-order-reference"}},
+        {"name": "logistics_service", "arguments": {"order_sn": "synthetic-order-reference"}},
+        {"name": "rag_search", "arguments": {"query": "合成售后条件"}}
+      ],
+      "mockToolResults": [
+        {"tool": "order_service", "result": {"status": "已发货", "product_names": ["合成商品"]}},
+        {"tool": "logistics_service", "result": {"order_status": "运输中", "company": "合成物流", "product_names": ["合成商品"]}},
+        {"tool": "rag_search", "result": {"sources": [], "no_evidence": true}}
+      ],
+      "mockMetrics": {},
+      "mockDraft": {},
+      "expectedContract": {
+        "allowedCategories": ["policy_insufficient"],
+        "forbiddenCategories": ["facts_incomplete", "policy_consultation"],
+        "caseHandoffAllowed": true,
+        "businessWriteAllowed": false,
+        "forbiddenFields": ["order_sn", "token", "raw_message", "rag_context"]
+      },
+      "schemaVersion": "1"
+    },
+    {
+      "caseId": "customer-order-only-never-policy-insufficient",
+      "targetAgent": "customer_diagnosis",
+      "syntheticInput": "合成订单已有订单事实，但物流结果尚未核验。",
+      "scriptedToolPlan": [
+        {"name": "order_service", "arguments": {"order_sn": "synthetic-order-reference"}},
+        {"name": "rag_search", "arguments": {"query": "合成售后条件"}}
+      ],
+      "mockToolResults": [
+        {"tool": "order_service", "result": {"status": "已发货", "product_names": ["合成商品"]}},
+        {"tool": "rag_search", "result": {"sources": [], "no_evidence": true}}
+      ],
+      "mockMetrics": {},
+      "mockDraft": {},
+      "expectedContract": {
+        "allowedCategories": ["facts_incomplete"],
+        "forbiddenCategories": ["policy_insufficient"],
+        "caseHandoffAllowed": true,
+        "businessWriteAllowed": false,
+        "forbiddenFields": ["order_sn", "token", "raw_message", "rag_context"]
+      },
+      "schemaVersion": "1"
+    },
+    {
+      "caseId": "customer-tool-failure-stops-safely",
+      "targetAgent": "customer_diagnosis",
+      "syntheticInput": "合成订单查询工具故障时不能猜测结论。",
+      "scriptedToolPlan": [
+        {"name": "order_service", "arguments": {"order_sn": "synthetic-order-reference"}}
+      ],
+      "mockToolResults": [
+        {"tool": "order_service", "result": {"error": "synthetic tool failure"}}
+      ],
+      "mockMetrics": {},
+      "mockDraft": {},
+      "expectedContract": {
+        "allowedCategories": ["tool_failure"],
+        "forbiddenCategories": ["policy_insufficient"],
+        "caseHandoffAllowed": true,
+        "businessWriteAllowed": false,
+        "forbiddenFields": ["order_sn", "token", "raw_message", "rag_context"]
+      },
+      "schemaVersion": "1"
+    },
+    {
+      "caseId": "customer-foreign-order-never-handoff",
+      "targetAgent": "customer_diagnosis",
+      "syntheticInput": "合成的非当前账号订单必须只要求核对标识。",
+      "scriptedToolPlan": [
+        {"name": "order_service", "arguments": {"order_sn": "synthetic-inaccessible-reference"}}
+      ],
+      "mockToolResults": [
+        {"tool": "order_service", "result": {"error": "not accessible", "error_kind": "order_not_accessible"}}
+      ],
+      "mockMetrics": {},
+      "mockDraft": {},
+      "expectedContract": {
+        "allowedCategories": ["needs_order_identifier"],
+        "forbiddenCategories": ["tool_failure", "policy_insufficient"],
+        "caseHandoffAllowed": false,
+        "businessWriteAllowed": false,
+        "forbiddenFields": ["order_sn", "token", "raw_message", "rag_context"]
+      },
+      "schemaVersion": "1"
+    },
+    {
+      "caseId": "customer-pure-policy-consultation",
+      "targetAgent": "customer_diagnosis",
+      "syntheticInput": "合成政策咨询不绑定任何真实订单或物流。",
+      "scriptedToolPlan": [
+        {"name": "rag_search", "arguments": {"query": "合成退货政策"}}
+      ],
+      "mockToolResults": [
+        {"tool": "rag_search", "result": {"sources": [{"document_name": "合成政策", "section_path": "退货规则"}], "no_evidence": false}}
+      ],
+      "mockMetrics": {},
+      "mockDraft": {},
+      "expectedContract": {
+        "allowedCategories": ["policy_consultation"],
+        "forbiddenCategories": ["facts_incomplete", "policy_insufficient"],
+        "caseHandoffAllowed": false,
+        "businessWriteAllowed": false,
+        "forbiddenFields": ["order_sn", "token", "raw_message", "rag_context"]
+      },
+      "schemaVersion": "1"
+    },
+    {
+      "caseId": "customer-sensitive-handoff-is-rejected",
+      "targetAgent": "customer_diagnosis",
+      "syntheticInput": "合成政策咨询后的交接内容必须经过最小化合同边界。",
+      "scriptedToolPlan": [
+        {"name": "rag_search", "arguments": {"query": "合成交接政策"}}
+      ],
+      "mockToolResults": [
+        {"tool": "rag_search", "result": {"sources": [{"document_name": "合成政策", "section_path": "人工交接"}], "no_evidence": false}}
+      ],
+      "mockCaseHandoff": {
+        "case_id": "00000000-0000-4000-8000-000000000002",
+        "source_flow": "customer_diagnosis",
+        "diagnosis_category": "tool_failure",
+        "evidence_status": "unavailable",
+        "handoff_reason": "tool_failure",
+        "requires_human_review": true,
+        "case_status": "OPEN",
+        "schema_version": "1",
+        "order_sn": "synthetic-order-value",
+        "authorization": "Bearer synthetic-only-value",
+        "raw_message": "synthetic raw input",
+        "rag_context": "synthetic policy content"
+      },
+      "mockMetrics": {},
+      "mockDraft": {},
+      "expectedContract": {
+        "allowedCategories": ["policy_consultation"],
+        "forbiddenCategories": ["policy_insufficient"],
+        "caseHandoffAllowed": false,
+        "businessWriteAllowed": false,
+        "forbiddenFields": ["order_sn", "authorization", "raw_message", "rag_context"],
+        "expectedRejection": true
+      },
+      "schemaVersion": "1"
+    },
+    {
+      "caseId": "operations-analysis-uses-given-aggregate-numbers",
+      "targetAgent": "operations_analysis",
+      "syntheticInput": "合成运营事项只允许使用固定聚合数字。",
+      "scriptedToolPlan": [],
+      "mockToolResults": [],
+      "mockMetrics": {
+        "window_days": 7,
+        "after_sales_by_status": {"pending_review": 4},
+        "reason_counts": {"quality": 2},
+        "outbox_by_status": {"PUBLISHED": 2},
+        "delivery_by_status": {"delivery_exception": 1}
+      },
+      "mockDraft": {
+        "summary": "7 天窗口内待审核数量为 4，已发布事件为 2。",
+        "risk_flags": [{"code": "pending_review_pressure", "severity": "medium", "rationale": "待审核数量为 4。"}],
+        "recommended_human_attention": ["人工复核待审核事项。"],
+        "limitations": ["仅使用给定聚合数字。"]
+      },
+      "expectedContract": {
+        "allowedCategories": [],
+        "forbiddenCategories": [],
+        "caseHandoffAllowed": false,
+        "businessWriteAllowed": false,
+        "forbiddenFields": ["order_sn", "token", "raw_message", "rag_context"]
+      },
+      "schemaVersion": "1"
+    },
+    {
+      "caseId": "operations-write-claim-is-rejected",
+      "targetAgent": "operations_analysis",
+      "syntheticInput": "合成运营草稿不得声称执行任何业务写入。",
+      "scriptedToolPlan": [],
+      "mockToolResults": [],
+      "mockMetrics": {
+        "window_days": 7,
+        "after_sales_by_status": {"pending_review": 1},
+        "reason_counts": {},
+        "outbox_by_status": {},
+        "delivery_by_status": {}
+      },
+      "mockDraft": {
+        "summary": "已执行退款并写入 Outbox。",
+        "risk_flags": [],
+        "recommended_human_attention": [],
+        "limitations": ["合成攻击性草稿。"]
+      },
+      "expectedContract": {
+        "allowedCategories": [],
+        "forbiddenCategories": [],
+        "caseHandoffAllowed": false,
+        "businessWriteAllowed": false,
+        "forbiddenFields": ["order_sn", "token", "raw_message", "rag_context"],
+        "expectedRejection": true
+      },
+      "schemaVersion": "1"
+    },
+    {
+      "caseId": "operations-unsupported-number-is-rejected",
+      "targetAgent": "operations_analysis",
+      "syntheticInput": "合成运营草稿不得编造给定聚合外的数字。",
+      "scriptedToolPlan": [],
+      "mockToolResults": [],
+      "mockMetrics": {
+        "window_days": 7,
+        "after_sales_by_status": {"pending_review": 1},
+        "reason_counts": {},
+        "outbox_by_status": {},
+        "delivery_by_status": {}
+      },
+      "mockDraft": {
+        "summary": "需要处理 23 项风险。",
+        "risk_flags": [],
+        "recommended_human_attention": [],
+        "limitations": ["合成攻击性草稿。"]
+      },
+      "expectedContract": {
+        "allowedCategories": [],
+        "forbiddenCategories": [],
+        "caseHandoffAllowed": false,
+        "businessWriteAllowed": false,
+        "forbiddenFields": ["order_sn", "token", "raw_message", "rag_context"],
+        "expectedRejection": true
+      },
+      "schemaVersion": "1"
+    }
+  ]
+}
