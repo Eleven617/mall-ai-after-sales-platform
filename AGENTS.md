@@ -34,13 +34,17 @@
 ## 常用验证
 
 ```powershell
-cd C:\Users\12969\Desktop\mall\mall-ai-service
+# 从仓库根目录执行
+Push-Location .\mall-ai-service
 .\.venv\Scripts\python.exe -m pytest -q
+Pop-Location
 
-cd C:\Users\12969\Desktop\mall\mall-ai-web
+Push-Location .\mall-ai-web
 npm run build
+Pop-Location
 
-cd C:\Users\12969\Desktop\mall\mall2
+Push-Location .\mall2
 mvn -pl mall-portal -am "-Dtest=AiCaseHandoffServiceImplTest,AiServiceCaseServiceImplTest,AiServiceCaseOutboxPublisherTest,AiServiceCaseEventReceiverTest" "-DskipTests=false" "-Dsurefire.failIfNoSpecifiedTests=false" test
 mvn -pl mall-admin -am "-Dtest=AiServiceOperationsServiceImplTest,AiServiceOperationsControllerTest" "-DskipTests=false" "-Dsurefire.failIfNoSpecifiedTests=false" test
+Pop-Location
 ```

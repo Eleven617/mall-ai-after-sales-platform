@@ -4,7 +4,7 @@
 
 ## 发布范围
 
-- 公开仓库：`617liu817/mall-ai-after-sales-platform`。
+- 公开仓库：`Eleven617/mall-ai-after-sales-platform`。
 - 发布内容：可复现的本地合成演示代码、文档、测试与启动脚本。
 - 不包含：真实生产数据、密钥、预构建的 Chroma 索引、本地 Embedding/Reranker 权重、Docker 命名卷、日志或浏览器会话数据。
 - 视频演示：有意留待后续制作；当前仓库已经提供文字演示脚本，不将“视频已完成”作为发布结论。

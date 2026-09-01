@@ -44,7 +44,10 @@ Vue 浏览器
 前置条件：Docker Desktop 已启动；首次准备本地 BGE Embedding 时需要正常网络下载公开模型。需要真实 DeepSeek 调用时，网络可直连 DeepSeek。政策切分、本地 BGE embedding、Dense/BM25/RRF/Rerank 实验均不依赖 VPN。
 
 ```powershell
-cd C:\Users\12969\Desktop\mall
+# 如果还没有克隆：
+# git clone https://github.com/Eleven617/mall-ai-after-sales-platform.git mall-ai-after-sales-platform
+# Set-Location .\mall-ai-after-sales-platform
+# 以下命令均从仓库根目录执行
 .\scripts\Prepare-PublicDemo.ps1
 ```
 
@@ -82,14 +85,25 @@ cd C:\Users\12969\Desktop\mall
 
 ## 本地演示身份：由你自行设置密码
 
+这是“下载后在自己电脑运行”的本地 Demo，不是向所有 GitHub 访客开放同一组线上测试账号。完整 AI 对话需要运行者自己的 DeepSeek Key；不配置 Key 时仍可启动结构和权限验证，但模型请求会安全停止。
+
 仓库、文档和脚本不保存任何演示账号密码；此前自动验收用的是一次性随机账号，因此不能把它当成你应当记住的登录凭据。现在可用下面的本地初始化脚本，**在你的终端输入一次自己选择的密码**，由它只在本机 Compose 数据库中建立或重置最小权限演示身份：
 
 ```powershell
-cd C:\Users\12969\Desktop\mall
+# 当前目录为仓库根目录
 .\scripts\Initialize-LocalDemoAccess.ps1 -PrepareCustomerFixtures
 ```
 
-它不会把密码打印、写入文件或加入 Git；只显示固定的本地用户名。提交后，它会在本机通过对应的 FastAPI 登录边界验证适用身份，但不会显示或保存返回的 Token。客户、运营、质量开发者和人工处理人员仍使用不同角色和接口边界。若只需检查脚本而不改任何账号，可运行：
+它不会把密码打印、写入文件或加入 Git。运行者输入的这一份密码仅用于其自己的本机 Compose 数据库，并会设置下面五个固定用户名：
+
+| 本地角色 | 用户名 |
+| --- | --- |
+| 客户 A / 客户 B | `localDemoCustomerA` / `localDemoCustomerB` |
+| 运营人员 | `localDemoOperations` |
+| AI 质量开发者 | `aiQualityDeveloper` |
+| 人工售后处理人员 | `afterSalesProcessor` |
+
+同一位运行者可用自己刚输入的密码登录这些本地演示身份；客户、运营、质量开发者和人工处理人员仍使用不同角色和接口边界。脚本提交后会在本机通过对应的 FastAPI 登录边界验证适用身份，但不会显示或保存返回的 Token。若只需检查脚本而不改任何账号，可运行：
 
 ```powershell
 $password = Read-Host "Temporary dry-run password" -AsSecureString
@@ -99,21 +113,24 @@ $password = Read-Host "Temporary dry-run password" -AsSecureString
 ## 验证命令
 
 ```powershell
+# 以下命令均从仓库根目录执行
 # FastAPI 全量回归
-cd C:\Users\12969\Desktop\mall\mall-ai-service
+Push-Location .\mall-ai-service
 .\.venv\Scripts\python.exe -m pytest -q
+Pop-Location
 
 # Vue 类型检查与生产构建
-cd C:\Users\12969\Desktop\mall\mall-ai-web
+Push-Location .\mall-ai-web
 npm run build
+Pop-Location
 
 # Java 人工协同 / Outbox 定向测试；Maven 根 POM 默认跳过测试，必须显式覆盖
-cd C:\Users\12969\Desktop\mall\mall2
+Push-Location .\mall2
 mvn -pl mall-portal -am "-Dtest=AiCaseHandoffServiceImplTest,AiServiceCaseServiceImplTest,AiServiceCaseOutboxPublisherTest,AiServiceCaseEventReceiverTest" "-DskipTests=false" "-Dsurefire.failIfNoSpecifiedTests=false" test
 mvn -pl mall-admin -am "-Dtest=AiServiceOperationsServiceImplTest,AiServiceOperationsControllerTest" "-DskipTests=false" "-Dsurefire.failIfNoSpecifiedTests=false" test
+Pop-Location
 
 # Compose 静态合同，不启动或删除容器
-cd C:\Users\12969\Desktop\mall
 docker compose config --quiet
 ```
 
