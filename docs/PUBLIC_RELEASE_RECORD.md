@@ -21,6 +21,18 @@
 
 同时修复了 `scripts/Initialize-LocalDemoAccess.ps1` 在 Windows PowerShell 5.1 下的真实兼容缺口：原来的带引号 `sh -ec` 和 `python -c` 原生参数在 `docker.exe` 边界会被错误拆分；现在通过容器内安全命令和标准输入传递 SQL/Python，并显式设置 UTF-8 输出编码。PowerShell 5.1 语法检查、`-DryRun` 事务回滚和一次本地合成身份初始化/登录边界复验均通过；密码未写入文件、输出或 Git。
 
+### 本次展示更新的完整回归（提交 `0d407783fec9291b3d8d5d01befc38c0e009c553`）
+
+此提交已在 GitHub `main` 真实通过：[mall-ci #33613512109](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/33613512109) 和 [quality-evaluation #33613512012](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/33613512012)。前者的 Python、Java、Web、Compose contract、Gitleaks/OSV 共 5 个 Job 均成功；后者的隔离质量 Job 成功。
+
+| 范围 | 实际结果 |
+| --- | --- |
+| FastAPI 回归 | `python -m pytest -q`：`292 passed, 20 subtests passed`；新增 1 条 Windows 本地演示入口回归。 |
+| 质量与 RAG | quality-agent 17/17；质量合同 20 passed；RAG 合同 55 passed；Chunk/Metadata 8/8（0 外部模型调用）；LangGraph 9 tests passed。 |
+| Web / Java / Compose | Vue 生产构建成功；Java package 成功、portal 13 passed、admin 6 passed；Compose 合同通过且八个常驻服务 healthy。 |
+
+上述范围独立计数，不能相加为一个总数。远程安全 Job 成功证明当前工作流的 Gitleaks 与 OSV 直接依赖/锁文件门已通过；本机 Docker 当时没有可用的 Docker Hub HTTPS 代理，无法额外拉取 Gitleaks 工具镜像，未把这件环境阻塞写成扫描成功。
+
 ## 2026-09-02：公开 CI 收口证据
 
 提交 [`c5ad321355a5c9979ada83f72294c70440964cc8`](https://github.com/Eleven617/mall-ai-after-sales-platform/commit/c5ad321355a5c9979ada83f72294c70440964cc8) 已在 GitHub `main` 真实触发并通过两个独立工作流：

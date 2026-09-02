@@ -18,6 +18,19 @@
 
 本轮还修复并验证了 Windows PowerShell 5.1 下的 `Initialize-LocalDemoAccess.ps1`：Docker SQL 不再依赖容易被原生参数拆分的引号脚本，Python 哈希程序通过标准输入执行，脚本源文件使用 UTF-8 BOM 以保留中文合成标签。新增 `tests/test_local_demo_access_script_contract.py` 防止该入口回归；本机 `-DryRun` 与实际本地身份边界验证通过。
 
+### 与本次展示更新对应的远程 CI
+
+提交 [`0d407783fec9291b3d8d5d01befc38c0e009c553`](https://github.com/Eleven617/mall-ai-after-sales-platform/commit/0d407783fec9291b3d8d5d01befc38c0e009c553) 已实际通过 [`mall-ci` #33613512109](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/33613512109) 和 [`quality-evaluation` #33613512012](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/33613512012)。
+
+| 本机命令范围 | 实际结果 |
+| --- | --- |
+| `python -m pytest -q` | 292 passed，20 subtests passed。 |
+| `run_quality_agent_evaluation.py` / 质量 pytest | 17/17；20 passed。 |
+| CI RAG pytest / Chunk summary / LangGraph unittest | 55 passed；8/8；9 tests passed。 |
+| `npm run build` / Java CI 定向 Maven / Compose 合同 | 全部成功；portal 13 passed，admin 6 passed。 |
+
+远程 `mall-ci` 的 Python、Java、Web、Compose contract、dependency-and-secret-risk 5 个 Job 均为 success；质量工作流的隔离 Job 为 success。计数分别记录，不能相加。由于本机 Docker 当时没有 Docker Hub HTTPS 代理，额外的本机 Gitleaks 镜像拉取被环境阻塞；没有将该本机步骤描述为成功，远程安全 Job 才是当前安全门的真实成功证据。
+
 ## 公开 CI 收口（2026-09-02）
 
 本节是与下方历史本机/Docker 快照分开的新证据。提交 [`c5ad321355a5c9979ada83f72294c70440964cc8`](https://github.com/Eleven617/mall-ai-after-sales-platform/commit/c5ad321355a5c9979ada83f72294c70440964cc8) 的远程 GitHub Actions 已成功：[`mall-ci` #33607689472](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/33607689472)、[`quality-evaluation` #33607689443](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/33607689443)。
