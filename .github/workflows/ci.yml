@@ -23,12 +23,20 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - name: Install dependencies
-        run: python -m pip install --upgrade pip && python -m pip install -r requirements.txt
+      - name: Install runtime and CI test dependencies
+        run: >-
+          python -m pip install --upgrade pip &&
+          python -m pip install -r requirements.txt -r requirements-ci.txt
       - name: Compile FastAPI sources
         run: python -m compileall -q app
       - name: Run FastAPI regression suite
         run: python -m pytest -q
+      - name: Run isolated LangGraph compatibility regression
+        # langgraph was raised to the patched 1.2 line after the dependency
+        # scan found the lab's old vulnerable pin. These nine deterministic
+        # cases prove the educational graph still enforces its action bounds
+        # and pause/resume contracts; they make no model or business calls.
+        run: python -m unittest discover -s labs/langgraph_order_exception -p "test_*.py" -v
 
   java:
     runs-on: ubuntu-latest
@@ -47,7 +55,7 @@ jobs:
       - name: Run portal collaboration and event tests
         run: >-
           mvn -pl mall-portal -am
-          -Dtest=AiCaseHandoffServiceImplTest,AiServiceCaseServiceImplTest,AiServiceCaseOutboxPublisherTest,AiServiceCaseEventReceiverTest
+          -Dtest=AiCaseHandoffServiceImplTest,AiServiceCaseServiceImplTest,AiServiceCaseOutboxPublisherTest,AiServiceCaseEventReceiverTest,SpringDataWebExposureContractTest
           -DskipTests=false -Dsurefire.failIfNoSpecifiedTests=false test
       - name: Run service-operations tests
         run: >-
@@ -91,5 +99,24 @@ jobs:
         uses: gitleaks/gitleaks-action@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: Scan dependency manifests and lockfiles for known vulnerabilities
+      - name: Scan direct dependency manifests and lockfiles for known vulnerabilities
         uses: google/osv-scanner-action/osv-scanner-action@v2.0.2
+        with:
+          # The Mall Maven reactor contains local SNAPSHOT modules.  OSV's
+          # isolated action container cannot resolve those local artifacts,
+          # so scan every Java POM as a direct manifest instead of allowing
+          # an unresolved reactor scan to be reported as success.  Python
+          # requirements and the npm lockfile are passed explicitly as well.
+          # This is a direct-manifest/lockfile gate, not a transitive-SBOM
+          # claim; the time-bounded Java 8 risk acceptance stays visible in
+          # the tracked scanner config.
+          scan-args: |
+            scan source
+            --config=./osv-scanner.toml
+            --no-resolve
+            --lockfile=mall-ai-service/requirements.txt
+            --lockfile=mall-ai-service/requirements-ci.txt
+            --lockfile=mall-ai-service/labs/langgraph_order_exception/requirements.txt
+            --lockfile=mall-ai-web/package-lock.json
+            --recursive
+            mall2

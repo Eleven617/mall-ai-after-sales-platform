@@ -21,8 +21,10 @@ jobs:
           node-version: "20"
           cache: npm
           cache-dependency-path: mall-ai-web/package-lock.json
-      - name: Install AI service dependencies
-        run: python -m pip install --upgrade pip && python -m pip install -r requirements.txt
+      - name: Install AI service and CI test dependencies
+        run: >-
+          python -m pip install --upgrade pip &&
+          python -m pip install -r requirements.txt -r requirements-ci.txt
       - name: Run Build 22 contract_mock trajectory and red-team gate
         run: python scripts/run_quality_agent_evaluation.py
       - name: Run quality Agent contract tests

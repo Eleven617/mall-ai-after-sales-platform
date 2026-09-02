@@ -1,0 +1,21 @@
+# Narrow, time-bounded risk acceptance for the final Java 8 Spring Boot line.
+# Spring Data Commons 2.7.18 is the last published 2.7.x artifact; the
+# advisories below have fixes only in newer Spring Data lines that require a
+# major Spring Boot/Java migration. The controller contract test reduces the
+# affected public binding surface, but it is not a complete remediation. Keep
+# this exception visible to the scanner and migrate before 2027-09-02.
+
+[[IgnoredVulns]]
+id = "GHSA-5m4m-73w9-8433"
+ignoreUntil = 2027-09-02
+reason = "No fixed Spring Data 2.7.x artifact exists. A controller contract test reduces projection-binding exposure but does not eliminate the dependency risk; migrate to Spring Boot 3/Java 17 before expiry."
+
+[[IgnoredVulns]]
+id = "GHSA-5vpf-xvv7-c8vh"
+ignoreUntil = 2027-09-02
+reason = "No fixed Spring Data 2.7.x artifact exists. A controller contract test reduces user-controlled Spring Data Sort exposure but does not eliminate the dependency risk; migrate to Spring Boot 3/Java 17 before expiry."
+
+[[IgnoredVulns]]
+id = "GHSA-9fw2-h3hf-293r"
+ignoreUntil = 2027-09-02
+reason = "No fixed Spring Data 2.7.x artifact exists. A controller contract test reduces user-controlled property-path exposure but does not eliminate the dependency risk; migrate to Spring Boot 3/Java 17 before expiry."

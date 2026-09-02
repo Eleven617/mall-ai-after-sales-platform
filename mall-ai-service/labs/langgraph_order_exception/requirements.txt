@@ -1,2 +1,2 @@
-langgraph==0.6.11
+langgraph==1.2.11
 python-dotenv>=1.0,<2
