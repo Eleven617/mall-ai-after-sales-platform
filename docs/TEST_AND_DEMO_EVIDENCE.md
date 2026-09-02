@@ -1,8 +1,27 @@
 # 测试与演示证据
 
-更新时间：2026-09-01。本文件只记录本机实际执行的命令和结果；所有账号、订单、凭据、Token、内部 payload 与 Docker 卷均未写入本文档。
+更新时间：2026-09-02。本文件只记录实际执行的命令和结果；所有账号、订单、凭据、Token、内部 payload 与 Docker 卷均未写入本文档。
 
 > 说明：本文件保留最终升级阶段的一轮较广产品验收快照。公开发布准备阶段另有一轮最小复核，使用的定向测试选择不同，结果见 [公开发布记录](PUBLIC_RELEASE_RECORD.md)。两组计数不能相加，也不代表生产验收。
+
+## 公开 CI 收口（2026-09-02）
+
+本节是与下方历史本机/Docker 快照分开的新证据。提交 [`c5ad321355a5c9979ada83f72294c70440964cc8`](https://github.com/Eleven617/mall-ai-after-sales-platform/commit/c5ad321355a5c9979ada83f72294c70440964cc8) 的远程 GitHub Actions 已成功：[`mall-ci` #33607689472](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/33607689472)、[`quality-evaluation` #33607689443](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/33607689443)。
+
+| 证据类型 | 运行范围 | 实际结果与含义 |
+| --- | --- | --- |
+| 远程 GitHub CI | Ubuntu runner，Python 3.12、Java 8、Node 20 | `mall-ci` 全部 5 个 job 成功：Python、Java、Web、Compose contract、dependency-and-secret-risk。远程成功才证明工作流在 GitHub runner 上可运行。 |
+| 远程质量门 | Ubuntu runner，合成夹具 | `quality-evaluation` 成功：只运行 `contract_mock` / 合同/RAG/Chunk 测试和 Web 构建；不调用真实模型。 |
+| 干净 Python 回归 | 临时 `python:3.12-slim` 容器 | `python -m pytest -q`：**291 passed，20 subtests passed**。未使用 `.venv`、Chroma、模型、模型 Key 或数据库。 |
+| 质量 Agent 合同 | 同一干净 Python 容器 | `run_quality_agent_evaluation.py`：**17/17**；指定质量 Agent pytest：**20 passed**。 |
+| RAG 合同 | 同一干净 Python 容器 | 指定 RAG 2.0 pytest：**55 passed**；Chunk/Metadata：**8/8**，0 外部模型调用。此处不是 52 题真实模型准确率结论。 |
+| LangGraph 兼容性 | 干净 Python 容器 | `python -m unittest discover -s labs/langgraph_order_exception -p "test_*.py" -v`：**9 tests passed**；防止安全升级后的实验图放宽工具/暂停边界。 |
+| Java 8 | 临时 `maven:3.9.9-eclipse-temurin-8` 容器 | `package` 成功；portal 定向 **13 passed**，admin 定向 **6 passed**。普通 package 不再要求可达的远程 Docker daemon。 |
+| Web | 隔离 Node 容器 + GitHub Node 20 | 本机隔离 Node 22：`npm ci && npm run build` 成功；GitHub Actions 另以 Node 20 成功。 |
+| Compose 静态合同 | 本机 | `docker compose config --quiet` 成功；未启动/重建项目 Compose 服务。 |
+| 密钥与依赖门 | GitHub + 本机等价 OSV 命令 | 远程 Gitleaks 与 OSV 均成功。OSV 范围是所有 Maven POM 的直接依赖声明、Python requirements 和 npm lockfile；详见 [公开发布记录](PUBLIC_RELEASE_RECORD.md#依赖与密钥扫描范围)。 |
+
+上述项目分别计数，绝不相加为一个“总通过数”。本机隔离容器用于复现依赖/平台前提；远程 GitHub 成功是 CI 是否通过的唯一依据。
 
 ## 本次最终复验（2026-09-01）
 
@@ -62,13 +81,14 @@
 ## 尚未宣称完成的项
 
 - `live_model_synthetic` 已在本轮手动执行并通过 3 条合成案例；它不是 CI、客户请求或线上模型泛化评测，且 Provider 未返回可用 Token 数，不能据此声称成本或普遍准确率。
-- `.github/workflows/ci.yml` 与 `quality-evaluation.yml` 已具备本地可审查质量门，但本根目录当前不是 Git 仓库，且没有本轮远程 GitHub Actions 运行记录。
+- 当前公开仓库的两条远程 Actions 已在本文件开头所列提交上成功；这不包含 Java 全量集成测试、完整传递依赖 SBOM 审计或独立安全审计。
 - 本机 Docker/合成数据/定向测试不证明生产部署、独立安全审计、真实支付/仓储/物流/维修接入、生产 QPS/P95/SLA 或模型对所有输入的准确率。
 
 ## 复验命令
 
 ```powershell
 cd C:\Users\12969\Desktop\mall\mall-ai-service
+\.venv\Scripts\python.exe -m pip install -r requirements-ci.txt
 .\.venv\Scripts\python.exe -m pytest -q
 .\.venv\Scripts\python.exe scripts\run_quality_agent_evaluation.py
 .\.venv\Scripts\python.exe scripts\evaluate_chunk_metadata.py --summary

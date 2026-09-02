@@ -1,5 +1,8 @@
 # Mall 可信 AI 售后与 AgentOps 平台
 
+[![mall-ci](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/workflows/ci.yml)
+[![quality-evaluation](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/workflows/quality-evaluation.yml/badge.svg?branch=main)](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/workflows/quality-evaluation.yml)
+
 这是一个本地可运行的电商售后演示系统。它将 Java 商城交易底座、FastAPI AI 编排服务、Vue 工作台、MySQL、Redis、RabbitMQ 与 MongoDB 组合为一个受控的 AI 售后闭环。
 
 它不是生产 SaaS，也不宣称真实模型在所有输入上的准确率、线上 SLA 或真实支付/仓储/维修系统接入。
@@ -116,6 +119,7 @@ $password = Read-Host "Temporary dry-run password" -AsSecureString
 # 以下命令均从仓库根目录执行
 # FastAPI 全量回归
 Push-Location .\mall-ai-service
+.\.venv\Scripts\python.exe -m pip install -r requirements-ci.txt
 .\.venv\Scripts\python.exe -m pytest -q
 Pop-Location
 
