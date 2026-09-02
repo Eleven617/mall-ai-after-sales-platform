@@ -1,11 +1,64 @@
 # Mall 可信 AI 售后与 AgentOps 平台
 
+> 面向电商售后场景的受控 AI 协同演示：模型负责受限建议，Java 服务始终掌握事实、权限与最终写入。
+
 [![mall-ci](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/workflows/ci.yml)
 [![quality-evaluation](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/workflows/quality-evaluation.yml/badge.svg?branch=main)](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/workflows/quality-evaluation.yml)
 
-这是一个本地可运行的电商售后演示系统。它将 Java 商城交易底座、FastAPI AI 编排服务、Vue 工作台、MySQL、Redis、RabbitMQ 与 MongoDB 组合为一个受控的 AI 售后闭环。
+## 30 秒了解项目
 
-它不是生产 SaaS，也不宣称真实模型在所有输入上的准确率、线上 SLA 或真实支付/仓储/维修系统接入。
+- **解决的问题**：把“能聊天”的售后助手变成可核验、可确认、可回放的电商 AI 协同流程。
+- **不是普通聊天机器人**：LLM 仅产生受限 JSON 意图、字段线索或只读下一步；订单事实、JWT、归属、资格、状态机、幂等、事务和最终写入由 Java / Spring Boot 权威服务执行。
+- **受控技术链路**：Vue 公开 DTO → FastAPI / LangGraph 编排 → RAG 政策证据与受控 MCP 只读工具 → Redis 待确认状态 → Java / MySQL Outbox / RabbitMQ 可靠事件。
+- **验证范围**：可在本地用合成数据运行，并有自动化回归、合成 EvalCase 与 GitHub Actions 证据；不是生产 SaaS，未接入真实支付、仓储、维修或真实用户数据。
+- **二次开发边界**：mall2/ 基于 [macrozheng/mall](https://github.com/macrozheng/mall)（Apache-2.0）演进；本项目新增的是受控 AI 售后、评测、人工协同、公开 DTO 与本地演示工程，不把商城底座表述为原创。
+
+## 核心闭环
+
+~~~mermaid
+flowchart LR
+    U[客户问题] --> W[Vue：公开 DTO]
+    W --> A[FastAPI：Schema / LangGraph / Redis]
+    A --> L[LLM：受限意图或只读建议]
+    A --> R[RAG：政策证据]
+    A --> J[Java：订单事实 / JWT / 归属 / 状态机 / 幂等]
+    R --> A
+    L --> A
+    J --> P[待确认方案或人工协同]
+    P -->|明确确认 / 受控处理| J
+    J --> T[MySQL 同事务：业务状态 + Outbox]
+    T --> Q[RabbitMQ：可重试、幂等消费]
+    A --> E[脱敏 Trace + 合成 Eval / 回放]
+~~~
+
+写操作不经过模型直达数据库：创建、取消、修改必须先生成与用户/会话绑定的待确认动作；Java 仍会再次校验身份、归属、合法状态与幂等。
+
+## 真实运行截图
+
+> 2026-09-02 在本机 Docker Compose 获取。截图中的账号、咨询、转人工统计与质量结果均为本地合成演示数据；不包含密码、Token、真实客户信息、RAG chunk/距离或完整内部 Trace。
+
+![客户政策咨询：RAG 只提供政策证据，公开页面不显示内部检索载荷](docs/assets/customer-policy-conversation.png)
+
+*客户统一售后入口：真实政策问答，回答由证据链路支撑，但不把内部检索内容暴露给客户。*
+
+![运营工作台：Java 聚合的转人工概览与最小化事项投影](docs/assets/operations-handoff-overview.png)
+
+*运营只读工作台：统计由 Java 后端聚合，页面不显示客户原话、订单详情或模型内部记录。*
+
+![质量评测工作台：版本化合成 EvalCase 的确定性结果](docs/assets/quality-evaluation-dashboard.png)
+
+*质量开发者页面：使用合成案例运行 contract_mock，不读取生产数据库、真实聊天或业务 Trace。*
+
+## 可信性与项目边界
+
+- FastAPI 不直连商城业务数据库；RAG 只能提供政策证据，不能替代订单/物流/资格事实。
+- 客户、运营、质量开发者、人工售后处理人员使用不同身份、接口与最小数据投影。
+- 依赖或模型不可用、JSON 契约不合法、证据不足时流程安全停止或等待处理，不能凭猜测写入业务数据。
+- 当前证据只覆盖本机、合成数据、定向/回归测试和远程 CI；不声称线上部署、真实用户准确率、吞吐、成本、生产 SLA 或第三方履约成功。
+
+## 快速开始
+
+从干净克隆启动、用自己的本地密码初始化演示身份、准备本地 Embedding 与运行确定性验证的命令都在 [从干净克隆启动](#从干净克隆启动) 与 [测试与演示证据](docs/TEST_AND_DEMO_EVIDENCE.md)。首次真实模型调用需要运行者自己的 DeepSeek Key；不配置 Key 时模型路径会安全停止，仍可验证结构、权限和确定性质量门。
 
 ## 产品能力
 

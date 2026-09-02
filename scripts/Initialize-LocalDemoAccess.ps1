@@ -1,4 +1,4 @@
-[CmdletBinding()]
+﻿[CmdletBinding()]
 param(
     [System.Security.SecureString]$DemoPassword,
     [switch]$PrepareCustomerFixtures,
@@ -23,6 +23,15 @@ $customerAUsername = "localDemoCustomerA"
 $customerBUsername = "localDemoCustomerB"
 $temporaryEnvironmentNames = @("MALL_LOCAL_DEMO_PASSWORD", "MALL_LIVE_DEMO_PASSWORD", "MALL_JAVA_BASE_URL", "MALL_LIVE_DEMO_USER_A", "MALL_LIVE_DEMO_USER_B", "MALL_LIVE_DEMO_RESULT_FILE")
 $localAiServiceBaseUrl = "http://127.0.0.1:8000"
+
+# This public helper supports Windows PowerShell 5.1 as well as PowerShell 7.
+# Its native-command pipeline otherwise uses an ANSI/ASCII code page, which
+# corrupts the Chinese synthetic role labels before MySQL receives the SQL.
+$utf8NoBom = New-Object System.Text.UTF8Encoding($false)
+$previousOutputEncoding = $OutputEncoding
+$previousConsoleOutputEncoding = [Console]::OutputEncoding
+$OutputEncoding = $utf8NoBom
+[Console]::OutputEncoding = $utf8NoBom
 
 function ConvertTo-PlainText {
     param([Parameter(Mandatory = $true)][System.Security.SecureString]$Value)
@@ -80,6 +89,29 @@ function Assert-LocalDemoLogin {
     }
 }
 
+function Invoke-ComposeMysqlSql {
+    param(
+        [Parameter(Mandatory = $true)][string]$Sql,
+        [switch]$BatchOutput
+    )
+
+    # Windows PowerShell 5.1 splits a quoted `sh -ec "..."` program when it
+    # crosses docker.exe.  Keep the program a single, whitespace-free shell
+    # argument and stream SQL to MySQL stdin. `${IFS}` expands inside the
+    # container shell, not in PowerShell. The database password stays in the
+    # container environment and never enters a host command line, file, or
+    # script output.
+    $mysqlCommand = 'MYSQL_PWD=$MYSQL_ROOT_PASSWORD;export${IFS}MYSQL_PWD;exec${IFS}mysql${IFS}--protocol=TCP${IFS}--host=127.0.0.1${IFS}--port=3306${IFS}--user=root${IFS}--default-character-set=utf8mb4'
+    if ($BatchOutput) {
+        $mysqlCommand += '${IFS}--skip-column-names${IFS}--batch'
+    }
+    $mysqlCommand += '${IFS}mall'
+    $Sql | & docker compose -f $composeFile exec -T mysql sh -c $mysqlCommand
+    if ($LASTEXITCODE -ne 0) {
+        throw "The local MySQL container is not ready. Start the demo first with .\scripts\start-demo.ps1."
+    }
+}
+
 if (-not (Get-Command docker -ErrorAction SilentlyContinue)) {
     throw "Docker Desktop CLI is unavailable. Start Docker Desktop first."
 }
@@ -111,13 +143,22 @@ try {
         throw "Use a local demo password between 12 and 72 UTF-8 bytes."
     }
 
-    & docker compose -f $composeFile exec -T mysql sh -ec 'MYSQL_PWD="$MYSQL_ROOT_PASSWORD" mysql --protocol=TCP --host=127.0.0.1 --port=3306 --user=root --execute="SELECT 1" mall >/dev/null'
-    if ($LASTEXITCODE -ne 0) {
-        throw "The local MySQL container is not ready. Start the demo first with .\scripts\start-demo.ps1."
-    }
+    $null = Invoke-ComposeMysqlSql -Sql "SELECT 1;"
 
     [Environment]::SetEnvironmentVariable("MALL_LOCAL_DEMO_PASSWORD", $plainPassword, "Process")
-    $hashOutput = & $python -c 'import os, bcrypt; print(bcrypt.hashpw(os.environ["MALL_LOCAL_DEMO_PASSWORD"].encode("utf-8"), bcrypt.gensalt(rounds=12)).decode("ascii"))'
+    # Python source also travels through stdin: Windows PowerShell 5.1 would
+    # otherwise strip the inner quotes from `python -c` and turn the
+    # environment-key lookup into a Python identifier.
+    $hashProgram = @'
+import os
+import bcrypt
+
+print(bcrypt.hashpw(
+    os.environ["MALL_LOCAL_DEMO_PASSWORD"].encode("utf-8"),
+    bcrypt.gensalt(rounds=12),
+).decode("ascii"))
+'@
+    $hashOutput = $hashProgram | & $python
     if ($LASTEXITCODE -ne 0) {
         throw "The local BCrypt helper could not create a password hash."
     }
@@ -128,10 +169,8 @@ try {
 
     $transactionEnd = if ($DryRun) { "ROLLBACK;" } else { "COMMIT;" }
     $bootstrapSql = @'
-set -eu
-MYSQL_PWD="$MYSQL_ROOT_PASSWORD" mysql --protocol=TCP --host=127.0.0.1 --port=3306 --user=root --default-character-set=utf8mb4 mall <<SQL
 START TRANSACTION;
-SET @demo_password_hash = '$MALL_LOCAL_DEMO_PASSWORD_HASH';
+SET @demo_password_hash = '__MALL_LOCAL_DEMO_PASSWORD_HASH__';
 
 INSERT INTO ums_role (name, description, admin_count, create_time, status, sort)
 SELECT 'AI质量开发者', '只能访问合成 AI 质量评测页面', 0, NOW(), 1, 0
@@ -197,11 +236,11 @@ SET password = @demo_password_hash, status = 1
 WHERE username IN ('localDemoCustomerA', 'localDemoCustomerB');
 
 __TRANSACTION_END__
-SQL
-'@.Replace("__TRANSACTION_END__", $transactionEnd)
+'@.Replace("__TRANSACTION_END__", $transactionEnd).Replace("__MALL_LOCAL_DEMO_PASSWORD_HASH__", $passwordHash)
 
-    & docker compose -f $composeFile exec -T -e "MALL_LOCAL_DEMO_PASSWORD_HASH=$passwordHash" mysql sh -ec $bootstrapSql
-    if ($LASTEXITCODE -ne 0) {
+    try {
+        $null = Invoke-ComposeMysqlSql -Sql $bootstrapSql
+    } catch {
         throw "Local demo identity provisioning failed; no partial database transaction was committed."
     }
 
@@ -226,8 +265,10 @@ SQL
     }
 
     if ($PrepareCustomerFixtures) {
-        $customerCountOutput = & docker compose -f $composeFile exec -T mysql sh -ec 'MYSQL_PWD="$MYSQL_ROOT_PASSWORD" mysql --protocol=TCP --host=127.0.0.1 --port=3306 --user=root --skip-column-names --batch --execute="SELECT COUNT(*) FROM ums_member WHERE username IN (''localDemoCustomerA'', ''localDemoCustomerB'')" mall'
-        if ($LASTEXITCODE -ne 0) {
+        $customerCountSql = "SELECT COUNT(*) FROM ums_member WHERE username IN ('localDemoCustomerA', 'localDemoCustomerB');"
+        try {
+            $customerCountOutput = Invoke-ComposeMysqlSql -Sql $customerCountSql -BatchOutput
+        } catch {
             throw "Internal role accounts are ready, but existing local customer fixtures could not be checked."
         }
         $customerCount = 0
@@ -293,6 +334,8 @@ SQL
     }
 } finally {
     Restore-ProcessEnvironment -PreviousValues $previousEnvironment
+    $OutputEncoding = $previousOutputEncoding
+    [Console]::OutputEncoding = $previousConsoleOutputEncoding
     $plainPassword = $null
     $DemoPassword = $null
 }
