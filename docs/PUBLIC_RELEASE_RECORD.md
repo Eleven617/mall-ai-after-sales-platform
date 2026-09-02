@@ -9,6 +9,18 @@
 - 不包含：真实生产数据、密钥、预构建的 Chroma 索引、本地 Embedding/Reranker 权重、Docker 命名卷、日志或浏览器会话数据。
 - 视频演示：有意留待后续制作；当前仓库已经提供文字演示脚本，不将“视频已完成”作为发布结论。
 
+## 2026-09-02：真实页面截图与本地入口复验
+
+在本机现有 Docker Compose（八个常驻服务均为 healthy）上，用本地合成身份取得并人工检查了三张公开截图：
+
+- [`docs/assets/customer-policy-conversation.png`](assets/customer-policy-conversation.png)：客户政策咨询页面，显示真实运行的合成政策问答。
+- [`docs/assets/operations-handoff-overview.png`](assets/operations-handoff-overview.png)：运营只读工作台，显示 Java 聚合的转人工概览。
+- [`docs/assets/quality-evaluation-dashboard.png`](assets/quality-evaluation-dashboard.png)：质量开发者工作台，显示 `quality-agent.v2` 的 `contract_mock` 结果（17/17）。
+
+截图尺寸均为 1440×1000；只含合成账号、合成咨询和合成统计，不含密码、Token、真实订单、客户原话、RAG 原文、内部 Trace 或业务密钥。截图是本机 Docker 证据，不是线上部署证据。
+
+同时修复了 `scripts/Initialize-LocalDemoAccess.ps1` 在 Windows PowerShell 5.1 下的真实兼容缺口：原来的带引号 `sh -ec` 和 `python -c` 原生参数在 `docker.exe` 边界会被错误拆分；现在通过容器内安全命令和标准输入传递 SQL/Python，并显式设置 UTF-8 输出编码。PowerShell 5.1 语法检查、`-DryRun` 事务回滚和一次本地合成身份初始化/登录边界复验均通过；密码未写入文件、输出或 Git。
+
 ## 2026-09-02：公开 CI 收口证据
 
 提交 [`c5ad321355a5c9979ada83f72294c70440964cc8`](https://github.com/Eleven617/mall-ai-after-sales-platform/commit/c5ad321355a5c9979ada83f72294c70440964cc8) 已在 GitHub `main` 真实触发并通过两个独立工作流：

@@ -4,6 +4,20 @@
 
 > 说明：本文件保留最终升级阶段的一轮较广产品验收快照。公开发布准备阶段另有一轮最小复核，使用的定向测试选择不同，结果见 [公开发布记录](PUBLIC_RELEASE_RECORD.md)。两组计数不能相加，也不代表生产验收。
 
+## 2026-09-02：真实网页截图与本地演示入口
+
+本机 Docker Compose 的网站代理页面由 Edge 无头浏览器实际打开并截图；使用合成身份 `localDemoCustomerA`、`localDemoOperations`、`aiQualityDeveloper`，没有读取或保存浏览器已有会话。截图文件为：
+
+| 文件 | 页面与可见证据 |
+| --- | --- |
+| [`docs/assets/customer-policy-conversation.png`](assets/customer-policy-conversation.png) | 客户政策咨询；公开回答可见，RAG 内部字段不可见。 |
+| [`docs/assets/operations-handoff-overview.png`](assets/operations-handoff-overview.png) | 运营转人工概览；窗口、去重总数、类别次数和百分比由后端聚合。 |
+| [`docs/assets/quality-evaluation-dashboard.png`](assets/quality-evaluation-dashboard.png) | 质量页面；`contract_mock` 版本化合成评测显示 17/17。 |
+
+三张图均为 1440×1000 PNG，数据为本机合成数据，不是生产数据或线上用户截图。视频演示仍未制作。
+
+本轮还修复并验证了 Windows PowerShell 5.1 下的 `Initialize-LocalDemoAccess.ps1`：Docker SQL 不再依赖容易被原生参数拆分的引号脚本，Python 哈希程序通过标准输入执行，脚本源文件使用 UTF-8 BOM 以保留中文合成标签。新增 `tests/test_local_demo_access_script_contract.py` 防止该入口回归；本机 `-DryRun` 与实际本地身份边界验证通过。
+
 ## 公开 CI 收口（2026-09-02）
 
 本节是与下方历史本机/Docker 快照分开的新证据。提交 [`c5ad321355a5c9979ada83f72294c70440964cc8`](https://github.com/Eleven617/mall-ai-after-sales-platform/commit/c5ad321355a5c9979ada83f72294c70440964cc8) 的远程 GitHub Actions 已成功：[`mall-ci` #33607689472](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/33607689472)、[`quality-evaluation` #33607689443](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/33607689443)。
