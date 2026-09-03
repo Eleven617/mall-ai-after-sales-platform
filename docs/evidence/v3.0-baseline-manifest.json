@@ -1,6 +1,40 @@
 {
   "schemaVersion": "v3.0-baseline.v1",
-  "status": "generated-by-script-after-verification",
-  "source": "mall-ai-service/scripts/generate_v3_baseline_manifest.py",
-  "note": "Run the generator after the tested commit; this placeholder is replaced by the release preflight record and contains no credentials or customer data."
+  "generatedAtUtc": "2026-09-03T06:52:52+00:00",
+  "rootCommit": "0c355b079b4ae7a49dde40469d1d37221610caf2",
+  "gitStatusClean": true,
+  "javaSource": {
+    "strategy": "vendored-source-with-upstream-base-and-local-patch-boundary",
+    "nestedWorktreeCommit": "d9501e97a78eb2bb0ae8eaa273eeb1cfc7c5d386",
+    "upstream": "macrozheng/mall"
+  },
+  "environment": {
+    "python": "3.12.13",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "node": "v24.18.0",
+    "npm": "11.16.0",
+    "java": "java version \"11.0.24\" 2024-07-16 LTS",
+    "maven": "Apache Maven 3.9.12 (848fbb4bf2d427b72bdb2471c22fced7ebd9a7a1)",
+    "docker": "Docker version 29.6.2, build dfc4efb"
+  },
+  "fixtures": {
+    "releaseManifest": "evals/v3/release-manifest.json",
+    "releaseManifestSha256": "d9fc72be81e2f67330710052c03287d49677bf7eb6f54eed51b87c01db2ac1ad"
+  },
+  "verificationCommands": [
+    "python -m compileall -q app",
+    "python -m pytest --collect-only -q",
+    "python -m pytest -q",
+    "python scripts/run_v3_release_preflight.py --json",
+    "npm ci && npm run build",
+    "mvn -pl mall-portal -am -DskipTests=false test",
+    "mvn -pl mall-admin -am -DskipTests=false test",
+    "docker compose --env-file .env.example config --quiet"
+  ],
+  "scope": {
+    "data": "synthetic/local only",
+    "liveModel": "not run by default CI",
+    "productionClaims": false,
+    "externalFulfillment": "not connected"
+  }
 }
