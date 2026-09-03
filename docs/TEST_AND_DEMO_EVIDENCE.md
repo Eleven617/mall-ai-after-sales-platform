@@ -1,5 +1,14 @@
 # 测试与演示证据
 
+## GitHub Actions 远程 CI（2026-09-03，提交 `911203ba9f84fd6796cce7c1369fc32251aca98a`）
+
+| 工作流 | 真实运行 | 结果 | 范围 |
+| --- | --- | --- | --- |
+| `mall-ci` | [33745227927](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/33745227927) | **success** | Python、Java、Web、Compose contract、dependency-and-secret-risk 五个 job 均 success |
+| `quality-evaluation` | [33745227870](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/33745227870) | **success** | 质量合同、任务编排、RAG 合同与开发者页面构建 job success |
+
+远程 workflow 的具体命令以 [.github/workflows/ci.yml](../.github/workflows/ci.yml) 和 [.github/workflows/quality-evaluation.yml](../.github/workflows/quality-evaluation.yml) 为准。本机等价命令的分项结果为：FastAPI `343 passed`、`7 subtests passed`；Java portal `13/13`、admin `6/6`；Vue `npm run build` 成功；OSV v2 直接清单扫描无未处理结果。远程 job 的 success 与本机数量分开记录，不能相加。
+
 ## Mall v3.0 发布预检（2026-09-03，本机 deterministic）
 
 | 范围 | 实际结果 | 口径 |
@@ -7,7 +16,7 @@
 | v3 manifest | `478` 条 deterministic、`36` 条 live synthetic、`12` 个性能 Profile；hash 校验通过 | 只验证清单完整性，不把 live/E2E/Java 现场冒充已运行 |
 | v3 release preflight | **478/478** 注册 Case、**8/8** 代表性 Runtime 分支通过 | 无真实模型、无业务写入 |
 | 新增回归测试 | `tests/test_release_manifest.py` + `tests/test_release_evaluation.py`：**23 passed**（与全量计数分开） | 覆盖重复 ID、fixture 篡改、跳过开关、空断言和运行时失败码 |
-| CI 接线 | `ci.yml` 与 `quality-evaluation.yml` 均先 compile/collect，再执行 manifest/preflight | 远程是否通过以本次提交后的 Actions 为准 |
+| CI 接线 | `ci.yml` 与 `quality-evaluation.yml` 均先 compile/collect，再执行 manifest/preflight | 本次提交后的远程运行已通过，链接见上方 |
 
 命令：
 
@@ -101,7 +110,7 @@ Pop-Location
 ## 尚未宣称完成的项
 
 - `live_model_synthetic` 已在本轮手动执行并通过 3 条合成案例；它不是 CI、客户请求或线上模型泛化评测，且 Provider 未返回可用 Token 数，不能据此声称成本或普遍准确率。
-- `.github/workflows/ci.yml` 与 `quality-evaluation.yml` 已具备本地可审查质量门，但本根目录当前不是 Git 仓库，且没有本轮远程 GitHub Actions 运行记录。
+- `.github/workflows/ci.yml` 与 `quality-evaluation.yml` 的本次远程运行已成功；后续提交仍需重新查看对应 Actions，不能把一次成功外推为所有未来版本都通过。
 - 本机 Docker/合成数据/定向测试不证明生产部署、独立安全审计、真实支付/仓储/物流/维修接入、生产 QPS/P95/SLA 或模型对所有输入的准确率。
 
 ## 复验命令

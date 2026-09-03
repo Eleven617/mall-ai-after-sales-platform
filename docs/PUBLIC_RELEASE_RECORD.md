@@ -1,14 +1,25 @@
 # 公开发布记录
 
+## 2026-09-03 — GitHub Actions 远程门禁验证（提交 `911203ba9f84fd6796cce7c1369fc32251aca98a`）
+
+本次提交后的远程运行已实际完成，不能用本机结果替代：
+
+| 工作流 | 运行 | 结果 | Job 结果 |
+| --- | --- | --- | --- |
+| `mall-ci` | [33745227927](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/33745227927) | **success** | Python、Java、Web、Compose contract、dependency-and-secret-risk 全部 success |
+| `quality-evaluation` | [33745227870](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/33745227870) | **success** | isolated-quality-evaluation success |
+
+工作流执行的门禁命令已提交在 [.github/workflows/ci.yml](../.github/workflows/ci.yml) 和 [.github/workflows/quality-evaluation.yml](../.github/workflows/quality-evaluation.yml)。本机等价复核记录为：FastAPI `343 passed`、`7 subtests passed`；Java portal 定向 `13/13`、admin 定向 `6/6`；Vue `npm run build` 成功；OSV v2 直接清单扫描 `No issues found`。这些是分项证据，不能相加，也不代表生产 SLA 或真实用户准确率。
+
 ## 2026-09-03 — Mall v3.0 Runtime 发布硬化（本地证据）
 
 本次在既有 v3 Runtime 基础上补齐了可追溯的 release manifest、确定性发布预检、CI 接线和公开证据入口。`evals/v3/release-manifest.json` 当前包含 **478 条唯一 deterministic Case、36 条手工 live-synthetic Case、12 个性能 Profile**；其分类数量、fixture hash、预算、可执行断言和禁止跳过字段由 `mall-ai-service/scripts/validate_v3_release_manifest.py` 校验。
 
-截至本记录生成时，本机预检实际结果为：**478/478 注册 Case、8/8 代表性 Task Runtime 安全冒烟通过**，无模型 Key、无 Java/数据库/业务写入。新增的 `tests/test_release_manifest.py` 与 `tests/test_release_evaluation.py` 也纳入 FastAPI 全量回归。该结果是本机 deterministic/合成证据，不是 GitHub Actions 或生产能力结论；远程状态须以本次提交对应的 Actions 页面为准。
+截至本记录生成时，本机预检实际结果为：**478/478 注册 Case、8/8 代表性 Task Runtime 安全冒烟通过**，无模型 Key、无 Java/数据库/业务写入。新增的 `tests/test_release_manifest.py` 与 `tests/test_release_evaluation.py` 也纳入 FastAPI 全量回归。该结果是本机 deterministic/合成证据；远程门禁结果另见上方真实 Actions 运行记录。
 
 发布集成方式为单一根仓库快照：不提交 `mall2/.git`，保留根目录及 `mall2/LICENSE`、NOTICE、上游归属，并在 [UPSTREAM.md](../UPSTREAM.md) 说明 `macrozheng/mall` 二次开发边界。未提交 `.env`、密码、Token、模型权重、Chroma 索引、客户数据或完整 Trace。
 
-更新时间：2026-09-01。本文记录本仓库公开发布准备阶段实际完成的工作，严格区分已验证事实、已知边界和待补材料。账号密码、API Key、Token、真实订单、真实客户对话、Docker 卷和本地模型/索引均不在仓库或本文中。
+历史发布准备记录更新时间：2026-09-01。本文记录本仓库公开发布准备阶段实际完成的工作，严格区分已验证事实、已知边界和待补材料。账号密码、API Key、Token、真实订单、真实客户对话、Docker 卷和本地模型/索引均不在仓库或本文中。
 
 ## 发布范围
 
@@ -36,7 +47,7 @@
 ## 已知边界与未验证项
 
 1. Java 全量 Maven 测试未作为本次“全部通过”结论。历史 `MallPortalApplicationTests` 需要可达的 MySQL 集成环境，在本机曾因 `Public Key Retrieval is not allowed` 失败；这不是已通过的业务单测，故只报告上述显式定向测试结果。
-2. GitHub Actions 工作流已随代码提交，但本次未取得远端运行状态：GitHub API 查询遭遇速率限制。因此不能写“CI 已绿”。
+2. 本次提交对应的 `mall-ci` 与 `quality-evaluation` 已取得远端成功运行记录（见本文顶部链接）。这只证明该提交在 GitHub runner 上通过了当前门禁，不等于生产部署、生产 SLA 或真实模型泛化能力。
 3. 本地 Docker 验收保留已有命名卷和合成演示数据；没有清库、删卷、删历史日志或模拟外部支付/仓储/物流/维修成功。
 4. 真实模型调用需要由使用者在本机配置自己的密钥和可达网络；无模型配置时系统会安全停止模型相关请求，仍可做结构与权限验证。
 5. 清理后的 `main` 不再包含旧认证值的可达提交；已经获取过旧提交的本地克隆、缓存或镜像不受 Git 历史重写控制。若该旧值曾在某个真实环境中有效，应由该环境维护者单独轮换对应的认证签名/会话密钥。

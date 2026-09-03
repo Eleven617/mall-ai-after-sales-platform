@@ -1,5 +1,8 @@
 # Mall v3.0｜可信电商 Agent Runtime
 
+[![mall-ci](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/workflows/ci.yml)
+[![quality-evaluation](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/workflows/quality-evaluation.yml/badge.svg?branch=main)](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/workflows/quality-evaluation.yml)
+
 面向复杂商品、订单与售后目标的本地可运行演示：Agent 形成计划、发现版本化 Skill、执行只读事实调查、观察结果并在必要时重规划，再把需要副作用的行动交给 Java 领域服务确认和提交。
 
 ## 30 秒了解项目
@@ -21,7 +24,20 @@ flowchart LR
   R --> X[AgentOps / Eval\n合成合同与回放]
 ```
 
-真实验证范围是本机、合成数据、自动化测试和显式的模型合成评测；不宣称生产 SaaS、真实用户准确率、生产 SLA，也未接入真实支付、仓储、物流或维修系统。项目基于 `macrozheng/mall` 二次开发，上游归属和许可证见 [UPSTREAM.md](UPSTREAM.md)。
+真实验证范围是本机、合成数据、自动化测试和显式的模型合成评测；截至提交 `911203b`，`mall-ci` 与 `quality-evaluation` 也有真实成功的 GitHub Actions 运行记录。不宣称生产 SaaS、真实用户准确率、生产 SLA，也未接入真实支付、仓储、物流或维修系统。项目基于 `macrozheng/mall` 二次开发，上游归属和许可证见 [UPSTREAM.md](UPSTREAM.md)。
+
+## 真实运行截图
+
+以下截图来自本地 Compose 演示，使用合成账号和合成数据；图片不代表线上部署或生产数据。
+
+![客户政策咨询与售后对话](docs/assets/customer-policy-conversation.png)
+客户侧政策咨询与安全回答，业务写入仍需后续确认。
+
+![运营转人工概览](docs/assets/operations-handoff-overview.png)
+运营侧只读的脱敏转人工聚合与时间窗概览。
+
+![AI 质量评测页面](docs/assets/quality-evaluation-dashboard.png)
+开发者侧查看 contract_mock 评测结果、合同差异和人工审批状态。
 
 ## 产品能力
 
