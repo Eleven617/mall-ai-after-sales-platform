@@ -115,9 +115,7 @@ jobs:
           # scan each direct manifest/lockfile explicitly and keep the
           # time-bounded Java 8 exception visible in osv-scanner.toml.
           scan-args: |
-            scan source
             --config=./osv-scanner.toml
-            --no-resolve
             --lockfile=mall-ai-service/requirements.txt
             --lockfile=mall-ai-service/requirements-ci.txt
             --lockfile=mall-ai-service/labs/langgraph_order_exception/requirements.txt
