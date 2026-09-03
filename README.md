@@ -24,7 +24,7 @@ flowchart LR
   R --> X[AgentOps / Eval\n合成合同与回放]
 ```
 
-真实验证范围是本机、合成数据、自动化测试和显式的模型合成评测；截至提交 `911203b`，`mall-ci` 与 `quality-evaluation` 也有真实成功的 GitHub Actions 运行记录。不宣称生产 SaaS、真实用户准确率、生产 SLA，也未接入真实支付、仓储、物流或维修系统。项目基于 `macrozheng/mall` 二次开发，上游归属和许可证见 [UPSTREAM.md](UPSTREAM.md)。
+真实验证范围是本机、合成数据、自动化测试和显式的模型合成评测；截至当前 `main` 提交，`mall-ci` 与 `quality-evaluation` 均有真实成功的 GitHub Actions 运行记录。不宣称生产 SaaS、真实用户准确率、生产 SLA，也未接入真实支付、仓储、物流或维修系统。项目基于 `macrozheng/mall` 二次开发，上游归属和许可证见 [UPSTREAM.md](UPSTREAM.md)。
 
 ## 真实运行截图
 

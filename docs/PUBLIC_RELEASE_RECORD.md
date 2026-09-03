@@ -1,13 +1,13 @@
 # 公开发布记录
 
-## 2026-09-03 — GitHub Actions 远程门禁验证（提交 `911203ba9f84fd6796cce7c1369fc32251aca98a`）
+## 2026-09-03 — GitHub Actions 远程门禁验证（最终提交 `d7c8f9bf4354f05009b9f83c793a3f296619bf66`）
 
 本次提交后的远程运行已实际完成，不能用本机结果替代：
 
 | 工作流 | 运行 | 结果 | Job 结果 |
 | --- | --- | --- | --- |
-| `mall-ci` | [33745227927](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/33745227927) | **success** | Python、Java、Web、Compose contract、dependency-and-secret-risk 全部 success |
-| `quality-evaluation` | [33745227870](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/33745227870) | **success** | isolated-quality-evaluation success |
+| `mall-ci` | [33746095478](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/33746095478) | **success** | Python、Java、Web、Compose contract、dependency-and-secret-risk 全部 success |
+| `quality-evaluation` | [33746095446](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/33746095446) | **success** | isolated-quality-evaluation success |
 
 工作流执行的门禁命令已提交在 [.github/workflows/ci.yml](../.github/workflows/ci.yml) 和 [.github/workflows/quality-evaluation.yml](../.github/workflows/quality-evaluation.yml)。本机等价复核记录为：FastAPI `343 passed`、`7 subtests passed`；Java portal 定向 `13/13`、admin 定向 `6/6`；Vue `npm run build` 成功；OSV v2 直接清单扫描 `No issues found`。这些是分项证据，不能相加，也不代表生产 SLA 或真实用户准确率。
 

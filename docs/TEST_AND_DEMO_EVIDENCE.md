@@ -1,11 +1,11 @@
 # 测试与演示证据
 
-## GitHub Actions 远程 CI（2026-09-03，提交 `911203ba9f84fd6796cce7c1369fc32251aca98a`）
+## GitHub Actions 远程 CI（2026-09-03，最终提交 `d7c8f9bf4354f05009b9f83c793a3f296619bf66`）
 
 | 工作流 | 真实运行 | 结果 | 范围 |
 | --- | --- | --- | --- |
-| `mall-ci` | [33745227927](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/33745227927) | **success** | Python、Java、Web、Compose contract、dependency-and-secret-risk 五个 job 均 success |
-| `quality-evaluation` | [33745227870](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/33745227870) | **success** | 质量合同、任务编排、RAG 合同与开发者页面构建 job success |
+| `mall-ci` | [33746095478](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/33746095478) | **success** | Python、Java、Web、Compose contract、dependency-and-secret-risk 五个 job 均 success |
+| `quality-evaluation` | [33746095446](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/33746095446) | **success** | 质量合同、任务编排、RAG 合同与开发者页面构建 job success |
 
 远程 workflow 的具体命令以 [.github/workflows/ci.yml](../.github/workflows/ci.yml) 和 [.github/workflows/quality-evaluation.yml](../.github/workflows/quality-evaluation.yml) 为准。本机等价命令的分项结果为：FastAPI `343 passed`、`7 subtests passed`；Java portal `13/13`、admin `6/6`；Vue `npm run build` 成功；OSV v2 直接清单扫描无未处理结果。远程 job 的 success 与本机数量分开记录，不能相加。
 
