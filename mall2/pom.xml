@@ -32,6 +32,24 @@
         <java.version>1.8</java.version>
         <skipTests>true</skipTests>
         <!--
+            Java 8-compatible security patch line.  Spring Boot 2.7.18 is
+            intentionally retained for this legacy demo; dependencies with
+            available same-generation fixes are pinned here.  Remaining
+            advisories that require the Boot 3/Java 17 migration are tracked
+            as explicit, time-bounded exceptions in osv-scanner.toml.
+        -->
+        <assertj.version>3.27.7</assertj.version>
+        <jackson-bom.version>2.18.9</jackson-bom.version>
+        <json-path.version>2.9.0</json-path.version>
+        <log4j2.version>2.25.5</log4j2.version>
+        <logback.version>1.2.13</logback.version>
+        <micrometer.version>1.15.12</micrometer.version>
+        <netty.version>4.1.136.Final</netty.version>
+        <snakeyaml.version>2.0</snakeyaml.version>
+        <spring-framework.version>5.3.39</spring-framework.version>
+        <tomcat.version>9.0.121</tomcat.version>
+        <xmlunit2.version>2.10.0</xmlunit2.version>
+        <!--
             Docker image builds are opt-in. A normal Maven package is a Java
             compile/test artifact and must not require a reachable Docker
             daemon. Enable image building explicitly with -Pdocker-image.
@@ -42,6 +60,7 @@
         <druid.version>1.2.14</druid.version>
         <hutool.version>5.8.47</hutool.version>
         <springfox-swagger.version>3.0.0</springfox-swagger.version>
+        <classgraph.version>4.8.112</classgraph.version>
         <swagger-models.version>1.6.0</swagger-models.version>
         <swagger-annotations.version>1.6.0</swagger-annotations.version>
         <mybatis-generator.version>1.4.1</mybatis-generator.version>
@@ -143,6 +162,13 @@
                 <groupId>io.springfox</groupId>
                 <artifactId>springfox-boot-starter</artifactId>
                 <version>${springfox-swagger.version}</version>
+            </dependency>
+            <!-- Springfox brings ClassGraph transitively; keep its XML parser
+                 on the patched Java 8-compatible release. -->
+            <dependency>
+                <groupId>io.github.classgraph</groupId>
+                <artifactId>classgraph</artifactId>
+                <version>${classgraph.version}</version>
             </dependency>
             <!--解决Swagger访问主页时的NumberFormatException问题-->
             <dependency>

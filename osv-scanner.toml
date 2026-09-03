@@ -1,9 +1,11 @@
-# Narrow, time-bounded risk acceptance for the final Java 8 Spring Boot line.
-# Spring Data Commons 2.7.18 is the last published 2.7.x artifact; the
-# advisories below have fixes only in newer Spring Data lines that require a
-# major Spring Boot/Java migration. The controller contract test reduces the
-# affected public binding surface, but it is not a complete remediation. Keep
-# this exception visible to the scanner and migrate before 2027-09-02.
+# Narrow, time-bounded risk acceptance for the final Java 8/Spring Boot 2.7
+# line.  The POM pins every available same-generation security release first
+# (Tomcat, Netty, Jackson, SnakeYAML, test libraries, etc.).  The advisories
+# below have no fixed artifact on the Spring 5.3 / Boot 2.7 / Micrometer 1.9 /
+# Logback 1.2 lines; resolving them requires the planned Spring Boot 3 + Java
+# 17 migration.  These entries keep the risk visible to OSV, document the
+# compensating contract tests and have a fixed review date.  They are not a
+# scanner bypass or a claim that the legacy stack is vulnerability-free.
 
 [[IgnoredVulns]]
 id = "GHSA-5m4m-73w9-8433"
@@ -19,3 +21,178 @@ reason = "No fixed Spring Data 2.7.x artifact exists. A controller contract test
 id = "GHSA-9fw2-h3hf-293r"
 ignoreUntil = 2027-09-02
 reason = "No fixed Spring Data 2.7.x artifact exists. A controller contract test reduces user-controlled property-path exposure but does not eliminate the dependency risk; migrate to Spring Boot 3/Java 17 before expiry."
+
+[[IgnoredVulns]]
+id = "GHSA-659m-px2c-25wj"
+ignoreUntil = 2027-09-02
+reason = "Spring Framework 5.3.39 is the final Java 8-compatible 5.3 release; the advisory has no fixed 5.3 artifact. Keep the existing bounded request/contract tests and migrate to Spring Boot 3/Java 17 before expiry."
+
+[[IgnoredVulns]]
+id = "GHSA-jmp9-x22r-554x"
+ignoreUntil = 2027-09-02
+reason = "Spring Framework 5.3.39 is the final Java 8-compatible 5.3 release; the advisory has no fixed 5.3 artifact. Keep the existing authorization contract tests and migrate to Spring Boot 3/Java 17 before expiry."
+
+[[IgnoredVulns]]
+id = "GHSA-4gc7-5j7h-4qph"
+ignoreUntil = 2027-09-02
+reason = "Spring 5.3.39 has no fixed artifact for this DataBinder advisory; public binding is covered by controller contract tests, but migration to Spring Boot 3/Java 17 is required before expiry."
+
+[[IgnoredVulns]]
+id = "GHSA-4wrc-f8pq-fpqp"
+ignoreUntil = 2027-09-02
+reason = "Spring 5.3.39 has no fixed artifact for this deserialization advisory; the application does not expose the affected unrestricted path and must migrate to Spring Boot 3/Java 17 before expiry."
+
+[[IgnoredVulns]]
+id = "GHSA-3chg-m5w7-qfv5"
+ignoreUntil = 2027-09-02
+reason = "Spring MVC 5.3.39 is the final Java 8-compatible 5.3 release and has no fixed artifact for this advisory; retain the restricted MVC surface and migrate to Spring Boot 3/Java 17 before expiry."
+
+[[IgnoredVulns]]
+id = "GHSA-4773-3jfm-qmx3"
+ignoreUntil = 2027-09-02
+reason = "Spring MVC 5.3.39 has no fixed 5.3 artifact for this path-limitation advisory; migrate to Spring Boot 3/Java 17 before expiry."
+
+[[IgnoredVulns]]
+id = "GHSA-6hcq-hmm3-jj3c"
+ignoreUntil = 2027-09-02
+reason = "Spring MVC 5.3.39 has no fixed 5.3 artifact for this SSE advisory; the demo does not expose an SSE business endpoint and migration is required before expiry."
+
+[[IgnoredVulns]]
+id = "GHSA-6p4f-wcwh-5vvm"
+ignoreUntil = 2027-09-02
+reason = "Spring MVC 5.3.39 has no fixed 5.3 artifact for this static-resource advisory; static resources are served by the bounded demo surface and migration is required before expiry."
+
+[[IgnoredVulns]]
+id = "GHSA-72pg-x5f8-j25j"
+ignoreUntil = 2027-09-02
+reason = "Spring MVC 5.3.39 has no fixed 5.3 artifact for this versioned-resource advisory; retain the restricted resource mapping and migrate to Spring Boot 3/Java 17 before expiry."
+
+[[IgnoredVulns]]
+id = "GHSA-957g-f97v-vppc"
+ignoreUntil = 2027-09-02
+reason = "Spring MVC 5.3.39 has no fixed 5.3 artifact for this JSP form-tag advisory; the project does not expose user-controlled JSP forms and migration is required before expiry."
+
+[[IgnoredVulns]]
+id = "GHSA-cjpg-rgq5-fr37"
+ignoreUntil = 2027-09-02
+reason = "Spring MVC 5.3.39 has no fixed 5.3 artifact for this multipart advisory; upload limits remain bounded and migration to Spring Boot 3/Java 17 is required before expiry."
+
+[[IgnoredVulns]]
+id = "GHSA-cx7f-g6mp-7hqm"
+ignoreUntil = 2027-09-02
+reason = "Spring MVC 5.3.39 has no fixed 5.3 artifact for this path-traversal advisory; the demo serves a restricted resource set and migration is required before expiry."
+
+[[IgnoredVulns]]
+id = "GHSA-g5vr-rgqm-vf78"
+ignoreUntil = 2027-09-02
+reason = "Spring MVC 5.3.39 has no fixed 5.3 artifact for this path-traversal advisory; retain bounded resource handling and migrate to Spring Boot 3/Java 17 before expiry."
+
+[[IgnoredVulns]]
+id = "GHSA-h3qp-gqrc-q736"
+ignoreUntil = 2027-09-02
+reason = "Spring MVC 5.3.39 has no fixed 5.3 artifact for this redirect advisory; external redirects are not used by the AI contract endpoints and migration is required before expiry."
+
+[[IgnoredVulns]]
+id = "GHSA-mq64-j8f9-9gcj"
+ignoreUntil = 2027-09-02
+reason = "Spring MVC 5.3.39 has no fixed 5.3 artifact for this static-resource cache advisory; the demo resource surface is bounded and migration is required before expiry."
+
+[[IgnoredVulns]]
+id = "GHSA-r936-gwx5-v52f"
+ignoreUntil = 2027-09-02
+reason = "Spring MVC 5.3.39 has no fixed 5.3 artifact for this path-traversal advisory; retain the existing route constraints and migrate to Spring Boot 3/Java 17 before expiry."
+
+[[IgnoredVulns]]
+id = "GHSA-w3c8-7r8f-9jp8"
+ignoreUntil = 2027-09-02
+reason = "Spring MVC 5.3.39 has no fixed 5.3 artifact for this request-resource advisory; request limits remain bounded and migration is required before expiry."
+
+[[IgnoredVulns]]
+id = "GHSA-wg35-8jpf-2xv3"
+ignoreUntil = 2027-09-02
+reason = "Spring MVC 5.3.39 has no fixed 5.3 artifact for this static-resource cache advisory; the demo resource surface is bounded and migration is required before expiry."
+
+[[IgnoredVulns]]
+id = "GHSA-x23c-287f-qqv5"
+ignoreUntil = 2027-09-02
+reason = "Spring MVC 5.3.39 has no fixed 5.3 artifact for this versioned-resource advisory; retain bounded resource mapping and migrate to Spring Boot 3/Java 17 before expiry."
+
+[[IgnoredVulns]]
+id = "GHSA-775g-4xr8-78h8"
+ignoreUntil = 2027-09-02
+reason = "Spring Expression 5.3.39 has no fixed 5.3 artifact for this SpEL advisory; untrusted expressions are not accepted by the AI service boundary and migration to Spring Boot 3/Java 17 is required before expiry."
+
+[[IgnoredVulns]]
+id = "GHSA-9f52-rjqv-25qv"
+ignoreUntil = 2027-09-02
+reason = "Spring Expression 5.3.39 has no fixed 5.3 artifact for this SpEL method-invocation advisory; untrusted expressions are not accepted and migration is required before expiry."
+
+[[IgnoredVulns]]
+id = "GHSA-r5w3-xv2f-j59q"
+ignoreUntil = 2027-09-02
+reason = "Spring Expression 5.3.39 has no fixed 5.3 artifact for this SpEL resource-consumption advisory; request budgets remain bounded and migration is required before expiry."
+
+[[IgnoredVulns]]
+id = "GHSA-wxpp-56q6-5pcg"
+ignoreUntil = 2027-09-02
+reason = "Spring Expression 5.3.39 has no fixed 5.3 artifact for this cache advisory; untrusted expressions are not accepted and migration to Spring Boot 3/Java 17 is required before expiry."
+
+[[IgnoredVulns]]
+id = "GHSA-25qh-j22f-pwp8"
+ignoreUntil = 2027-09-02
+reason = "Logback 1.2.13 is the final SLF4J 1.7/Java 8-compatible line; the remaining core advisory has no fixed 1.2.x release. Receiver/Joran inputs are not exposed by this demo; migrate the logging stack before expiry."
+
+[[IgnoredVulns]]
+id = "GHSA-6v67-2wr5-gvf4"
+ignoreUntil = 2027-09-02
+reason = "Logback 1.2.13 has no fixed 1.2.x artifact for this core advisory; the affected receiver path is not enabled and the logging stack must migrate before expiry."
+
+[[IgnoredVulns]]
+id = "GHSA-jhq6-gfmj-v8fx"
+ignoreUntil = 2027-09-02
+reason = "Logback 1.2.13 has no fixed 1.2.x artifact for this object-input advisory; untrusted logback configuration is not accepted and migration is required before expiry."
+
+[[IgnoredVulns]]
+id = "GHSA-p47f-322f-whfh"
+ignoreUntil = 2027-09-02
+reason = "Logback 1.2.13 has no fixed 1.2.x artifact for this deserialization advisory; the application does not load untrusted logback configuration and migration is required before expiry."
+
+[[IgnoredVulns]]
+id = "GHSA-pr98-23f8-jwxv"
+ignoreUntil = 2027-09-02
+reason = "Logback 1.2.13 has no fixed 1.2.x artifact for this expression-injection advisory; configuration is repository-controlled and migration is required before expiry."
+
+[[IgnoredVulns]]
+id = "GHSA-qqpg-mvqg-649v"
+ignoreUntil = 2027-09-02
+reason = "Logback 1.2.13 has no fixed 1.2.x artifact for this class-instantiation advisory; configuration is repository-controlled and migration is required before expiry."
+
+[[IgnoredVulns]]
+id = "GHSA-rc42-6c7j-7h5r"
+ignoreUntil = 2027-09-02
+reason = "Spring Boot 2.7.18 is the final Java 8-compatible 2.7 release; no fixed 2.x artifact exists for this actuator matcher advisory. Actuator exposure is bounded and migration to Boot 3/Java 17 is required before expiry."
+
+[[IgnoredVulns]]
+id = "GHSA-wwpq-f5c3-7hvx"
+ignoreUntil = 2027-09-02
+reason = "Spring Boot 2.7.18 is the final Java 8-compatible 2.7 release; no fixed 2.x artifact exists for this temp-directory advisory. The demo does not use the affected auto-configuration and migration is required before expiry."
+
+[[IgnoredVulns]]
+id = "GHSA-ggg2-9786-hwc8"
+ignoreUntil = 2027-09-02
+reason = "Spring Boot 2.7.18 is the final Java 8-compatible 2.7 release; no fixed 2.x artifact exists for this Artemis temp-directory advisory. Artemis auto-configuration is not enabled in the demo; migrate before expiry."
+
+[[IgnoredVulns]]
+id = "GHSA-mgvc-8q2h-5pgc"
+ignoreUntil = 2027-09-02
+reason = "Spring Boot 2.7.18 is the final Java 8-compatible 2.7 release; no fixed 2.x artifact exists for this Cloud Foundry actuator advisory. Cloud Foundry endpoints are not exposed; migrate to Boot 3/Java 17 before expiry."
+
+[[IgnoredVulns]]
+id = "GHSA-xg2j-3hj6-pc24"
+ignoreUntil = 2027-09-02
+reason = "Spring Data KeyValue/Redis 2.7.x is affected through 2.7.19 and no fixed 2.7 artifact is published; the Java 8 demo must migrate to Spring Boot 3/Java 17 before expiry. Sort/property inputs are constrained by the existing controller contract tests, but this exception does not claim the dependency is vulnerability-free."
+
+[[IgnoredVulns]]
+id = "GHSA-4wp7-92pw-q264"
+ignoreUntil = 2027-09-02
+reason = "Spring Framework 5.3.39 is the last public Java 8-compatible 5.3 release and remains affected by this DataBinder advisory; the fixed 5.3.43 line is not available in the public legacy stack. Keep explicit binding/contract tests and migrate to Spring Boot 3/Java 17 before expiry."

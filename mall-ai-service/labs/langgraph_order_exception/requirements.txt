@@ -1,2 +1,5 @@
-langgraph==0.6.11
+# Keep the learning lab on the same patched LangGraph major line as the
+# service.  Versions <=1.0.9 are affected by unsafe checkpoint deserialization
+# (PYSEC-2026-83); this lab does not need the legacy API.
+langgraph>=1.2,<2
 python-dotenv>=1.0,<2

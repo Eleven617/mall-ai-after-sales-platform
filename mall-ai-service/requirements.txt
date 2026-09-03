@@ -2,6 +2,10 @@ fastapi
 uvicorn[standard]
 pydantic
 httpx
+# Keep the IDNA parser on a patched, reproducible release.  An exact pin is
+# intentional: OSV's manifest resolver otherwise selects the minimum version
+# allowed by httpx and reports the vulnerable pre-3.15 line.
+idna==3.19
 python-dotenv
 chromadb
 redis>=5.0,<6

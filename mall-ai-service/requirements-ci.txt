@@ -2,3 +2,6 @@
 # install this file as well instead of relying on an image-provided pytest.
 # 9.0.3 includes the upstream fix for GHSA-6w46-j5rx-g56g.
 pytest==9.0.3
+# pytest's dependency range otherwise lets the OSV resolver select Pygments
+# 2.9.0.  Pin the patched release for deterministic CI installation.
+Pygments==2.20.0
