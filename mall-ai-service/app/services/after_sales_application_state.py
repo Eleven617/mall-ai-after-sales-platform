@@ -30,6 +30,16 @@ class AfterSalesPendingStateError(RuntimeError):
     pass
 
 
+class AfterSalesTransactionGateConflictError(AfterSalesPendingStateError):
+    """A second confirmation candidate must never replace the first one.
+
+    Conversation tasks may continue while a proposal/action waits for
+    confirmation. The transaction layer still owns exactly one durable,
+    owner-bound write candidate, so callers must keep their task draft and ask
+    the customer to resolve the existing gate before creating another card.
+    """
+
+
 def owner_fingerprint(authorization: str | None, member_id: int | None = None) -> str:
     """Bind mutable workflow state to the authenticated member, never raw JWT."""
     if member_id is not None:
@@ -122,11 +132,9 @@ def has_pending_after_sales_work(session_id: str) -> bool:
 def save_pending_after_sales_draft(session_id: str, draft: PendingAfterSalesDraft) -> None:
     state = get_conversation_state(session_id)
     state.pending_after_sales_draft = draft
-    state.pending_after_sales_proposal = None
-    state.pending_after_sales_action = None
     state.pending_after_sales_selection = None
     state.pending_after_sales_modification_draft = None
-    state.facts["after_sales_flow_status"] = "collecting_information"
+    _set_non_transaction_status(state, "collecting_information")
     save_conversation_state(state)
 
 
@@ -159,7 +167,7 @@ def clear_pending_after_sales_draft(
         return False
     state = get_conversation_state(session_id)
     state.pending_after_sales_draft = None
-    state.facts.pop("after_sales_flow_status", None)
+    _clear_non_transaction_status(state)
     save_conversation_state(state)
     return True
 
@@ -171,6 +179,10 @@ def save_pending_after_sales_proposal(
     if proposal.session_fingerprint != session_fingerprint(session_id):
         raise AfterSalesPendingStateError("售后确认会话不匹配，请重新发起申请。")
     state = get_conversation_state(session_id)
+    if _has_transaction_gate(state):
+        raise AfterSalesTransactionGateConflictError(
+            "当前已有待确认的售后方案或操作，不能覆盖。"
+        )
     state.pending_after_sales_draft = None
     state.pending_after_sales_proposal = proposal
     state.pending_after_sales_action = None
@@ -211,7 +223,7 @@ def complete_pending_after_sales_proposal(
         return None
     state = get_conversation_state(session_id)
     state.pending_after_sales_proposal = None
-    state.facts.pop("after_sales_flow_status", None)
+    _clear_non_transaction_status(state)
     save_conversation_state(state)
     return proposal
 
@@ -251,6 +263,10 @@ def save_pending_after_sales_action(
     if action.session_fingerprint != session_fingerprint(session_id):
         raise AfterSalesPendingStateError("售后确认会话不匹配，请重新发起操作。")
     state = get_conversation_state(session_id)
+    if _has_transaction_gate(state):
+        raise AfterSalesTransactionGateConflictError(
+            "当前已有待确认的售后方案或操作，不能覆盖。"
+        )
     state.pending_after_sales_draft = None
     state.pending_after_sales_proposal = None
     state.pending_after_sales_action = action
@@ -291,7 +307,7 @@ def complete_pending_after_sales_action(
         return None
     state = get_conversation_state(session_id)
     state.pending_after_sales_action = None
-    state.facts.pop("after_sales_flow_status", None)
+    _clear_non_transaction_status(state)
     save_conversation_state(state)
     return action
 
@@ -364,11 +380,9 @@ def save_pending_after_sales_selection(
         raise AfterSalesPendingStateError("售后选择会话不匹配，请重新发起操作。")
     state = get_conversation_state(session_id)
     state.pending_after_sales_draft = None
-    state.pending_after_sales_proposal = None
-    state.pending_after_sales_action = None
     state.pending_after_sales_selection = selection
     state.pending_after_sales_modification_draft = None
-    state.facts["after_sales_flow_status"] = "awaiting_application_selection"
+    _set_non_transaction_status(state, "awaiting_application_selection")
     save_conversation_state(state)
 
 
@@ -403,7 +417,7 @@ def complete_pending_after_sales_selection(
         return None
     state = get_conversation_state(session_id)
     state.pending_after_sales_selection = None
-    state.facts.pop("after_sales_flow_status", None)
+    _clear_non_transaction_status(state)
     save_conversation_state(state)
     return selection
 
@@ -425,11 +439,9 @@ def save_pending_after_sales_modification_draft(
         raise AfterSalesPendingStateError("售后修改会话不匹配，请重新发起操作。")
     state = get_conversation_state(session_id)
     state.pending_after_sales_draft = None
-    state.pending_after_sales_proposal = None
-    state.pending_after_sales_action = None
     state.pending_after_sales_selection = None
     state.pending_after_sales_modification_draft = draft
-    state.facts["after_sales_flow_status"] = "collecting_modification"
+    _set_non_transaction_status(state, "collecting_modification")
     save_conversation_state(state)
 
 
@@ -464,7 +476,7 @@ def complete_pending_after_sales_modification_draft(
         return None
     state = get_conversation_state(session_id)
     state.pending_after_sales_modification_draft = None
-    state.facts.pop("after_sales_flow_status", None)
+    _clear_non_transaction_status(state)
     save_conversation_state(state)
     return draft
 
@@ -525,8 +537,39 @@ def application_type_label(value: str | None) -> str:
     }.get(value or "", "售后申请")
 
 
+def _has_transaction_gate(state) -> bool:
+    """Return whether a proposal/action already reserves the write gate."""
+
+    now = time.time()
+    return (
+        (
+            state.pending_after_sales_proposal is not None
+            and state.pending_after_sales_proposal.expires_at > now
+        )
+        or (
+            state.pending_after_sales_action is not None
+            and state.pending_after_sales_action.expires_at > now
+        )
+    )
+
+
+def _set_non_transaction_status(state, value: str) -> None:
+    """Do not let task progress overwrite a confirmation marker."""
+
+    if not _has_transaction_gate(state):
+        state.facts["after_sales_flow_status"] = value
+
+
+def _clear_non_transaction_status(state) -> None:
+    """A task may finish while a separate transaction gate remains valid."""
+
+    if not _has_transaction_gate(state):
+        state.facts.pop("after_sales_flow_status", None)
+
+
 __all__ = [
     "AfterSalesPendingStateError",
+    "AfterSalesTransactionGateConflictError",
     "PENDING_AFTER_SALES_ACTION_TTL_SECONDS",
     "PENDING_AFTER_SALES_DRAFT_TTL_SECONDS",
     "PENDING_AFTER_SALES_PROPOSAL_TTL_SECONDS",

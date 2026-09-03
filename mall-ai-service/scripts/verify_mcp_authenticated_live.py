@@ -73,7 +73,7 @@ def main() -> int:
     api_base = web_base + "/api"
     mcp_url = api_base + "/mcp"
     try:
-        with httpx.Client(timeout=45) as client:
+        with httpx.Client(timeout=45, trust_env=False) as client:
             anonymous = client.post(
                 mcp_url,
                 headers=MCP_HEADERS,
@@ -238,7 +238,7 @@ def _bootstrap_disposable_inputs(password: str) -> LiveInputs:
     )
     java_base = os.getenv("MALL_JAVA_BASE_URL", "http://127.0.0.1:8085").rstrip("/")
     try:
-        with httpx.Client(timeout=45) as client:
+        with httpx.Client(timeout=45, trust_env=False) as client:
             order_a = _prepare_account_order(
                 client, java_base, accounts[0], int(os.getenv("MALL_LIVE_DEMO_PRODUCT_ID", "26")), required_stock=2
             )

@@ -47,6 +47,7 @@ AFTER_SALES_INTENTS = {
     "modify_after_sales",
     "follow_up_after_sales",
 }
+AFTER_SALES_FLOW_INTENTS = AFTER_SALES_INTENTS - {"after_sales_policy"}
 
 
 class IntentToolCall(ToolCall):
@@ -96,12 +97,16 @@ class IntentResponse(BaseModel):
             if self.need_tool or self.tool_call is not None:
                 raise ValueError(f"{self.route} 路由不能直接调用工具")
 
-        # The unified graph is the only runtime entry for customer after-sales
-        # intents.  A valid-looking model JSON must not quietly route a policy,
-        # application, cancellation, or follow-up request back to a legacy RAG
-        # or direct-tool path.
-        if self.intent in AFTER_SALES_INTENTS and self.route != "after_sales_flow":
-            raise ValueError("所有售后 intent 必须进入统一售后流程")
+        # A policy consultation is a read-only evidence lookup.  It bypasses
+        # the business workflow so it can be a one-turn detour without
+        # allowing any Java write.  Every other after-sales intent remains
+        # closed to the unified flow; a valid-looking model JSON may not turn
+        # an application, cancellation, modification or follow-up into a
+        # legacy direct-tool call.
+        if self.intent == "after_sales_policy" and self.route != "rag":
+            raise ValueError("售后政策咨询必须进入只读 RAG 路由")
+        if self.intent in AFTER_SALES_FLOW_INTENTS and self.route != "after_sales_flow":
+            raise ValueError("售后业务 intent 必须进入统一售后流程")
 
         if self.intent == "general_chat":
             if self.route != "chat" or self.chat_scope is None:

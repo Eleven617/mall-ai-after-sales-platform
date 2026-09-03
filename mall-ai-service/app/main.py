@@ -2,6 +2,7 @@ from fastapi import FastAPI, Request
 
 from app.routers import (
     authentication,
+    agent_tasks,
     chat,
     customer_service,
     health,
@@ -36,6 +37,7 @@ async def correlation_middleware(request: Request, call_next):
 
 app.include_router(health.router)
 app.include_router(authentication.router)
+app.include_router(agent_tasks.router)
 app.include_router(chat.router)
 app.include_router(intent.router)
 app.include_router(customer_service.router)

@@ -1,8 +1,7 @@
-"""Durable session state, context compaction, and pending tool continuation."""
+"""Durable session state and privacy-safe model context projection."""
 import json
 import time
 from collections.abc import Callable
-from dataclasses import dataclass
 
 from app.config import settings
 from app.schemas.conversation import (
@@ -10,7 +9,7 @@ from app.schemas.conversation import (
     ConversationModelContext,
     ConversationState,
 )
-from app.schemas.tool import ToolCall
+from app.schemas.task_orchestration import TaskModelReference
 from app.services.conversation_store import (
     ConversationStore,
     InMemoryConversationStore,
@@ -25,17 +24,8 @@ ALLOWED_FACT_KEYS = {
     "sku_id",
     "product_hint",
     "return_reason",
-    "pending_tool_status",
     "after_sales_flow_status",
     "after_sales_type",
-}
-
-PENDING_TOOL_CANCEL_MESSAGES = {
-    "取消",
-    "取消查询",
-    "取消当前查询",
-    "不查了",
-    "先不查了",
 }
 
 SUMMARY_SYSTEM_PROMPT = """
@@ -81,6 +71,14 @@ class ConversationManager:
         if state.expires_at and state.expires_at <= time.time():
             self._store.delete(session_id)
             return ConversationState(session_id=session_id)
+        # One-shot cutover: state serialized before task orchestration has no
+        # version field in Pydantic's loaded-field set.  Old pending work cannot
+        # safely be guessed into active/paused slots, so expire only that
+        # short-lived workflow cache.  Submitted Java business records and the
+        # customer-visible active application reference remain untouched.
+        if "task_orchestration_version" not in state.model_fields_set:
+            _expire_legacy_pending_work(state)
+            self.save_state(state)
         return state
 
     def save_state(self, state: ConversationState) -> ConversationState:
@@ -115,10 +113,16 @@ class ConversationManager:
     def model_context(self, session_id: str) -> ConversationModelContext:
         state = self.get_state(session_id)
         return ConversationModelContext(
-            summary=state.summary,
-            facts=dict(state.facts),
-            active_task=_active_task(state),
-            recent_messages=list(state.recent_messages),
+            # The current message is passed separately to P0.  Do not replay
+            # raw historical customer text, identifiers, or server workflow
+            # payloads into a routing-model prompt.  Task snapshots are the
+            # only cross-turn model reference.
+            summary="",
+            facts=_safe_model_facts(state.facts),
+            active_task=_usable_task(state.active_task),
+            paused_task=_usable_task(state.paused_task),
+            transaction_gate=_usable_gate(state.transaction_gate),
+            recent_messages=[],
         )
 
     def _compact_if_needed(self, state: ConversationState) -> None:
@@ -183,7 +187,14 @@ def remember_conversation_facts(session_id: str, **facts: str | None) -> Convers
 def get_conversation_model_context(session_id: str) -> str:
     """Render prior session data as explicitly untrusted model reference context."""
     context = get_conversation_manager().model_context(session_id)
-    if not (context.summary or context.facts or context.active_task or context.recent_messages):
+    if not (
+        context.summary
+        or context.facts
+        or context.active_task
+        or context.paused_task
+        or context.transaction_gate
+        or context.recent_messages
+    ):
         return ""
     return json.dumps(context.model_dump(), ensure_ascii=False)
 
@@ -199,96 +210,6 @@ def save_conversation_state(state: ConversationState) -> ConversationState:
 def delete_conversation_state(session_id: str) -> None:
     """Remove only the short-lived workflow cache for one opaque session key."""
     get_conversation_manager().delete_state(session_id)
-
-
-def save_pending_tool_call(session_id: str, tool_call: ToolCall) -> None:
-    state = get_conversation_state(session_id)
-    state.pending_tool_call = tool_call
-    state.facts["pending_tool_status"] = "awaiting_tool_argument"
-    save_conversation_state(state)
-
-
-def cancel_pending_tool_call(session_id: str, message: str) -> ToolCall | None:
-    """Cancel an explicitly abandoned read-only query without executing it."""
-    normalized_message = message.strip().rstrip("。！？!?").replace(" ", "")
-    if normalized_message not in PENDING_TOOL_CANCEL_MESSAGES:
-        return None
-
-    state = get_conversation_state(session_id)
-    tool_call = state.pending_tool_call
-    if tool_call is None:
-        return None
-
-    state.pending_tool_call = None
-    state.facts.pop("pending_tool_status", None)
-    save_conversation_state(state)
-    return tool_call
-
-
-@dataclass(frozen=True)
-class PendingToolResolution:
-    has_pending: bool = False
-    tool_call: ToolCall | None = None
-    clarification: str | None = None
-
-
-def resolve_pending_tool_call(session_id: str, message: str) -> PendingToolResolution:
-    """Continue a read-only tool only when one identifier is unambiguous."""
-    state = get_conversation_state(session_id)
-    tool_call = state.pending_tool_call
-    if tool_call is None:
-        return PendingToolResolution()
-
-    arguments = dict(tool_call.arguments)
-    if tool_call.name in {"order_service", "logistics_service"}:
-        resolution = extract_order_sn(message)
-        value = arguments.get("order_sn") or resolution.value
-        if resolution.ambiguous:
-            return PendingToolResolution(
-                has_pending=True,
-                tool_call=ToolCall(name=tool_call.name, arguments=arguments),
-                clarification="检测到多个可能的订单编号，请明确回复“订单号：xxxxxxxx”。",
-            )
-        if not value:
-            return PendingToolResolution(
-                has_pending=True,
-                tool_call=ToolCall(name=tool_call.name, arguments=arguments),
-                clarification="请提供订单号；手机号、物流单号等其他数字不能替代订单号。",
-            )
-        arguments["order_sn"] = str(value)
-        state.facts["order_sn"] = str(value)
-    elif tool_call.name == "inventory_service":
-        resolution = extract_sku_id(message)
-        value = arguments.get("sku_id") or resolution.value
-        if resolution.ambiguous:
-            return PendingToolResolution(
-                has_pending=True,
-                tool_call=ToolCall(name=tool_call.name, arguments=arguments),
-                clarification="检测到多个 SKU，请明确说明需要查询的一个 SKU 编码。",
-            )
-        if not value:
-            return PendingToolResolution(
-                has_pending=True,
-                tool_call=ToolCall(name=tool_call.name, arguments=arguments),
-                clarification="请提供一个 SKU 编码，例如 SKU10001。",
-            )
-        arguments["sku_id"] = str(value).upper()
-        state.facts["sku_id"] = str(value).upper()
-    else:
-        return PendingToolResolution(has_pending=True)
-
-    state.pending_tool_call = None
-    state.facts.pop("pending_tool_status", None)
-    save_conversation_state(state)
-    return PendingToolResolution(
-        has_pending=True,
-        tool_call=ToolCall(name=tool_call.name, arguments=arguments),
-    )
-
-
-def pop_pending_tool_call(session_id: str, message: str) -> ToolCall | None:
-    """Backward-compatible helper used by earlier tests and callers."""
-    return resolve_pending_tool_call(session_id, message).tool_call
 
 
 def _should_compact(
@@ -331,14 +252,54 @@ def _summarize_messages(
         return "\n".join(part for part in [existing_summary, *fallback_lines] if part)
 
 
-def _active_task(state: ConversationState) -> str | None:
-    if state.pending_after_sales_proposal is not None:
-        return "after_sales_application_awaiting_confirmation"
-    if state.pending_after_sales_draft is not None:
-        return "after_sales_application_collecting_information"
-    if state.pending_tool_call is not None:
-        return f"awaiting_argument_for_{state.pending_tool_call.name}"
-    return None
+def _safe_model_facts(facts: dict[str, str]) -> dict[str, str]:
+    """Expose only fact-presence signals, never persisted identifiers.
+
+    Java remains the source of truth for the actual values.  The P0 coordinator
+    only needs to know whether a previously verified reference exists.
+    """
+
+    safe: dict[str, str] = {}
+    for key, value in facts.items():
+        if key in {"order_sn", "sku_id"}:
+            safe[f"{key}_present"] = "true" if value else "false"
+        elif key in {"after_sales_flow_status", "after_sales_type"}:
+            safe[key] = value[:80]
+    return safe
+
+
+def _usable_task(task):
+    if task is None or task.expires_at <= time.time():
+        return None
+    return TaskModelReference(
+        kind=task.kind,
+        status=task.status,
+        goal_summary=task.goal_summary,
+        known_slots=dict(task.known_slots),
+        pending_question=task.pending_question,
+        completed_steps=list(task.completed_steps),
+        next_agent_hint=task.next_agent_hint,
+    )
+
+
+def _usable_gate(gate):
+    if gate is None or gate.expires_at <= time.time():
+        return None
+    return gate
+
+
+def _expire_legacy_pending_work(state: ConversationState) -> None:
+    state.pending_tool_call = None
+    state.pending_after_sales_draft = None
+    state.pending_after_sales_proposal = None
+    state.pending_after_sales_action = None
+    state.pending_after_sales_selection = None
+    state.pending_after_sales_modification_draft = None
+    state.task_payloads.clear()
+    state.active_task = None
+    state.paused_task = None
+    state.transaction_gate = None
+    state.facts.pop("after_sales_flow_status", None)
 
 
 def _remember_identifiers(state: ConversationState, message: str) -> None:

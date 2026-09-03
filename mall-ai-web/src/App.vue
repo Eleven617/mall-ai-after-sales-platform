@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, nextTick, ref, watch } from "vue";
+import AgentTaskWorkspace from "./AgentTaskWorkspace.vue";
 
 import {
   createCustomerConversation,
@@ -919,6 +920,12 @@ async function scrollToLatest(): Promise<void> {
         </section>
       </section>
 
+      <AgentTaskWorkspace
+        v-if="currentMember"
+        :authorization="buildAuthorizationHeader(accessToken) || ''"
+        :session-id="sessionId"
+      />
+
       <div class="workspace">
         <aside class="history-sidebar" aria-label="历史会话">
           <div class="history-heading">
@@ -959,6 +966,18 @@ async function scrollToLatest(): Promise<void> {
 
         <section class="chat-panel" aria-label="客服对话">
           <div ref="conversationElement" class="conversation" aria-live="polite">
+            <section
+              v-if="messages.length && messages[messages.length - 1].response?.task"
+              class="task-status-card"
+              aria-label="已暂存任务"
+            >
+              <div>
+                <p class="card-caption">{{ messages[messages.length - 1].response?.task?.task_status === "paused" ? "已暂存任务" : "当前处理任务" }}</p>
+                <h3>{{ messages[messages.length - 1].response?.task?.task_label }}</h3>
+                <p>{{ messages[messages.length - 1].response?.task?.task_hint }}</p>
+              </div>
+              <span class="return-status">{{ messages[messages.length - 1].response?.task?.task_status === "paused" ? "可恢复" : "进行中" }}</span>
+            </section>
             <article v-for="item in messages" :key="item.id" class="message-row" :class="item.role">
               <div v-if="item.role !== 'user'" class="avatar" aria-hidden="true">AI</div>
               <div class="message-stack">
@@ -985,13 +1004,6 @@ async function scrollToLatest(): Promise<void> {
                   <p class="diagnosis-status">{{ diagnosisEvidenceLabel(item.response.diagnosis.evidence_status) }}</p>
                   <div v-if="item.response.diagnosis.allowed_next_steps.length" class="diagnosis-next-steps"><span v-for="step in item.response.diagnosis.allowed_next_steps" :key="step">{{ diagnosisNextStepLabel(step) }}</span></div>
                   <p v-if="item.response.diagnosis.handoff" class="diagnosis-handoff">{{ item.response.diagnosis.handoff.summary }}</p>
-                </section>
-
-                <section v-if="item.response?.pending_action" class="workflow-card pending-card">
-                  <p class="card-caption">待办查询</p><h3>{{ item.response.pending_action.label }}</h3>
-                  <p v-if="item.response.pending_action.resumable">诊断已在当前会话安全暂停。补充所需信息后会继续只读查询；不会创建售后单、退款或修改订单。</p>
-                  <p v-else>补充所需信息后继续查询，或取消当前查询后再咨询其他问题。</p>
-                  <button class="secondary-button" type="button" :disabled="isSending" @click="sendMessage(item.response.pending_action.cancel_message)">取消当前查询</button>
                 </section>
 
                 <section v-if="item.response?.after_sales_draft" class="workflow-card">

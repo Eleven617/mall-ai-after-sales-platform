@@ -64,7 +64,7 @@ def run_agent_result(
     conversation_context: str = "",
     session_id: str | None = None,
     diagnosis: bool = False,
-    diagnosis_require_order_identifier: bool = False,
+    diagnosis_requires_order_facts: bool = False,
 ) -> AgentRunResult:
     """Run a bounded Agent loop and return server-rendered verified facts."""
     context = (tool_context or ToolExecutionContext()).for_skill(
@@ -85,7 +85,7 @@ def run_agent_result(
             generate_fn=generate_with_tools,
             call_tool_fn=call_tool,
             member_id=context.member_id,
-            require_order_identifier=diagnosis_require_order_identifier,
+            requires_order_facts=diagnosis_requires_order_facts,
         )
 
     record_trace("agent", "run_started", trace_session_id)

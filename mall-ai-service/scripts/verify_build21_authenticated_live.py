@@ -68,7 +68,7 @@ def main() -> int:
     api_base = web_base + "/api"
 
     try:
-        with httpx.Client(timeout=45) as client:
+        with httpx.Client(timeout=45, trust_env=False) as client:
             authorization_a = _login(
                 client, api_base, inputs.user_a, inputs.password
             )
@@ -213,7 +213,7 @@ def _bootstrap_disposable_inputs(password: str) -> LiveInputs:
     )
     java_base = os.getenv("MALL_JAVA_BASE_URL", "http://127.0.0.1:8085").rstrip("/")
     try:
-        with httpx.Client(timeout=45) as client:
+        with httpx.Client(timeout=45, trust_env=False) as client:
             order_a = _prepare_account_order(
                 client,
                 java_base,

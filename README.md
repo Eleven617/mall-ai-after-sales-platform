@@ -1,74 +1,35 @@
-# Mall 可信 AI 售后与 AgentOps 平台
+# Mall v3.0｜可信电商 Agent Runtime
 
-> 面向电商售后场景的受控 AI 协同演示：模型负责受限建议，Java 服务始终掌握事实、权限与最终写入。
-
-[![mall-ci](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/workflows/ci.yml)
-[![quality-evaluation](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/workflows/quality-evaluation.yml/badge.svg?branch=main)](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/workflows/quality-evaluation.yml)
+面向复杂商品、订单与售后目标的本地可运行演示：Agent 形成计划、发现版本化 Skill、执行只读事实调查、观察结果并在必要时重规划，再把需要副作用的行动交给 Java 领域服务确认和提交。
 
 ## 30 秒了解项目
 
-- **解决的问题**：把“能聊天”的售后助手变成可核验、可确认、可回放的电商 AI 协同流程。
-- **不是普通聊天机器人**：LLM 仅产生受限 JSON 意图、字段线索或只读下一步；订单事实、JWT、归属、资格、状态机、幂等、事务和最终写入由 Java / Spring Boot 权威服务执行。
-- **受控技术链路**：Vue 公开 DTO → FastAPI / LangGraph 编排 → RAG 政策证据与受控 MCP 只读工具 → Redis 待确认状态 → Java / MySQL Outbox / RabbitMQ 可靠事件。
-- **验证范围**：可在本地用合成数据运行，并有自动化回归、合成 EvalCase 与 GitHub Actions 证据；不是生产 SaaS，未接入真实支付、仓储、维修或真实用户数据。
-- **二次开发边界**：mall2/ 基于 [macrozheng/mall](https://github.com/macrozheng/mall)（Apache-2.0）演进；本项目新增的是受控 AI 售后、评测、人工协同、公开 DTO 与本地演示工程，不把商城底座表述为原创。
+这不是把大模型接到数据库的聊天机器人。Spring Boot / Java `mall2/` 负责 JWT、订单与物流事实、归属、资格、状态机、幂等、MySQL 事务、Outbox 与 RabbitMQ；FastAPI 负责 Task Runtime、LangGraph 必要编排、RAG 证据、Skill 白名单、Context/Memory、评测与安全公开 DTO；Vue 只展示服务端允许的投影。LLM 没有业务库或任意写接口权限。
 
-## 核心闭环
+核心闭环：
 
-~~~mermaid
+```mermaid
 flowchart LR
-    U[客户问题] --> W[Vue：公开 DTO]
-    W --> A[FastAPI：Schema / LangGraph / Redis]
-    A --> L[LLM：受限意图或只读建议]
-    A --> R[RAG：政策证据]
-    A --> J[Java：订单事实 / JWT / 归属 / 状态机 / 幂等]
-    R --> A
-    L --> A
-    J --> P[待确认方案或人工协同]
-    P -->|明确确认 / 受控处理| J
-    J --> T[MySQL 同事务：业务状态 + Outbox]
-    T --> Q[RabbitMQ：可重试、幂等消费]
-    A --> E[脱敏 Trace + 合成 Eval / 回放]
-~~~
+  U[用户目标] --> R[FastAPI Task Runtime]
+  R --> E[Executor Agent\n计划/Skill/观察/重规划]
+  R --> C[Context Curator\n工作与情景记忆]
+  R --> S[版本化 Skill Catalog]
+  S --> J[Java Commerce Gateway\n事实/资格/事务/最终写入]
+  S --> Q[政策 RAG\n版本化证据]
+  J --> O[MySQL Outbox / RabbitMQ]
+  R --> V[Vue Agent Workspace\n安全 DTO/确认卡]
+  R --> X[AgentOps / Eval\n合成合同与回放]
+```
 
-写操作不经过模型直达数据库：创建、取消、修改必须先生成与用户/会话绑定的待确认动作；Java 仍会再次校验身份、归属、合法状态与幂等。
-
-## 真实运行截图
-
-> 2026-09-02 在本机 Docker Compose 获取。截图中的账号、咨询、转人工统计与质量结果均为本地合成演示数据；不包含密码、Token、真实客户信息、RAG chunk/距离或完整内部 Trace。
-
-![客户政策咨询：RAG 只提供政策证据，公开页面不显示内部检索载荷](docs/assets/customer-policy-conversation.png)
-
-*客户统一售后入口：真实政策问答，回答由证据链路支撑，但不把内部检索内容暴露给客户。*
-
-![运营工作台：Java 聚合的转人工概览与最小化事项投影](docs/assets/operations-handoff-overview.png)
-
-*运营只读工作台：统计由 Java 后端聚合，页面不显示客户原话、订单详情或模型内部记录。*
-
-![质量评测工作台：版本化合成 EvalCase 的确定性结果](docs/assets/quality-evaluation-dashboard.png)
-
-*质量开发者页面：使用合成案例运行 contract_mock，不读取生产数据库、真实聊天或业务 Trace。*
-
-## 可信性与项目边界
-
-- FastAPI 不直连商城业务数据库；RAG 只能提供政策证据，不能替代订单/物流/资格事实。
-- 客户、运营、质量开发者、人工售后处理人员使用不同身份、接口与最小数据投影。
-- 依赖或模型不可用、JSON 契约不合法、证据不足时流程安全停止或等待处理，不能凭猜测写入业务数据。
-- 当前证据只覆盖本机、合成数据、定向/回归测试和远程 CI；不声称线上部署、真实用户准确率、吞吐、成本、生产 SLA 或第三方履约成功。
-
-## 快速开始
-
-从干净克隆启动、用自己的本地密码初始化演示身份、准备本地 Embedding 与运行确定性验证的命令都在 [从干净克隆启动](#从干净克隆启动) 与 [测试与演示证据](docs/TEST_AND_DEMO_EVIDENCE.md)。首次真实模型调用需要运行者自己的 DeepSeek Key；不配置 Key 时模型路径会安全停止，仍可验证结构、权限和确定性质量门。
+真实验证范围是本机、合成数据、自动化测试和显式的模型合成评测；不宣称生产 SaaS、真实用户准确率、生产 SLA，也未接入真实支付、仓储、物流或维修系统。项目基于 `macrozheng/mall` 二次开发，上游归属和许可证见 [UPSTREAM.md](UPSTREAM.md)。
 
 ## 产品能力
 
 - 统一售后 Agent：政策咨询、资格核验、新建申请、列表、状态、取消、修改与跟进。
+- 任务感知对话：Agent 结合当前目标、已验证 Artifact 与计划版本决定继续、澄清、重规划或结束；确认卡是独立交易关口，不抢占其他问题。
 - 政策 RAG：本地 embedding 与向量检索只提供政策证据；订单、物流、资格、申请状态始终由 Java 权威接口查询。
-- 受控写入：模型只输出受限结构化意图和字段线索；创建、取消、修改均经 Redis 绑定的待确认动作，再由 Java 复核归属、状态和幂等。
-- 可靠异步：售后与人工案件动作和 Outbox 在同一 MySQL 事务内；RabbitMQ 发布、重复消费和失败队列均有受控处理。
-- 三种职责角色：客户统一售后、运营只读分析、开发者质量评测；另有独立的人工售后处理人员领取和处置复杂案件。
-- AgentOps：版本化 Skill Catalog、脱敏 Trace、合成 EvalCase、确定性合同比较、人工审批的反馈候选和只读 MCP。
-- 人工协同：复杂案件可规则入队、领取、请求补件、核验、处理、结案；客户只能查看自己的公开状态和允许补充的信息。
+- 受控写入：模型只能提出受限 ActionProposal；客户确认后由 Java 复核归属、状态、幂等并写入。
+- AgentOps：版本化 Skill Catalog、脱敏 Trace、Context/Memory、Resolution Critic、合成 EvalCase 与确定性发布门禁。
 
 ## 不可突破的边界
 
@@ -139,6 +100,19 @@ Vue 浏览器
 
 该项目的发布镜像不内置本地模型权重和 Chroma 索引；它们由显式准备脚本在本机生成并通过 Compose 挂载。Dense 是默认检索；可选 Reranker 不会成为首次启动前置条件。
 
+### v3.0 确定性发布预检
+
+不需要模型 Key 或生产服务即可复跑发布清单与运行时安全冒烟：
+
+```powershell
+Push-Location .\mall-ai-service
+.\.venv\Scripts\python.exe scripts\validate_v3_release_manifest.py --json
+.\.venv\Scripts\python.exe scripts\run_v3_release_preflight.py --json
+Pop-Location
+```
+
+预检只覆盖合成 deterministic Case 和代表性运行时分支；36 条 live synthetic、浏览器 E2E、Java/Compose 现场路径必须单独执行并单独记录。完整证据见 [v3.0 发布证据](docs/evidence/v3.0-release-evidence.md)。
+
 ## 本地演示身份：由你自行设置密码
 
 这是“下载后在自己电脑运行”的本地 Demo，不是向所有 GitHub 访客开放同一组线上测试账号。完整 AI 对话需要运行者自己的 DeepSeek Key；不配置 Key 时仍可启动结构和权限验证，但模型请求会安全停止。
@@ -172,7 +146,6 @@ $password = Read-Host "Temporary dry-run password" -AsSecureString
 # 以下命令均从仓库根目录执行
 # FastAPI 全量回归
 Push-Location .\mall-ai-service
-.\.venv\Scripts\python.exe -m pip install -r requirements-ci.txt
 .\.venv\Scripts\python.exe -m pytest -q
 Pop-Location
 
@@ -188,7 +161,7 @@ mvn -pl mall-admin -am "-Dtest=AiServiceOperationsServiceImplTest,AiServiceOpera
 Pop-Location
 
 # Compose 静态合同，不启动或删除容器
-docker compose config --quiet
+docker compose --env-file .env.example config --quiet
 ```
 
 详细的可复核结论和当前未验证项见 [测试与演示证据](docs/TEST_AND_DEMO_EVIDENCE.md)。

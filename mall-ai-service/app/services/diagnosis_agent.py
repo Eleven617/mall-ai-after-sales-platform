@@ -25,10 +25,6 @@ from app.services.fact_presentation_service import (
     build_verified_facts,
     render_verified_facts_summary,
 )
-from app.services.durable_diagnosis import (
-    DiagnosisCheckpointError,
-    begin_durable_diagnosis,
-)
 from app.services.identifier_extraction import IdentifierResolution, extract_order_sn
 from app.services.llm_service import LLMResponse
 from app.services.mall_client import MallOrderNotAccessibleError
@@ -78,7 +74,7 @@ class DiagnosisState(TypedDict, total=False):
     tool_results: list[tuple[str, dict[str, Any]]]
     step: int
     started_at: float
-    require_order_identifier: bool
+    requires_order_facts: bool
     model_answer: str | None
     pending_tool_call: ToolCall | None
     terminal_kind: str | None
@@ -101,10 +97,15 @@ def run_diagnosis_agent(
     call_tool_fn: CallTool,
     conversation_context: str = "",
     member_id: int | None = None,
-    require_order_identifier: bool = False,
+    requires_order_facts: bool = False,
     started_at: float | None = None,
 ) -> AgentRunResult:
-    """Run an ephemeral diagnosis and durably pause only a safe missing-ID gate."""
+    """Run an ephemeral diagnosis and return a normal waiting-input signal.
+
+    Cross-message task persistence is handled by ``TaskOrchestrationService``.
+    Missing identifiers are no longer converted into a default LangGraph
+    interrupt/checkpoint before the user can naturally change topic.
+    """
 
     record_trace("analysis_agent", "run_started", session_id)
     run_started_at = time.perf_counter()
@@ -135,52 +136,20 @@ def run_diagnosis_agent(
         # synthetic quality runner to exercise the bounded timeout branch
         # without sleeping. Customer requests always use the current clock.
         "started_at": time.time() if started_at is None else started_at,
-        "require_order_identifier": require_order_identifier,
+        "requires_order_facts": requires_order_facts,
         "next_node": "agent_decide",
     }
     graph = build_diagnosis_graph(generate_fn, call_tool_fn)
     final_state = graph.invoke(initial_state)
 
     pending_tool_call = final_state.get("pending_tool_call")
-    durable_checkpoint_pending = False
     answer = final_state.get("answer", "暂时无法完成订单诊断，请联系人工客服。")
-    if pending_tool_call is not None:
-        try:
-            checkpoint = begin_durable_diagnosis(
-                session_id=session_id,
-                member_id=member_id,
-                pending_tool_call=pending_tool_call,
-                continuation_mode=(
-                    "order_then_logistics"
-                    if require_order_identifier and pending_tool_call.name == "order_service"
-                    else "single_read"
-                ),
-            )
-        except DiagnosisCheckpointError:
-            # A missing identifier is not a reason to silently fall back to a
-            # non-durable cache.  The customer can retry, but no tool or write
-            # is executed until safe durable state is available again.
-            return AgentRunResult(
-                answer="暂时无法安全保存诊断进度，请稍后重试；系统未执行任何查询或写操作。",
-                verified_facts=final_state.get("verified_facts", []),
-                diagnosis=final_state.get("diagnosis"),
-                policy_sources=final_state.get("policy_sources", []),
-            )
-        if not checkpoint.pending:
-            return AgentRunResult(
-                answer="暂时无法安全保存诊断进度，请稍后重试；系统未执行任何查询或写操作。",
-                verified_facts=final_state.get("verified_facts", []),
-                diagnosis=final_state.get("diagnosis"),
-                policy_sources=final_state.get("policy_sources", []),
-            )
-        durable_checkpoint_pending = True
-        answer = _durable_missing_identifier_prompt(pending_tool_call)
 
     result = AgentRunResult(
         answer=answer,
         verified_facts=final_state.get("verified_facts", []),
         pending_tool_call=pending_tool_call,
-        durable_checkpoint_pending=durable_checkpoint_pending,
+        durable_checkpoint_pending=False,
         diagnosis=final_state.get("diagnosis"),
         policy_sources=final_state.get("policy_sources", []),
     )
@@ -191,7 +160,7 @@ def run_diagnosis_agent(
         duration_ms=int((time.perf_counter() - run_started_at) * 1000),
         result_kind=(
             "pending"
-            if result.durable_checkpoint_pending
+            if result.pending_tool_call
             else "failure"
             if result.diagnosis and result.diagnosis.category == "tool_failure"
             else "success"
@@ -218,63 +187,6 @@ def build_diagnosis_graph(
                 "step": step,
                 "terminal_kind": "timeout",
                 "next_node": "handoff",
-            }
-
-        # Once the bounded intent layer has selected the order-exception Agent,
-        # an order identifier is a factual prerequisite, not an LLM semantic
-        # decision.  Pause before an unnecessary model call so the durable
-        # checkpoint has a deterministic, safe resume point.  Direct/internal
-        # graph users can leave this flag false and retain the original model
-        # planning behaviour.
-        if state.get("require_order_identifier") and not state.get("tool_results"):
-            resolution = extract_order_sn(state.get("user_message", ""))
-            if not resolution.value or resolution.ambiguous:
-                pending = ToolCall(name="order_service", arguments={})
-                record_trace(
-                    "analysis_agent",
-                    "tool_argument_requested",
-                    session_id,
-                    step=step,
-                    node="agent_decide",
-                    tool_name=pending.name,
-                )
-                return {
-                    "step": step,
-                    "pending_tool_call": pending,
-                    "terminal_kind": "missing_identifier",
-                    "next_node": "await_identifier",
-                }
-            # The bounded intent layer has already selected an
-            # order-exception diagnosis, and one unambiguous identifier has
-            # been supplied.  Verifying that order is a fixed factual
-            # prerequisite, not a semantic choice for the model.  Performing
-            # this first prevents a free-form model answer from bypassing the
-            # Java-owned order fact boundary.  Subsequent dependent reads
-            # (logistics, policy and inventory) still use the bounded ReAct
-            # loop below.
-            initial_call = ToolCall(
-                name="order_service",
-                arguments={"order_sn": resolution.value},
-            )
-            initial_key = (
-                f"{initial_call.name}:"
-                f"{json.dumps(initial_call.arguments, ensure_ascii=False, sort_keys=True)}"
-            )
-            record_trace(
-                "analysis_agent",
-                "fixed_fact_prerequisite",
-                session_id,
-                step=step,
-                node="agent_decide",
-                tool_name=initial_call.name,
-            )
-            return {
-                "step": step,
-                "tool_calls": [
-                    {"name": initial_call.name, "arguments": initial_call.arguments}
-                ],
-                "call_counts": {initial_key: 1},
-                "next_node": "execute_tools",
             }
 
         record_trace("analysis_agent", "graph_node_entered", session_id, step=step, node="agent_decide")
@@ -561,7 +473,7 @@ def build_diagnosis_graph(
             order_facts_required=_requires_order_facts(state),
         )
         facts = diagnosis.verified_facts
-        if not facts:
+        if not facts and state.get("requires_order_facts", False):
             record_trace(
                 "analysis_agent",
                 "no_verified_facts_before_final_answer",
@@ -569,16 +481,30 @@ def build_diagnosis_graph(
                 step=state.get("step", 0),
                 node="finalize",
             )
+            # A free-form model sentence is not evidence that an order
+            # investigation has finished.  In particular, some providers may
+            # answer "please provide an order number" instead of proposing the
+            # allow-listed read with an empty argument object.  Treat that
+            # protocol miss as the same ordinary waiting-input state rather
+            # than leaking an unverified answer, creating a handoff, or
+            # incorrectly labelling the run as policy-insufficient.
+            #
+            # This is not a keyword route: the caller already selected the
+            # bounded read-only diagnosis subflow.  The graph only supplies the
+            # deterministic missing prerequisite for that selected subflow.
+            record_trace(
+                "analysis_agent",
+                "missing_identifier_fallback",
+                state["session_id"],
+                step=state.get("step", 0),
+                node="finalize",
+                result_kind="pending",
+            )
             return {
-                "diagnosis": diagnosis.model_copy(
-                    update={
-                        "category": "policy_insufficient",
-                        "evidence_status": "insufficient",
-                    }
+                "pending_tool_call": ToolCall(
+                    name="order_service",
+                    arguments={},
                 ),
-                "answer": "暂未获得足够的业务证据，无法完成订单诊断，请补充订单号或联系人工客服。",
-                "verified_facts": [],
-                "policy_sources": [],
                 "next_node": "finish",
             }
         record_trace(
@@ -900,7 +826,9 @@ def _requires_order_facts(state: DiagnosisState) -> bool:
     """
 
     resolution = extract_order_sn(state.get("user_message", ""))
-    return bool(resolution.value and not resolution.ambiguous) or any(
+    return state.get("requires_order_facts", False) or bool(
+        resolution.value and not resolution.ambiguous
+    ) or any(
         tool_name in {"order_service", "logistics_service"}
         for tool_name, _ in state.get("tool_results", [])
     )
@@ -973,14 +901,6 @@ def _missing_identifier_prompt(tool_call: ToolCall) -> str:
         return "请提供订单号；收到后我会继续完成订单异常诊断。"
     if tool_call.name == "inventory_service":
         return "请提供 SKU 编码；收到后我会继续完成诊断。"
-    return "请补充必要信息后再继续诊断。"
-
-
-def _durable_missing_identifier_prompt(tool_call: ToolCall) -> str:
-    if tool_call.name in {"order_service", "logistics_service"}:
-        return "请提供订单号；收到后会在当前会话继续只读诊断，不会创建售后单、退款或修改订单。"
-    if tool_call.name == "inventory_service":
-        return "请提供 SKU 编码；收到后会在当前会话继续只读诊断，不会创建售后单、退款或修改订单。"
     return "请补充必要信息后再继续诊断。"
 
 

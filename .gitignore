@@ -4,6 +4,7 @@
 # directory so the published repository has one intentional history.
 /.git/
 /mall2/.git/
+/mall2/.git.staging-backup/
 /.claude/
 /.local/
 /.vscode/

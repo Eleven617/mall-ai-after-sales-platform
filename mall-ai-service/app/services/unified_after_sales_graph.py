@@ -48,14 +48,12 @@ from app.services.identifier_extraction import extract_order_sn
 from app.services.diagnosis_agent import run_diagnosis_agent
 from app.services.llm_service import LLMResponse, generate_with_tools
 from app.services.mall_client import MallApiClientError, list_my_after_sales_applications
-from app.services.rag_service import answer_after_sales_question
 from app.services.trace_service import record_trace
 from app.services.tool_context import ToolExecutionContext
 from app.services.tool_registry import call_tool
 
 
 UnifiedIntent = Literal[
-    "after_sales_policy",
     "after_sales_eligibility",
     "apply_after_sales",
     "list_after_sales",
@@ -73,7 +71,7 @@ class UnifiedAfterSalesState(TypedDict, total=False):
     member_id: int | None
     tool_context: ToolExecutionContext
     conversation_context: str
-    require_order_identifier: bool
+    requires_order_facts: bool
     diagnosis_started_at: float | None
     intent_name: str
     resume_only: bool
@@ -94,7 +92,6 @@ def run_unified_after_sales_graph(
     authorization: str | None,
     member_id: int | None,
     intent_name: str,
-    resume_only: bool = False,
 ) -> AfterSalesFlowResult | None:
     """Run one bounded request without giving the model business write access."""
     graph = build_unified_after_sales_graph()
@@ -104,11 +101,8 @@ def run_unified_after_sales_graph(
         "authorization": authorization,
         "member_id": member_id,
         "intent_name": intent_name,
-        "resume_only": resume_only,
     }
     final = graph.invoke(initial)
-    if resume_only and "result" not in final:
-        return None
     result = final.get(
         "result",
         AfterSalesFlowResult(answer="暂时无法处理本次售后请求，请稍后重试或联系人工客服。"),
@@ -116,6 +110,40 @@ def run_unified_after_sales_graph(
     if isinstance(result, AfterSalesFlowResult):
         return result
     return AfterSalesFlowResult(answer="暂时无法处理本次售后请求，请稍后重试或联系人工客服。")
+
+
+def resume_unified_after_sales_task(
+    *,
+    session_id: str,
+    message: str,
+    authorization: str | None,
+    member_id: int | None,
+    resume_from_task: bool = False,
+) -> AfterSalesFlowResult | None:
+    """Continue only a task payload already selected by task-aware P0.
+
+    This function is intentionally not called for a new message before P0.
+    Proposal/action confirmation is a separate transaction gate and never
+    participates in this task continuation list.
+    """
+
+    for handler in (
+        handle_pending_after_sales_modification_draft,
+        _handle_pending_selection,
+    ):
+        result = handler(session_id, message, authorization, member_id)
+        if result is not None:
+            return result
+    result = handle_pending_after_sales_draft(
+        session_id,
+        message,
+        authorization,
+        member_id,
+        resume_from_task=resume_from_task,
+    )
+    if result is not None:
+        return result
+    return None
 
 
 GenerateWithTools = Callable[[list[dict[str, Any]], list[dict[str, Any]]], LLMResponse]
@@ -128,7 +156,7 @@ def run_unified_after_sales_investigation(
     message: str,
     tool_context: ToolExecutionContext,
     conversation_context: str = "",
-    require_order_identifier: bool = True,
+    requires_order_facts: bool = False,
     generate_fn: GenerateWithTools | None = None,
     call_tool_fn: CallTool | None = None,
     diagnosis_started_at: float | None = None,
@@ -152,7 +180,7 @@ def run_unified_after_sales_investigation(
             "member_id": tool_context.member_id,
             "tool_context": tool_context.for_skill("order_exception_diagnosis"),
             "conversation_context": conversation_context,
-            "require_order_identifier": require_order_identifier,
+            "requires_order_facts": requires_order_facts,
             "intent_name": "read_only_investigation",
             "resume_only": False,
             "skip_pending_recovery": True,
@@ -177,32 +205,6 @@ def build_unified_after_sales_graph(
     diagnosis_generate_fn = generate_fn or generate_with_tools
     diagnosis_call_tool_fn = call_tool_fn or call_tool
 
-    def resume_pending(state: UnifiedAfterSalesState) -> dict[str, Any]:
-        session_id = state["session_id"]
-        message = state["message"]
-        authorization = state.get("authorization")
-        member_id = state.get("member_id")
-        record_trace("unified_after_sales", "graph_node_entered", session_id, node="resume_pending")
-
-        # Customer service has already checked pending after-sales work before
-        # it enters the read-only investigation subflow.  Skipping the Redis
-        # probe here keeps its synthetic evaluator variant completely isolated
-        # from customer/session state without changing normal pending recovery.
-        if state.get("skip_pending_recovery"):
-            return {"next_node": "finish" if state.get("resume_only") else "dispatch"}
-
-        for handler in (
-            handle_pending_after_sales_action_confirmation,
-            handle_pending_after_sales_modification_draft,
-            _handle_pending_selection,
-            handle_pending_after_sales_confirmation,
-            handle_pending_after_sales_draft,
-        ):
-            result = handler(session_id, message, authorization, member_id)
-            if result is not None:
-                return {"result": result, "next_node": "finish"}
-        return {"next_node": "finish" if state.get("resume_only") else "dispatch"}
-
     def dispatch(state: UnifiedAfterSalesState) -> dict[str, Any]:
         session_id = state["session_id"]
         intent_name = state.get("intent_name", "")
@@ -213,9 +215,7 @@ def build_unified_after_sales_graph(
             node="dispatch",
             intent=intent_name,
         )
-        if intent_name == "after_sales_policy":
-            result = _policy_result(state["message"])
-        elif intent_name == "read_only_investigation":
+        if intent_name == "read_only_investigation":
             context = state.get("tool_context")
             if context is None:
                 result = AgentRunResult(
@@ -238,7 +238,7 @@ def build_unified_after_sales_graph(
                         generate_fn=diagnosis_generate_fn,
                         call_tool_fn=diagnosis_call_tool_fn,
                         member_id=context.member_id,
-                        require_order_identifier=state.get("require_order_identifier", True),
+                        requires_order_facts=state.get("requires_order_facts", False),
                         started_at=state.get("diagnosis_started_at"),
                     )
                     # A provider failure before any verified fact exists is a
@@ -306,35 +306,13 @@ def build_unified_after_sales_graph(
             )
         return {"result": result, "next_node": "finish"}
 
-    def after_resume(state: UnifiedAfterSalesState) -> str:
-        return state.get("next_node", "finish")
-
     graph = StateGraph(UnifiedAfterSalesState)
-    graph.add_node("resume_pending", resume_pending)
     graph.add_node("dispatch", dispatch)
     graph.add_node("finish", lambda state: {})
-    graph.add_edge(START, "resume_pending")
-    graph.add_conditional_edges(
-        "resume_pending",
-        after_resume,
-        {"dispatch": "dispatch", "finish": "finish"},
-    )
+    graph.add_edge(START, "dispatch")
     graph.add_edge("dispatch", "finish")
     graph.add_edge("finish", END)
     return graph.compile()
-
-
-def _policy_result(message: str) -> AfterSalesFlowResult:
-    policy = answer_after_sales_question(message)
-    if policy.retrieval_unavailable:
-        return AfterSalesFlowResult(
-            answer="售后政策检索服务暂时不可用，暂无法给出可靠结论，请稍后重试或联系人工客服。"
-        )
-    if policy.evidence_verification_unavailable or policy.answer_generation_unavailable:
-        return AfterSalesFlowResult(
-            answer="售后政策证据暂时无法完成核验，暂不提供不可靠的结论，请稍后重试。"
-        )
-    return AfterSalesFlowResult(answer=policy.answer, policy_sources=policy.sources)
 
 
 def _list_result(authorization: str | None) -> AfterSalesFlowResult:

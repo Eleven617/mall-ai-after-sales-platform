@@ -1,54 +1,47 @@
 # 测试与演示证据
 
-更新时间：2026-09-02。本文件只记录实际执行的命令和结果；所有账号、订单、凭据、Token、内部 payload 与 Docker 卷均未写入本文档。
+## Mall v3.0 发布预检（2026-09-03，本机 deterministic）
+
+| 范围 | 实际结果 | 口径 |
+| --- | --- | --- |
+| v3 manifest | `478` 条 deterministic、`36` 条 live synthetic、`12` 个性能 Profile；hash 校验通过 | 只验证清单完整性，不把 live/E2E/Java 现场冒充已运行 |
+| v3 release preflight | **478/478** 注册 Case、**8/8** 代表性 Runtime 分支通过 | 无真实模型、无业务写入 |
+| 新增回归测试 | `tests/test_release_manifest.py` + `tests/test_release_evaluation.py`：**23 passed**（与全量计数分开） | 覆盖重复 ID、fixture 篡改、跳过开关、空断言和运行时失败码 |
+| CI 接线 | `ci.yml` 与 `quality-evaluation.yml` 均先 compile/collect，再执行 manifest/preflight | 远程是否通过以本次提交后的 Actions 为准 |
+
+命令：
+
+```powershell
+Push-Location .\mall-ai-service
+.\.venv\Scripts\python.exe scripts\validate_v3_release_manifest.py --json
+.\.venv\Scripts\python.exe scripts\run_v3_release_preflight.py --json
+Pop-Location
+```
+
+该节不改变下方历史 Build 证据；计数不能相加，也不代表生产部署、生产 SLA 或真实用户模型泛化。
+
+更新时间：2026-09-02。本文件只记录本机实际执行的命令和结果；所有账号、订单、凭据、Token、内部 payload 与 Docker 卷均未写入本文档。
 
 > 说明：本文件保留最终升级阶段的一轮较广产品验收快照。公开发布准备阶段另有一轮最小复核，使用的定向测试选择不同，结果见 [公开发布记录](PUBLIC_RELEASE_RECORD.md)。两组计数不能相加，也不代表生产验收。
 
-## 2026-09-02：真实网页截图与本地演示入口
+## 任务感知 Agent 一次性升级复验（2026-09-02）
 
-本机 Docker Compose 的网站代理页面由 Edge 无头浏览器实际打开并截图；使用合成身份 `localDemoCustomerA`、`localDemoOperations`、`aiQualityDeveloper`，没有读取或保存浏览器已有会话。截图文件为：
+本节只记录本次任务编排改造后的新增复验，不覆盖或重算前文其他 Build 的历史结果。现场保留已有命名卷和演示数据，未执行 `docker compose down`、卷删除或数据库清空。
 
-| 文件 | 页面与可见证据 |
+| 范围 | 实际结果 |
 | --- | --- |
-| [`docs/assets/customer-policy-conversation.png`](assets/customer-policy-conversation.png) | 客户政策咨询；公开回答可见，RAG 内部字段不可见。 |
-| [`docs/assets/operations-handoff-overview.png`](assets/operations-handoff-overview.png) | 运营转人工概览；窗口、去重总数、类别次数和百分比由后端聚合。 |
-| [`docs/assets/quality-evaluation-dashboard.png`](assets/quality-evaluation-dashboard.png) | 质量页面；`contract_mock` 版本化合成评测显示 17/17。 |
+| FastAPI 全量回归 | **317 passed，7 subtests passed**；1 条 Starlette/httpx 第三方弃用警告。 |
+| Vue 生产构建 | `npm run build`：`vue-tsc --noEmit` 与 Vite build 成功。 |
+| Java portal 定向 | **22/22 passed**；无失败、无跳过。 |
+| Java admin 定向 | **14/14 passed**；无失败、无跳过。 |
+| Compose 静态合同 | `docker compose config --quiet` 成功。 |
+| 任务编排 contract_mock | `task-orchestration.v1` **11/11 passed**；仅合成 TurnPlan 与内存会话状态，零模型/Redis/Java/RAG/业务写入。 |
+| 任务编排真实模型合成评测 | `task-orchestration.v1` **10/10 passed**；仅 P0 + 版本化合成消息/安全任务摘要，总 **23.1 s**、p95 **4.0 s**；不访问真实会话或业务服务。 |
+| Docker 重建 | `docker compose up -d --build mall-ai-service mall-ai-web` 成功；依赖服务按需重建/重启，八个常驻服务最终 healthy。 |
+| 任务感知网站代理 | 合成匿名会话：缺标识诊断为 `active` → 政策临时切题为 `paused` → 重启 `mall-ai-service` → 同会话自然恢复为 `active`；每步 HTTP 200。 |
+| 公开字段安全 | 代理响应只含公开 DTO；未出现 `intent`、`rag_sources`、`rag_context`、`tool_result`、`trace`、task/checkpoint 内部标识等禁止字段。 |
 
-三张图均为 1440×1000 PNG，数据为本机合成数据，不是生产数据或线上用户截图。视频演示仍未制作。
-
-本轮还修复并验证了 Windows PowerShell 5.1 下的 `Initialize-LocalDemoAccess.ps1`：Docker SQL 不再依赖容易被原生参数拆分的引号脚本，Python 哈希程序通过标准输入执行，脚本源文件使用 UTF-8 BOM 以保留中文合成标签。新增 `tests/test_local_demo_access_script_contract.py` 防止该入口回归；本机 `-DryRun` 与实际本地身份边界验证通过。
-
-### 与本次展示更新对应的远程 CI
-
-提交 [`0d407783fec9291b3d8d5d01befc38c0e009c553`](https://github.com/Eleven617/mall-ai-after-sales-platform/commit/0d407783fec9291b3d8d5d01befc38c0e009c553) 已实际通过 [`mall-ci` #33613512109](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/33613512109) 和 [`quality-evaluation` #33613512012](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/33613512012)。
-
-| 本机命令范围 | 实际结果 |
-| --- | --- |
-| `python -m pytest -q` | 292 passed，20 subtests passed。 |
-| `run_quality_agent_evaluation.py` / 质量 pytest | 17/17；20 passed。 |
-| CI RAG pytest / Chunk summary / LangGraph unittest | 55 passed；8/8；9 tests passed。 |
-| `npm run build` / Java CI 定向 Maven / Compose 合同 | 全部成功；portal 13 passed，admin 6 passed。 |
-
-远程 `mall-ci` 的 Python、Java、Web、Compose contract、dependency-and-secret-risk 5 个 Job 均为 success；质量工作流的隔离 Job 为 success。计数分别记录，不能相加。由于本机 Docker 当时没有 Docker Hub HTTPS 代理，额外的本机 Gitleaks 镜像拉取被环境阻塞；没有将该本机步骤描述为成功，远程安全 Job 才是当前安全门的真实成功证据。
-
-## 公开 CI 收口（2026-09-02）
-
-本节是与下方历史本机/Docker 快照分开的新证据。提交 [`c5ad321355a5c9979ada83f72294c70440964cc8`](https://github.com/Eleven617/mall-ai-after-sales-platform/commit/c5ad321355a5c9979ada83f72294c70440964cc8) 的远程 GitHub Actions 已成功：[`mall-ci` #33607689472](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/33607689472)、[`quality-evaluation` #33607689443](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/33607689443)。
-
-| 证据类型 | 运行范围 | 实际结果与含义 |
-| --- | --- | --- |
-| 远程 GitHub CI | Ubuntu runner，Python 3.12、Java 8、Node 20 | `mall-ci` 全部 5 个 job 成功：Python、Java、Web、Compose contract、dependency-and-secret-risk。远程成功才证明工作流在 GitHub runner 上可运行。 |
-| 远程质量门 | Ubuntu runner，合成夹具 | `quality-evaluation` 成功：只运行 `contract_mock` / 合同/RAG/Chunk 测试和 Web 构建；不调用真实模型。 |
-| 干净 Python 回归 | 临时 `python:3.12-slim` 容器 | `python -m pytest -q`：**291 passed，20 subtests passed**。未使用 `.venv`、Chroma、模型、模型 Key 或数据库。 |
-| 质量 Agent 合同 | 同一干净 Python 容器 | `run_quality_agent_evaluation.py`：**17/17**；指定质量 Agent pytest：**20 passed**。 |
-| RAG 合同 | 同一干净 Python 容器 | 指定 RAG 2.0 pytest：**55 passed**；Chunk/Metadata：**8/8**，0 外部模型调用。此处不是 52 题真实模型准确率结论。 |
-| LangGraph 兼容性 | 干净 Python 容器 | `python -m unittest discover -s labs/langgraph_order_exception -p "test_*.py" -v`：**9 tests passed**；防止安全升级后的实验图放宽工具/暂停边界。 |
-| Java 8 | 临时 `maven:3.9.9-eclipse-temurin-8` 容器 | `package` 成功；portal 定向 **13 passed**，admin 定向 **6 passed**。普通 package 不再要求可达的远程 Docker daemon。 |
-| Web | 隔离 Node 容器 + GitHub Node 20 | 本机隔离 Node 22：`npm ci && npm run build` 成功；GitHub Actions 另以 Node 20 成功。 |
-| Compose 静态合同 | 本机 | `docker compose config --quiet` 成功；未启动/重建项目 Compose 服务。 |
-| 密钥与依赖门 | GitHub + 本机等价 OSV 命令 | 远程 Gitleaks 与 OSV 均成功。OSV 范围是所有 Maven POM 的直接依赖声明、Python requirements 和 npm lockfile；详见 [公开发布记录](PUBLIC_RELEASE_RECORD.md#依赖与密钥扫描范围)。 |
-
-上述项目分别计数，绝不相加为一个“总通过数”。本机隔离容器用于复现依赖/平台前提；远程 GitHub 成功是 CI 是否通过的唯一依据。
+本次代理冒烟验证的是任务状态和公开边界，不是登录后的 Java 写入或完整售后建单现场；后者沿用前文已有的独立验收记录。
 
 ## 本次最终复验（2026-09-01）
 
@@ -99,7 +92,7 @@
 
 | 路径 | 实际结果 | 断言 |
 | --- | --- | --- |
-| Build 21 Durable 恢复 | `MALL_BUILD21_BOOTSTRAP_LOCAL_DEMO=true` 的 `verify_build21_authenticated_live.py` 通过。 | Vue 代理 → FastAPI → Java/Redis；缺订单号 interrupt、重启 `mall-ai-service`、Redis readiness、同会话恢复、重复恢复、A/B 跨账号拒绝；只读诊断未创建售后记录。 |
+| Build 21 Durable 恢复（历史快照） | `MALL_BUILD21_BOOTSTRAP_LOCAL_DEMO=true` 的 `verify_build21_authenticated_live.py` 通过。 | 该脚本记录的是 Build 21 的 Durable checkpoint 验收；本次任务感知升级的缺标识路径已改为普通 `waiting_input` 任务，不再把 `interrupt()` 作为默认客户行为。 |
 | 统一售后 | `MALL_UNIFIED_BOOTSTRAP_LOCAL_DEMO=true` 的 `verify_unified_after_sales_live.py` 通过。 | 显式自举的 A/B 合成账号经 Vue 代理完成政策询问、确认卡、Java 建单、查询进度、取消待确认动作、幂等目标和 B 无法读取 A 的申请；公开 DTO 未泄露内部字段。 |
 | MCP 只读互操作 | `verify_mcp_authenticated_live.py` 通过。 | `initialize → tools/list → get_order_summary → SSE readiness` 成功；匿名、跨账号复用 session、跨账号订单、`memberId` 参数注入和已关闭 session 均被拒绝；无写工具。 |
 
@@ -108,14 +101,13 @@
 ## 尚未宣称完成的项
 
 - `live_model_synthetic` 已在本轮手动执行并通过 3 条合成案例；它不是 CI、客户请求或线上模型泛化评测，且 Provider 未返回可用 Token 数，不能据此声称成本或普遍准确率。
-- 当前公开仓库的两条远程 Actions 已在本文件开头所列提交上成功；这不包含 Java 全量集成测试、完整传递依赖 SBOM 审计或独立安全审计。
+- `.github/workflows/ci.yml` 与 `quality-evaluation.yml` 已具备本地可审查质量门，但本根目录当前不是 Git 仓库，且没有本轮远程 GitHub Actions 运行记录。
 - 本机 Docker/合成数据/定向测试不证明生产部署、独立安全审计、真实支付/仓储/物流/维修接入、生产 QPS/P95/SLA 或模型对所有输入的准确率。
 
 ## 复验命令
 
 ```powershell
 cd C:\Users\12969\Desktop\mall\mall-ai-service
-\.venv\Scripts\python.exe -m pip install -r requirements-ci.txt
 .\.venv\Scripts\python.exe -m pytest -q
 .\.venv\Scripts\python.exe scripts\run_quality_agent_evaluation.py
 .\.venv\Scripts\python.exe scripts\evaluate_chunk_metadata.py --summary

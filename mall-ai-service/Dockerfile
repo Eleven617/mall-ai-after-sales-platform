@@ -18,6 +18,7 @@ COPY evals/quality_agent_cases.v1.json ./evals/quality_agent_cases.v1.json
 COPY evals/quality_agent_cases.v2.json ./evals/quality_agent_cases.v2.json
 COPY evals/live_model_synthetic_cases.v1.json ./evals/live_model_synthetic_cases.v1.json
 COPY evals/rag2_golden_cases.v1.json ./evals/rag2_golden_cases.v1.json
+COPY evals/task_orchestration_cases.v1.json ./evals/task_orchestration_cases.v1.json
 
 # The local embedding weights and generated Chroma index are deliberately not
 # image layers or Git content. `scripts/start-demo.ps1` prepares them from the

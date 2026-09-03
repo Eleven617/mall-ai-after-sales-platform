@@ -494,7 +494,7 @@ def _run_customer_diagnosis_case(
                 session_id=f"quality-eval:{case.case_id}",
                 message=case.synthetic_input,
                 tool_context=ToolExecutionContext(),
-                require_order_identifier=False,
+        requires_order_facts=False,
                 generate_fn=selected_generate_fn,
                 call_tool_fn=call_tool_fn,
                 diagnosis_started_at=diagnosis_started_at,

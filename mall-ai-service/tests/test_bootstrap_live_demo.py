@@ -43,9 +43,10 @@ class BootstrapLiveDemoPrivacyTests(unittest.TestCase):
         }
         client_context = MagicMock()
         client_context.__enter__.return_value = object()
+        client_factory = MagicMock(return_value=client_context)
         with (
             patch.dict(os.environ, environment),
-            patch.object(module.httpx, "Client", return_value=client_context),
+            patch.object(module.httpx, "Client", client_factory),
             patch.object(module, "_prepare_account_order", side_effect=[first, second]),
             contextlib.redirect_stdout(io.StringIO()) as stdout,
         ):
@@ -58,6 +59,7 @@ class BootstrapLiveDemoPrivacyTests(unittest.TestCase):
         self.assertNotIn("SYNTHETIC-ORDER-B", output)
         self.assertNotIn("member_id", output)
         self.assertNotIn("order_id", output)
+        client_factory.assert_called_once_with(timeout=20, trust_env=False)
 
         payload = json.loads(Path(result_file).read_text(encoding="utf-8"))
         self.assertEqual("SYNTHETIC-ORDER-A", payload["account_a"]["order_sn"])

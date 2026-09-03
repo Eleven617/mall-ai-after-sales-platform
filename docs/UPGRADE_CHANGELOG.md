@@ -13,6 +13,22 @@
 
 Git 提交是代码版本锚点；本文件是面向人阅读的变更备注；详细命令与结果放在 [测试与演示证据](TEST_AND_DEMO_EVIDENCE.md) 或对应 Build 文档中。
 
+## 2026-09-03 — Mall v3.0 发布硬化与可回放门禁
+
+- 新增版本化 `evals/v3/release-manifest.json`（478 条 deterministic、36 条 live synthetic、12 个性能 Profile）及 hash/预算/安全字段校验。
+- 新增无模型的 `run_v3_release_preflight.py`，对完整注册清单和代表性 Runtime 安全分支执行确定性检查；新增 manifest/evaluation 回归测试。
+- CI 在 FastAPI compile/collect 后执行 manifest/preflight；质量工作流纳入同一合同测试，保留 Java、Web、Compose 与安全扫描门禁。
+- README、AGENTS、UPSTREAM 与公开证据文档明确 v3 Runtime 的 Agent/Skill/Java 权威边界和本机合成验证口径。
+- 当前未宣称：远程 Actions（须等待本次提交运行）、36 条 live 三轮、完整浏览器 E2E、真实外部履约和生产 SLA。
+
+## 2026-09-02 — 统一售后 Agent 任务感知编排一次性升级
+
+- 目标：让每条新消息先经过受限任务感知 P0，再决定继续当前任务、临时切题、恢复唯一暂停任务、放弃或开始新任务；移除旧 pending 优先抢占。
+- 实际改动：新增 `active_task`、最多一个 `paused_task` 与独立 `transaction_gate`；缺订单号改为普通等待输入任务，不再默认创建 LangGraph `interrupt()`；Proposal/Action 不再阻断无关聊天、政策查询或新任务；任务摘要只保存安全字段并绑定会话/身份。
+- Agent 边界：P0 只输出闭集 `TurnPlan`；只读调查仍由受控统一售后图执行；Java 继续负责事实、归属、资格、状态机、幂等、事务和最终写入；浏览器仅看到“进行中/已暂存任务”摘要，不看到 task/checkpoint 标识或内部载荷。
+- 验证：FastAPI 全量 **317 passed，7 subtests passed**（1 条第三方弃用警告）；Vue 生产构建通过；Java portal 定向 **22/22**、admin 定向 **14/14**；任务编排 `contract_mock` **11/11**、手动真实模型合成评测 **10/10**（总 **23.1 s**、p95 **4.0 s**）；Compose 配置通过；Docker 重建后八个常驻服务健康；网页代理完成缺标识诊断 → 政策临时切题 → AI 服务重启 → 同会话自然恢复，公开响应无内部字段泄露。
+- 边界：本次现场使用本机合成会话和现有命名卷，不代表生产 SLA、模型通用准确率或远程 CI；未删除演示数据、数据库卷或历史日志。回退依赖本次前快照 `snapshots/task-orchestration-one-shot-20260902-1815` 与数据库备份。
+
 ## 2026-09-01 — 公开发布基线
 
 - 范围：将本地可信 AI 售后与 AgentOps 项目整理为可复现的公开发布包。

@@ -201,6 +201,9 @@ services:
       RAG_RERANKER_MODEL_PATH: /app/models/reranker/bge-reranker-base
       RELIABILITY_BACKEND: redis
       RELIABILITY_KEY_PREFIX: mall-ai:reliability
+      AGENT_TASK_STORE_BACKEND: mongo
+      AGENT_TASK_MONGO_URL: mongodb://mongo:27017
+      AGENT_TASK_MONGO_DATABASE: mall_ai
     ports:
       - "8000:8000"
     volumes:

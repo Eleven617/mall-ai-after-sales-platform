@@ -11,7 +11,7 @@ from app.schemas.conversation_history import (
     ConversationHistoryMessage,
     ConversationHistorySummary,
 )
-from app.schemas.customer_service import CustomerServiceResponse, PendingActionView
+from app.schemas.customer_service import CustomerServiceResponse
 from app.schemas.diagnosis import DiagnosisHandoff, DiagnosisPolicySource, DiagnosisResult
 from app.schemas.intent import IntentResponse
 from app.schemas.rag import RagSource
@@ -168,9 +168,7 @@ class CustomerServiceRouterTests(unittest.TestCase):
         self.assertEqual(200, response.status_code)
         payload = response.json()
         self.assertEqual("订单正在运输中。", payload["answer"])
-        self.assertEqual("awaiting_order_sn", payload["pending_action"]["kind"])
         self.assertEqual("delivery_in_transit", payload["diagnosis"]["category"])
-        self.assertEqual("取消查询", payload["pending_action"]["cancel_message"])
         for internal_field in (
             "message",
             "intent",
@@ -315,7 +313,6 @@ def detailed_internal_response() -> CustomerServiceResponse:
                 fields=[VerifiedFactField(label="物流状态", value="运输中")],
             )
         ],
-        pending_action=PendingActionView(kind="awaiting_order_sn", label="正在等待订单号"),
         diagnosis=DiagnosisResult(
             category="delivery_in_transit",
             evidence_status="complete",

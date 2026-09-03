@@ -102,7 +102,7 @@ class UnifiedAfterSalesGraphTests(unittest.TestCase):
             session_id="unified-investigation",
             message="合成订单为什么还没到？",
             tool_context=ToolExecutionContext(authorization=AUTH_A, member_id=1),
-            require_order_identifier=False,
+            requires_order_facts=False,
             generate_fn=generate_fn,
             call_tool_fn=call_tool_fn,
         )
@@ -124,7 +124,7 @@ class UnifiedAfterSalesGraphTests(unittest.TestCase):
             session_id="unified-investigation-unavailable",
             message="合成订单异常",
             tool_context=ToolExecutionContext(authorization=AUTH_A, member_id=1),
-            require_order_identifier=False,
+            requires_order_facts=False,
             generate_fn=unavailable,
             call_tool_fn=lambda call, _context: calls.append(call) or {},
         )

@@ -1,0 +1,133 @@
+{
+  "suiteVersion": "task-orchestration.v1",
+  "contractCases": [
+    {
+      "caseId": "contract-active-diagnosis-policy-detour",
+      "initialState": "active_order_waiting",
+      "turnPlan": {"business_intent": "after_sales_policy", "task_relation": "temporary_detour", "route": "rag", "task_kind": null, "confirmation_intent": "none", "rationale_code": "temporary_detour", "need_tool": false, "tool_call": null, "reply": null, "chat_scope": null},
+      "expected": {"mode": "dispatch", "activeTaskKind": null, "pausedTaskKind": "order_diagnosis", "transactionGateKind": null, "legacyPendingToolCall": false}
+    },
+    {
+      "caseId": "contract-paused-diagnosis-natural-resume",
+      "initialState": "paused_order_waiting",
+      "turnPlan": {"business_intent": "query_logistics", "task_relation": "resume_paused", "route": "agent", "task_kind": "order_diagnosis", "confirmation_intent": "none", "rationale_code": "paused_task_match", "need_tool": true, "tool_call": {"name": "analysis_agent", "arguments": {}}, "reply": null, "chat_scope": null},
+      "expected": {"mode": "continue_task", "activeTaskKind": "order_diagnosis", "pausedTaskKind": null, "transactionGateKind": null, "legacyPendingToolCall": false}
+    },
+    {
+      "caseId": "contract-chat-detour-preserves-diagnosis",
+      "initialState": "active_order_waiting",
+      "turnPlan": {"business_intent": "general_chat", "task_relation": "temporary_detour", "route": "chat", "task_kind": null, "confirmation_intent": "none", "rationale_code": "temporary_detour", "need_tool": false, "tool_call": null, "reply": null, "chat_scope": "capability"},
+      "expected": {"mode": "dispatch", "activeTaskKind": null, "pausedTaskKind": "order_diagnosis", "transactionGateKind": null, "legacyPendingToolCall": false}
+    },
+    {
+      "caseId": "contract-proposal-policy-does-not-block-chat",
+      "initialState": "proposal_gate",
+      "turnPlan": {"business_intent": "after_sales_policy", "task_relation": "standalone_answer", "route": "rag", "task_kind": null, "confirmation_intent": "none", "rationale_code": "standalone_question", "need_tool": false, "tool_call": null, "reply": null, "chat_scope": null},
+      "expected": {"mode": "dispatch", "activeTaskKind": null, "pausedTaskKind": null, "transactionGateKind": "proposal", "legacyPendingToolCall": false}
+    },
+    {
+      "caseId": "contract-proposal-natural-confirmation-is-gate-only",
+      "initialState": "proposal_gate",
+      "turnPlan": {"business_intent": "apply_after_sales", "task_relation": "standalone_answer", "route": "after_sales_flow", "task_kind": null, "confirmation_intent": "confirm", "rationale_code": "standalone_question", "need_tool": false, "tool_call": null, "reply": null, "chat_scope": null},
+      "expected": {"mode": "transaction_gate", "activeTaskKind": null, "pausedTaskKind": null, "transactionGateKind": "proposal", "legacyPendingToolCall": false}
+    },
+    {
+      "caseId": "contract-proposal-natural-cancel-is-gate-only",
+      "initialState": "proposal_gate",
+      "turnPlan": {"business_intent": "apply_after_sales", "task_relation": "standalone_answer", "route": "after_sales_flow", "task_kind": null, "confirmation_intent": "cancel", "rationale_code": "standalone_question", "need_tool": false, "tool_call": null, "reply": null, "chat_scope": null},
+      "expected": {"mode": "transaction_gate", "activeTaskKind": null, "pausedTaskKind": null, "transactionGateKind": "proposal", "legacyPendingToolCall": false}
+    },
+    {
+      "caseId": "contract-third-long-task-requires-clarification",
+      "initialState": "active_and_paused",
+      "turnPlan": {"business_intent": "query_logistics", "task_relation": "start_new_task", "route": "agent", "task_kind": "order_diagnosis", "confirmation_intent": "none", "rationale_code": "new_long_running_goal", "need_tool": true, "tool_call": {"name": "analysis_agent", "arguments": {}}, "reply": null, "chat_scope": null},
+      "expected": {"mode": "clarify", "activeTaskKind": "after_sales_draft", "pausedTaskKind": "order_diagnosis", "transactionGateKind": null, "legacyPendingToolCall": false}
+    },
+    {
+      "caseId": "contract-misclassified-standalone-third-task-is-still-safe",
+      "initialState": "active_and_paused",
+      "turnPlan": {"business_intent": "query_logistics", "task_relation": "standalone_answer", "route": "ask_missing_info", "task_kind": null, "confirmation_intent": "none", "rationale_code": "standalone_question", "need_tool": false, "tool_call": {"name": "logistics_service", "arguments": {}}, "reply": null, "chat_scope": null},
+      "expected": {"mode": "clarify", "activeTaskKind": "after_sales_draft", "pausedTaskKind": "order_diagnosis", "transactionGateKind": null, "legacyPendingToolCall": false}
+    },
+    {
+      "caseId": "contract-explicit-task-conflict-does-not-overwrite",
+      "initialState": "active_and_paused",
+      "turnPlan": {"business_intent": "unknown", "task_relation": "resolve_task_conflict", "route": "chat", "task_kind": null, "confirmation_intent": "none", "rationale_code": "task_conflict", "need_tool": false, "tool_call": null, "reply": null, "chat_scope": null},
+      "expected": {"mode": "clarify", "activeTaskKind": "after_sales_draft", "pausedTaskKind": "order_diagnosis", "transactionGateKind": null, "legacyPendingToolCall": false}
+    },
+    {
+      "caseId": "contract-discard-active-preserves-paused",
+      "initialState": "active_and_paused",
+      "turnPlan": {"business_intent": "unknown", "task_relation": "discard_active", "route": "chat", "task_kind": null, "confirmation_intent": "none", "rationale_code": "explicit_task_abandonment", "need_tool": false, "tool_call": null, "reply": null, "chat_scope": null},
+      "expected": {"mode": "discarded", "activeTaskKind": null, "pausedTaskKind": "order_diagnosis", "transactionGateKind": null, "legacyPendingToolCall": false}
+    },
+    {
+      "caseId": "contract-missing-identifier-is-task-not-legacy-pending",
+      "initialState": "active_order_waiting",
+      "turnPlan": {"business_intent": "query_order_status", "task_relation": "continue_active", "route": "agent", "task_kind": "order_diagnosis", "confirmation_intent": "none", "rationale_code": "active_task_match", "need_tool": true, "tool_call": {"name": "analysis_agent", "arguments": {}}, "reply": null, "chat_scope": null},
+      "expected": {"mode": "continue_task", "activeTaskKind": "order_diagnosis", "pausedTaskKind": null, "transactionGateKind": null, "legacyPendingToolCall": false}
+    }
+  ],
+  "liveModelCases": [
+    {
+      "caseId": "live-policy-detour-from-active-diagnosis",
+      "syntheticInput": "如果退货退款，运费通常由谁承担？",
+      "safeContext": {"active_task": {"kind": "order_diagnosis", "status": "waiting_input", "goal_summary": "订单与物流异常诊断", "known_slots": {"awaiting_input": "订单号"}, "pending_question": "还可继续：补充订单号后核验物流。", "completed_steps": [], "next_agent_hint": "收到相关标识后继续只读核验。"}},
+      "expectedPlan": {"businessIntent": "after_sales_policy", "taskRelation": "temporary_detour", "route": "rag", "taskKind": null, "confirmationIntent": "none"}
+    },
+    {
+      "caseId": "live-resume-paused-diagnosis",
+      "syntheticInput": "订单号是 SYNTHETIC-ORDER-REFERENCE，请继续刚才的订单问题。",
+      "safeContext": {"paused_task": {"kind": "order_diagnosis", "status": "paused", "goal_summary": "订单与物流异常诊断", "known_slots": {"awaiting_input": "订单号"}, "pending_question": "还可继续：补充订单号后核验物流。", "completed_steps": [], "next_agent_hint": "收到相关标识后继续只读核验。"}},
+      "expectedPlan": {"taskRelation": "resume_paused", "route": "agent", "taskKind": "order_diagnosis", "confirmationIntent": "none"}
+    },
+    {
+      "caseId": "live-chat-detour-from-active-diagnosis",
+      "syntheticInput": "你可以帮我做什么？",
+      "safeContext": {"active_task": {"kind": "order_diagnosis", "status": "waiting_input", "goal_summary": "订单与物流异常诊断", "known_slots": {"awaiting_input": "订单号"}, "pending_question": "还可继续：补充订单号后核验物流。", "completed_steps": [], "next_agent_hint": "收到相关标识后继续只读核验。"}},
+      "expectedPlan": {"businessIntent": "general_chat", "taskRelationAnyOf": ["temporary_detour", "standalone_answer"], "route": "chat", "taskKind": null, "confirmationIntent": "none"}
+    },
+    {
+      "caseId": "live-policy-question-does-not-consume-proposal",
+      "syntheticInput": "退货的运费一般由谁承担？",
+      "safeContext": {"transaction_gate": {"kind": "proposal", "status": "awaiting_confirmation", "label": "待确认售后申请方案"}},
+      "expectedPlan": {"businessIntent": "after_sales_policy", "taskRelation": "standalone_answer", "route": "rag", "taskKind": null, "confirmationIntent": "none"}
+    },
+    {
+      "caseId": "live-natural-confirmation-for-proposal",
+      "syntheticInput": "那就按刚才的方案办。",
+      "safeContext": {"transaction_gate": {"kind": "proposal", "status": "awaiting_confirmation", "label": "待确认售后申请方案"}},
+      "expectedPlan": {"taskRelation": "standalone_answer", "route": "after_sales_flow", "taskKind": null, "confirmationIntent": "confirm"}
+    },
+    {
+      "caseId": "live-natural-cancel-for-proposal",
+      "syntheticInput": "先不用了，取消刚才的方案。",
+      "safeContext": {"transaction_gate": {"kind": "proposal", "status": "awaiting_confirmation", "label": "待确认售后申请方案"}},
+      "expectedPlan": {"taskRelation": "standalone_answer", "route": "after_sales_flow", "taskKind": null, "confirmationIntent": "cancel"}
+    },
+    {
+      "caseId": "live-third-long-task-conflict",
+      "syntheticInput": "我还要查另一笔订单的物流。",
+      "safeContext": {"active_task": {"kind": "after_sales_draft", "status": "waiting_input", "goal_summary": "收集售后申请信息并核验资格", "known_slots": {}, "pending_question": "还可继续：补充必要信息后核验售后资格。", "completed_steps": [], "next_agent_hint": null}, "paused_task": {"kind": "order_diagnosis", "status": "paused", "goal_summary": "订单与物流异常诊断", "known_slots": {"awaiting_input": "订单号"}, "pending_question": "还可继续：补充订单号后核验物流。", "completed_steps": [], "next_agent_hint": "收到相关标识后继续只读核验。"}},
+      "expectedPlan": {"taskRelation": "resolve_task_conflict", "taskKind": null, "confirmationIntent": "none"}
+    },
+    {
+      "caseId": "live-ambiguous-two-task-message-clarifies",
+      "syntheticInput": "继续刚才那个。",
+      "safeContext": {"active_task": {"kind": "after_sales_draft", "status": "waiting_input", "goal_summary": "收集售后申请信息并核验资格", "known_slots": {}, "pending_question": "还可继续：补充必要信息后核验售后资格。", "completed_steps": [], "next_agent_hint": null}, "paused_task": {"kind": "order_diagnosis", "status": "paused", "goal_summary": "订单与物流异常诊断", "known_slots": {"awaiting_input": "订单号"}, "pending_question": "还可继续：补充订单号后核验物流。", "completed_steps": [], "next_agent_hint": "收到相关标识后继续只读核验。"}},
+      "expectedPlan": {"taskRelation": "resolve_task_conflict", "taskKind": null, "confirmationIntent": "none"}
+    },
+    {
+      "caseId": "live-missing-identifier-is-order-diagnosis",
+      "syntheticInput": "我的订单为什么一直没有发货？",
+      "safeContext": null,
+      "expectedPlan": {"taskRelation": "start_new_task", "route": "agent", "taskKind": "order_diagnosis", "confirmationIntent": "none"}
+    },
+    {
+      "caseId": "live-after-sales-progress-is-not-logistics",
+      "syntheticInput": "查询我刚提交的售后申请审核和履约进度。",
+      "safeContext": null,
+      "expectedPlan": {"businessIntent": "status_after_sales", "taskRelation": "standalone_answer", "route": "after_sales_flow", "taskKind": null, "confirmationIntent": "none"}
+    }
+  ]
+}

@@ -397,6 +397,10 @@ def _needs_history_restore(scoped_session_id: str) -> bool:
         or state.pending_after_sales_selection
         or state.pending_after_sales_modification_draft
         or state.active_after_sales_application
+        or state.active_task
+        or state.paused_task
+        or state.task_payloads
+        or state.transaction_gate
     )
 
 

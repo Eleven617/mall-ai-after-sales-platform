@@ -1,0 +1,6 @@
+{
+  "schemaVersion": "v3.0-baseline.v1",
+  "status": "generated-by-script-after-verification",
+  "source": "mall-ai-service/scripts/generate_v3_baseline_manifest.py",
+  "note": "Run the generator after the tested commit; this placeholder is replaced by the release preflight record and contains no credentials or customer data."
+}

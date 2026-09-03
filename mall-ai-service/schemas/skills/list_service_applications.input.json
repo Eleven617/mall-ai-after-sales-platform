@@ -1,0 +1,1 @@
+{"$schema":"https://json-schema.org/draft/2020-12/schema","title":"list_service_applications input","type":"object","additionalProperties":false}

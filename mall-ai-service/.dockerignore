@@ -15,3 +15,4 @@ evals/*
 !evals/quality_agent_cases.v2.json
 !evals/live_model_synthetic_cases.v1.json
 !evals/rag2_golden_cases.v1.json
+!evals/task_orchestration_cases.v1.json

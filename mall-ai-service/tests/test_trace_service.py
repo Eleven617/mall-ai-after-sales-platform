@@ -45,7 +45,7 @@ class TraceServiceTests(unittest.TestCase):
             "session-a",
             prompt_version="intent_semantic_v1",
             intent="apply_after_sales",
-            route="after_sales_flow",
+            route="rag",
             message="申请退货",
             order_sn="202608240001",
         )
@@ -55,7 +55,7 @@ class TraceServiceTests(unittest.TestCase):
             {
                 "prompt_version": "intent_semantic_v1",
                 "intent": "apply_after_sales",
-                "route": "after_sales_flow",
+                "route": "rag",
             },
             event.details,
         )
@@ -82,6 +82,38 @@ class TraceServiceTests(unittest.TestCase):
         self.assertEqual("tool_sequence_mismatch", event.contract_violation)
         self.assertEqual(
             {"node": "execute_tools", "tool_name": "order_service"}, event.details
+        )
+
+    def test_task_turn_trace_keeps_only_closed_orchestration_metadata(self) -> None:
+        record_trace(
+            "task_routing",
+            "resolved",
+            "session-a",
+            prompt_version="task_aware_turn_plan_v3",
+            intent="after_sales_policy",
+            route="rag",
+            task_relation="temporary_detour",
+            task_kind="order_diagnosis",
+            confirmation_intent="none",
+            rationale_code="temporary_detour",
+            task_id="not-allowlisted",
+            message="用户原话不能写入轨迹",
+            order_sn="202607240001",
+        )
+
+        event = self.sink.events[0]
+        self.assertEqual("task_routing", event.flow)
+        self.assertEqual(
+            {
+                "prompt_version": "task_aware_turn_plan_v3",
+                "intent": "after_sales_policy",
+                "route": "rag",
+                "task_relation": "temporary_detour",
+                "task_kind": "order_diagnosis",
+                "confirmation_intent": "none",
+                "rationale_code": "temporary_detour",
+            },
+            event.details,
         )
 
     def test_context_capture_isolated_from_default_sink(self) -> None:

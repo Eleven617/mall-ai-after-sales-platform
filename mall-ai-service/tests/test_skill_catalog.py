@@ -1,7 +1,9 @@
 import unittest
 from unittest.mock import patch
 
+from app.schemas.intent import IntentToolCall
 from app.schemas.tool import ToolCall
+from app.schemas.task_orchestration import TurnPlan
 from app.services.skill_catalog import (
     SKILL_CATALOG_VERSION,
     SkillPolicyError,
@@ -58,24 +60,88 @@ class SkillCatalogTests(unittest.TestCase):
         )
         self.assertEqual("order_exception_diagnosis", skill.skill_id)
 
+    def test_diagnosis_inventory_tool_matches_the_existing_read_only_allow_list(self) -> None:
+        """Avoid a catalog/Agent mismatch that would deny an advertised read."""
+        skill = assert_tool_allowed_for_skill(
+            "unified_after_sales", "order_exception_diagnosis", "inventory_service"
+        )
+        self.assertIn("inventory_service", skill.allowed_tool_ids)
+
     def test_customer_route_to_skill_mapping_is_closed_and_not_keyword_based(self) -> None:
         self.assertEqual(
             "policy_question_answering",
             select_customer_skill(
-                intent_name="after_sales_policy",
-                route="after_sales_flow",
+                plan=_customer_plan(
+                    intent="after_sales_policy",
+                    route="rag",
+                ),
             ),
         )
         self.assertEqual(
             "order_exception_diagnosis",
             select_customer_skill(
-                intent_name="query_logistics",
-                route="tool_calling",
-                tool_name="logistics_service",
+                plan=_customer_plan(
+                    intent="query_logistics",
+                    route="agent",
+                    task_kind="order_diagnosis",
+                    tool_name="analysis_agent",
+                    relation="start_new_task",
+                ),
+            ),
+        )
+        self.assertEqual(
+            "after_sales_proposal",
+            select_customer_skill(
+                plan=_customer_plan(
+                    intent="apply_after_sales",
+                    route="after_sales_flow",
+                    task_kind="after_sales_draft",
+                    relation="start_new_task",
+                ),
             ),
         )
         with self.assertRaisesRegex(SkillPolicyError, "没有可用"):
-            select_customer_skill(intent_name="unknown", route="chat")
+            select_customer_skill(
+                plan=_customer_plan(intent="unknown", route="chat"),
+            )
+
+
+def _customer_plan(
+    *,
+    intent: str,
+    route: str,
+    task_kind: str | None = None,
+    tool_name: str | None = None,
+    relation: str = "standalone_answer",
+) -> TurnPlan:
+    if route == "agent":
+        tool_call = IntentToolCall(name="analysis_agent", arguments={})
+        need_tool = True
+    elif route == "tool_calling":
+        tool_call = IntentToolCall(
+            name=tool_name or "order_service",
+            arguments={"order_sn": "202608280001"},
+        )
+        need_tool = True
+    else:
+        tool_call = None
+        need_tool = False
+    return TurnPlan(
+        business_intent=intent,
+        task_relation=relation,
+        route=route,
+        task_kind=task_kind,
+        confirmation_intent="none",
+        rationale_code=(
+            "new_long_running_goal"
+            if relation == "start_new_task"
+            else "standalone_question"
+        ),
+        need_tool=need_tool,
+        tool_call=tool_call,
+        reply=None,
+        chat_scope=None,
+    )
 
 
 if __name__ == "__main__":

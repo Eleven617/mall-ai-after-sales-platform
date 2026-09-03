@@ -14,7 +14,6 @@
 
 ```powershell
 cd C:\Users\12969\Desktop\mall\mall-ai-service
-.\.venv\Scripts\python.exe -m pip install -r requirements-ci.txt
 .\.venv\Scripts\python.exe -m pytest -q
 
 cd C:\Users\12969\Desktop\mall\mall-ai-web

@@ -28,6 +28,7 @@ from app.schemas.after_sales_application import (
 )
 from app.services.after_sales_application_state import (
     AfterSalesPendingStateError,
+    AfterSalesTransactionGateConflictError,
     PENDING_AFTER_SALES_DRAFT_TTL_SECONDS,
     PENDING_AFTER_SALES_ACTION_TTL_SECONDS,
     PENDING_AFTER_SALES_PROPOSAL_TTL_SECONDS,
@@ -167,10 +168,12 @@ def start_after_sales_flow(
     authorization: str | None,
     member_id: int | None = None,
 ) -> AfterSalesFlowResult:
-    """Start a generic draft. Existing work is always resumed first."""
-    pending = handle_pending_after_sales_draft(session_id, message, authorization, member_id)
-    if pending is not None:
-        return pending
+    """Start a new draft after task-aware routing has selected it.
+
+    Continuing an existing draft is intentionally handled by
+    ``TaskOrchestrationService``.  A stale draft must never steal a fresh
+    natural-language request before P0 has decided its task relation.
+    """
     try:
         fingerprint = owner_fingerprint(authorization, member_id)
     except AfterSalesPendingStateError as exc:
@@ -207,6 +210,8 @@ def handle_pending_after_sales_draft(
     message: str,
     authorization: str | None,
     member_id: int | None = None,
+    *,
+    resume_from_task: bool = False,
 ) -> AfterSalesFlowResult | None:
     try:
         draft = get_pending_after_sales_draft(session_id, authorization, member_id)
@@ -215,15 +220,15 @@ def handle_pending_after_sales_draft(
     if draft is None:
         return None
 
-    normalized = _normalize_message(message)
-    if normalized in CANCEL_MESSAGES:
-        clear_pending_after_sales_draft(session_id, authorization, member_id)
-        record_trace("after_sales_workflow", "draft_cancelled", session_id)
-        return AfterSalesFlowResult(answer="已取消本次售后信息收集，尚未提交任何申请。")
-
     resolution = extract_order_sn(message)
     extraction = _safe_extract(message)
     if not _is_draft_follow_up(draft, message, resolution, extraction):
+        if resume_from_task:
+            # P0 has already selected this exact server-owned task. A natural
+            # “continue the previous request” must not be parsed as new draft
+            # content, but it may safely re-run bounded factual/policy checks
+            # using fields collected on earlier grounded turns.
+            return _advance_draft(session_id, draft, message, authorization, member_id)
         record_trace("after_sales_workflow", "draft_paused_for_unrelated_message", session_id)
         return None
     if resolution.ambiguous:
@@ -482,7 +487,30 @@ def _advance_draft(
         ),
         expires_at=time.time() + PENDING_AFTER_SALES_PROPOSAL_TTL_SECONDS,
     )
-    save_pending_after_sales_proposal(session_id, proposal)
+    try:
+        save_pending_after_sales_proposal(session_id, proposal)
+    except AfterSalesTransactionGateConflictError:
+        # A confirmation card is a separate write reservation, not an owner of
+        # the conversation. Keep this fully collected draft behind its active
+        # task so the customer can complete it after resolving the existing
+        # card; never silently replace either write candidate.
+        save_pending_after_sales_draft(session_id, draft)
+        record_trace(
+            "after_sales_workflow",
+            "transaction_gate_conflict",
+            session_id,
+            requested_gate="proposal",
+        )
+        return AfterSalesFlowResult(
+            answer=(
+                "本次售后申请的信息、资格和政策依据已核验，但当前还有一项待确认的"
+                "售后方案或操作。为避免混淆两次提交，请先确认或取消现有事项；"
+                "之后可继续本次申请以生成新的确认卡。"
+            ),
+            draft=to_after_sales_draft_view(draft, []),
+            eligibility=eligibility,
+            policy_sources=policy.sources,
+        )
     remember_conversation_facts(
         session_id,
         order_sn=proposal.order_sn,
@@ -569,7 +597,23 @@ def prepare_after_sales_action(
         description=normalized_description,
         expires_at=time.time() + PENDING_AFTER_SALES_ACTION_TTL_SECONDS,
     )
-    save_pending_after_sales_action(session_id, pending)
+    try:
+        save_pending_after_sales_action(session_id, pending)
+    except AfterSalesTransactionGateConflictError:
+        record_trace(
+            "after_sales_workflow",
+            "transaction_gate_conflict",
+            session_id,
+            requested_gate="after_sales_action",
+            action=action,
+        )
+        return AfterSalesFlowResult(
+            answer=(
+                "当前还有一项待确认的售后方案或操作。为避免覆盖原确认卡，"
+                "请先确认或取消现有事项，再继续本次售后操作。"
+            ),
+            applications=[application],
+        )
     record_trace(
         "after_sales_workflow",
         "action_prepared",
@@ -635,10 +679,6 @@ def handle_pending_after_sales_modification_draft(
         return AfterSalesFlowResult(answer=str(exc))
     if draft is None:
         return None
-    normalized = _normalize_message(message)
-    if normalized in CANCEL_MESSAGES:
-        complete_pending_after_sales_modification_draft(session_id, authorization, member_id)
-        return AfterSalesFlowResult(answer="已取消本次售后修改，原申请没有变化。")
     try:
         extraction = extract_after_sales_request(message)
     except AfterSalesApplicationError:
@@ -654,10 +694,6 @@ def handle_pending_after_sales_modification_draft(
     reason = extraction.reason
     description = extraction.description
     if not reason and not description:
-        if normalized in CONFIRM_MESSAGES:
-            return AfterSalesFlowResult(
-                answer="请先说明要修改的售后原因或补充内容；系统不会在未展示变更前执行写入。"
-            )
         return AfterSalesFlowResult(
             answer=(
                 "请明确说明新的售后原因或补充内容；系统只会接受能在你的原话中"
@@ -672,11 +708,10 @@ def handle_pending_after_sales_modification_draft(
     if application is None:
         complete_pending_after_sales_modification_draft(session_id, authorization, member_id)
         return AfterSalesFlowResult(answer="该售后申请已不存在或无法继续修改，请先查询售后记录。")
-    complete_pending_after_sales_modification_draft(session_id, authorization, member_id)
     if application.can_supplement and not application.can_modify:
         description = description or reason
         reason = None
-    return prepare_after_sales_action(
+    result = prepare_after_sales_action(
         session_id=session_id,
         authorization=authorization,
         member_id=member_id,
@@ -685,6 +720,12 @@ def handle_pending_after_sales_modification_draft(
         reason=reason,
         description=description,
     )
+    # A conflicting transaction gate is not a failed modification task. Keep
+    # the grounded modification draft so it can naturally resume after the
+    # customer resolves the existing confirmation card.
+    if result.pending_action is not None or not (application.can_modify or application.can_supplement):
+        complete_pending_after_sales_modification_draft(session_id, authorization, member_id)
+    return result
 
 
 def handle_pending_after_sales_action_confirmation(

@@ -7,6 +7,7 @@ an LLM never receives authority to invent another one.
 from __future__ import annotations
 
 from app.schemas.agent_harness import AgentRole, CapabilityProfile, SkillDefinition
+from app.schemas.task_orchestration import TaskKind, TurnPlan
 
 
 SKILL_CATALOG_VERSION = "mall-business-skills.v1"
@@ -39,7 +40,7 @@ _SKILLS: tuple[SkillDefinition, ...] = (
         owner_role="unified_after_sales",
         input_contract="OrderExceptionInput/v1",
         output_contract="VerifiedDiagnosis/v1",
-        allowed_tool_ids=("order_service", "logistics_service", "rag_search"),
+        allowed_tool_ids=("order_service", "logistics_service", "inventory_service", "rag_search"),
         allowed_state_transitions=("needs_identifier", "diagnosis_ready", "clarification_required", "safe_failure"),
         required_evidence_kinds=("order_fact", "logistics_fact"),
         max_model_calls=7,
@@ -126,7 +127,7 @@ _CAPABILITY_PROFILES: tuple[CapabilityProfile, ...] = (
             "after_sales_proposal",
             "case_handoff",
         ),
-        allowed_tool_ids=("order_service", "logistics_service", "rag_search"),
+        allowed_tool_ids=("order_service", "logistics_service", "inventory_service", "rag_search"),
         business_writes_allowed=False,
     ),
     CapabilityProfile(
@@ -180,22 +181,43 @@ def assert_tool_allowed_for_skill(role: AgentRole, skill_id: str, tool_name: str
     return skill
 
 
-def select_customer_skill(*, intent_name: str, route: str, tool_name: str | None = None) -> str:
-    """Map only already-validated server intent/route values to a closed Skill.
+def select_customer_skill(
+    *,
+    plan: TurnPlan,
+    active_task_kind: TaskKind | None = None,
+) -> str:
+    """Choose a closed Skill from the already-validated task-aware plan.
 
-    This is deliberately not a second natural-language classifier and never
-    looks at customer text. Unknown routes fail rather than falling back to a
-    broad privilege set.
+    ``TurnPlan`` is the only semantic input.  This catalog never sees raw
+    customer text and does not recreate an intent classifier from routes or
+    keywords.  ``active_task_kind`` is server-owned state supplied only when a
+    recovered Agent task is being executed; it cannot expand the role's tool
+    allow-list.
     """
 
-    if route == "rag" or tool_name == "rag_search" or intent_name == "after_sales_policy":
-        return "policy_question_answering"
-    if route == "agent" or intent_name in {"query_order_status", "query_logistics", "query_inventory"}:
+    task_kind = active_task_kind or plan.task_kind
+    tool_name = plan.tool_call.name if plan.tool_call is not None else None
+
+    if task_kind == "order_diagnosis":
         return "order_exception_diagnosis"
-    if route == "after_sales_flow":
-        if intent_name == "after_sales_policy":
-            return "policy_question_answering"
+    if task_kind in {"after_sales_draft", "after_sales_modification"}:
         return "after_sales_proposal"
-    if route == "tool_calling" and tool_name in {"order_service", "logistics_service"}:
+    if plan.business_intent == "after_sales_policy":
+        return "policy_question_answering"
+    if plan.route == "rag" or tool_name == "rag_search":
+        return "policy_question_answering"
+    if plan.business_intent in {
+        "query_order_status",
+        "query_logistics",
+        "query_inventory",
+    }:
+        return "order_exception_diagnosis"
+    if plan.route == "after_sales_flow":
+        return "after_sales_proposal"
+    if plan.route == "tool_calling" and tool_name in {
+        "order_service",
+        "logistics_service",
+        "inventory_service",
+    }:
         return "order_exception_diagnosis"
     raise SkillPolicyError("当前受控路由没有可用业务 Skill。")

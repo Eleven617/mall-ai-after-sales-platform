@@ -1,4 +1,5 @@
 import type {
+  AgentTaskPublicView,
   AfterSalesApplicationView,
   CustomerFeedbackRequest,
   CustomerFeedbackReasonCode,
@@ -91,6 +92,79 @@ export async function sendCustomerMessage(
     throw new CustomerServiceApiError("AI 服务返回的数据格式不符合客服接口约定。");
   }
   return payload;
+}
+
+export async function createAgentTask(
+  request: { session_id: string; goal: string; success_criteria?: string[] },
+  authorization: string,
+): Promise<AgentTaskPublicView> {
+  const response = await fetch(`${apiBaseUrl}/agent-tasks`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: authorization },
+    body: JSON.stringify(request),
+  }).catch(() => {
+    throw new CustomerServiceApiError("无法连接 Agent Runtime 服务。", 503);
+  });
+  return parseAgentTaskResponse(response, "创建 Agent 任务失败");
+}
+
+export async function getAgentTasks(
+  sessionId: string,
+  authorization: string,
+): Promise<AgentTaskPublicView[]> {
+  const response = await fetch(
+    `${apiBaseUrl}/agent-tasks?session_id=${encodeURIComponent(sessionId)}`,
+    { method: "GET", headers: { Authorization: authorization } },
+  ).catch(() => {
+    throw new CustomerServiceApiError("无法读取 Agent 任务。", 503);
+  });
+  const payload = await parseJsonBody(response);
+  if (!response.ok) {
+    throw new CustomerServiceApiError(
+      extractErrorDetail(payload) || `读取 Agent 任务失败（HTTP ${response.status}）。`,
+      response.status,
+    );
+  }
+  if (!Array.isArray(payload) || !payload.every(isAgentTaskPublicView)) {
+    throw new CustomerServiceApiError("Agent 任务返回的数据格式不符合公开接口约定。", 502);
+  }
+  return payload;
+}
+
+export async function continueAgentTask(
+  taskRef: string,
+  message: string,
+  authorization: string,
+): Promise<AgentTaskPublicView> {
+  const response = await fetch(
+    `${apiBaseUrl}/agent-tasks/${encodeURIComponent(taskRef)}/messages`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: authorization },
+      body: JSON.stringify({ message }),
+    },
+  ).catch(() => {
+    throw new CustomerServiceApiError("无法继续 Agent 任务。", 503);
+  });
+  return parseAgentTaskResponse(response, "继续 Agent 任务失败");
+}
+
+export async function confirmAgentTaskAction(
+  taskRef: string,
+  confirmation: "confirm" | "withdraw",
+  authorization: string,
+): Promise<AgentTaskPublicView> {
+  const response = await fetch(
+    `${apiBaseUrl}/agent-tasks/${encodeURIComponent(taskRef)}/action`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: authorization },
+      body: JSON.stringify({ confirmation }),
+    },
+  ).catch(() => {
+    throw new CustomerServiceApiError("Agent 行动确认服务暂不可用。", 503);
+  });
+  return parseAgentTaskResponse(response, "Agent 行动确认失败");
 }
 
 export async function loginCustomer(
@@ -890,6 +964,23 @@ async function parseJsonBody(response: Response): Promise<unknown> {
   }
 }
 
+async function parseAgentTaskResponse(
+  response: Response,
+  actionLabel: string,
+): Promise<AgentTaskPublicView> {
+  const payload = await parseJsonBody(response);
+  if (!response.ok) {
+    throw new CustomerServiceApiError(
+      extractErrorDetail(payload) || `${actionLabel}（HTTP ${response.status}）。`,
+      response.status,
+    );
+  }
+  if (!isAgentTaskPublicView(payload)) {
+    throw new CustomerServiceApiError("Agent Runtime 返回的数据格式不符合公开接口约定。", 502);
+  }
+  return payload;
+}
+
 function extractErrorDetail(payload: unknown): string | null {
   if (!payload || typeof payload !== "object") {
     return null;
@@ -906,6 +997,34 @@ function isCustomerServiceResponse(
   }
   const data = payload as Record<string, unknown>;
   return typeof data.answer === "string";
+}
+
+function isAgentTaskPublicView(payload: unknown): payload is AgentTaskPublicView {
+  if (!payload || typeof payload !== "object") {
+    return false;
+  }
+  const data = payload as Record<string, unknown>;
+  return (
+    typeof data.task_ref === "string"
+    && typeof data.goal === "string"
+    && typeof data.status === "string"
+    && typeof data.plan_version === "number"
+    && Array.isArray(data.plan_nodes)
+    && Array.isArray(data.artifacts)
+    && Array.isArray(data.limitation_codes)
+    && (data.context_summary === undefined || data.context_summary === null || isAgentTaskContextView(data.context_summary))
+  );
+}
+
+function isAgentTaskContextView(payload: unknown): boolean {
+  if (!payload || typeof payload !== "object") return false;
+  const data = payload as Record<string, unknown>;
+  return (
+    typeof data.version === "number"
+    && typeof data.token_estimate_before === "number"
+    && typeof data.token_estimate_after === "number"
+    && typeof data.fact_reference_retention === "number"
+  );
 }
 
 function isCustomerServiceCaseView(payload: unknown): payload is CustomerServiceCaseView {

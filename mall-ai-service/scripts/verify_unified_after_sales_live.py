@@ -59,7 +59,9 @@ def main() -> int:
     api_base = web_base + "/api"
 
     try:
-        with httpx.Client(timeout=45) as client:
+        # Website-proxy verification must stay on the local Compose path even
+        # when the host OS has a system proxy configured.
+        with httpx.Client(timeout=45, trust_env=False) as client:
             authorization_a = _login(client, api_base, inputs.user_a, inputs.password)
             authorization_b = _login(client, api_base, inputs.user_b, inputs.password)
             session_id = _create_conversation(client, api_base, authorization_a)
@@ -194,7 +196,7 @@ def _bootstrap_disposable_inputs(password: str) -> LiveInputs:
     )
     java_base = os.getenv("MALL_JAVA_BASE_URL", "http://127.0.0.1:8085").rstrip("/")
     try:
-        with httpx.Client(timeout=45) as client:
+        with httpx.Client(timeout=45, trust_env=False) as client:
             order_a = _prepare_account_order(
                 client,
                 java_base,

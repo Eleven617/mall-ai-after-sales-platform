@@ -140,5 +140,27 @@ class Settings:
         os.getenv("RELIABILITY_CIRCUIT_COOLDOWN_SECONDS", "20")
     )
 
+    # Mall v3.0 Task Runtime. MongoDB is the Docker/local source of truth for
+    # task/plan/artifact/action indexes; Redis is intentionally limited to
+    # locks and short-lived event/cache duties. Unit tests explicitly select
+    # memory through dependency injection rather than changing production
+    # defaults.
+    agent_task_store_backend: str = os.getenv("AGENT_TASK_STORE_BACKEND", "memory")
+    agent_task_mongo_url: str = os.getenv(
+        "AGENT_TASK_MONGO_URL", "mongodb://127.0.0.1:27017"
+    )
+    agent_task_mongo_database: str = os.getenv("AGENT_TASK_MONGO_DATABASE", "mall_ai")
+    agent_task_mongo_collection: str = os.getenv(
+        "AGENT_TASK_MONGO_COLLECTION", "agent_task_records"
+    )
+    agent_task_ttl_seconds: int = int(os.getenv("AGENT_TASK_TTL_SECONDS", "86400"))
+    agent_task_event_limit: int = int(os.getenv("AGENT_TASK_EVENT_LIMIT", "64"))
+    executor_model: str = os.getenv("EXECUTOR_MODEL", os.getenv("DEEPSEEK_MODEL", "deepseek-chat"))
+    context_model: str = os.getenv("CONTEXT_MODEL", os.getenv("DEEPSEEK_MODEL", "deepseek-chat"))
+    critic_model: str = os.getenv("CRITIC_MODEL", os.getenv("DEEPSEEK_MODEL", "deepseek-chat"))
+    executor_timeout_seconds: float = float(os.getenv("EXECUTOR_TIMEOUT_SECONDS", "45"))
+    context_timeout_seconds: float = float(os.getenv("CONTEXT_TIMEOUT_SECONDS", "20"))
+    critic_timeout_seconds: float = float(os.getenv("CRITIC_TIMEOUT_SECONDS", "20"))
+
 
 settings = Settings()

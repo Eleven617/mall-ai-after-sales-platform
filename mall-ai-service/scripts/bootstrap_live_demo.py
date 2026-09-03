@@ -71,7 +71,10 @@ def main() -> int:
     )
 
     try:
-        with httpx.Client(timeout=20) as client:
+        # These fixtures intentionally exercise the local Compose Java API.
+        # httpx otherwise honours Windows system proxy settings, which can
+        # proxy 127.0.0.1 and turn a healthy local endpoint into HTTP 502.
+        with httpx.Client(timeout=20, trust_env=False) as client:
             orders = [
                 _prepare_account_order(
                     client,

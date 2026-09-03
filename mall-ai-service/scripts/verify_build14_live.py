@@ -63,7 +63,7 @@ def main() -> int:
     )
 
     try:
-        with httpx.Client(timeout=120) as client:
+        with httpx.Client(timeout=120, trust_env=False) as client:
             orders = [
                 _prepare_account_order(
                     client,

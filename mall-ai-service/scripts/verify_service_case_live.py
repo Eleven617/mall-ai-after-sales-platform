@@ -59,7 +59,7 @@ def main() -> int:
     web_base = os.getenv("MALL_DEMO_WEB_BASE_URL", "http://127.0.0.1:5173").rstrip("/")
     api_base = f"{web_base}/api"
     try:
-        with httpx.Client(timeout=60) as client:
+        with httpx.Client(timeout=60, trust_env=False) as client:
             _expect_status(client.get(f"{api_base}/service-operations/cases"), 401, "anonymous processor read")
             password = os.environ["MALL_SERVICE_CASE_LIVE_PASSWORD"]
             customer_a = _customer_login(client, api_base, os.environ["MALL_SERVICE_CASE_LIVE_USER_A"], password)

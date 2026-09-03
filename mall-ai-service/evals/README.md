@@ -86,3 +86,19 @@ None of these outcomes changes a customer configuration automatically.
   `tests/test_durable_diagnosis.py`: owner mismatch, expiry/cancellation,
   version incompatibility, duplicate/replayed resume, concurrent resume lock
   and Redis failure all stop without an extra read or write.
+
+## Task-aware conversation orchestration suite
+
+- `task_orchestration_cases.v1.json` separates a deterministic
+  `contract_mock` gate from a manually run `live_model_synthetic` P0 check.
+  It covers active/paused task transitions, policy/chat detours, natural
+  recovery, confirmation-gate isolation, two-task conflict clarification,
+  missing identifiers and the distinction between a submitted after-sales
+  application's progress and package logistics.
+- Run `python scripts/evaluate_task_orchestration.py --mode contract_mock` in
+  CI. It uses an in-memory conversation store and synthetic plans only: no
+  model, Redis, Java, RAG, customer conversation or business write is touched.
+- Run `python scripts/evaluate_task_orchestration.py --mode
+  live_model_synthetic` only for explicit prompt/schema/task-runtime changes.
+  It makes P0 calls with versioned synthetic messages and safe task summaries;
+  model/network failure is reported as `ENVIRONMENT_BLOCKED`, never as a pass.

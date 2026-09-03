@@ -9,12 +9,6 @@
 
 客户请求绝不会等待 52 条 RAG 黄金集或质量 Agent 的评测。质量运行由质量开发者独立身份显式发起。
 
-## GitHub CI 中的确定性质量门
-
-`quality-evaluation` 工作流只运行无需模型 Key、Chroma 索引、生产数据库或真实客户数据的确定性范围：`quality-agent.v2` 的 17 条 `contract_mock`、质量 Agent 20 条 pytest 合同、RAG 2.0 55 条 pytest 合同、以及 8 条 Chunk/Metadata 合同。它还构建开发者质量页面，但不执行 `live_model_synthetic`。
-
-真实模型合成评测仍只可在本地、手动、夜间或发版前显式发起。网络或模型服务不可用应记作 `environment_blocked`，不能因 CI 通过或失败而被误写为模型质量结论。远程 CI 的具体运行链接与安全扫描范围见 [公开发布记录](PUBLIC_RELEASE_RECORD.md)。
-
 ## 固定 Profile
 
 `mall-ai-service/app/services/evaluation_profile_service.py` 固化以下版本化 Profile：

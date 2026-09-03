@@ -118,6 +118,7 @@ class IntentSchemaTests(unittest.TestCase):
                 "route": "after_sales_flow",
                 "need_tool": False,
                 "tool_call": None,
+                "chat_scope": None,
             }
         )
 
@@ -177,14 +178,26 @@ class IntentSchemaTests(unittest.TestCase):
         responses = [
             {
                 "intent": "apply_after_sales",
+                "task_relation": "start_new_task",
                 "route": "after_sales_flow",
+                "task_kind": "after_sales_draft",
+                "confirmation_intent": "none",
+                "rationale_code": "new_long_running_goal",
                 "need_tool": "false",
+                "reply": None,
+                "chat_scope": None,
             },
             {
                 "intent": "apply_after_sales",
+                "task_relation": "start_new_task",
                 "route": "after_sales_flow",
+                "task_kind": "after_sales_draft",
+                "confirmation_intent": "none",
+                "rationale_code": "new_long_running_goal",
                 "need_tool": False,
                 "tool_call": None,
+                "reply": None,
+                "chat_scope": None,
             },
         ]
         with patch(
@@ -198,9 +211,17 @@ class IntentSchemaTests(unittest.TestCase):
         self.assertEqual(2, generate_json.call_count)
         self.assertIn('"validationErrors":["schema_invalid"]', generate_json.call_args_list[1].kwargs["message"])
 
-    def test_all_after_sales_actions_are_closed_to_the_unified_flow(self) -> None:
+    def test_policy_is_read_only_rag_and_other_after_sales_actions_use_unified_flow(self) -> None:
+        policy = IntentResponse.model_validate(
+            {
+                "intent": "after_sales_policy",
+                "route": "rag",
+                "need_tool": False,
+                "tool_call": None,
+            }
+        )
+        self.assertEqual("rag", policy.route)
         actions = (
-            "after_sales_policy",
             "after_sales_eligibility",
             "apply_after_sales",
             "list_after_sales",
@@ -226,9 +247,15 @@ class IntentSchemaTests(unittest.TestCase):
 
         response = {
             "intent": "after_sales_policy",
-            "route": "after_sales_flow",
+            "task_relation": "standalone_answer",
+            "route": "rag",
+            "task_kind": None,
+            "confirmation_intent": "none",
+            "rationale_code": "standalone_question",
             "need_tool": False,
             "tool_call": None,
+            "reply": None,
+            "chat_scope": None,
         }
         with patch("app.services.intent_service.generate_json", return_value=response) as generate_json:
             detect_intent("质量问题退货运费谁承担？")
@@ -236,12 +263,78 @@ class IntentSchemaTests(unittest.TestCase):
         system_prompt = generate_json.call_args.kwargs["system_prompt"]
         self.assertIn(f"intent_prompt_version={INTENT_PROMPT_VERSION}", system_prompt)
 
-    def test_rejects_after_sales_intent_outside_unified_flow(self) -> None:
+    def test_prompt_marks_colloquial_order_delay_as_mall_scope_not_general_chat(self) -> None:
+        self.assertIn("订单为什么还没到，我现在应该怎么办？", INTENT_SYSTEM_PROMPT)
+        self.assertIn("绝不能归为 general_chat", INTENT_SYSTEM_PROMPT)
+
+    def test_prompt_distinguishes_after_sales_application_progress_from_logistics_progress(self) -> None:
+        self.assertIn("已提交售后申请进度", INTENT_SYSTEM_PROMPT)
+        self.assertIn("status_after_sales，route=after_sales_flow", INTENT_SYSTEM_PROMPT)
+        self.assertIn("订单履约进度", INTENT_SYSTEM_PROMPT)
+
+    def test_prompt_requires_clarification_for_ambiguous_two_task_context(self) -> None:
+        self.assertIn("active_task 和 paused_task 同时存在", INTENT_SYSTEM_PROMPT)
+        self.assertIn("resolve_task_conflict", INTENT_SYSTEM_PROMPT)
+
+    def test_turn_plan_accepts_existing_after_sales_status_as_one_turn_flow(self) -> None:
+        from app.schemas.task_orchestration import TurnPlan
+
+        plan = TurnPlan.model_validate(
+            {
+                "business_intent": "status_after_sales",
+                "task_relation": "standalone_answer",
+                "route": "after_sales_flow",
+                "task_kind": None,
+                "confirmation_intent": "none",
+                "rationale_code": "standalone_question",
+                "need_tool": False,
+                "tool_call": None,
+                "reply": None,
+                "chat_scope": None,
+            }
+        )
+        self.assertEqual("status_after_sales", plan.business_intent)
+        self.assertEqual("after_sales_flow", plan.route)
+
+    def test_turn_plan_rejects_confirmation_that_impersonates_a_conversation_task(self) -> None:
+        from app.schemas.task_orchestration import TurnPlan
+
+        with self.assertRaises(ValidationError):
+            TurnPlan.model_validate(
+                {
+                    "business_intent": "apply_after_sales",
+                    "task_relation": "continue_active",
+                    "route": "after_sales_flow",
+                    "task_kind": "after_sales_draft",
+                    "confirmation_intent": "confirm",
+                    "rationale_code": "active_task_match",
+                    "need_tool": False,
+                    "tool_call": None,
+                    "reply": None,
+                    "chat_scope": None,
+                }
+            )
+
+    def test_task_aware_turn_plan_rejects_missing_relation_fields(self) -> None:
+        """Pre-upgrade intent JSON cannot silently choose a task transition."""
+        from app.schemas.task_orchestration import TurnPlan
+
+        with self.assertRaises(ValidationError):
+            TurnPlan.model_validate(
+                {
+                    "intent": "after_sales_policy",
+                    "route": "rag",
+                    "need_tool": False,
+                    "tool_call": None,
+                }
+            )
+
+    def test_rejects_policy_intent_outside_read_only_rag(self) -> None:
         with self.assertRaises(ValidationError):
             IntentResponse.model_validate(
                 {
                     "intent": "after_sales_policy",
-                    "route": "rag",
+                    "route": "after_sales_flow",
                     "need_tool": False,
                 }
             )

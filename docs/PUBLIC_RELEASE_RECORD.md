@@ -1,6 +1,14 @@
 # 公开发布记录
 
-更新时间：2026-09-02。本文记录本仓库公开发布准备阶段实际完成的工作，严格区分已验证事实、已知边界和待补材料。账号密码、API Key、Token、真实订单、真实客户对话、Docker 卷和本地模型/索引均不在仓库或本文中。
+## 2026-09-03 — Mall v3.0 Runtime 发布硬化（本地证据）
+
+本次在既有 v3 Runtime 基础上补齐了可追溯的 release manifest、确定性发布预检、CI 接线和公开证据入口。`evals/v3/release-manifest.json` 当前包含 **478 条唯一 deterministic Case、36 条手工 live-synthetic Case、12 个性能 Profile**；其分类数量、fixture hash、预算、可执行断言和禁止跳过字段由 `mall-ai-service/scripts/validate_v3_release_manifest.py` 校验。
+
+截至本记录生成时，本机预检实际结果为：**478/478 注册 Case、8/8 代表性 Task Runtime 安全冒烟通过**，无模型 Key、无 Java/数据库/业务写入。新增的 `tests/test_release_manifest.py` 与 `tests/test_release_evaluation.py` 也纳入 FastAPI 全量回归。该结果是本机 deterministic/合成证据，不是 GitHub Actions 或生产能力结论；远程状态须以本次提交对应的 Actions 页面为准。
+
+发布集成方式为单一根仓库快照：不提交 `mall2/.git`，保留根目录及 `mall2/LICENSE`、NOTICE、上游归属，并在 [UPSTREAM.md](../UPSTREAM.md) 说明 `macrozheng/mall` 二次开发边界。未提交 `.env`、密码、Token、模型权重、Chroma 索引、客户数据或完整 Trace。
+
+更新时间：2026-09-01。本文记录本仓库公开发布准备阶段实际完成的工作，严格区分已验证事实、已知边界和待补材料。账号密码、API Key、Token、真实订单、真实客户对话、Docker 卷和本地模型/索引均不在仓库或本文中。
 
 ## 发布范围
 
@@ -8,59 +16,6 @@
 - 发布内容：可复现的本地合成演示代码、文档、测试与启动脚本。
 - 不包含：真实生产数据、密钥、预构建的 Chroma 索引、本地 Embedding/Reranker 权重、Docker 命名卷、日志或浏览器会话数据。
 - 视频演示：有意留待后续制作；当前仓库已经提供文字演示脚本，不将“视频已完成”作为发布结论。
-
-## 2026-09-02：真实页面截图与本地入口复验
-
-在本机现有 Docker Compose（八个常驻服务均为 healthy）上，用本地合成身份取得并人工检查了三张公开截图：
-
-- [`docs/assets/customer-policy-conversation.png`](assets/customer-policy-conversation.png)：客户政策咨询页面，显示真实运行的合成政策问答。
-- [`docs/assets/operations-handoff-overview.png`](assets/operations-handoff-overview.png)：运营只读工作台，显示 Java 聚合的转人工概览。
-- [`docs/assets/quality-evaluation-dashboard.png`](assets/quality-evaluation-dashboard.png)：质量开发者工作台，显示 `quality-agent.v2` 的 `contract_mock` 结果（17/17）。
-
-截图尺寸均为 1440×1000；只含合成账号、合成咨询和合成统计，不含密码、Token、真实订单、客户原话、RAG 原文、内部 Trace 或业务密钥。截图是本机 Docker 证据，不是线上部署证据。
-
-同时修复了 `scripts/Initialize-LocalDemoAccess.ps1` 在 Windows PowerShell 5.1 下的真实兼容缺口：原来的带引号 `sh -ec` 和 `python -c` 原生参数在 `docker.exe` 边界会被错误拆分；现在通过容器内安全命令和标准输入传递 SQL/Python，并显式设置 UTF-8 输出编码。PowerShell 5.1 语法检查、`-DryRun` 事务回滚和一次本地合成身份初始化/登录边界复验均通过；密码未写入文件、输出或 Git。
-
-### 本次展示更新的完整回归（提交 `0d407783fec9291b3d8d5d01befc38c0e009c553`）
-
-此提交已在 GitHub `main` 真实通过：[mall-ci #33613512109](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/33613512109) 和 [quality-evaluation #33613512012](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/33613512012)。前者的 Python、Java、Web、Compose contract、Gitleaks/OSV 共 5 个 Job 均成功；后者的隔离质量 Job 成功。
-
-| 范围 | 实际结果 |
-| --- | --- |
-| FastAPI 回归 | `python -m pytest -q`：`292 passed, 20 subtests passed`；新增 1 条 Windows 本地演示入口回归。 |
-| 质量与 RAG | quality-agent 17/17；质量合同 20 passed；RAG 合同 55 passed；Chunk/Metadata 8/8（0 外部模型调用）；LangGraph 9 tests passed。 |
-| Web / Java / Compose | Vue 生产构建成功；Java package 成功、portal 13 passed、admin 6 passed；Compose 合同通过且八个常驻服务 healthy。 |
-
-上述范围独立计数，不能相加为一个总数。远程安全 Job 成功证明当前工作流的 Gitleaks 与 OSV 直接依赖/锁文件门已通过；本机 Docker 当时没有可用的 Docker Hub HTTPS 代理，无法额外拉取 Gitleaks 工具镜像，未把这件环境阻塞写成扫描成功。
-
-## 2026-09-02：公开 CI 收口证据
-
-提交 [`c5ad321355a5c9979ada83f72294c70440964cc8`](https://github.com/Eleven617/mall-ai-after-sales-platform/commit/c5ad321355a5c9979ada83f72294c70440964cc8) 已在 GitHub `main` 真实触发并通过两个独立工作流：
-
-- [`mall-ci` 成功运行 #33607689472](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/33607689472)：Python、Java 8、Vue、Compose 静态合同、Gitleaks 与 OSV 直接依赖/锁文件门禁均为成功。
-- [`quality-evaluation` 成功运行 #33607689443](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/33607689443)：合成 `contract_mock`、质量 Agent 合同、RAG 2.0 合同、Chunk/Metadata 合同与开发者质量页面构建均为成功。
-
-这两条远程结论与本机结果不能混为同一组数字。为尽量接近 GitHub Ubuntu runner，本次还在临时的 Python 3.12 / Maven 3.9 + Temurin 8 容器中复跑了下列命令；没有使用工作区 `.venv`、Chroma 索引、本地模型、模型 Key、数据库或客户数据：
-
-| 范围 | 干净环境实际结果 |
-| --- | --- |
-| Python 自动化回归 | `291 passed, 20 subtests passed`。 |
-| 独立 LangGraph 学习实验 | `9` 条确定性 `unittest` 通过；升级后的 `langgraph==1.2.11` 仍覆盖最大步数、非法动作、暂停/恢复与事实泄露边界。 |
-| 质量 Agent 合同 | `quality-agent.v2`：`17/17`；独立 pytest 合同：`20 passed`。 |
-| RAG 2.0 合同 | `55 passed`；不运行真实模型，也不改变 Dense 默认结论。 |
-| Chunk / Metadata 合同 | `rag-chunk-metadata.v1`：`8/8`，`0` 外部模型调用。 |
-| Java 8 | `mvn -pl mall-portal,mall-admin -am -DskipTests package` 成功；portal 定向 `13 passed`，admin 定向 `6 passed`。 |
-| Web | 隔离 Node 22 容器中 `npm ci && npm run build` 成功；远程工作流另以 Node 20 成功构建。 |
-| Compose 静态合同 | `docker compose config --quiet` 成功；未启动、重建或删除 Compose 服务/卷。 |
-
-### 依赖与密钥扫描范围
-
-- Gitleaks 仍为远程必过门，不使用 `continue-on-error`、`|| true` 或忽略规则伪造通过。
-- OSV 远程门逐一扫描所有 Maven 模块 POM 的**直接依赖声明**、三个 Python requirements 文件和 npm lockfile；`mall2` 的本地 `SNAPSHOT` reactor 坐标不能在 OSV 的隔离容器中解析，因此不把解析错误伪装成扫描成功，也不宣称这是完整传递依赖 SBOM 扫描。
-- `langgraph` 实验 pin 已从 `0.6.11` 升至 `1.2.11`，CI pytest 固定为已修复公告 `GHSA-6w46-j5rx-g56g` 的 `9.0.3`；Java 直接依赖同步升至可兼容的最新 Java 8 线版本。
-- `osv-scanner.toml` 保留三条可见、带到期日的 Java 8 风险接受项：`GHSA-5m4m-73w9-8433`、`GHSA-5vpf-xvv7-c8vh`、`GHSA-9fw2-h3hf-293r`。Spring Data 2.7.18 没有同线修复；控制器合同测试仅降低受影响绑定面，并不是完整修复。必须在 `2027-09-02` 前迁移到 Spring Boot 3 / Java 17 或重新作出有证据的处理。
-
-因此，可如实表述为“GitHub CI 的当前直接依赖/锁文件安全门和回归门已通过”，不能表述为“所有传递依赖零风险”或“已完成独立安全审计”。
 
 ## 本次公开发布复核
 
@@ -81,7 +36,7 @@
 ## 已知边界与未验证项
 
 1. Java 全量 Maven 测试未作为本次“全部通过”结论。历史 `MallPortalApplicationTests` 需要可达的 MySQL 集成环境，在本机曾因 `Public Key Retrieval is not allowed` 失败；这不是已通过的业务单测，故只报告上述显式定向测试结果。
-2. GitHub Actions 的当前远程证据见上节两个成功运行；它覆盖 CI 所列回归、构建、Compose 静态合同、质量合同与直接依赖/锁文件扫描，不能替代 Java 全量集成测试、完整传递依赖 SBOM 审计或独立安全审计。
+2. GitHub Actions 工作流已随代码提交，但本次未取得远端运行状态：GitHub API 查询遭遇速率限制。因此不能写“CI 已绿”。
 3. 本地 Docker 验收保留已有命名卷和合成演示数据；没有清库、删卷、删历史日志或模拟外部支付/仓储/物流/维修成功。
 4. 真实模型调用需要由使用者在本机配置自己的密钥和可达网络；无模型配置时系统会安全停止模型相关请求，仍可做结构与权限验证。
 5. 清理后的 `main` 不再包含旧认证值的可达提交；已经获取过旧提交的本地克隆、缓存或镜像不受 Git 历史重写控制。若该旧值曾在某个真实环境中有效，应由该环境维护者单独轮换对应的认证签名/会话密钥。

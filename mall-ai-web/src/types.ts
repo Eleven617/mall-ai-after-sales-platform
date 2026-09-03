@@ -9,11 +9,77 @@ export interface VerifiedFactCard {
   fields: VerifiedFactField[];
 }
 
-export interface PendingAction {
-  kind: "awaiting_order_sn" | "awaiting_sku_id";
-  label: string;
-  resumable: boolean;
-  cancel_message: "取消查询";
+export interface TaskPublicState {
+  task_status: "active" | "paused" | "none";
+  task_label?: string | null;
+  task_hint?: string | null;
+}
+
+/** Safe public projection of a Mall v3 Agent Runtime task. */
+export type AgentTaskStatus =
+  | "created"
+  | "planning"
+  | "executing"
+  | "replanning"
+  | "waiting_for_user"
+  | "waiting_for_async_task"
+  | "ready_to_commit"
+  | "committing"
+  | "completed"
+  | "failed"
+  | "blocked"
+  | "cancelled";
+
+export interface AgentTaskPlanNodeView {
+  node_label: string;
+  goal: string;
+  status: "pending" | "running" | "completed" | "blocked" | "skipped";
+}
+
+export interface AgentTaskArtifactView {
+  kind: string;
+  summary: string;
+  source_skill: string;
+  factuality: "verified" | "derived" | "proposal" | "unavailable";
+}
+
+export interface AgentTaskActionView {
+  action_skill: string;
+  expected_effect: string;
+  user_explanation: string;
+  confirmation_status:
+    | "not_required"
+    | "awaiting_confirmation"
+    | "confirmed"
+    | "withdrawn"
+    | "expired"
+    | "committed"
+    | "blocked"
+    | "unknown";
+}
+
+/** Aggregate-only Context Pack metrics; no prompt, source reference or raw fact is exposed. */
+export interface AgentTaskContextView {
+  version: number;
+  token_estimate_before: number;
+  token_estimate_after: number;
+  fact_reference_retention: number;
+}
+
+export interface AgentTaskPublicView {
+  /** Opaque public reference; internal task IDs and action arguments stay server-side. */
+  task_ref: string;
+  goal: string;
+  status: AgentTaskStatus;
+  plan_version: number;
+  plan_nodes: AgentTaskPlanNodeView[];
+  artifacts: AgentTaskArtifactView[];
+  open_question?: string | null;
+  action?: AgentTaskActionView | null;
+  outcome?: string | null;
+  limitation_codes: string[];
+  execution_summary?: string | null;
+  context_summary?: AgentTaskContextView | null;
 }
 
 export type DiagnosisCategory =
@@ -169,8 +235,8 @@ export interface CustomerServiceResponse {
   after_sales_pending_action?: AfterSalesPendingActionView | null;
   after_sales_selection?: AfterSalesSelectionView | null;
   after_sales_applications?: AfterSalesApplicationView[] | null;
-  pending_action?: PendingAction | null;
   diagnosis?: DiagnosisResult | null;
+  task?: TaskPublicState | null;
   response_ref?: string | null;
 }
 

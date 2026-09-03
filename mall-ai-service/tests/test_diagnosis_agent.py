@@ -3,11 +3,6 @@ from unittest.mock import patch
 
 from app.schemas.tool import ToolCall
 from app.services.agent_service import run_agent_result
-from app.services.durable_diagnosis import (
-    DurableDiagnosisManager,
-    SanitizedMemorySaver,
-    set_durable_diagnosis_manager_for_tests,
-)
 from app.services.llm_service import LLMResponse
 from app.services.mall_client import MallOrderNotAccessibleError
 from app.services.trace_service import InMemoryTraceSink, set_trace_sink_for_tests
@@ -17,13 +12,9 @@ class DiagnosisAgentTests(unittest.TestCase):
     def setUp(self) -> None:
         self.trace_sink = InMemoryTraceSink()
         set_trace_sink_for_tests(self.trace_sink)
-        set_durable_diagnosis_manager_for_tests(
-            DurableDiagnosisManager(SanitizedMemorySaver(), ttl_seconds=600)
-        )
 
     def tearDown(self) -> None:
         set_trace_sink_for_tests(None)
-        set_durable_diagnosis_manager_for_tests(None)
 
     @patch("app.services.agent_service.call_tool")
     @patch("app.services.agent_service.generate_with_tools")
@@ -69,26 +60,32 @@ class DiagnosisAgentTests(unittest.TestCase):
         self.assertIn("订单号", result.answer)
         self.assertIn("tool_argument_requested", [event.event for event in self.trace_sink.events])
 
+    @patch("app.services.agent_service.call_tool")
     @patch("app.services.agent_service.generate_with_tools")
-    def test_order_exception_route_pauses_before_an_unnecessary_second_model_call(
+    def test_missing_order_identifier_is_normal_waiting_input_without_durable_interrupt(
         self,
         generate_with_tools,
+        call_tool,
     ) -> None:
+        generate_with_tools.return_value = LLMResponse(
+            tool_calls=[{"name": "order_service", "arguments": {}}]
+        )
         result = run_agent_result(
             "订单为什么没有按预期送达，物流是否异常，我下一步怎么办？",
             session_id="diagnosis-durable-entry",
             diagnosis=True,
-            diagnosis_require_order_identifier=True,
+            diagnosis_requires_order_facts=True,
         )
 
-        self.assertTrue(result.durable_checkpoint_pending)
+        self.assertFalse(result.durable_checkpoint_pending)
         self.assertEqual("order_service", result.pending_tool_call.name)
-        self.assertIn("不会创建售后单", result.answer)
-        generate_with_tools.assert_not_called()
+        self.assertIn("订单号", result.answer)
+        generate_with_tools.assert_called_once()
+        call_tool.assert_not_called()
 
     @patch("app.services.agent_service.call_tool")
     @patch("app.services.agent_service.generate_with_tools")
-    def test_order_exception_with_one_identifier_verifies_java_fact_before_model_planning(
+    def test_order_exception_model_plans_before_the_server_executes_its_read_only_tool(
         self,
         generate_with_tools,
         call_tool,
@@ -98,7 +95,7 @@ class DiagnosisAgentTests(unittest.TestCase):
         def order_fact_before_model(call, _context):
             self.assertEqual("order_service", call.name)
             self.assertEqual(order_sn, call.arguments["order_sn"])
-            generate_with_tools.assert_not_called()
+            self.assertEqual(1, generate_with_tools.call_count)
             return {
                 "order_sn": order_sn,
                 "status": "已发货",
@@ -106,19 +103,50 @@ class DiagnosisAgentTests(unittest.TestCase):
             }
 
         call_tool.side_effect = order_fact_before_model
-        generate_with_tools.return_value = LLMResponse(content="已完成第一步核验。")
+        generate_with_tools.side_effect = [
+            LLMResponse(tool_calls=[{"name": "order_service", "arguments": {}}]),
+            LLMResponse(content="已完成第一步核验。"),
+        ]
 
         result = run_agent_result(
             f"订单号 {order_sn} 为什么没有按预期送达？",
             session_id="diagnosis-fixed-order-prerequisite",
             diagnosis=True,
-            diagnosis_require_order_identifier=True,
+            diagnosis_requires_order_facts=True,
         )
 
         self.assertEqual(1, call_tool.call_count)
-        self.assertEqual(1, generate_with_tools.call_count)
+        self.assertEqual(2, generate_with_tools.call_count)
         self.assertEqual("facts_incomplete", result.diagnosis.category)
         self.assertTrue(result.diagnosis.handoff)
+
+    @patch("app.services.agent_service.call_tool")
+    @patch("app.services.agent_service.generate_with_tools")
+    def test_unverified_free_text_in_order_diagnosis_becomes_waiting_input(
+        self,
+        generate_with_tools,
+        call_tool,
+    ) -> None:
+        generate_with_tools.return_value = LLMResponse(
+            content="请提供订单号后再查询。"
+        )
+
+        result = run_agent_result(
+            "订单一直没有发货，怎么处理？",
+            session_id="diagnosis-no-fact-free-text",
+            diagnosis=True,
+            diagnosis_requires_order_facts=True,
+        )
+
+        self.assertIsNotNone(result.pending_tool_call)
+        self.assertEqual("order_service", result.pending_tool_call.name)
+        self.assertEqual("needs_order_identifier", result.diagnosis.category)
+        self.assertIn("订单号", result.answer)
+        call_tool.assert_not_called()
+        self.assertIn(
+            "missing_identifier_fallback",
+            [event.event for event in self.trace_sink.events],
+        )
 
     @patch("app.services.agent_service.call_tool")
     @patch("app.services.agent_service.generate_with_tools")

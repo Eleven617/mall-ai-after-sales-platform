@@ -1,12 +1,14 @@
 # Mall 最终升级实施记录
 
-更新时间：2026-09-01（本地工作区、保留原有命名卷）。
+更新时间：2026-09-02（本地工作区、保留原有命名卷）。
 
 ## 结论与口径
 
 本次以 `C:\Users\12969\Desktop\hermes\output\Mall_可信AI售后与AgentOps平台_最终需求对接文档.md` 为唯一功能契约，对 FR-01～FR-19 的代码、自动化回归、Compose 与可执行本地现场路径进行了收口。它是本地合成 Demo 和 Apache-2.0 上游 mall 的二次开发，**不是**生产上线、真实客户系统、自动退款服务或线上模型路由平台。
 
 Java 始终是 JWT、订单/物流/资格、售后状态机、幂等、事务、Outbox 与最终写入权威；FastAPI 只做受限模型编排、公开 DTO、Redis 短期状态、RAG 和离线评测，绝不直连商城业务数据库。
+
+> 2026-09-02 后续收口：客户入口已从旧的 pending 优先恢复改为任务感知 P0 优先。`active_task` 与最多一个 `paused_task` 用于普通多轮澄清和自然恢复；缺订单号不再默认进入 Durable `interrupt()`。Proposal/Action 是不抢占聊天的独立 transaction gate。详见 [任务感知编排实施记录](TASK_ORCHESTRATION_IMPLEMENTATION_RECORD.md)。
 
 ## 本轮实际补强
 
@@ -25,7 +27,7 @@ Java 始终是 JWT、订单/物流/资格、售后状态机、幂等、事务、
 | FR-01 | 登录会员绑定会话、Redis 草案和 Durable checkpoint；猜测、跨账号、删除后恢复均拒绝。 | `routers/customer_service.py`、`conversation_scope.py`、`durable_diagnosis.py`、`test_conversation_*`、`test_durable_diagnosis.py` |
 | FR-02 | 政策与实时事实分层；版本化 Chunk/Metadata、Dense/BM25/RRF/Rerank 实验、证据核验和无证据安全停止。 | `rag_service.py`、`policy_retrieval.py`、`chunking_service.py`、`rag_evidence_verifier.py`、RAG/Chunk 测试与评测 |
 | FR-03 | 订单、物流、资格、申请状态仅走 Java 最小投影；客户只接收安全事实卡和查询时间。 | `mall_client.py`、`fact_presentation_service.py`、Java `AiAfterSalesApplicationController` |
-| FR-04 | 有界只读诊断：缺标识、中断恢复、候选歧义、工具失败和事实不足均澄清或安全停止。 | `diagnosis_agent.py`、`durable_diagnosis.py`、`test_diagnosis_*` |
+| FR-04 | 有界只读诊断：缺标识进入普通 waiting-input 任务；任务感知 P0 负责暂停/恢复，候选歧义、工具失败和事实不足均澄清或安全停止。 | `diagnosis_agent.py`、`task_orchestration_service.py`、`test_diagnosis_*`、`test_task_orchestration_service.py` |
 | FR-05 | 四类申请的统一售后图；草案绑定用户/会话/内容哈希/TTL，创建、取消、修改均先展示待确认动作。 | `unified_after_sales_graph.py`、`after_sales_application_service.py`、`test_unified_after_sales_graph.py` |
 | FR-06 | FastAPI 不写业务库；Java 在提交前复核归属、商品、资格、状态、版本和幂等。 | Java `AiAfterSalesApplicationServiceImpl`、`AiAfterSalesApplicationControllerTest` |
 | FR-07 | 申请/动作/审计/Outbox 同事务；发布、消费、回调和重复事件均以事件/动作幂等键保护。 | Java `AiAfterSalesOutboxPublisher`、`AiAfterSalesStatusEventReceiver`、portal 测试 |

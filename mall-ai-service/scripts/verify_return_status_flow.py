@@ -49,7 +49,7 @@ def main() -> int:
     ai_base = os.getenv("MALL_AI_BASE_URL", "http://127.0.0.1:8000").rstrip("/")
     java_base = os.getenv("MALL_JAVA_BASE_URL", "http://127.0.0.1:8085").rstrip("/")
     try:
-        with httpx.Client(timeout=20) as client:
+        with httpx.Client(timeout=20, trust_env=False) as client:
             authorization_a = _login(
                 client,
                 ai_base,

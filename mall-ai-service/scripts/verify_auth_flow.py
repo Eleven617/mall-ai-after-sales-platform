@@ -55,7 +55,7 @@ def main() -> int:
         return 2
 
     try:
-        with httpx.Client(timeout=15) as client:
+        with httpx.Client(timeout=15, trust_env=False) as client:
             token_a, member_a = _login_and_check(client, ai_base, account_a)
             token_b, member_b = _login_and_check(client, ai_base, account_b)
             if member_a == member_b:

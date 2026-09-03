@@ -1,5 +1,3 @@
-from typing import Literal
-
 from pydantic import BaseModel, Field
 
 from app.schemas.agent import VerifiedFactCard
@@ -20,23 +18,12 @@ from app.schemas.diagnosis import (
 )
 from app.schemas.intent import IntentResponse
 from app.schemas.rag import RagSource
+from app.schemas.task_orchestration import TaskPublicState
 
 
 class CustomerServiceRequest(BaseModel):
     session_id: str = Field(min_length=1, max_length=128, examples=["chat-7f2e"])
     message: str = Field(min_length=1, examples=["帮我查订单 20240617001 的物流"])
-
-
-class PendingActionView(BaseModel):
-    """A client-safe action for a read-only task that awaits one identifier."""
-
-    kind: Literal["awaiting_order_sn", "awaiting_sku_id"]
-    label: str
-    # Safe UI capability only; it never contains a checkpoint/thread ID or
-    # customer data.  The customer can understand that a later reply resumes
-    # this read-only task rather than opening a hidden write workflow.
-    resumable: bool = False
-    cancel_message: Literal["取消查询"] = "取消查询"
 
 
 class CustomerServiceResponse(BaseModel):
@@ -55,8 +42,8 @@ class CustomerServiceResponse(BaseModel):
     after_sales_pending_action: AfterSalesPendingActionView | None = None
     after_sales_selection: AfterSalesSelectionView | None = None
     after_sales_applications: list[AfterSalesApplicationView] | None = None
-    pending_action: PendingActionView | None = None
     diagnosis: DiagnosisResult | None = None
+    task: TaskPublicState | None = None
 
 
 class CustomerDiagnosisHandoff(BaseModel):
@@ -87,8 +74,8 @@ class CustomerServicePublicResponse(BaseModel):
     after_sales_pending_action: AfterSalesPendingActionView | None = None
     after_sales_selection: AfterSalesSelectionView | None = None
     after_sales_applications: list[AfterSalesApplicationView] | None = None
-    pending_action: PendingActionView | None = None
     diagnosis: CustomerDiagnosisView | None = None
+    task: TaskPublicState | None = None
     # Opaque, short-lived browser capability for structured feedback only. It
     # is not a session ID, trace ID, order identifier or business action token.
     response_ref: str | None = None
@@ -123,6 +110,6 @@ def to_public_customer_service_response(
         after_sales_pending_action=response.after_sales_pending_action,
         after_sales_selection=response.after_sales_selection,
         after_sales_applications=response.after_sales_applications,
-        pending_action=response.pending_action,
         diagnosis=diagnosis,
+        task=response.task,
     )

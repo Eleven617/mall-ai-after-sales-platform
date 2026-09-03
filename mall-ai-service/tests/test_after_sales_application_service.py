@@ -6,6 +6,7 @@ from app.schemas.after_sales_application import (
     AfterSalesApplicationView,
     AfterSalesEligibilityView,
     AfterSalesRequestExtraction,
+    PendingAfterSalesProposal,
 )
 from app.schemas.rag import RagSource
 from app.services.after_sales_application_service import (
@@ -14,6 +15,7 @@ from app.services.after_sales_application_service import (
     handle_pending_after_sales_confirmation,
     handle_pending_after_sales_draft,
     handle_pending_after_sales_modification_draft,
+    prepare_after_sales_action,
     start_after_sales_modification_draft,
     start_after_sales_flow,
 )
@@ -21,6 +23,12 @@ from app.services.conversation_state import (
     get_conversation_state,
     reset_conversation_state_for_tests,
     set_conversation_manager_for_tests,
+)
+from app.services.after_sales_application_state import (
+    complete_pending_after_sales_proposal,
+    owner_fingerprint,
+    save_pending_after_sales_proposal,
+    session_fingerprint,
 )
 from app.services.rag_service import RagAnswer
 
@@ -111,6 +119,111 @@ class AfterSalesApplicationServiceTests(unittest.TestCase):
 
     def tearDown(self) -> None:
         set_conversation_manager_for_tests(None)
+
+    @patch("app.services.after_sales_application_service.answer_after_sales_question")
+    @patch("app.services.after_sales_application_service.check_after_sales_eligibility")
+    @patch("app.services.after_sales_application_service.get_order_snapshot")
+    @patch("app.services.after_sales_application_service.extract_after_sales_request")
+    def test_new_ready_draft_preserves_existing_gate_instead_of_overwriting_it(
+        self,
+        extract_after_sales_request,
+        get_order_snapshot,
+        check_after_sales_eligibility,
+        answer_after_sales_question,
+    ) -> None:
+        session_id = "session-gate-and-new-draft"
+        original_gate = _pending_proposal(session_id)
+        save_pending_after_sales_proposal(session_id, original_gate)
+        extract_after_sales_request.return_value = AfterSalesRequestExtraction(
+            goal="apply",
+            application_type="return_refund",
+            product_hint="耳机",
+            reason="商品存在质量问题",
+            description="耳机无法充电",
+        )
+        get_order_snapshot.return_value = ORDER_ONE
+        check_after_sales_eligibility.return_value = ELIGIBLE_RETURN
+        answer_after_sales_question.return_value = POLICY_ANSWER
+
+        result = start_after_sales_flow(
+            session_id,
+            "订单号：202608210001，另一笔订单的耳机无法充电，申请退货退款",
+            AUTHORIZATION,
+        )
+
+        state = get_conversation_state(session_id)
+        self.assertIn("待确认", result.answer)
+        self.assertIsNotNone(result.draft)
+        self.assertEqual(original_gate, state.pending_after_sales_proposal)
+        self.assertIsNotNone(state.pending_after_sales_draft)
+        self.assertIsNone(state.pending_after_sales_action)
+
+    def test_new_action_never_replaces_an_existing_transaction_gate(self) -> None:
+        session_id = "session-gate-and-new-action"
+        original_gate = _pending_proposal(session_id)
+        save_pending_after_sales_proposal(session_id, original_gate)
+
+        result = prepare_after_sales_action(
+            session_id=session_id,
+            authorization=AUTHORIZATION,
+            member_id=None,
+            application=SUBMITTED_APPLICATION,
+            action="cancel",
+        )
+
+        state = get_conversation_state(session_id)
+        self.assertIn("待确认", result.answer)
+        self.assertIsNone(result.pending_action)
+        self.assertEqual(original_gate, state.pending_after_sales_proposal)
+        self.assertIsNone(state.pending_after_sales_action)
+
+    @patch("app.services.after_sales_application_service.answer_after_sales_question")
+    @patch("app.services.after_sales_application_service.check_after_sales_eligibility")
+    @patch("app.services.after_sales_application_service.get_order_snapshot")
+    @patch("app.services.after_sales_application_service.extract_after_sales_request")
+    def test_ready_draft_can_resume_after_existing_gate_is_resolved(
+        self,
+        extract_after_sales_request,
+        get_order_snapshot,
+        check_after_sales_eligibility,
+        answer_after_sales_question,
+    ) -> None:
+        session_id = "session-gate-resume"
+        original_gate = _pending_proposal(session_id)
+        save_pending_after_sales_proposal(session_id, original_gate)
+        extract_after_sales_request.side_effect = [
+            AfterSalesRequestExtraction(
+                goal="apply",
+                application_type="return_refund",
+                product_hint="耳机",
+                reason="商品存在质量问题",
+                description="耳机无法充电",
+            ),
+            AfterSalesRequestExtraction(),
+        ]
+        get_order_snapshot.return_value = ORDER_ONE
+        check_after_sales_eligibility.return_value = ELIGIBLE_RETURN
+        answer_after_sales_question.return_value = POLICY_ANSWER
+
+        waiting = start_after_sales_flow(
+            session_id,
+            "订单号：202608210001，另一笔订单的耳机无法充电，申请退货退款",
+            AUTHORIZATION,
+        )
+        complete_pending_after_sales_proposal(session_id, AUTHORIZATION)
+        resumed = handle_pending_after_sales_draft(
+            session_id,
+            "继续刚才的售后申请",
+            AUTHORIZATION,
+            resume_from_task=True,
+        )
+
+        state = get_conversation_state(session_id)
+        self.assertIsNotNone(waiting.draft)
+        self.assertIsNotNone(resumed)
+        self.assertIsNotNone(resumed.proposal)
+        self.assertNotEqual(original_gate.proposal_id, state.pending_after_sales_proposal.proposal_id)
+        self.assertEqual("商品存在质量问题", state.pending_after_sales_proposal.reason)
 
     @patch("app.services.after_sales_application_service.answer_after_sales_question")
     @patch("app.services.after_sales_application_service.check_after_sales_eligibility")
@@ -476,6 +589,23 @@ class AfterSalesApplicationServiceTests(unittest.TestCase):
             '"validationErrors":["evidence_span_missing"]',
             generate_json.call_args_list[1].kwargs["message"],
         )
+
+
+def _pending_proposal(session_id: str) -> PendingAfterSalesProposal:
+    return PendingAfterSalesProposal(
+        proposal_id="p" * 32,
+        application_type="return_refund",
+        order_sn="202608210001",
+        order_item_id=501,
+        product_name="无线耳机",
+        product_attr="颜色：黑色",
+        reason="商品存在质量问题",
+        description="耳机无法充电",
+        owner_fingerprint=owner_fingerprint(AUTHORIZATION),
+        session_fingerprint=session_fingerprint(session_id),
+        content_hash="h" * 64,
+        expires_at=time.time() + 600,
+    )
 
 
 if __name__ == "__main__":

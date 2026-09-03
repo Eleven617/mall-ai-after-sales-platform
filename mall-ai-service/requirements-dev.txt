@@ -1,0 +1,5 @@
+# Test-only dependencies are explicit so a clean CI runner does not rely on a
+# pre-installed pytest command or on a developer's virtual environment. Keep
+# the test runner pin in the dedicated CI file so OSV scans it explicitly.
+-r requirements.txt
+-r requirements-ci.txt

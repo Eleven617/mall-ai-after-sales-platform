@@ -37,7 +37,7 @@ def main() -> int:
     )
     reports: list[dict[str, str | bool]] = []
     try:
-        with httpx.Client(timeout=5, follow_redirects=True) as client:
+        with httpx.Client(timeout=5, follow_redirects=True, trust_env=False) as client:
             for check in checks:
                 reports.append(_check_endpoint(client, check))
     except httpx.HTTPError as exc:

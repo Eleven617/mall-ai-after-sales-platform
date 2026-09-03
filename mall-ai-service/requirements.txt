@@ -7,3 +7,4 @@ chromadb
 redis>=5.0,<6
 langgraph>=1.2,<2
 fastembed==0.8.0
+pymongo>=4.8,<5

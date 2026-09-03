@@ -32,10 +32,12 @@ _SAFE_FLOW_ALIASES = {
     "after_sales_workflow": "unified_after_sales",
     "diagnosis_checkpoint": "unified_after_sales_checkpoint",
     "intent_routing": "intent_routing",
+    "task_routing": "task_routing",
     "case_handoff": "case_handoff",
     "conversation_history": "conversation_history",
     "operations_analysis": "operations_analysis",
     "quality_evaluation": "quality_evaluation",
+    "task_runtime": "task_runtime",
 }
 _SAFE_EVENT_PATTERN = re.compile(r"^[a-z][a-z0-9_]{0,63}$")
 _SAFE_CONTRACT_VIOLATION_PATTERN = re.compile(r"^[a-z][a-z0-9_]{0,79}$")
@@ -49,6 +51,7 @@ _SAFE_RESULT_KINDS = {
     "completed",
     "rejected",
     "skipped",
+    "succeeded",
 }
 
 # Trace metadata uses an allow-list rather than attempting to redact every
@@ -83,6 +86,10 @@ _SAFE_DETAIL_KEYS = {
     "outbox_ref",
     "error_category",
     "dependency",
+    "task_relation",
+    "task_kind",
+    "confirmation_intent",
+    "rationale_code",
 }
 _SAFE_TOOL_NAMES = {
     "order_service",
@@ -133,8 +140,21 @@ _SAFE_INTENTS = {
     "unknown",
 }
 _SAFE_ROUTES = {"chat", "rag", "tool_calling", "agent", "ask_missing_info", "after_sales_flow"}
-_SAFE_PROMPT_VERSIONS = {"intent_semantic_v1", "intent_semantic_v2"}
-_SAFE_ROLES = {"unified_after_sales", "operations_analysis", "quality_evaluation"}
+_SAFE_PROMPT_VERSIONS = {
+    "intent_semantic_v1",
+    "intent_semantic_v2",
+    "task_aware_turn_plan_v1",
+    "task_aware_turn_plan_v2",
+    "task_aware_turn_plan_v3",
+}
+_SAFE_ROLES = {
+    "unified_after_sales",
+    "operations_analysis",
+    "quality_evaluation",
+    "commerce_executor",
+    "context_curator",
+    "resolution_critic",
+}
 _SAFE_SKILL_IDS = {
     "policy_question_answering",
     "order_exception_diagnosis",
@@ -142,11 +162,52 @@ _SAFE_SKILL_IDS = {
     "case_handoff",
     "handoff_operations_analysis",
     "quality_contract_evaluation",
+    "search_catalog",
+    "compare_skus",
+    "read_order",
+    "read_logistics",
+    "read_inventory",
+    "retrieve_policy",
+    "list_service_applications",
+    "build_service_resolution",
+    "create_after_sales_draft",
+    "amend_after_sales_draft",
+    "commit_after_sales_action",
+    "open_human_case",
+    "request_customer_evidence",
+    "schedule_follow_up",
+    "search_task_memory",
+    "spawn_subtask",
 }
 _SAFE_DEPENDENCIES = {"llm", "java", "rag", "rabbitmq", "redis"}
 _SAFE_VERSION_PATTERN = re.compile(r"^[a-z][a-z0-9_.-]{1,63}$")
 _SAFE_REFERENCE_PATTERN = re.compile(r"^[a-f0-9]{16,64}$")
 _SAFE_ERROR_CATEGORY_PATTERN = re.compile(r"^[a-z][a-z0-9_]{0,63}$")
+_SAFE_TASK_RELATIONS = {
+    "continue_active",
+    "temporary_detour",
+    "resume_paused",
+    "start_new_task",
+    "standalone_answer",
+    "discard_active",
+    "discard_paused",
+    "resolve_task_conflict",
+}
+_SAFE_TASK_KINDS = {
+    "order_diagnosis",
+    "after_sales_draft",
+    "after_sales_modification",
+}
+_SAFE_CONFIRMATION_INTENTS = {"confirm", "cancel", "modify", "none"}
+_SAFE_RATIONALE_CODES = {
+    "active_task_match",
+    "temporary_detour",
+    "paused_task_match",
+    "new_long_running_goal",
+    "standalone_question",
+    "explicit_task_abandonment",
+    "task_conflict",
+}
 
 
 @dataclass(frozen=True)
@@ -359,5 +420,17 @@ def _sanitize_details(details: dict[str, Any]) -> dict[str, Any]:
                 safe_details[key] = value
         elif key == "error_category":
             if isinstance(value, str) and _SAFE_ERROR_CATEGORY_PATTERN.fullmatch(value):
+                safe_details[key] = value
+        elif key == "task_relation":
+            if value in _SAFE_TASK_RELATIONS:
+                safe_details[key] = value
+        elif key == "task_kind":
+            if value in _SAFE_TASK_KINDS:
+                safe_details[key] = value
+        elif key == "confirmation_intent":
+            if value in _SAFE_CONFIRMATION_INTENTS:
+                safe_details[key] = value
+        elif key == "rationale_code":
+            if value in _SAFE_RATIONALE_CODES:
                 safe_details[key] = value
     return safe_details
