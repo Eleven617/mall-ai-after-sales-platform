@@ -19,7 +19,7 @@ Git 提交是代码版本锚点；本文件是面向人阅读的变更备注；�
 - 新增无模型的 `run_v3_release_preflight.py`，对完整注册清单和代表性 Runtime 安全分支执行确定性检查；新增 manifest/evaluation 回归测试。
 - CI 在 FastAPI compile/collect 后执行 manifest/preflight；质量工作流纳入同一合同测试，保留 Java、Web、Compose 与安全扫描门禁。
 - README、AGENTS、UPSTREAM 与公开证据文档明确 v3 Runtime 的 Agent/Skill/Java 权威边界和本机合成验证口径。
-- 当前未宣称：远程 Actions（须等待本次提交运行）、36 条 live 三轮、完整浏览器 E2E、真实外部履约和生产 SLA。
+- 当前未宣称：36 条 live 三轮、完整浏览器 E2E、真实外部履约和生产 SLA。远程 Actions 已在公开发布验证基线通过；其结果仅代表当前 CI 门禁，不代表生产部署或生产 SLA。
 
 ## 2026-09-02 — 统一售后 Agent 任务感知编排一次性升级
 

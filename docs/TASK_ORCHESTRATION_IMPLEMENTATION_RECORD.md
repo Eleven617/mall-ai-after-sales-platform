@@ -50,7 +50,7 @@
 
 已在最新容器中实际确认：缺订单标识时公开任务状态为 `active`；同会话政策提问后状态为 `paused`；仅重启 `mall-ai-service` 且 Redis 保留后，后续自然语言恢复为 `active`。代理公开响应没有 `intent`、`rag_sources`、`rag_context`、`tool_result`、`trace`、任务 ID 或 checkpoint ID。
 
-尚未把下列项目宣称为完成：真实生产部署/SLA、全部自然语言表达的任务关系准确率、完整登录态下的每一种 Proposal/Action 现场组合、真实支付/仓储/物流/维修集成、远程 GitHub Actions 本轮绿灯。交易关口的“不抢占、自然确认、自然撤回、不可覆盖”由本次 FastAPI 合同测试覆盖；此前独立的登录态统一售后网站代理验收仍在 [测试与演示证据](TEST_AND_DEMO_EVIDENCE.md) 中保留。
+尚未把下列项目宣称为完成：真实生产部署/SLA、全部自然语言表达的任务关系准确率、完整登录态下的每一种 Proposal/Action 现场组合、真实支付/仓储/物流/维修集成。远程 GitHub Actions 已在公开发布验证基线通过，但只代表当前门禁在 GitHub runner 上成功，不代表生产能力。交易关口的“不抢占、自然确认、自然撤回、不可覆盖”由本次 FastAPI 合同测试覆盖；此前独立的登录态统一售后网站代理验收仍在 [测试与演示证据](TEST_AND_DEMO_EVIDENCE.md) 中保留。
 
 ## 回退依据
 

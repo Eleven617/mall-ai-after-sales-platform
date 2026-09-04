@@ -53,7 +53,7 @@ Java 始终是 JWT、订单/物流/资格、售后状态机、幂等、事务、
 
 ## 本轮已验证与未验证范围
 
-完整命令、通过数量、Docker 网站代理结果、真实模型合成评测和本机 RAG 指标见 [TEST_AND_DEMO_EVIDENCE.md](TEST_AND_DEMO_EVIDENCE.md)。当前仍不能声称：真实支付/仓储/物流/维修接入、生产吞吐/SLA、真实用户数据、模型对所有自然语言输入的准确率或远程 GitHub Actions 已绿。
+完整命令、通过数量、Docker 网站代理结果、真实模型合成评测和本机 RAG 指标见 [TEST_AND_DEMO_EVIDENCE.md](TEST_AND_DEMO_EVIDENCE.md)。当前仍不能声称：真实支付/仓储/物流/维修接入、生产吞吐/SLA、真实用户数据或模型对所有自然语言输入的准确率。远程 GitHub Actions 已在公开发布验证基线通过，具体运行链接见 [TEST_AND_DEMO_EVIDENCE.md](TEST_AND_DEMO_EVIDENCE.md)。
 
 本轮开始前的受限源码快照为 `snapshots/final-upgrade-implementation-prechange-20260901-105000.zip`；快照排除了 `.env`、凭据、日志、虚拟环境、模型、向量索引与 Docker 数据。回退应使用源码版本和数据库备份，不保留双运行时路径。
 
