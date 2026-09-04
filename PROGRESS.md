@@ -35,7 +35,7 @@
 
 ## 2. 修改过的文件
 
-### 已提交并推送（截至 `d1718a2`）
+### 已提交并推送（截至 `96bec5e`）
 
 - `mall-ai-web/src/App.vue`：将输入框 placeholder 中的完整订单号示例改为泛化文本。
 - `docs/assets/customer-policy-conversation.png`：真实客户政策对话截图，合成数据。
@@ -45,7 +45,7 @@
 - `docs/TEST_AND_DEMO_EVIDENCE.md`：记录本机复验、截图 hash 和远程 Actions 证据。
 - `docs/PUBLIC_RELEASE_RECORD.md`：记录公开发布范围与验证边界。
 - `docs/evidence/v3.0-release-evidence.md`：同步最新已验证提交与远程门禁链接。
-- `PROGRESS.md`：记录暂停点、恢复结果和最终远程验证状态；当前又追加了 `42d0385` 的推送阻塞记录，尚未进入远程。
+- `PROGRESS.md`：记录暂停点、恢复结果和最终远程验证状态。
 
 ### 未跟踪但被 Git 忽略的临时文件
 
@@ -71,12 +71,11 @@
 ## 4. 当前遇到的问题
 
 1. 历史证据章节仍保留各自时间点和命令口径；这些记录不能与当前结果相加。
-2. `42d0385` 仅是进度文档更新，当前本地 GitHub HTTPS 推送连续遇到连接重置/超时；远程仍停在 `d1718a2`。此前 `d1718a2` 对应的两个远程工作流均已成功。
-3. 生产 SLA、真实用户泛化、真实外部履约和完整浏览器/Java-MySQL manifest 仍属于未验证边界，详见公开证据文档。
+2. 生产 SLA、真实用户泛化、真实外部履约和完整浏览器/Java-MySQL manifest 仍属于未验证边界，详见公开证据文档。
 
 ## 5. 尚未完成的任务
 
-本轮必做任务已完成至 `d1718a2`：三张真实截图、公开证据文档、本机复验、提交、推送，以及该提交对应的两个 GitHub Actions 工作流均已成功。`42d0385` 的进度追加提交尚未推送，待网络恢复后再推送并核对其远程门禁；不能把父提交结果冒充为它的结果。
+本轮必做任务已完成至 `96bec5e`：三张真实截图、公开证据文档、本机复验、提交、推送，以及该提交对应的两个 GitHub Actions 工作流均已成功。
 
 ## 6. 下一步应该做什么
 
@@ -102,4 +101,4 @@
 - 该 SHA 的 `mall-ci` run `33866949872` 与 `quality-evaluation` run `33866949829` 均为 GitHub 实际 `success`。链接已同步到公开证据文档。
 - `df67753` 已推送并完成对应远程复验：`mall-ci` run `33868598584`、`quality-evaluation` run `33868598567` 均为 success。
 - 随后为修正文档暂停状态创建并推送提交 `d1718a25fab537da65b3f333b910386e99315055`；该提交对应 `mall-ci` run `33869631046` 和 `quality-evaluation` run `33869631166`，两者均为 GitHub 实际 `success`。Web job 的依赖安装曾长时间运行，最终正常通过。
-- 又创建本地进度记录提交 `42d0385ca5549f228b39a776b06808488ab9160f`；两次 `git push` 及一次 HTTP/1.1 重试均因当前环境连接 GitHub:443 失败，GitHub API 未找到该 SHA，因此它尚未触发远程 Actions。
+- 又创建进度记录提交 `42d0385ca5549f228b39a776b06808488ab9160f`，随后补充网络阻塞记录为 `96bec5e3f9df48b204a85a22f4c67c18bb25ea06` 并成功推送。该最终远程 SHA 对应 `mall-ci` [33870716875](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/33870716875) 和 `quality-evaluation` [33870716971](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/33870716971)，两者均为 success。
