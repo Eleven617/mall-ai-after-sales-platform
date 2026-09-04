@@ -2,7 +2,7 @@
 
 ## 2026-09-05 — 当前 HEAD 剩余关键结果补测（代码提交 `38cf3809e48ec08bead6accc07a4ace27ebf5f59`）
 
-本次补测的分层汇总见 [`docs/evidence/v3.0-current-head-evidence.md`](evidence/v3.0-current-head-evidence.md) 与同名 JSON。确定性回归、Docker 健康和 Java 定向测试通过；开放任务真实模型合成评测为 `24/72 passed`、Grounding 为 `11/15 passed`，其余失败和环境阻塞均按原始结果保留。不要把本节或历史 Actions 运行外推为生产能力。
+本次补测的分层汇总见 [`docs/evidence/v3.0-current-head-evidence.md`](evidence/v3.0-current-head-evidence.md) 与同名 JSON。确定性回归、Docker 健康和 Java 定向测试通过；开放任务真实模型合成评测为 `24/72 passed`、Grounding 为 `11/15 passed`，其余失败和环境阻塞均按原始结果保留。验证提交 `9fba15ddac537016fca2116286e7238121b1236a` 的 `mall-ci` [33901002046](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/33901002046) 与 `quality-evaluation` [33901002043](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/33901002043) 均为 GitHub 实际 success；不要把本节或历史 Actions 运行外推为生产能力。
 
 ## 2026-09-04 — 公开演示截图刷新与远程门禁复验（验证提交 `df67753bb923434c0b5d11e448e778cb413b7840`）
 

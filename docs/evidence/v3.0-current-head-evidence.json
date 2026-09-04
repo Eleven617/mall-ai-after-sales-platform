@@ -6,7 +6,12 @@
     "branch": "main",
     "testedCodeCommit": "38cf3809e48ec08bead6accc07a4ace27ebf5f59",
     "remoteCommitAtStart": "cbb951f9815b7483d2aeec0620947fdb1eba59b0",
-    "workspaceCleanAtStart": true
+    "workspaceCleanAtStart": true,
+    "remoteVerification": {
+      "commit": "9fba15ddac537016fca2116286e7238121b1236a",
+      "mallCi": {"runId": 33901002046, "status": "success", "url": "https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/33901002046"},
+      "qualityEvaluation": {"runId": 33901002043, "status": "success", "url": "https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/33901002043"}
+    }
   },
   "scope": {
     "data": "versioned synthetic fixtures and local demo data only",

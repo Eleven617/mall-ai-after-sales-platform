@@ -2,7 +2,7 @@
 
 ## 2026-09-05 — 当前 HEAD 剩余关键结果补测（代码提交 `38cf3809e48ec08bead6accc07a4ace27ebf5f59`）
 
-当前补测的完整、可审计分层结果见 [`docs/evidence/v3.0-current-head-evidence.md`](evidence/v3.0-current-head-evidence.md) 与同名 JSON。确定性门禁和本机 Compose 健康通过；真实模型开放任务与 Grounding 存在明确质量失败，完整浏览器/Java-MySQL/故障恢复 manifest 尚未逐条现场执行。历史提交的 Actions 成功链接只代表对应历史提交。
+当前补测的完整、可审计分层结果见 [`docs/evidence/v3.0-current-head-evidence.md`](evidence/v3.0-current-head-evidence.md) 与同名 JSON。确定性门禁和本机 Compose 健康通过；真实模型开放任务与 Grounding 存在明确质量失败，完整浏览器/Java-MySQL/故障恢复 manifest 尚未逐条现场执行。验证提交 `9fba15ddac537016fca2116286e7238121b1236a` 的 `mall-ci` [33901002046](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/33901002046) 与 `quality-evaluation` [33901002043](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/33901002043) 均为 GitHub 实际 success；历史提交的其他 Actions 链接只代表各自提交。
 
 ## 2026-09-04 — 公开演示资产与 CI 复验更新（验证提交 `df67753bb923434c0b5d11e448e778cb413b7840`）
 
