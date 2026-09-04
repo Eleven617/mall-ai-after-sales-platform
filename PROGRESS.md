@@ -1,6 +1,6 @@
 # 当前工作进度记录
 
-更新时间：2026-09-04（Asia/Shanghai）
+更新时间：2026-09-04（Asia/Shanghai；恢复执行后最终核对）
 仓库：`C:\\Users\\12969\\Desktop\\mall`
 分支：`main`
 开始本轮时 HEAD：`8891d4c3fc5116aed794b76daca7e45e691795db`
@@ -100,3 +100,4 @@
 - 初次 `git push` 曾受网络重置影响；网络恢复后，`10bce84` 及证据状态提交 `c6be3ea3c7b2c2fef9893815a444e06430b02ddd` 已推送。
 - 该 SHA 的 `mall-ci` run `33866949872` 与 `quality-evaluation` run `33866949829` 均为 GitHub 实际 `success`。链接已同步到公开证据文档。
 - `df67753` 已推送并完成对应远程复验：`mall-ci` run `33868598584`、`quality-evaluation` run `33868598567` 均为 success；本轮没有剩余收口工作。
+- 随后为修正文档暂停状态创建并推送提交 `d1718a25fab537da65b3f333b910386e99315055`；该提交对应 `mall-ci` run `33869631046` 和 `quality-evaluation` run `33869631166`，两者均为 GitHub 实际 `success`。Web job 的依赖安装曾长时间运行，最终正常通过。
