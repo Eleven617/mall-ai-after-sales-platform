@@ -35,7 +35,7 @@
 
 ## 2. 修改过的文件
 
-### 已提交并推送（截至 `96bec5e`）
+### 已提交并推送（截至 `e9e6c42`）
 
 - `mall-ai-web/src/App.vue`：将输入框 placeholder 中的完整订单号示例改为泛化文本。
 - `docs/assets/customer-policy-conversation.png`：真实客户政策对话截图，合成数据。
@@ -66,7 +66,7 @@
 | 本地截图脚本（修正等待条件后） | 成功生成并检查客户、运营、质量三张真实 PNG |
 | 本地 API 冒烟（合成客户） | 登录、创建会话、发送政策问题均 HTTP 200；只检查响应结构/长度 |
 | `view_image` 检查三张资产 | 三张均通过公开安全检查；无完整订单号、密码、Token 值、客户原话、RAG 原文或生产 Trace |
-| `git status --short --branch` | 当前 `main` 比 `origin/main` 超前 1 个本地进度提交；无未提交文件，临时脚本/profile 被忽略 |
+| `git status --short --branch` | `main...origin/main`，工作区干净；临时脚本/profile 被忽略 |
 
 ## 4. 当前遇到的问题
 
@@ -75,7 +75,7 @@
 
 ## 5. 尚未完成的任务
 
-本轮必做任务已完成至 `96bec5e`：三张真实截图、公开证据文档、本机复验、提交、推送，以及该提交对应的两个 GitHub Actions 工作流均已成功。
+本轮必做任务已完成至 `e9e6c42`：三张真实截图、公开证据文档、本机复验、提交、推送，以及该提交对应的两个 GitHub Actions 工作流均已成功。
 
 ## 6. 下一步应该做什么
 
@@ -102,3 +102,4 @@
 - `df67753` 已推送并完成对应远程复验：`mall-ci` run `33868598584`、`quality-evaluation` run `33868598567` 均为 success。
 - 随后为修正文档暂停状态创建并推送提交 `d1718a25fab537da65b3f333b910386e99315055`；该提交对应 `mall-ci` run `33869631046` 和 `quality-evaluation` run `33869631166`，两者均为 GitHub 实际 `success`。Web job 的依赖安装曾长时间运行，最终正常通过。
 - 又创建进度记录提交 `42d0385ca5549f228b39a776b06808488ab9160f`，随后补充网络阻塞记录为 `96bec5e3f9df48b204a85a22f4c67c18bb25ea06` 并成功推送。该最终远程 SHA 对应 `mall-ci` [33870716875](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/33870716875) 和 `quality-evaluation` [33870716971](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/33870716971)，两者均为 success。
+- 最终进度收口提交 `e9e6c425eb2aa50791b8be791df1db82d6385bc2` 已推送；对应 `mall-ci` [33870889803](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/33870889803) 和 `quality-evaluation` [33870889792](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/33870889792)，两者均为 success。
