@@ -1,5 +1,9 @@
 # 测试与演示证据
 
+## 2026-09-05 — 当前 HEAD 剩余关键结果补测（代码提交 `38cf3809e48ec08bead6accc07a4ace27ebf5f59`）
+
+本次补测的分层汇总见 [`docs/evidence/v3.0-current-head-evidence.md`](evidence/v3.0-current-head-evidence.md) 与同名 JSON。确定性回归、Docker 健康和 Java 定向测试通过；开放任务真实模型合成评测为 `24/72 passed`、Grounding 为 `11/15 passed`，其余失败和环境阻塞均按原始结果保留。不要把本节或历史 Actions 运行外推为生产能力。
+
 ## 2026-09-04 — 公开演示截图刷新与远程门禁复验（验证提交 `df67753bb923434c0b5d11e448e778cb413b7840`）
 
 本节对应本轮提交的前端示例占位符和三张真实页面截图。截图由本机 Compose 页面、Chrome headless/CDP 和合成账号生成；未保存或输出密码、Token、完整订单号、客户原话、RAG 原文或生产 Trace。代码/截图提交及证据状态提交已推送，下面的 Actions 链接均由 GitHub 返回并与该验证提交 SHA 一致。

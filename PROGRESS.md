@@ -105,3 +105,13 @@
 - 最终进度收口提交 `e9e6c425eb2aa50791b8be791df1db82d6385bc2` 已推送；对应 `mall-ci` [33870889803](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/33870889803) 和 `quality-evaluation` [33870889792](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/33870889792)，两者均为 success。
 - 文档状态对齐提交 `bd9012e3ad6c05c3385f6aba24aacf14ec191981` 已推送；对应 `mall-ci` [33871171081](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/33871171081) 和 `quality-evaluation` [33871171148](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/33871171148)，两者均为 success。
 - 后续仅对本文件做了进度状态校正；最终进度提交已推送，且其对应的 `mall-ci` 与 `quality-evaluation` 均已由 GitHub 实际判定为 success。核心代码、截图和公开证据已在此前提交中完成并远程验证。
+
+## 2026-09-05 — 当前 HEAD 剩余关键结果补测
+
+- 当前代码 HEAD：`38cf3809e48ec08bead6accc07a4ace27ebf5f59`；补测开始时 `origin/main` 仍为 `cbb951f9815b7483d2aeec0620947fdb1eba59b0`。
+- 已新增当前 HEAD 分层证据：`docs/evidence/v3.0-current-head-evidence.md` 与 `docs/evidence/v3.0-current-head-evidence.json`。
+- 当前确定性结果：FastAPI `349 passed`；v3 `478/478` + 代表性 Runtime `8/8`；Quality Agent `17/17`；任务编排 `11/11`；Chunk/Metadata `8/8`；RAG verifier `36/36`；Dense/Hybrid/Hybrid+Rerank 各 `52/52`；Java portal/admin `14/14`、`6/6`；Web build、Compose config、Compose endpoint `3/3` 通过；Docker `8/8 healthy`。
+- 当前真实模型合成补测：开放任务 Agent `24` 案例 × `3` 次 = `24 passed / 48 failed / 0 environment_blocked`；报告为被忽略的 `tmp/live_model_agent_runtime_report_current_head.json`。Grounding `15` 条 = `11 passed / 4 quality_failed / 0 environment_blocked`；4 条 `UNAPPROVED_EVIDENCE_SOURCE` 保留为失败证据。
+- 完整浏览器 E2E `24`、Java/MySQL integration `30`、fault injection `36`、durable async recovery `32` 本轮未逐条现场执行；因缺少一次性本地账号/订单环境变量，7 个现场脚本均标为 `environment_blocked`，没有把 manifest 注册数当作通过数。
+- 下一步：检查新证据文件和 `git diff --check`，提交并推送；再等待该新提交对应的 `mall-ci` 与 `quality-evaluation` 真实结果。远程结果出来前不得把历史 Actions 链接用于当前 HEAD。
+- Grounding 已重新执行并保存为被忽略的 `tmp/rag2_grounding_current_head.json`（SHA-256 `f254dea3c765251ae49385a3f6c1fd93276b474717f040557b8c7a57093cf0be`）：`11 passed / 4 quality_failed / 0 environment_blocked`，Token `20,550`，p95 `2,098.64 ms`；4 条 `UNAPPROVED_EVIDENCE_SOURCE` 原样保留。

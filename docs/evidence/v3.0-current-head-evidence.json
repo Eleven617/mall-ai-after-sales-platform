@@ -1,0 +1,122 @@
+{
+  "schemaVersion": "v3.0-current-head-evidence.v1",
+  "generatedAt": "2026-09-05T01:17:50+08:00",
+  "repository": {
+    "remote": "https://github.com/Eleven617/mall-ai-after-sales-platform.git",
+    "branch": "main",
+    "testedCodeCommit": "38cf3809e48ec08bead6accc07a4ace27ebf5f59",
+    "remoteCommitAtStart": "cbb951f9815b7483d2aeec0620947fdb1eba59b0",
+    "workspaceCleanAtStart": true
+  },
+  "scope": {
+    "data": "versioned synthetic fixtures and local demo data only",
+    "businessWrites": false,
+    "productionClaims": false,
+    "externalFulfillment": "not connected",
+    "defaultRagMode": "dense",
+    "hybridAndRerank": "reproducible experiments only"
+  },
+  "fixtureHashes": {
+    "evals/v3/release-manifest.json": "d9fc72be81e2f67330710052c03287d49677bf7eb6f54eed51b87c01db2ac1ad",
+    "evals/v3/caseSetSha256": "18a3ad20485417bbebd8bad875490cf80b171ed28760b1dc2dfbd203d1938ccd",
+    "mall-ai-service/evals/live_model_agent_runtime_cases.v1.json": "d5de1e85fa40eace714b051e78e830bee4b367545d154e0b435fc247b2a7b99d",
+    "mall-ai-service/evals/rag2_golden_cases.v1.json": "632f36c30a21c0b76a5ae18cc2f4b74ff887f70b37c42235f4b776aad8a4fcc1",
+    "mall-ai-service/evals/rag_grounding_cases.json": "72d36be4dfec0888fcac57eb211fb85413018c8254db7d52f1914d6703966f11",
+    "mall-ai-service/evals/rag_chunk_metadata_cases.v1.json": "a10f963c4dfba5de0b4b7efb6e60c8238f59553e53b9c090da86c9702b040c24",
+    "mall-ai-service/evals/quality_agent_cases.v2.json": "ef3cbcb70b92b82a7e115886b6d771c358cd459da9633bd4201dd766b6d878a7",
+    "mall-ai-service/evals/task_orchestration_cases.v1.json": "c8489ec40ff99a23fb146aca752a19f072bf042d9d0ec04313041cf184eab3b8",
+    "tmp/live_model_agent_runtime_report_current_head.json": "20e82406f4f8eceaf722dfc13249fe08f3d13e31b64eb791c122c54c7f112e0b",
+    "tmp/rag2_grounding_current_head.json": "f254dea3c765251ae49385a3f6c1fd93276b474717f040557b8c7a57093cf0be"
+  },
+  "deterministic": {
+    "fastapi": {"compileall": "passed", "collected": 349, "passed": 349, "warnings": 1, "subtestsPassed": 7},
+    "qualityAgentContractMock": {"suiteVersion": "quality-agent.v2", "total": 17, "passed": 17, "failed": 0},
+    "taskOrchestrationContractMock": {"suiteVersion": "task-orchestration.v1", "total": 11, "passed": 11, "failed": 0, "environmentBlocked": 0},
+    "v3Manifest": {"suiteVersion": "mall-v3.0.release.v1", "deterministicRegistered": 478, "liveRegistered": 36, "performanceProfiles": 12, "manifestSha256": "2f9d60f3903b3046236a71e1557d89fac87e916d9586d787a193c6deb4c71d2e", "caseSetSha256": "18a3ad20485417bbebd8bad875490cf80b171ed28760b1dc2dfbd203d1938ccd"},
+    "v3Preflight": {"deterministicPassed": 478, "deterministicRegistered": 478, "representativePassed": 8, "representativeRegistered": 8, "failed": 0},
+    "chunkMetadata": {"suiteVersion": "rag-chunk-metadata.v1", "total": 8, "passed": 8, "failed": 0, "syntheticChunkCount": 5, "externalModelCalls": 0},
+    "ragRetrieval": {
+      "suiteVersion": "rag2-golden.v1",
+      "totalCasesPerMode": 52,
+      "modes": [
+        {"mode": "dense", "status": "passed", "supportedCases": 39, "recallAtK": 1.0, "mrr": 0.948718, "ndcgAtK": 0.962147, "abstentionCases": 13, "averageMs": 21.78, "p95Ms": 11.95, "maxMs": 644.82},
+        {"mode": "hybrid", "status": "passed", "supportedCases": 39, "recallAtK": 1.0, "mrr": 0.935897, "ndcgAtK": 0.952683, "abstentionCases": 13, "averageMs": 11.5, "p95Ms": 15.83, "maxMs": 26.91},
+        {"mode": "hybrid_rerank", "status": "passed", "supportedCases": 39, "recallAtK": 1.0, "mrr": 0.935897, "ndcgAtK": 0.952683, "abstentionCases": 13, "averageMs": 1587.18, "p95Ms": 1915.45, "maxMs": 4333.62}
+      ]
+    },
+    "ragVerifier": {"status": "completed", "total": 36, "supported": {"total": 28, "passed": 28}, "noEvidence": {"total": 8, "passed": 8}, "environmentBlocked": 0, "evidenceMaxDistance": 0.48},
+    "java": {"portal": {"tests": 14, "passed": 14, "failed": 0, "skipped": 0}, "admin": {"tests": 6, "passed": 6, "failed": 0, "skipped": 0}},
+    "web": {"build": "passed"},
+    "composeConfig": {"status": "passed"}
+  },
+  "openTaskAgent": {
+    "reportPath": "tmp/live_model_agent_runtime_report_current_head.json",
+    "suiteVersion": "live-model-agent-runtime.v1",
+    "suiteSha256": "ef6c0ad66556eb03127e85ee6607a5cdf79bb8f69ddfa8749ecc29e913e97d53",
+    "mode": "live_model_agent_synthetic",
+    "uniqueCases": 24,
+    "requiredRunsPerCase": 3,
+    "executedRuns": 72,
+    "passed": 24,
+    "failed": 48,
+    "environmentBlocked": 0,
+    "taskSuccess": {"passed": 46, "total": 72},
+    "clarificationCorrect": {"passed": 62, "total": 72},
+    "requiredSkillOrFactCoverage": {"passed": 29, "total": 72},
+    "proposalOrResumeSuccess": {"passed": 56, "total": 72},
+    "irrelevantCalls": 3,
+    "forbiddenSideEffects": 0,
+    "duplicateFinalBusinessWrites": 0,
+    "runtimeCalls": {"model": 133, "tool": 42, "context": 34, "critic": 0},
+    "llm": {"totalCalls": 189, "succeededCalls": 189, "totalTokens": 333383, "pricingConfigured": false, "estimatedCost": null, "p50Ms": 3282, "p95Ms": 7859, "maxMs": 10219},
+    "failureCategoryCounts": {"required_skill_or_fact_missing": 33, "terminal_status_mismatch": 16, "runtime_exception_validationerror": 10, "unsafe_no_evidence_or_failure_continuation": 10, "proposal_or_resume_missing": 6, "expired_proposal_rejected": 3, "duplicate_confirmation_single_commit": 2, "irrelevant_skill_call": 2},
+    "model": {"provider": "DeepSeekRuntimeProvider", "name": "deepseek-chat", "promptVersion": "agent_runtime_v3_0", "skillCatalogVersion": "skill_catalog_v3_0", "executionBoundary": "synthetic_read_only_gateway"}
+  },
+  "grounding": {
+    "reportPath": "tmp/rag2_grounding_current_head.json",
+    "suiteVersion": "rag2-golden.v1",
+    "mode": "dense",
+    "totalCases": 15,
+    "passedCases": 11,
+    "qualityFailedCases": 4,
+    "environmentBlockedCases": 0,
+    "passRate": 0.733333,
+    "violations": {"UNAPPROVED_EVIDENCE_SOURCE": ["rag2-007", "rag2-011", "rag2-012", "rag2-013"]},
+    "provider": {"totalCalls": 30, "succeededCalls": 30, "totalTokens": 20550, "pricingConfigured": false, "estimatedCost": null},
+    "latencyMs": {"average": 1549.01, "p95": 2098.64, "max": 2098.64}
+  },
+  "composeAndReliability": {
+    "containersHealthy": {"healthy": 8, "total": 8},
+    "endpointChecks": {"passed": 3, "total": 3},
+    "manifestFieldResults": {
+      "browser_e2e": {"registered": 24, "executed": 0, "passed": 0, "failed": 0, "environmentBlocked": 24},
+      "java_mysql_integration": {"registered": 30, "executed": 0, "passed": 0, "failed": 0, "environmentBlocked": 30},
+      "fault_injection": {"registered": 36, "executed": 0, "passed": 0, "failed": 0, "environmentBlocked": 36},
+      "durable_async_recovery": {"registered": 32, "executed": 0, "passed": 0, "failed": 0, "environmentBlocked": 32}
+    },
+    "executedSyntheticSafetyChecks": {"crossAccountRejected": {"passed": 3, "total": 3}, "noUnconfirmedCommit": {"passed": 2, "total": 2}, "subtaskOwnerCheck": {"passed": 3, "total": 3}, "forbiddenSideEffects": 0},
+    "notClaimed": ["full_cross_account_leak_rate", "full_unconfirmed_write_rate", "duplicate_outbox_events_converged"]
+  },
+  "commands": [
+    "Push-Location .\\mall-ai-service; .\\.venv\\Scripts\\python.exe -m compileall -q app; Pop-Location",
+    "Push-Location .\\mall-ai-service; .\\.venv\\Scripts\\python.exe -m pytest --collect-only -q; Pop-Location",
+    "Push-Location .\\mall-ai-service; .\\.venv\\Scripts\\python.exe -m pytest -q; Pop-Location",
+    "Push-Location .\\mall-ai-service; .\\.venv\\Scripts\\python.exe scripts\\run_quality_agent_evaluation.py; Pop-Location",
+    "Push-Location .\\mall-ai-service; .\\.venv\\Scripts\\python.exe scripts\\evaluate_task_orchestration.py --mode contract_mock; Pop-Location",
+    "Push-Location .\\mall-ai-service; .\\.venv\\Scripts\\python.exe scripts\\validate_v3_release_manifest.py --json; Pop-Location",
+    "Push-Location .\\mall-ai-service; .\\.venv\\Scripts\\python.exe scripts\\run_v3_release_preflight.py --json; Pop-Location",
+    "Push-Location .\\mall-ai-service; .\\.venv\\Scripts\\python.exe scripts\\evaluate_rag2.py --summary; Pop-Location",
+    "Push-Location .\\mall-ai-service; .\\.venv\\Scripts\\python.exe scripts\\evaluate_rag_verifier.py; Pop-Location",
+    "Push-Location .\\mall-ai-service; .\\.venv\\Scripts\\python.exe scripts\\evaluate_chunk_metadata.py --summary; Pop-Location",
+    "Push-Location .\\mall-ai-service; .\\.venv\\Scripts\\python.exe scripts\\evaluate_rag2_grounding.py --mode dense --max-cases 15 --timeout-seconds 20 --max-attempts 1; Pop-Location",
+    "Push-Location .\\mall-ai-service; .\\.venv\\Scripts\\python.exe scripts\\run_live_model_agent_synthetic.py --max-total-seconds 1200 --timeout-seconds 25 --max-attempts 1 --report ..\\tmp\\live_model_agent_runtime_report_current_head.json --summary; Pop-Location",
+    "Push-Location .\\mall-ai-web; npm run build; Pop-Location",
+    "Push-Location .\\mall2; mvn -pl mall-portal -am \"-Dtest=AiCaseHandoffServiceImplTest,AiServiceCaseServiceImplTest,AiServiceCaseOutboxPublisherTest,AiServiceCaseEventReceiverTest,SpringDataWebExposureContractTest,MongoMicrometerCompatibilityTest\" \"-DskipTests=false\" \"-Dsurefire.failIfNoSpecifiedTests=false\" test; Pop-Location",
+    "Push-Location .\\mall2; mvn -pl mall-admin -am \"-Dtest=AiServiceOperationsServiceImplTest,AiServiceOperationsControllerTest\" \"-DskipTests=false\" \"-Dsurefire.failIfNoSpecifiedTests=false\" test; Pop-Location",
+    "docker compose --env-file .env.example config --quiet",
+    "Push-Location .\\mall-ai-service; .\\.venv\\Scripts\\python.exe scripts\\verify_compose_stack.py; Pop-Location",
+    "docker compose ps --format json"
+  ],
+  "environmentBlockedLiveScripts": ["verify_build21_authenticated_live.py", "verify_unified_after_sales_live.py", "verify_service_case_live.py", "verify_return_status_flow.py", "verify_mcp_authenticated_live.py", "verify_auth_flow.py", "verify_build14_live.py"],
+  "claims": {"productionAccuracy": false, "productionSla": false, "realUserGeneralization": false, "realPaymentWarehouseLogisticsRepair": false}
+}
