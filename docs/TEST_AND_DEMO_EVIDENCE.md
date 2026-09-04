@@ -1,15 +1,20 @@
 # 测试与演示证据
 
-## 2026-09-04 — 公开演示截图刷新与本机复验（本地提交 `10bce84284c4ba344e7880fac5a605958e4c4b90`）
+## 2026-09-04 — 公开演示截图刷新与远程门禁复验（验证提交 `c6be3ea3c7b2c2fef9893815a444e06430b02ddd`）
 
-本节对应本轮提交的前端示例占位符和三张真实页面截图。截图由本机 Compose 页面、Chrome headless/CDP 和合成账号生成；未保存或输出密码、Token、完整订单号、客户原话、RAG 原文或生产 Trace。提交已在本地完成，但当前网络无法连接 GitHub Git 端点，尚未推送；**不能使用历史 Actions 链接替代本次远程验证**。
+本节对应本轮提交的前端示例占位符和三张真实页面截图。截图由本机 Compose 页面、Chrome headless/CDP 和合成账号生成；未保存或输出密码、Token、完整订单号、客户原话、RAG 原文或生产 Trace。代码/截图提交及证据状态提交已推送，下面的 Actions 链接均由 GitHub 返回并与该验证提交 SHA 一致。
+
+| GitHub 工作流 | 真实运行 | 结果 |
+| --- | --- | --- |
+| `mall-ci` | [33866949872](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/33866949872) | **success** |
+| `quality-evaluation` | [33866949829](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/33866949829) | **success** |
 
 | 范围 | 实际命令/动作 | 结果 |
 | --- | --- | --- |
 | FastAPI 全量 | `mall-ai-service/.venv/Scripts/python.exe -m pytest -q` | **346 passed**、1 条第三方弃用警告、7 个参数化子断言通过 |
 | 质量合同 | `scripts/run_quality_agent_evaluation.py` | `quality-agent.v2` **17/17 passed** |
 | Chunk/Metadata | `scripts/evaluate_chunk_metadata.py --summary` | `rag-chunk-metadata.v1` **8/8 passed**，合成 chunk `5`，外部模型调用 `0` |
-| RAG 2.0 | `scripts/evaluate_rag2.py --summary` | Dense、Hybrid、Hybrid+Rerank 各 **52/52 passed**；外部模型调用 `0`；Dense 仍为默认，其他模式只保留实验 |
+| RAG 2.0 | `scripts/evaluate_rag2.py --summary` | Dense、Hybrid、Hybrid+Rerank 各 **52/52 passed**；外部模型调用 `0`；Dense 仍为默认，其他模式只保留实验（本次本机 p95：19.29 / 15.75 / 1876.67 ms） |
 | v3 清单 | `validate_v3_release_manifest.py --json` | `478` deterministic、`36` live case、`12` performance profile；清单和 fixture hash 校验通过 |
 | v3 预检 | `run_v3_release_preflight.py --json` | **478/478** deterministic、**8/8** representative runtime |
 | Java portal | 受影响协同/事件/安全合同定向 Maven 测试 | **14/14 passed**，无失败、无跳过 |
@@ -24,7 +29,15 @@
 - `docs/assets/operations-handoff-overview.png`
 - `docs/assets/quality-evaluation-dashboard.png`
 
-本节的本机结果不代表 GitHub Actions 已通过，也不代表生产部署、生产 SLA、真实用户准确率或真实外部履约系统接入。推送后必须等待该提交对应的 `mall-ci` 与 `quality-evaluation`，再补录远程链接；截至记录时远程仍停留在父提交 `8891d4c3fc5116aed794b76daca7e45e691795db`。
+截图 SHA-256（用于确认公开资产来自本次现场）：
+
+| 文件 | 尺寸 | SHA-256 |
+| --- | --- | --- |
+| `customer-policy-conversation.png` | `1384×1396` | `067a7fd25ee1cc76b8f6479411de77d11fd679e6efbf830f0312471abf2ede8d` |
+| `operations-handoff-overview.png` | `1399×1200` | `5e51d8330e88f6a322f34c8eb507995cf78f77804762384a2193196c422d6a67` |
+| `quality-evaluation-dashboard.png` | `1369×5557` | `a8d51981abf769a18d3bf0907cbcf5b216e64d0a2a57d16c5fbd601bbce067` |
+
+本节的本机结果和上述远程门禁不代表生产部署、生产 SLA、真实用户准确率或真实外部履约系统接入。`live_model_synthetic`、完整浏览器 E2E 清单和 Java/MySQL manifest 仍须按各自证据单独理解，不能由这两条 CI 运行外推。
 
 ## 2026-09-04 — Build 22 提交后最终复验（`f88fee38b2089a0cc433650480ebac6dc3dcba03`）
 

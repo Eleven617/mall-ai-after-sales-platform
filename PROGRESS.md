@@ -107,5 +107,6 @@
 - 三张图均未发现完整数字订单号、密码、Token 值、客户原话、RAG 原文或生产 Trace；质量页中出现的 `token`/`rag_context` 等仅是合同测试中的字段名说明，不是实际值。
 - 重新执行本机复验：FastAPI `346 passed`；质量 `17/17`；Chunk/Metadata `8/8`；v3 manifest `478/478`、preflight `478/478`、代表性 Runtime `8/8`；RAG2 三种模式各 `52/52`；Java portal `14/14`、admin `6/6`；Vue build、Compose config 均成功。
 - 已更新 `README.md`、`docs/TEST_AND_DEMO_EVIDENCE.md`、`docs/PUBLIC_RELEASE_RECORD.md`，明确本轮截图与本机结果；已创建本地提交 `10bce84284c4ba344e7880fac5a605958e4c4b90`。
-- `git push origin main` 及一次连接参数重试均因 `github.com:443` connection reset/timeout 失败；SSH 推送因当前环境无可用 public key 被拒绝。GitHub API 核对显示远程仍为 `8891d4c3fc5116aed794b76daca7e45e691795db`，尚未生成本次提交的 Actions 运行。
-- 当前下一步：网络/认证通道恢复后推送 `10bce84`，等待新提交对应的 `mall-ci`/`quality-evaluation`，再将真实链接和最终 SHA 补回证据文档；在此之前不能宣称远程 CI 成功。
+- 初次 `git push` 曾受网络重置影响；网络恢复后，`10bce84` 及证据状态提交 `c6be3ea3c7b2c2fef9893815a444e06430b02ddd` 已推送。
+- 该 SHA 的 `mall-ci` run `33866949872` 与 `quality-evaluation` run `33866949829` 均为 GitHub 实际 `success`。链接已同步到公开证据文档。
+- 当前剩余工作仅为提交并推送本次“补录远程证据”的文档更新，再确认这份文档提交没有触发 CI 回归。
