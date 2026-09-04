@@ -1,8 +1,8 @@
 # 测试与演示证据
 
-## 2026-09-04 — 公开演示截图刷新与本机复验（待推送变更）
+## 2026-09-04 — 公开演示截图刷新与本机复验（本地提交 `10bce84284c4ba344e7880fac5a605958e4c4b90`）
 
-本节对应本轮准备提交的前端示例占位符和三张真实页面截图。截图由本机 Compose 页面、Chrome headless/CDP 和合成账号生成；未保存或输出密码、Token、完整订单号、客户原话、RAG 原文或生产 Trace。此时变更尚未推送，**不能使用历史 Actions 链接替代本次远程验证**。
+本节对应本轮提交的前端示例占位符和三张真实页面截图。截图由本机 Compose 页面、Chrome headless/CDP 和合成账号生成；未保存或输出密码、Token、完整订单号、客户原话、RAG 原文或生产 Trace。提交已在本地完成，但当前网络无法连接 GitHub Git 端点，尚未推送；**不能使用历史 Actions 链接替代本次远程验证**。
 
 | 范围 | 实际命令/动作 | 结果 |
 | --- | --- | --- |
@@ -24,7 +24,7 @@
 - `docs/assets/operations-handoff-overview.png`
 - `docs/assets/quality-evaluation-dashboard.png`
 
-本节的本机结果不代表 GitHub Actions 已通过，也不代表生产部署、生产 SLA、真实用户准确率或真实外部履约系统接入。推送后必须等待新提交对应的 `mall-ci` 与 `quality-evaluation`，再补录远程链接。
+本节的本机结果不代表 GitHub Actions 已通过，也不代表生产部署、生产 SLA、真实用户准确率或真实外部履约系统接入。推送后必须等待该提交对应的 `mall-ci` 与 `quality-evaluation`，再补录远程链接；截至记录时远程仍停留在父提交 `8891d4c3fc5116aed794b76daca7e45e691795db`。
 
 ## 2026-09-04 — Build 22 提交后最终复验（`f88fee38b2089a0cc433650480ebac6dc3dcba03`）
 
