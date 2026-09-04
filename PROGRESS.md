@@ -35,21 +35,24 @@
 
 ## 2. 修改过的文件
 
-### 已跟踪、当前有改动
+### 已提交并推送
 
 - `mall-ai-web/src/App.vue`：将输入框 placeholder 中的完整订单号示例改为泛化文本。
-- `docs/assets/customer-policy-conversation.png`：截图脚本曾写入过新文件，但当前内容仍需重新确认，不能直接作为公开最终截图。
-- `docs/assets/operations-handoff-overview.png`：由真实运营页面重新截图，使用合成账号/聚合数据。
+- `docs/assets/customer-policy-conversation.png`：真实客户政策对话截图，合成数据。
+- `docs/assets/operations-handoff-overview.png`：真实运营转人工概览截图，合成聚合数据。
+- `docs/assets/quality-evaluation-dashboard.png`：真实质量评测页面截图，合成评测数据。
+- `README.md`：同步公开演示截图与可信性边界。
+- `docs/TEST_AND_DEMO_EVIDENCE.md`：记录本机复验、截图 hash 和远程 Actions 证据。
+- `docs/PUBLIC_RELEASE_RECORD.md`：记录公开发布范围与验证边界。
+- `docs/evidence/v3.0-release-evidence.md`：同步最新已验证提交与远程门禁链接。
+- `PROGRESS.md`：记录暂停点、恢复结果和最终远程验证状态。
 
 ### 未跟踪但被 Git 忽略的临时文件
 
 - `tmp/capture_demo_screenshots.py`：仅用于本地截图驱动，已多次调整；位于被 `.gitignore` 忽略的 `tmp/`，不应提交。
 - `tmp/capture-chrome-profile*`：Chrome 临时 profile，不应提交。
 
-### 尚未修改
-
-- `docs/assets/quality-evaluation-dashboard.png` 本轮尚未成功刷新，仍是旧截图。
-- `README.md`、`docs/TEST_AND_DEMO_EVIDENCE.md`、`docs/PUBLIC_RELEASE_RECORD.md` 和其他公开证据文档尚未针对本轮截图更新完成。
+本轮没有遗留的截图或公开证据文件改动；工作区状态以 `git status` 为准。
 
 ## 3. 已执行的命令和结果
 
@@ -60,36 +63,23 @@
 | `npm run build`（`mall-ai-web`） | 成功：`vue-tsc --noEmit` 与 Vite build 均通过 |
 | `docker compose up -d --build mall-ai-web` | 成功；Web 及依赖服务重建/重启完成，未 down、未删卷 |
 | `docker compose ps` | 八个常驻服务显示 healthy |
-| 本地截图脚本（多次） | 部分失败：客户页异步历史/消息状态等待条件未稳定；运营页截图已生成；质量页未刷新 |
+| 本地截图脚本（修正等待条件后） | 成功生成并检查客户、运营、质量三张真实 PNG |
 | 本地 API 冒烟（合成客户） | 登录、创建会话、发送政策问题均 HTTP 200；只检查响应结构/长度 |
-| `view_image` 检查三张资产 | 已查看；发现客户图仍可能显示旧 placeholder 中的完整数字，不能发布；运营图为合成只读概览；质量图为旧的真实质量页截图 |
-| `git status --short --branch` | 当前分支 `main`；改动为 App.vue 与两张截图；临时脚本/profile 被忽略 |
+| `view_image` 检查三张资产 | 三张均通过公开安全检查；无完整订单号、密码、Token 值、客户原话、RAG 原文或生产 Trace |
+| `git status --short --branch` | `main...origin/main`，工作区干净；临时脚本/profile 被忽略 |
 
 ## 4. 当前遇到的问题
 
-1. 客户截图脚本中，服务端请求已返回 200，但前端在登录后的会话历史异步更新与新消息渲染之间存在竞态；脚本观察到客户页只有两行消息，未稳定捕获 assistant 回答，因此等待条件超时。
-2. 客户截图当前仍能看到旧的完整数字订单号 placeholder；在重新生成并用图像检查确认前，不能提交或在 README 宣称它是安全新截图。
-3. 质量截图尚未刷新；上一次质量图虽来自真实页面，但不是本轮截图更新，且页面中的合同字段名不能被误判为真实敏感值，需用更精确的安全检查重新截取。
-4. 公开证据文档中的历史提交 SHA、远程 Actions 链接、Java 分项数量和 live-synthetic p95 有不同历史口径；恢复后必须以一组新命令和新提交统一，不得编数字或把旧链接冒充新提交结果。
-5. 本轮尚未完成公开文档同步、最终全量回归、Git commit/push 和新提交对应的远程 Actions 验证。
+1. 历史证据章节仍保留各自时间点和命令口径；这些记录不能与当前结果相加。
+2. 本轮没有未解决的代码、截图、推送或远程 CI 阻塞；生产 SLA、真实用户泛化、真实外部履约和完整浏览器/Java-MySQL manifest 仍属于未验证边界，详见公开证据文档。
 
 ## 5. 尚未完成的任务
 
-- 稳定生成并检查三张真实截图：客户、运营、质量；确认无完整订单号、密码、Token、客户原话、RAG 原文或生产 Trace。
-- 重新运行与本轮改动相关的测试，至少包括 Vue build、`git diff --check`、FastAPI 受影响测试；交付前按仓库规则完成 FastAPI 全量回归，并复跑 Compose config。
-- 更新 `README.md`、`docs/TEST_AND_DEMO_EVIDENCE.md`、`docs/PUBLIC_RELEASE_RECORD.md`（必要时同步 v3 证据），写清日期、命令、数据集规模、hash、deterministic/contract_mock/live_model_synthetic/浏览器现场边界。
-- 检查暂存区，确保没有 `.env`、密码、Token、模型权重、Chroma 索引、浏览器 profile、日志或其他敏感文件。
-- 创建专门的截图/测试证据 commit，建议消息：`docs: refresh live demo screenshots and evaluation evidence`。
-- 推送到 `origin main`，等待该新提交对应的 `mall-ci` 与 `quality-evaluation` 完成；只有真实 success 才能在最终报告写新 Actions 链接和“该提交 CI 通过”。
-- 若远程失败，逐项读取新日志并如实记录根因、命令和阻塞点，不能沿用旧成功链接。
+本轮必做任务已全部完成：三张真实截图、公开证据文档、本机复验、提交、推送，以及 `df67753` 对应的两个 GitHub Actions 工作流均已成功。后续若继续迭代，应为新的代码/文档提交重新运行并记录远程门禁，不能沿用本次结果。
 
 ## 6. 下一步应该做什么
 
-1. 先修复临时截图脚本的客户页竞态：等待登录初始化结束后再发送，或打开已生成且不含业务标识的合成政策会话；必要时用 CDP 检查 DOM 状态，但不要打印页面敏感内容。
-2. 重新截三张图并逐张 `view_image` 检查；客户图若仍有数字订单号，立即判为不合格并重截，不做图像伪造或遮盖替代。
-3. 运行测试和静态检查，保存真实输出。
-4. 只更新公开文档中的真实结果与边界，不把历史数量相加、不把 mock 说成真实模型效果。
-5. 检查 Git diff/status 后提交、推送，再等待并记录新 Actions。
+本轮已收口。下一次重大升级时，先读取本文件和仓库 `AGENTS.md`，仅针对新增改动运行受影响测试，再提交并等待新的远程 Actions；不要把本次本机/合成结果宣传为生产能力。
 
 ## 7. 不能重复执行或不能删除的内容
 
@@ -109,4 +99,4 @@
 - 已更新 `README.md`、`docs/TEST_AND_DEMO_EVIDENCE.md`、`docs/PUBLIC_RELEASE_RECORD.md`，明确本轮截图与本机结果；已创建本地提交 `10bce84284c4ba344e7880fac5a605958e4c4b90`。
 - 初次 `git push` 曾受网络重置影响；网络恢复后，`10bce84` 及证据状态提交 `c6be3ea3c7b2c2fef9893815a444e06430b02ddd` 已推送。
 - 该 SHA 的 `mall-ci` run `33866949872` 与 `quality-evaluation` run `33866949829` 均为 GitHub 实际 `success`。链接已同步到公开证据文档。
-- 当前剩余工作仅为提交并推送本次“补录远程证据”的文档更新，再确认这份文档提交没有触发 CI 回归。
+- `df67753` 已推送并完成对应远程复验：`mall-ci` run `33868598584`、`quality-evaluation` run `33868598567` 均为 success；本轮没有剩余收口工作。

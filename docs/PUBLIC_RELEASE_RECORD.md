@@ -1,6 +1,6 @@
 # 公开发布记录
 
-## 2026-09-04 — 公开演示资产与 CI 复验更新（验证提交 `c6be3ea3c7b2c2fef9893815a444e06430b02ddd`）
+## 2026-09-04 — 公开演示资产与 CI 复验更新（验证提交 `df67753bb923434c0b5d11e448e778cb413b7840`）
 
 本轮更新了客户页面的泛化输入示例，并从真实本地 Compose 页面重新截取客户、运营和 AI 质量开发者页面。截图只使用合成账号与脱敏/聚合数据，不包含密码、Token、完整订单号、客户原话、RAG 原文或生产 Trace。
 
@@ -12,7 +12,7 @@
 - RAG2 Dense、Hybrid、Hybrid+Rerank：各 `52/52 passed`，Dense 继续默认；
 - Java portal：`14/14`；Java admin：`6/6`；Vue 生产构建成功；Compose config 成功；八个常驻容器 healthy。
 
-本轮提交已推送并取得与该 SHA 一致的远程门禁结果：`mall-ci` [33866949872](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/33866949872) **success**；`quality-evaluation` [33866949829](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/33866949829) **success**。本机复验和远程 CI 均不等于生产部署、生产 SLA、真实用户准确率或真实外部履约接入。
+本轮提交已推送并取得与该 SHA 一致的远程门禁结果：`mall-ci` [33868598584](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/33868598584) **success**；`quality-evaluation` [33868598567](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/33868598567) **success**。本机复验和远程 CI 均不等于生产部署、生产 SLA、真实用户准确率或真实外部履约接入。
 
 ## 2026-09-04 — Build 22 CI 与 live-synthetic 收口（提交 `f88fee38b2089a0cc433650480ebac6dc3dcba03`）
 
