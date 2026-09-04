@@ -1082,7 +1082,7 @@ async function scrollToLatest(): Promise<void> {
           <div class="composer-area">
             <div class="quick-prompts" aria-label="快捷问题"><button v-for="prompt in quickPrompts" :key="prompt" type="button" :disabled="isSending || isCreatingConversation" @click="sendMessage(prompt)">{{ prompt }}</button></div>
             <form class="composer" @submit.prevent="sendMessage()">
-              <textarea v-model="messageInput" :disabled="isSending || isCreatingConversation" rows="2" placeholder="例如：订单号 202607240001 的耳机损坏了，想申请退货" @keydown.enter.exact.prevent="sendMessage()"></textarea>
+              <textarea v-model="messageInput" :disabled="isSending || isCreatingConversation" rows="2" placeholder="例如：某笔订单的耳机损坏了，想申请退货" @keydown.enter.exact.prevent="sendMessage()"></textarea>
               <button class="send-button" type="submit" :disabled="isSending || isCreatingConversation || !messageInput.trim()">{{ isSending ? "处理中" : "发送" }}</button>
             </form>
             <p class="composer-note">Enter 发送；Shift + Enter 换行。涉及写操作时，系统会先要求明确确认。</p>

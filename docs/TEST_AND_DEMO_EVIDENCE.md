@@ -1,5 +1,31 @@
 # 测试与演示证据
 
+## 2026-09-04 — 公开演示截图刷新与本机复验（待推送变更）
+
+本节对应本轮准备提交的前端示例占位符和三张真实页面截图。截图由本机 Compose 页面、Chrome headless/CDP 和合成账号生成；未保存或输出密码、Token、完整订单号、客户原话、RAG 原文或生产 Trace。此时变更尚未推送，**不能使用历史 Actions 链接替代本次远程验证**。
+
+| 范围 | 实际命令/动作 | 结果 |
+| --- | --- | --- |
+| FastAPI 全量 | `mall-ai-service/.venv/Scripts/python.exe -m pytest -q` | **346 passed**、1 条第三方弃用警告、7 个参数化子断言通过 |
+| 质量合同 | `scripts/run_quality_agent_evaluation.py` | `quality-agent.v2` **17/17 passed** |
+| Chunk/Metadata | `scripts/evaluate_chunk_metadata.py --summary` | `rag-chunk-metadata.v1` **8/8 passed**，合成 chunk `5`，外部模型调用 `0` |
+| RAG 2.0 | `scripts/evaluate_rag2.py --summary` | Dense、Hybrid、Hybrid+Rerank 各 **52/52 passed**；外部模型调用 `0`；Dense 仍为默认，其他模式只保留实验 |
+| v3 清单 | `validate_v3_release_manifest.py --json` | `478` deterministic、`36` live case、`12` performance profile；清单和 fixture hash 校验通过 |
+| v3 预检 | `run_v3_release_preflight.py --json` | **478/478** deterministic、**8/8** representative runtime |
+| Java portal | 受影响协同/事件/安全合同定向 Maven 测试 | **14/14 passed**，无失败、无跳过 |
+| Java admin | 运营分析定向 Maven 测试 | **6/6 passed**，无失败、无跳过 |
+| Web | `mall-ai-web/npm run build` | `vue-tsc --noEmit` 与 Vite build 成功 |
+| Compose | `docker compose --env-file .env.example config --quiet` | 成功；常驻容器随后均为 healthy |
+| 浏览器现场截图 | 真实 Chrome headless/CDP，客户/运营/质量页面各一张 | 三张 PNG 已生成并人工检查公开字段；这不是完整浏览器 E2E 清单 |
+
+本轮新截图文件：
+
+- `docs/assets/customer-policy-conversation.png`
+- `docs/assets/operations-handoff-overview.png`
+- `docs/assets/quality-evaluation-dashboard.png`
+
+本节的本机结果不代表 GitHub Actions 已通过，也不代表生产部署、生产 SLA、真实用户准确率或真实外部履约系统接入。推送后必须等待新提交对应的 `mall-ci` 与 `quality-evaluation`，再补录远程链接。
+
 ## 2026-09-04 — Build 22 提交后最终复验（`f88fee38b2089a0cc433650480ebac6dc3dcba03`）
 
 这次只引用该提交对应的真实远程运行，不用旧提交的绿色结果替代：

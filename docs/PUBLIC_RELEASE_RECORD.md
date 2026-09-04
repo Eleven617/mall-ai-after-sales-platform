@@ -1,5 +1,19 @@
 # 公开发布记录
 
+## 2026-09-04 — 公开演示资产与本机复验更新（远程验证待完成）
+
+本轮更新了客户页面的泛化输入示例，并从真实本地 Compose 页面重新截取客户、运营和 AI 质量开发者页面。截图只使用合成账号与脱敏/聚合数据，不包含密码、Token、完整订单号、客户原话、RAG 原文或生产 Trace。
+
+本机实际复验结果（不能代替远程 CI）：
+
+- FastAPI 全量：`346 passed`，7 个参数化子断言通过；
+- `quality-agent.v2`：`17/17 passed`；`rag-chunk-metadata.v1`：`8/8 passed`；
+- v3 manifest/preflight：`478/478` deterministic，代表性 Runtime `8/8`；
+- RAG2 Dense、Hybrid、Hybrid+Rerank：各 `52/52 passed`，Dense 继续默认；
+- Java portal：`14/14`；Java admin：`6/6`；Vue 生产构建成功；Compose config 成功；八个常驻容器 healthy。
+
+本节对应的代码、截图和文档变更尚未取得新提交对应的 GitHub Actions 结果；推送后必须补录真实的 `mall-ci`、`quality-evaluation` URL，不能沿用旧提交链接。
+
 ## 2026-09-04 — Build 22 CI 与 live-synthetic 收口（提交 `f88fee38b2089a0cc433650480ebac6dc3dcba03`）
 
 本次代码提交已推送到 `main`，并取得了**该提交对应**的远程 GitHub Actions 结果：

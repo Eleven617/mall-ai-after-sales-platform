@@ -24,11 +24,11 @@ flowchart LR
   R --> X[AgentOps / Eval\n合成合同与回放]
 ```
 
-真实验证范围是本机、合成数据、自动化测试和显式的模型合成评测；截至当前 `main` 提交，`mall-ci` 与 `quality-evaluation` 均有真实成功的 GitHub Actions 运行记录。不宣称生产 SaaS、真实用户准确率、生产 SLA，也未接入真实支付、仓储、物流或维修系统。项目基于 `macrozheng/mall` 二次开发，上游归属和许可证见 [UPSTREAM.md](UPSTREAM.md)。
+真实验证范围是本机、合成数据、自动化测试和显式的模型合成评测；已推送基线的 `mall-ci` 与 `quality-evaluation` 有真实成功运行记录，任何新提交都必须重新查看 Actions，不能由历史链接外推。不宣称生产 SaaS、真实用户准确率、生产 SLA，也未接入真实支付、仓储、物流或维修系统。项目基于 `macrozheng/mall` 二次开发，上游归属和许可证见 [UPSTREAM.md](UPSTREAM.md)。
 
 ## 真实运行截图
 
-以下截图来自本地 Compose 演示，使用合成账号和合成数据；图片不代表线上部署或生产数据。
+以下截图于 2026-09-04 从本地 Compose 演示重新获取，使用合成账号和合成数据；图片不代表线上部署或生产数据。完整命令和边界见 [测试与演示证据](docs/TEST_AND_DEMO_EVIDENCE.md)。
 
 ![客户政策咨询与售后对话](docs/assets/customer-policy-conversation.png)
 客户侧政策咨询与安全回答，业务写入仍需后续确认。
