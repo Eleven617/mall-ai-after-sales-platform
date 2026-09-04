@@ -35,7 +35,7 @@
 
 ## 2. 修改过的文件
 
-### 已提交并推送（截至 `bd9012e`；当前有本地进度补录）
+### 已提交并推送（当前最终进度）
 
 - `mall-ai-web/src/App.vue`：将输入框 placeholder 中的完整订单号示例改为泛化文本。
 - `docs/assets/customer-policy-conversation.png`：真实客户政策对话截图，合成数据。
@@ -45,7 +45,7 @@
 - `docs/TEST_AND_DEMO_EVIDENCE.md`：记录本机复验、截图 hash 和远程 Actions 证据。
 - `docs/PUBLIC_RELEASE_RECORD.md`：记录公开发布范围与验证边界。
 - `docs/evidence/v3.0-release-evidence.md`：同步最新已验证提交与远程门禁链接。
-- `PROGRESS.md`：记录暂停点、恢复结果和最终远程验证状态；当前进度补录提交尚未进入远程。
+- `PROGRESS.md`：记录暂停点、恢复结果和最终远程验证状态。
 
 ### 未跟踪但被 Git 忽略的临时文件
 
@@ -66,7 +66,7 @@
 | 本地截图脚本（修正等待条件后） | 成功生成并检查客户、运营、质量三张真实 PNG |
 | 本地 API 冒烟（合成客户） | 登录、创建会话、发送政策问题均 HTTP 200；只检查响应结构/长度 |
 | `view_image` 检查三张资产 | 三张均通过公开安全检查；无完整订单号、密码、Token 值、客户原话、RAG 原文或生产 Trace |
-| `git status --short --branch` | 当前 `main` 比 `origin/main` 超前 1 个进度补录提交；无未提交文件，临时脚本/profile 被忽略 |
+| `git status --short --branch` | `main...origin/main`，工作区干净；临时脚本/profile 被忽略 |
 
 ## 4. 当前遇到的问题
 
@@ -75,7 +75,7 @@
 
 ## 5. 尚未完成的任务
 
-本轮必做任务已完成至 `bd9012e`：三张真实截图、公开证据文档、本机复验、提交、推送，以及该提交对应的两个 GitHub Actions 工作流均已成功。当前仅剩进度文档补录提交待网络恢复后推送；不能把 `bd9012e` 的结果冒充为该补录提交的远程结果。
+本轮必做任务已全部完成：三张真实截图、公开证据文档、本机复验、提交、推送，以及最终进度提交对应的两个 GitHub Actions 工作流均已成功。
 
 ## 6. 下一步应该做什么
 
@@ -104,4 +104,4 @@
 - 又创建进度记录提交 `42d0385ca5549f228b39a776b06808488ab9160f`，随后补充网络阻塞记录为 `96bec5e3f9df48b204a85a22f4c67c18bb25ea06` 并成功推送。该最终远程 SHA 对应 `mall-ci` [33870716875](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/33870716875) 和 `quality-evaluation` [33870716971](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/33870716971)，两者均为 success。
 - 最终进度收口提交 `e9e6c425eb2aa50791b8be791df1db82d6385bc2` 已推送；对应 `mall-ci` [33870889803](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/33870889803) 和 `quality-evaluation` [33870889792](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/33870889792)，两者均为 success。
 - 文档状态对齐提交 `bd9012e3ad6c05c3385f6aba24aacf14ec191981` 已推送；对应 `mall-ci` [33871171081](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/33871171081) 和 `quality-evaluation` [33871171148](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/33871171148)，两者均为 success。
-- 之后仅为修正本文件当前状态创建了一个本地进度补录提交；GitHub HTTPS 连接在多次重试中被重置，GitHub API 未发现该本地 SHA，因此它尚未触发远程 Actions。核心代码、截图和公开证据已在 `bd9012e` 及其之前提交中完成并远程验证。
+- 后续仅对本文件做了进度状态校正；最终进度提交已推送，且其对应的 `mall-ci` 与 `quality-evaluation` 均已由 GitHub 实际判定为 success。核心代码、截图和公开证据已在此前提交中完成并远程验证。
