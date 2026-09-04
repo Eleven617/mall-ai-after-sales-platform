@@ -1,5 +1,25 @@
 # 公开发布记录
 
+## 2026-09-04 — Build 22 CI 与 live-synthetic 收口（提交 `f88fee38b2089a0cc433650480ebac6dc3dcba03`）
+
+本次代码提交已推送到 `main`，并取得了**该提交对应**的远程 GitHub Actions 结果：
+
+| 工作流 | 运行 | 结果 | Job 结果 |
+| --- | --- | --- | --- |
+| `mall-ci` | [33841952626](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/33841952626) | **success** | Python、Java、Web、Compose contract、dependency-and-secret-risk 全部 success |
+| `quality-evaluation` | [33841952630](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/33841952630) | **success** | isolated-quality-evaluation success |
+
+本次提交的实际改动和本机复核如下：
+
+- CI 质量工作流纳入 live-synthetic runner 合同测试；`call_skill` 的 Prompt 明确只允许只读 Skill，写能力只能生成 ActionProposal 并等待确认。
+- MongoDB Driver 固定为 `4.11.5`，新增 Micrometer Mongo API 兼容回归测试，避免健康检查在运行时出现 `NoSuchMethodError`。
+- Build 21 现场验收脚本对齐 v3 `task`/`waiting_input` 语义，不再把缺订单号写成旧式 pending action 或默认 interrupt。
+- 36 条人工 live-synthetic Case 各运行 3 次：**108/108 passed**，本机 p95 约 **1438 ms**；仅使用版本化合成消息和真实 P0 模型，不访问生产会话或业务写接口。
+- FastAPI 全量：**346 passed，7 subtests passed**；v3 manifest **478/478**，代表性 Runtime **8/8**；质量 Agent **17/17**；任务编排 contract_mock **11/11**；RAG 合同 **55/55**；Chunk/Metadata **8/8**。
+- Java portal 定向 **14/14**、admin 定向 **6/6**；Vue 生产构建和 Compose 静态合同通过。
+
+本机没有安装 gitleaks/OSV 命令行二进制，因此安全扫描的最终依据是上表中 GitHub runner 的真实 job；该 job 成功不表示 Java 8/Spring Boot 2.7 的时间限定 OSV 例外已经消失。浏览器 E2E manifest 的 24 条和 Java/MySQL manifest 的 30 条仍是合成合同清单，未被本次记录冒充为逐条现场运行。
+
 ## 2026-09-03 — GitHub Actions 远程门禁验证（代码验证基线 `d7c8f9bf4354f05009b9f83c793a3f296619bf66`）
 
 代码验证基线及其后续仅文档同步提交的远程运行均已实际完成，不能用本机结果替代：

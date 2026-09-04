@@ -1,5 +1,26 @@
 # 测试与演示证据
 
+## 2026-09-04 — Build 22 提交后最终复验（`f88fee38b2089a0cc433650480ebac6dc3dcba03`）
+
+这次只引用该提交对应的真实远程运行，不用旧提交的绿色结果替代：
+
+| 工作流 | 真实运行 | 结果 | 范围 |
+| --- | --- | --- | --- |
+| `mall-ci` | [33841952626](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/33841952626) | **success** | Python、Java、Web、Compose contract、dependency-and-secret-risk 五个 job |
+| `quality-evaluation` | [33841952630](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/33841952630) | **success** | 质量、任务编排、RAG 合同和开发者质量页面构建 |
+
+本机分项复验（计数不相加）为：
+
+| 范围 | 实际结果 |
+| --- | --- |
+| FastAPI + v3 deterministic | `346 passed`、`7 subtests passed`；manifest `478/478`，代表性 Runtime `8/8` |
+| Quality / task / RAG contracts | quality-agent `17/17`；task orchestration `11/11`；RAG 合同 `55/55`；Chunk/Metadata `8/8` |
+| Live model synthetic | 36 Case × 3 次 = **108/108 passed**；p95 `1438 ms` |
+| Java | portal `14/14`；admin `6/6` |
+| Web / Compose | `npm run build` 成功；`docker compose --env-file .env.example config --quiet` 成功 |
+
+Live-synthetic 只使用脱敏、版本化合成输入和安全任务摘要；模型不可用时 runner 会返回 `ENVIRONMENT_BLOCKED`，不会转成通过。浏览器 E2E 24 条和 Java/MySQL 30 条 manifest 场景仍未逐条现场执行；已有真实网站代理、Java 定向测试和 Docker health 证据应与这些合同清单分开理解。
+
 ## GitHub Actions 远程 CI（2026-09-03，代码验证基线 `d7c8f9bf4354f05009b9f83c793a3f296619bf66`）
 
 | 工作流 | 真实运行 | 结果 | 范围 |

@@ -2,6 +2,15 @@
 
 本文件记录已完成的命名 Build 与公开发布基线。它不是产品待办清单，也不以“已提交”替代测试或真实验收。
 
+## 2026-09-04 — Build 22 CI 与合成回放收口（`f88fee38b2089a0cc433650480ebac6dc3dcba03`）
+
+- 将 v3 live-synthetic 运行器接入质量合同测试，明确 36 条手工 Case 各运行三次；真实模型不可用时保持环境阻塞，不降级为通过。
+- 强化 Executor Prompt 的只读 Skill 白名单约束；写 Skill 只能经 Runtime 生成 Proposal 并等待客户确认。
+- 固定 MongoDB Java Driver `4.11.5` 并加入 Micrometer API 兼容回归测试；CI 工作流保留 Python、Java、Web、Compose、gitleaks 和 OSV 门禁。
+- 复验：FastAPI `346 passed + 7 subtests`、v3 `478/478 + 8/8`、Quality `17/17`、任务编排 `11/11`、RAG `55/55`、Chunk/Metadata `8/8`、Java portal `14/14`、admin `6/6`、Vue/Compose 通过；live-synthetic `108/108`，p95 `1438 ms`。
+- 远程 Actions：`mall-ci` [33841952626](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/33841952626)、`quality-evaluation` [33841952630](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/33841952630)，均真实 success。
+- 边界：浏览器 E2E 24 条和 Java/MySQL 30 条 manifest 场景仍未逐条现场验收；本机合成结果不代表生产准确率、SLA、吞吐或外部履约接入。
+
 ## 后续归档规则
 
 每次重大升级完成后，主线必须同时完成：
