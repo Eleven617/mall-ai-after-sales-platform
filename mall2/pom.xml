@@ -43,7 +43,14 @@
         <json-path.version>2.9.0</json-path.version>
         <log4j2.version>2.25.5</log4j2.version>
         <logback.version>1.2.13</logback.version>
+        <!--
+            Micrometer 1.15's Mongo metrics binder is compiled against the
+            MongoDB 4.11 API, including CommandEvent.getDatabaseName(). Keep
+            these two compatible patch lines aligned; otherwise Actuator's
+            real Mongo health probe fails at runtime with NoSuchMethodError.
+        -->
         <micrometer.version>1.15.12</micrometer.version>
+        <mongodb.version>4.11.5</mongodb.version>
         <netty.version>4.1.136.Final</netty.version>
         <snakeyaml.version>2.0</snakeyaml.version>
         <spring-framework.version>5.3.39</spring-framework.version>

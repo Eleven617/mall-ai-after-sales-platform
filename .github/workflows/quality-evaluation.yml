@@ -39,7 +39,7 @@ jobs:
       - name: Run task-aware conversation contract gate
         run: python scripts/evaluate_task_orchestration.py --mode contract_mock
       - name: Run quality and v3 release contract tests
-        run: python -m pytest tests/test_quality_evaluation_agent.py tests/test_quality_router.py tests/test_quality_developer_client.py tests/test_release_manifest.py tests/test_release_evaluation.py
+        run: python -m pytest tests/test_quality_evaluation_agent.py tests/test_quality_router.py tests/test_quality_developer_client.py tests/test_release_manifest.py tests/test_release_evaluation.py tests/test_v3_live_synthetic_runner.py
       - name: Validate versioned RAG 2.0 contracts
         run: python -m pytest tests/test_rag2_evaluation.py tests/test_policy_query.py tests/test_bm25_retriever.py tests/test_policy_retrieval.py tests/test_cross_encoder_reranker.py tests/test_rag_service.py tests/test_rag_evidence_verifier.py tests/test_chunking_service.py tests/test_embedding_and_vector_store.py tests/test_policy_metadata.py tests/test_chunk_metadata_evaluation.py tests/test_knowledge_contract.py
       - name: Validate RAG chunk and metadata pre-filter contract

@@ -94,9 +94,19 @@ def main() -> int:
                 "订单为什么未按预期完成、是否存在配送异常、我现在应如何处理？",
             )
             _assert_public_response(paused)
-            pending = _require_dict(paused.get("pending_action"), "durable pending action")
-            _expect(pending.get("kind") == "awaiting_order_sn", "Diagnosis did not wait for an order number")
-            _expect(pending.get("resumable") is True, "Diagnosis was not persisted as a resumable read-only task")
+            # v3.0 task-aware semantics keep a missing-order conversation as a
+            # normal server-owned task snapshot.  It is deliberately *not* a
+            # legacy pending_action or default LangGraph interrupt/checkpoint.
+            task = _require_dict(paused.get("task"), "waiting diagnosis task")
+            _expect(task.get("task_status") == "active", "Diagnosis did not create an active waiting task")
+            _expect(task.get("task_label") == "订单异常诊断", "Diagnosis task label is not customer-safe")
+            _expect(
+                isinstance(task.get("task_hint"), str)
+                and "订单号" in task["task_hint"],
+                "Diagnosis task did not expose the safe order-number hint",
+            )
+            _expect(paused.get("after_sales_pending_action") is None, "Diagnosis created an unrelated after-sales action")
+            _expect(paused.get("pending_action") is None, "Diagnosis exposed a legacy pending action")
             _expect(not paused.get("verified_facts"), "Interrupt unexpectedly queried business data")
             _assert_no_business_write_fields(paused)
 
@@ -114,7 +124,7 @@ def main() -> int:
             _expect(isinstance(resumed.get("diagnosis"), dict), "Authenticated resume did not return diagnosis state")
             _expect(
                 resumed.get("pending_action") is None,
-                "Authenticated resume unexpectedly remained in a pending diagnostic state",
+                "Authenticated resume exposed a legacy pending diagnostic state",
             )
             _assert_no_business_write_fields(resumed)
 
@@ -122,10 +132,11 @@ def main() -> int:
                 client, api_base, authorization_a, conversation_id, f"订单号：{inputs.order_a}"
             )
             _assert_public_response(duplicate)
-            _expect(
-                "未重复执行查询" in _require_text(duplicate.get("answer"), "duplicate resume answer"),
-                "Duplicate resume was not safely recognized as completed",
-            )
+            # A repeated factual input is always routed as a fresh v3 turn,
+            # rather than replaying an old checkpoint.  Its exact task
+            # relation is model-decided, but its safety invariant is fixed:
+            # it can only perform customer-scoped reads and cannot produce a
+            # proposal or business write.
             _assert_no_business_write_fields(duplicate)
 
             foreign = client.post(

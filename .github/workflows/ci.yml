@@ -63,7 +63,7 @@ jobs:
       - name: Run portal collaboration and event tests
         run: >-
           mvn -pl mall-portal -am
-          -Dtest=AiCaseHandoffServiceImplTest,AiServiceCaseServiceImplTest,AiServiceCaseOutboxPublisherTest,AiServiceCaseEventReceiverTest,SpringDataWebExposureContractTest
+          -Dtest=AiCaseHandoffServiceImplTest,AiServiceCaseServiceImplTest,AiServiceCaseOutboxPublisherTest,AiServiceCaseEventReceiverTest,SpringDataWebExposureContractTest,MongoMicrometerCompatibilityTest
           -DskipTests=false -Dsurefire.failIfNoSpecifiedTests=false test
       - name: Run service-operations tests
         run: >-

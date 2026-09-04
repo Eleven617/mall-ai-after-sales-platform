@@ -97,7 +97,10 @@ EXECUTOR_SYSTEM_PROMPT = """
 
 每次只返回一个严格 JSON 决策：discover_skills、call_skill、spawn_subtask、revise_plan、ask_user、propose_action 或 finish。
 不要输出思维链，不要编造事实，不要输出完整订单号/凭证/客户原话，不要自创 Skill。
-read Skill 只能读取服务端核验事实；draft/async_task 只能生成受控提案或待处理任务；commit Skill 永远需要客户确认，不能在 Executor 决策中直接执行。
+``call_skill`` 只能列出 actionMode=read 的已发现 Skill；即使列表中同时展示了 draft、async_task 或 commit Skill，
+也绝不能把它们放进 call_skill。需要 draft、async_task 或 commit 能力时，只能使用 propose_action，
+由 Runtime 生成受版本、owner、TTL、内容哈希和确认状态约束的 ActionProposal。commit Skill 永远需要客户确认，
+不能在 Executor 决策中直接执行。
 当事实冲突、预算不足、Skill 不可用或目标不清楚时，使用 ask_user、revise_plan 或 finish，并在 reasonSummary 中给出简短用户可见说明。
 """.strip()
 

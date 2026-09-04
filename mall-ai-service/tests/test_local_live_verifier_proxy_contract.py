@@ -26,3 +26,20 @@ def test_local_live_verifiers_disable_host_proxy_inheritance() -> None:
     for script_name in SCRIPT_NAMES:
         source = (scripts_dir / script_name).read_text(encoding="utf-8")
         assert "trust_env=False" in source, script_name
+
+
+def test_v3_live_synthetic_runner_has_a_reviewed_mapping_for_each_manifest_family() -> None:
+    runner = (Path(__file__).resolve().parents[1] / "scripts" / "run_v3_live_synthetic.py").read_text(
+        encoding="utf-8"
+    )
+    for scenario in (
+        "dynamic_skill_discovery",
+        "counterfactual_replan",
+        "candidate_comparison",
+        "safe_abstention",
+        "confirmation_gate",
+        "memory_reuse",
+    ):
+        assert f'"{scenario}"' in runner
+    assert "required_runs != 3" in runner
+    assert "p0_unavailable_or_contract_error" in runner
