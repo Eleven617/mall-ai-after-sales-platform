@@ -102,3 +102,29 @@ None of these outcomes changes a customer configuration automatically.
   live_model_synthetic` only for explicit prompt/schema/task-runtime changes.
   It makes P0 calls with versioned synthetic messages and safe task summaries;
   model/network failure is reported as `ENVIRONMENT_BLOCKED`, never as a pass.
+
+## Open-task Agent runtime suite
+
+- `live_model_agent_runtime_cases.v1.json` contains 24 distinct synthetic
+  open-task scenarios. Every case carries a fixture hash, a bounded budget,
+  allowed Skill scope and a safe terminal contract. It includes clarification,
+  multi-Skill read investigation, policy/evidence separation, candidate
+  comparison, no-evidence and tool-failure stops, cross-account rejection,
+  confirmation gates, expiry/idempotency checks, a bounded subtask and an
+  intentional model-timeout safety case.
+- Run it manually with
+  `python scripts/run_live_model_agent_synthetic.py --max-total-seconds 1200
+  --timeout-seconds 25 --max-attempts 1 --report <path>`. Each case is run
+  three times through the real bounded `TaskRuntime`. Normal cases use the
+  configured DeepSeek provider; all Skill observations come from an in-memory
+  read-only synthetic gateway. The timeout case intentionally injects a
+  provider fault to prove safe stop and is labelled `fault_injected` in the
+  report.
+- The suite never calls Java, Redis, MongoDB, production RAG, a customer
+  session or a real business write endpoint. A provider outage is
+  `environment_blocked`; a contract or behavior mismatch is `failed`. Token
+  cost remains `unavailable` unless the caller explicitly supplies pricing.
+- This suite is not part of default CI because it is a paid, network-dependent
+  developer checkpoint. Its results are evidence for the fixed synthetic
+  fixtures only and do not imply production accuracy, SLA or external
+  fulfillment capability.

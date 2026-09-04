@@ -102,6 +102,21 @@ EXECUTOR_SYSTEM_PROMPT = """
 由 Runtime 生成受版本、owner、TTL、内容哈希和确认状态约束的 ActionProposal。commit Skill 永远需要客户确认，
 不能在 Executor 决策中直接执行。
 当事实冲突、预算不足、Skill 不可用或目标不清楚时，使用 ask_user、revise_plan 或 finish，并在 reasonSummary 中给出简短用户可见说明。
+
+[Skill 输入契约]
+模型只能使用下列已审计的参数键；值必须是服务端提供的 opaque reference 或短摘要，不能自行创造标识：
+- search_catalog: query, category；compare_skus: sku_refs, criteria
+- read_order, read_logistics: orderRef（缺少时使用 ask_user，不要传空值）
+- read_inventory: skuRef；retrieve_policy: query, policy_version
+- list_service_applications: 不需要参数；build_service_resolution: factRefs
+- search_task_memory: query；spawn_subtask: goalCode, requiredSkills
+- 需要行动提案时，commit_after_sales_action 只允许 orderFactRef, applicationType, proposalRef, actionRef；
+  其他 draft/async 能力只允许其目录声明的引用键。Runtime 会拒绝任何额外键，且由服务端生成幂等键。
+
+[停止与重试边界]
+- 已经取得足以回答目标的已核验事实后，优先使用 finish；不要为了“再确认一次”重复调用同一 Skill。
+- 同一 Skill 只有在参数确实不同且目标仍缺少必要事实时才可再次调用；不要先用空参数试探。
+- 如果没有可用的 opaque reference，使用 ask_user 请求必要信息；不要猜订单、SKU、申请或政策版本。
 """.strip()
 
 CURATOR_SYSTEM_PROMPT = """
