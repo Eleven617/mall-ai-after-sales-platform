@@ -1,16 +1,17 @@
 {
   "schemaVersion": "v3.0-current-head-evidence.v1",
-  "generatedAt": "2026-09-05T01:17:50+08:00",
+  "generatedAt": "2026-09-05T01:40:00+08:00",
   "repository": {
     "remote": "https://github.com/Eleven617/mall-ai-after-sales-platform.git",
     "branch": "main",
     "testedCodeCommit": "38cf3809e48ec08bead6accc07a4ace27ebf5f59",
+    "evidenceHeadCommit": "94d782053c8ba188d2d79af0b3d5632ac685a8b8",
     "remoteCommitAtStart": "cbb951f9815b7483d2aeec0620947fdb1eba59b0",
     "workspaceCleanAtStart": true,
     "remoteVerification": {
-      "commit": "9fba15ddac537016fca2116286e7238121b1236a",
-      "mallCi": {"runId": 33901002046, "status": "success", "url": "https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/33901002046"},
-      "qualityEvaluation": {"runId": 33901002043, "status": "success", "url": "https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/33901002043"}
+      "commit": "94d782053c8ba188d2d79af0b3d5632ac685a8b8",
+      "mallCi": {"runId": 33901530634, "status": "success", "url": "https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/33901530634"},
+      "qualityEvaluation": {"runId": 33901530719, "status": "success", "url": "https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/33901530719"}
     }
   },
   "scope": {
