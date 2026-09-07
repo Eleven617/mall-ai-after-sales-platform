@@ -110,17 +110,76 @@ function upsert(task: AgentTaskPublicView): void {
 function messageFor(reason: unknown, fallback: string): string {
   return reason instanceof CustomerServiceApiError ? reason.message : fallback;
 }
+
+function statusLabel(status: AgentTaskPublicView["status"]): string {
+  return {
+    created: "已创建",
+    planning: "正在理解目标",
+    executing: "正在调查事实",
+    replanning: "正在根据新事实调整方案",
+    waiting_for_user: "等待你补充信息",
+    waiting_for_async_task: "等待业务查询完成",
+    ready_to_commit: "方案已准备，等待确认",
+    committing: "正在提交",
+    completed: "已完成",
+    blocked: "当前无法继续",
+    failed: "处理失败",
+    cancelled: "已取消",
+  }[status];
+}
+
+function statusTone(status: AgentTaskPublicView["status"]): string {
+  if (["completed"].includes(status)) return "success";
+  if (["blocked", "failed"].includes(status)) return "danger";
+  if (["waiting_for_user", "waiting_for_async_task", "ready_to_commit"].includes(status)) return "warning";
+  return "agent";
+}
+
+function nodeStatusLabel(status: AgentTaskPublicView["plan_nodes"][number]["status"]): string {
+  return { pending: "待处理", running: "进行中", completed: "已完成", blocked: "阻塞", skipped: "未触发" }[status];
+}
+
+function artifactKindLabel(kind: string): string {
+  return { fact: "事实", evidence: "证据", proposal: "方案", limitation: "限制" }[kind] || "任务产物";
+}
+
+function artifactFactualityLabel(value: AgentTaskPublicView["artifacts"][number]["factuality"]): string {
+  return { verified: "已核验", derived: "推导", proposal: "方案", unavailable: "不可用" }[value];
+}
+
+function limitationLabel(code: string): string {
+  return {
+    MODEL_UNAVAILABLE: "模型服务暂不可用",
+    EVIDENCE_INSUFFICIENT: "当前证据不足，需要补充信息",
+    TOOL_UNAVAILABLE: "必要的查询服务暂不可用",
+    HUMAN_REVIEW_REQUIRED: "需要人工协同处理",
+    CONFIRMATION_REQUIRED: "提交前需要你的明确确认",
+  }[code] || "当前任务存在服务端限制";
+}
+
+function actionStatusLabel(status: NonNullable<AgentTaskPublicView["action"]>["confirmation_status"]): string {
+  return {
+    not_required: "无需确认",
+    awaiting_confirmation: "等待确认",
+    confirmed: "已确认",
+    withdrawn: "已撤回",
+    expired: "已过期",
+    committed: "已提交",
+    blocked: "暂时阻塞",
+    unknown: "状态待核实",
+  }[status];
+}
 </script>
 
 <template>
   <section class="agent-task-workspace" aria-label="电商 Agent 任务工作台">
-    <header>
+    <header class="agent-workspace-header">
       <div>
-        <p class="eyebrow">AGENT RUNTIME</p>
-        <h2>复杂订单与售后任务</h2>
-        <p>提交一个目标后，Agent 会在受控 Skill 范围内形成计划、核验事实并给出行动卡。</p>
+        <p class="eyebrow">OPEN TASK AGENT</p>
+        <h2>开放任务工作台</h2>
+        <p>围绕你的目标调查订单、物流、库存和政策事实，并在需要写入前给出确认卡。</p>
       </div>
-      <button class="text-button" type="button" :disabled="isCreating || !!busyTaskRef" @click="refresh">刷新</button>
+      <button class="secondary-button" type="button" :disabled="isCreating || !!busyTaskRef" @click="refresh">刷新任务</button>
     </header>
 
     <form class="agent-task-form" @submit.prevent="createTask">
@@ -137,42 +196,42 @@ function messageFor(reason: unknown, fallback: string): string {
       </button>
     </form>
 
-    <p v-if="error" class="agent-task-error" role="alert">{{ error }}</p>
-    <p v-else-if="!visibleTasks.length" class="agent-task-note">当前会话还没有开放任务。普通咨询仍可使用下方客服对话。</p>
+    <p v-if="error" class="error-state agent-task-error" role="alert">{{ error }}</p>
+    <p v-else-if="!visibleTasks.length" class="empty-state agent-task-note">当前会话还没有开放任务。普通咨询仍可使用下方客服对话；需要多步调查时可从这里开始。</p>
 
     <ol v-else class="agent-task-list">
       <li v-for="task in visibleTasks" :key="task.task_ref" class="agent-task-card">
         <div class="agent-task-heading">
           <div>
-            <p class="card-caption">计划第 {{ task.plan_version }} 版</p>
+            <p class="card-caption">开放目标 · 计划第 {{ task.plan_version }} 版</p>
             <h3>{{ task.goal }}</h3>
           </div>
-          <span class="return-status">{{ task.status }}</span>
+          <span class="status-badge" :class="statusTone(task.status)">{{ statusLabel(task.status) }}</span>
         </div>
 
-        <ol v-if="task.plan_nodes.length" class="agent-plan-list">
-          <li v-for="node in task.plan_nodes" :key="`${node.node_label}-${node.goal}`">
-            <strong>{{ node.node_label }}</strong><span>{{ node.goal }}</span><em>{{ node.status }}</em>
+        <ol v-if="task.plan_nodes.length" class="timeline agent-plan-list">
+          <li v-for="node in task.plan_nodes" :key="`${node.node_label}-${node.goal}`" class="timeline-item" :class="node.status">
+            <span class="timeline-dot" aria-hidden="true"></span>
+            <span class="timeline-copy"><strong>{{ node.node_label }} · {{ nodeStatusLabel(node.status) }}</strong><span>{{ node.goal }}</span></span>
           </li>
         </ol>
 
         <ul v-if="task.artifacts.length" class="agent-artifact-list">
           <li v-for="artifact in task.artifacts" :key="`${artifact.kind}-${artifact.summary}`">
-            <strong>{{ artifact.kind }}</strong><span>{{ artifact.summary }}</span><em>{{ artifact.factuality }}</em>
+            <div><strong>{{ artifactKindLabel(artifact.kind) }}</strong><span>{{ artifact.summary }}</span></div><em class="status-badge" :class="artifact.factuality === 'verified' ? 'success' : artifact.factuality === 'unavailable' ? 'danger' : artifact.factuality === 'proposal' ? 'warning' : 'agent'">{{ artifactFactualityLabel(artifact.factuality) }}</em>
           </li>
         </ul>
 
         <p v-if="task.open_question" class="agent-open-question">{{ task.open_question }}</p>
         <p v-if="task.outcome" class="agent-outcome">{{ task.outcome }}</p>
         <p v-if="task.execution_summary" class="agent-execution-summary">{{ task.execution_summary }}</p>
-        <p v-if="task.context_summary" class="agent-context-summary">
-          上下文包 v{{ task.context_summary.version }}：
-          {{ task.context_summary.token_estimate_before }} → {{ task.context_summary.token_estimate_after }} tokens 估算，
-          关键事实引用保留 {{ Math.round(task.context_summary.fact_reference_retention * 100) }}%。
-        </p>
+        <details v-if="task.context_summary" class="agent-context-details">
+          <summary>处理摘要</summary>
+          <p class="agent-context-summary">上下文摘要 v{{ task.context_summary.version }}：保留关键事实引用 {{ Math.round(task.context_summary.fact_reference_retention * 100) }}%，上下文规模从 {{ task.context_summary.token_estimate_before }} 调整为 {{ task.context_summary.token_estimate_after }} 的估算值。</p>
+        </details>
 
         <section v-if="task.action" class="agent-action-card">
-          <p class="card-caption">待确认行动</p>
+          <div class="agent-action-heading"><p class="card-caption">行动方案</p><span class="status-badge" :class="task.action.confirmation_status === 'awaiting_confirmation' ? 'warning' : task.action.confirmation_status === 'committed' ? 'success' : 'agent'">{{ actionStatusLabel(task.action.confirmation_status) }}</span></div>
           <strong>{{ task.action.expected_effect }}</strong>
           <p>{{ task.action.user_explanation }}</p>
           <div v-if="task.action.confirmation_status === 'awaiting_confirmation'" class="agent-action-buttons">
@@ -187,30 +246,40 @@ function messageFor(reason: unknown, fallback: string): string {
           <button class="secondary-button" type="submit" :disabled="busyTaskRef === task.task_ref || !(continuationByTask[task.task_ref] || '').trim()">继续任务</button>
         </form>
 
-        <p v-if="task.limitation_codes.length" class="agent-limitation">当前限制：{{ task.limitation_codes.join('、') }}</p>
+        <p v-if="task.limitation_codes.length" class="agent-limitation">处理边界：{{ task.limitation_codes.map(limitationLabel).join('；') }}</p>
       </li>
     </ol>
   </section>
 </template>
 
 <style scoped>
-.agent-task-workspace { margin: 18px 0; padding: 20px; border: 1px solid #d6e4ff; border-radius: 16px; background: #f7faff; }
-.agent-task-workspace header, .agent-task-heading, .agent-action-buttons { display: flex; gap: 14px; justify-content: space-between; align-items: flex-start; }
-.agent-task-workspace h2, .agent-task-workspace h3 { margin: 2px 0 8px; color: #17396a; }
-.agent-task-workspace header p:not(.eyebrow) { margin: 0; color: #536579; line-height: 1.55; }
+.agent-task-workspace { margin: 18px 0; padding: 20px; border: 1px solid #ddd6fe; border-radius: var(--radius-md); background: linear-gradient(145deg, #fafaff, #f5f3ff); }
+.agent-workspace-header, .agent-task-heading, .agent-action-buttons, .agent-action-heading { display: flex; gap: 14px; justify-content: space-between; align-items: flex-start; }
+.agent-task-workspace h2, .agent-task-workspace h3 { margin: 2px 0 8px; color: #312e81; }
+.agent-task-workspace header p:not(.eyebrow) { margin: 0; color: var(--ink-600); line-height: 1.55; }
 .agent-task-form, .agent-continue-form { display: grid; gap: 8px; margin-top: 16px; }
-.agent-task-form textarea, .agent-continue-form input { width: 100%; box-sizing: border-box; border: 1px solid #c7d7ee; border-radius: 10px; padding: 10px; font: inherit; }
+.agent-task-form label, .agent-continue-form label { color: var(--ink-600); font-size: 12px; font-weight: 750; }
+.agent-task-form textarea, .agent-continue-form input { width: 100%; box-sizing: border-box; border: 1px solid #c4b5fd; border-radius: var(--radius-sm); padding: 10px; background: var(--surface); font: inherit; }
 .agent-task-form .primary-button { justify-self: start; }
-.agent-task-list, .agent-plan-list, .agent-artifact-list { display: grid; gap: 10px; padding: 0; list-style: none; }
+.agent-task-list, .agent-artifact-list { display: grid; gap: 12px; padding: 0; list-style: none; }
 .agent-task-list { margin: 16px 0 0; }
-.agent-task-card { padding: 16px; border-radius: 12px; background: #fff; border: 1px solid #dfe8f5; }
-.agent-plan-list li, .agent-artifact-list li { display: grid; grid-template-columns: auto 1fr auto; gap: 8px; align-items: baseline; font-size: .92rem; }
-.agent-plan-list strong, .agent-artifact-list strong { color: #365a8e; }
-.agent-plan-list em, .agent-artifact-list em { color: #6d7d91; font-style: normal; }
-.agent-open-question, .agent-outcome, .agent-limitation { padding: 9px 10px; border-radius: 8px; background: #f6f8fb; color: #384b61; }
-.agent-execution-summary, .agent-context-summary, .agent-task-note { color: #6a7785; font-size: .88rem; }
-.agent-action-card { padding: 12px; border: 1px solid #f0d194; border-radius: 10px; background: #fff9ec; }
-.agent-action-card p { margin: 6px 0; }
-.agent-task-error { color: #b42318; }
-@media (max-width: 700px) { .agent-task-workspace header, .agent-task-heading, .agent-action-buttons { flex-direction: column; } .agent-plan-list li, .agent-artifact-list li { grid-template-columns: 1fr; gap: 2px; } }
+.agent-task-card { display: grid; gap: 13px; padding: 16px; border-radius: var(--radius-sm); background: var(--surface); border: 1px solid #e2e8f0; box-shadow: 0 4px 14px rgb(76 29 149 / 4%); }
+.agent-plan-list { margin: 0; padding: 2px 0 0; }
+.agent-artifact-list { margin: 0; }
+.agent-artifact-list li { display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; padding: 10px; border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--surface-soft); font-size: .92rem; }
+.agent-artifact-list li > div { display: grid; gap: 3px; min-width: 0; }
+.agent-artifact-list strong { color: #365a8e; font-size: 12px; }
+.agent-artifact-list span { color: var(--ink-600); line-height: 1.45; }
+.agent-open-question, .agent-outcome, .agent-limitation { margin: 0; padding: 10px 11px; border-radius: 8px; background: #f6f8fb; color: #384b61; line-height: 1.5; }
+.agent-open-question { border-left: 3px solid #f59e0b; background: #fffbeb; }
+.agent-outcome { border-left: 3px solid #34d399; background: #f0fdf4; }
+.agent-execution-summary, .agent-context-summary, .agent-task-note { color: var(--ink-600); font-size: .88rem; line-height: 1.55; }
+.agent-action-card { display: grid; gap: 7px; padding: 14px; border: 1px solid #bbf7d0; border-radius: var(--radius-sm); background: #f0fdf4; }
+.agent-action-card p { margin: 0; line-height: 1.55; }
+.agent-action-card > strong { color: #166534; }
+.agent-action-buttons { justify-content: flex-start; margin-top: 4px; }
+.agent-context-details { border-top: 1px solid var(--line); padding-top: 9px; color: var(--ink-600); }
+.agent-context-details summary { cursor: pointer; color: #475569; font-size: 12px; font-weight: 750; }
+.agent-task-error { margin: 14px 0 0; }
+@media (max-width: 700px) { .agent-workspace-header, .agent-task-heading, .agent-action-buttons { flex-direction: column; } .agent-action-buttons { align-items: stretch; } .agent-action-buttons button { width: 100%; } .agent-artifact-list li { flex-direction: column; } }
 </style>

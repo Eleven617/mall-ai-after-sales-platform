@@ -218,6 +218,22 @@ function categoryLabel(value: ServiceProcessorCaseView["diagnosis_category"]): s
     tool_failure: "工具暂不可用", needs_order_identifier: "缺少订单号",
   }[value];
 }
+
+const processorSteps = [
+  { key: "QUEUED", label: "待领取" },
+  { key: "CLAIMED", label: "已领取" },
+  { key: "IN_REVIEW", label: "核验中" },
+  { key: "RESOLVED", label: "已处理" },
+  { key: "CLOSED", label: "已结案" },
+] as const;
+
+function stepClass(step: (typeof processorSteps)[number]["key"]): string {
+  const current = selectedCase.value?.state;
+  if (!current) return "pending";
+  const order: Record<string, number> = { QUEUED: 0, CLAIMED: 1, AWAITING_CUSTOMER_INFORMATION: 1, IN_REVIEW: 2, REOPENED: 2, RESOLVED: 3, CLOSED: 4, CANCELLED: 4 };
+  if (current === "CANCELLED") return step === "QUEUED" ? "blocked" : "pending";
+  return order[step] < order[current] ? "completed" : order[step] === order[current] ? "running" : "pending";
+}
 </script>
 
 <template>
@@ -249,7 +265,7 @@ function categoryLabel(value: ServiceProcessorCaseView["diagnosis_category"]): s
           </button>
         </div>
         <div v-if="selectedCase" class="processor-detail">
-          <section class="processor-card"><p class="card-caption">案件状态</p><h3>{{ categoryLabel(selectedCase.diagnosis_category) }}</h3><dl><div><dt>队列</dt><dd>{{ selectedCase.queue_ref }}</dd></div><div><dt>状态</dt><dd>{{ stateLabel(selectedCase.state) }}</dd></div><div><dt>客户可见状态</dt><dd>{{ selectedCase.public_status }}</dd></div><div v-if="selectedCase.assigned_to_me && selectedCase.customer_information"><dt>客户补充</dt><dd>{{ selectedCase.customer_information }}</dd></div></dl><button v-if="!selectedCase.assigned_to_me && selectedCase.state === 'QUEUED'" class="primary-button" type="button" :disabled="actionInProgress === selectedCase.case_id" @click="claim(selectedCase)">领取案件</button></section>
+          <section class="processor-card"><p class="card-caption">案件状态</p><h3>{{ categoryLabel(selectedCase.diagnosis_category) }}</h3><div class="processor-stepper" aria-label="案件处理步骤"><div v-for="step in processorSteps" :key="step.key" class="processor-step" :class="stepClass(step.key)"><span class="processor-step-dot" aria-hidden="true"></span><span>{{ step.label }}</span></div></div><dl><div><dt>队列</dt><dd>{{ selectedCase.queue_ref }}</dd></div><div><dt>状态</dt><dd>{{ stateLabel(selectedCase.state) }}</dd></div><div><dt>客户可见状态</dt><dd>{{ selectedCase.public_status }}</dd></div><div v-if="selectedCase.assigned_to_me && selectedCase.customer_information"><dt>客户补充</dt><dd>{{ selectedCase.customer_information }}</dd></div></dl><button v-if="!selectedCase.assigned_to_me && selectedCase.state === 'QUEUED'" class="primary-button" type="button" :disabled="actionInProgress === selectedCase.case_id" @click="claim(selectedCase)">领取案件</button></section>
           <section v-if="selectedCase.assigned_to_me" class="processor-card"><p class="card-caption">受控人工操作</p><label>客户可见说明<textarea v-model="publicMessage" maxlength="500" rows="3" placeholder="客户会看到这段说明；不要填写内部系统或敏感信息"></textarea></label><label>内部备注<textarea v-model="internalNote" maxlength="500" rows="2" placeholder="仅用于审计，不会返回给客户或运营"></textarea></label><label v-if="selectedCase.state === 'CLAIMED' || selectedCase.state === 'IN_REVIEW'">补件类型<select v-model="informationType"><option value="problem_description">问题说明</option><option value="purchase_context">购买/使用背景</option></select></label><div class="processor-actions"><button v-if="selectedCase.state === 'CLAIMED' || selectedCase.state === 'IN_REVIEW'" class="secondary-button" type="button" :disabled="actionInProgress === selectedCase.case_id" @click="perform('request_information')">请求补件</button><button v-if="selectedCase.state === 'CLAIMED' || selectedCase.state === 'REOPENED'" class="secondary-button" type="button" :disabled="actionInProgress === selectedCase.case_id" @click="perform('start_review')">开始核验</button><button v-if="selectedCase.state === 'IN_REVIEW'" class="primary-button" type="button" :disabled="actionInProgress === selectedCase.case_id" @click="perform('resolve')">标记已处理</button><button v-if="selectedCase.state === 'RESOLVED'" class="primary-button" type="button" :disabled="actionInProgress === selectedCase.case_id" @click="perform('close')">结案</button></div></section>
         </div>
         <p v-else class="processor-note">选择一条案件后开始人工处理。</p>
@@ -260,5 +276,38 @@ function categoryLabel(value: ServiceProcessorCaseView["diagnosis_category"]): s
 </template>
 
 <style scoped>
-.processor-panel { padding: 22px 28px; background: #fff7ed; }.processor-heading, .processor-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 18px; }.processor-heading h2 { margin: 4px 0 8px; color: #9a3412; font-size: 18px; }.processor-heading p:not(.panel-kicker), .processor-toolbar p { max-width: 760px; margin: 0; color: #64748b; font-size: 13px; line-height: 1.55; }.processor-login { display: flex; align-items: end; flex-wrap: wrap; gap: 12px; margin-top: 17px; }.processor-workspace { margin-top: 16px; }.processor-toolbar > div, .processor-actions { display: flex; flex-wrap: wrap; gap: 9px; }.processor-error { margin: 13px 0 0; color: #b91c1c; font-size: 13px; }.processor-note { margin: 14px 0 0; color: #64748b; font-size: 13px; }.processor-layout { display: grid; grid-template-columns: minmax(230px, .7fr) minmax(0, 1.3fr); gap: 16px; margin-top: 16px; }.processor-case-list { display: grid; align-content: start; gap: 8px; max-height: 440px; overflow: auto; }.processor-case-button { display: grid; gap: 4px; padding: 12px; border: 1px solid #fed7aa; border-radius: 10px; color: #334155; background: #fff; text-align: left; }.processor-case-button.selected { border-color: #ea580c; background: #fff7ed; }.processor-case-button strong { color: #9a3412; font-size: 13px; }.processor-case-button span, .processor-case-button small { color: #64748b; font-size: 11px; }.processor-detail { display: grid; gap: 11px; }.processor-card { display: grid; gap: 10px; padding: 14px; border: 1px solid #fed7aa; border-radius: 12px; background: #fff; }.processor-card h3 { margin: 0; color: #9a3412; font-size: 15px; }.processor-card dl { display: grid; gap: 7px; margin: 0; }.processor-card dl div { display: grid; grid-template-columns: 100px 1fr; gap: 9px; font-size: 12px; }.processor-card dt { color: #64748b; }.processor-card dd { margin: 0; color: #1e293b; font-weight: 650; word-break: break-word; }.processor-card label { display: grid; gap: 5px; color: #475569; font-size: 12px; font-weight: 700; }.processor-card textarea, .processor-card select { padding: 8px 9px; border: 1px solid #cbd5e1; border-radius: 7px; color: #1e293b; font: inherit; }.processor-card textarea { resize: vertical; }.processor-card textarea:focus, .processor-card select:focus { border-color: #ea580c; outline: 0; box-shadow: 0 0 0 3px rgb(234 88 12 / 10%); }@media (max-width: 780px) { .processor-panel { padding: 18px; }.processor-heading, .processor-toolbar { align-items: flex-start; flex-direction: column; }.processor-layout { grid-template-columns: 1fr; } }
+.processor-panel { padding: 24px 28px; background: #fbfdff; }
+.processor-heading, .processor-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 18px; }
+.processor-heading h2 { margin: 4px 0 8px; color: var(--ink-950); font-size: 18px; }
+.processor-heading p:not(.panel-kicker), .processor-toolbar p { max-width: 760px; margin: 0; color: var(--ink-600); font-size: 13px; line-height: 1.55; }
+.processor-login { display: flex; align-items: end; flex-wrap: wrap; gap: 12px; margin-top: 17px; }
+.processor-workspace { margin-top: 16px; }
+.processor-toolbar > div, .processor-actions { display: flex; flex-wrap: wrap; gap: 9px; }
+.processor-error { margin: 13px 0 0; color: var(--danger); font-size: 13px; }
+.processor-note { margin: 14px 0 0; color: var(--ink-600); font-size: 13px; }
+.processor-layout { display: grid; grid-template-columns: minmax(230px, .7fr) minmax(0, 1.3fr); gap: 16px; margin-top: 16px; }
+.processor-case-list { display: grid; align-content: start; gap: 8px; max-height: 440px; overflow: auto; }
+.processor-case-button { display: grid; gap: 4px; padding: 12px; border: 1px solid var(--line); border-radius: var(--radius-sm); color: var(--ink-800); background: var(--surface); text-align: left; }
+.processor-case-button.selected { border-color: #c4b5fd; background: #faf5ff; box-shadow: 0 0 0 2px rgb(124 58 237 / 8%); }
+.processor-case-button strong { color: #5b21b6; font-size: 13px; }
+.processor-case-button span, .processor-case-button small { color: var(--ink-600); font-size: 11px; }
+.processor-detail { display: grid; gap: 11px; }
+.processor-card { display: grid; gap: 10px; padding: 14px; border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--surface); }
+.processor-card h3 { margin: 0; color: var(--ink-950); font-size: 15px; }
+.processor-card dl { display: grid; gap: 7px; margin: 0; }
+.processor-card dl div { display: grid; grid-template-columns: 100px 1fr; gap: 9px; font-size: 12px; }
+.processor-card dt { color: var(--ink-600); }
+.processor-card dd { margin: 0; color: var(--ink-800); font-weight: 650; word-break: break-word; }
+.processor-card label { display: grid; gap: 5px; color: var(--ink-600); font-size: 12px; font-weight: 700; }
+.processor-card textarea, .processor-card select { padding: 8px 9px; border: 1px solid #cbd5e1; border-radius: 7px; color: var(--ink-800); background: var(--surface); font: inherit; }
+.processor-card textarea { resize: vertical; }
+.processor-card textarea:focus, .processor-card select:focus { border-color: var(--brand); outline: 0; box-shadow: 0 0 0 3px rgb(37 99 235 / 10%); }
+.processor-stepper { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 4px; padding: 9px 0 4px; }
+.processor-step { display: grid; justify-items: center; gap: 5px; color: var(--ink-400); font-size: 10px; text-align: center; }
+.processor-step-dot { width: 14px; height: 14px; border: 3px solid #cbd5e1; border-radius: 50%; background: var(--surface); }
+.processor-step.completed { color: var(--success); }.processor-step.completed .processor-step-dot { border-color: #34d399; background: #d1fae5; }
+.processor-step.running { color: #6d28d9; font-weight: 750; }.processor-step.running .processor-step-dot { border-color: #8b5cf6; background: #ede9fe; }
+.processor-step.blocked { color: var(--danger); }.processor-step.blocked .processor-step-dot { border-color: #f87171; background: #fee2e2; }
+@media (max-width: 900px) { .processor-stepper { grid-template-columns: repeat(5, minmax(60px, 1fr)); overflow-x: auto; } }
+@media (max-width: 780px) { .processor-panel { padding: 18px; }.processor-heading, .processor-toolbar { align-items: flex-start; flex-direction: column; }.processor-layout { grid-template-columns: 1fr; } }
 </style>

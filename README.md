@@ -39,6 +39,8 @@ flowchart LR
 ![AI 质量评测页面](docs/assets/quality-evaluation-dashboard.png)
 开发者侧查看 contract_mock 评测结果、合同差异和人工审批状态。
 
+本次前端统一展示升级已将客户页、开放任务 Agent、运营台、人工协同台和质量评测台收敛到同一套视觉变量与页面外壳；其中 Agent 计划时间线、事实产物、行动确认和质量 Case 详情均由现有接口驱动。由于当前工作站的 Docker Desktop 未运行，升级后的三张新现场截图尚未重新生成，以上图片仍是上一轮真实合成演示素材，不代表本次升级后的最终截图。重新启动 Docker 后应按 [前端升级验收记录](docs/evidence/frontend-unified-upgrade.md) 的命令重新截取并单独提交素材更新。
+
 ## 产品能力
 
 - 统一售后 Agent：政策咨询、资格核验、新建申请、列表、状态、取消、修改与跟进。

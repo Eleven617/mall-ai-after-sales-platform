@@ -3,12 +3,19 @@ import OperationsPanel from "./OperationsPanel.vue";
 </script>
 
 <template>
-  <main class="operations-page-shell">
-    <section class="operations-page-product" aria-label="售后运营工作台">
-      <header class="operations-page-topbar">
+  <main class="internal-page-shell operations-page-shell">
+    <section class="internal-page-product operations-page-product" aria-label="售后运营工作台">
+      <header class="internal-page-topbar operations-page-topbar">
+        <div class="internal-page-brand">
+          <span class="internal-page-brand-mark" aria-hidden="true">AI</span>
+          <div>
+            <p class="internal-page-product-name">Mall AI 售后平台</p>
+            <p class="internal-page-role">运营工作台 · 事实、证据与人工协同</p>
+          </div>
+        </div>
         <div>
-          <p>INTERNAL OPERATIONS</p>
           <h1>售后运营工作台</h1>
+          <p>用可信聚合数据观察转人工事项，不直接修改订单或售后。</p>
         </div>
         <a href="/">返回客户咨询</a>
       </header>
@@ -18,11 +25,6 @@ import OperationsPanel from "./OperationsPanel.vue";
 </template>
 
 <style scoped>
-.operations-page-shell { min-height: 100vh; padding: 32px; background: #eef3f8; }
-.operations-page-product { width: min(1220px, 100%); min-height: calc(100vh - 64px); margin: 0 auto; overflow: hidden; border: 1px solid #dbe5ee; border-radius: 24px; background: #fff; box-shadow: 0 18px 50px rgb(15 23 42 / 10%); }
-.operations-page-topbar { display: flex; align-items: center; justify-content: space-between; gap: 18px; min-height: 84px; padding: 18px 28px; border-bottom: 1px solid #e7edf3; }
-.operations-page-topbar p { margin: 0; color: #0f766e; font-size: 11px; font-weight: 800; letter-spacing: .09em; }
-.operations-page-topbar h1 { margin: 5px 0 0; color: #1e293b; font-size: 20px; }
-.operations-page-topbar a { color: #2563eb; font-size: 13px; font-weight: 700; text-decoration: none; }
-@media (max-width: 780px) { .operations-page-shell { padding: 0; } .operations-page-product { min-height: 100vh; border: 0; border-radius: 0; } .operations-page-topbar { align-items: flex-start; padding: 16px 18px; } }
+@media (max-width: 900px) { .operations-page-topbar { display: grid; grid-template-columns: 1fr auto; } .operations-page-topbar > div:nth-child(2) { grid-column: 1 / -1; } }
+@media (max-width: 520px) { .operations-page-shell { padding: 0; } .operations-page-product { min-height: 100vh; border: 0; border-radius: 0; } .operations-page-topbar { grid-template-columns: 1fr; align-items: flex-start; padding: 16px 18px; } .operations-page-topbar > div:nth-child(2) { grid-column: auto; } }
 </style>

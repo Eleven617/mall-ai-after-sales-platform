@@ -272,6 +272,16 @@ function handoffLabel(value: OperationsCase["handoff_reason"]): string {
 function metricEntries(values: Record<string, number>): Array<[string, number]> {
   return Object.entries(values);
 }
+
+function topHandoffCategory(): string {
+  const item = handoffOverview.value?.categories.slice().sort((left, right) => right.count - left.count)[0];
+  return item ? overviewCategoryLabel(item.category) : "暂无数据";
+}
+
+function topHandoffCount(): string {
+  const item = handoffOverview.value?.categories.slice().sort((left, right) => right.count - left.count)[0];
+  return item ? `${item.count} 次` : "—";
+}
 </script>
 
 <template>
@@ -307,6 +317,12 @@ function metricEntries(values: Record<string, number>): Array<[string, number]> 
       </div>
       <p v-if="casesError" class="operations-error">{{ casesError }}</p>
       <p v-else-if="isLoadingCases" class="operations-note">正在读取最小化人工跟进事项...</p>
+      <section v-if="handoffOverview || isLoadingOverview" class="summary-grid operations-summary-grid" aria-label="运营摘要">
+        <article class="summary-card"><strong>{{ handoffOverview?.total_unique_handoffs ?? "—" }}</strong><span>去重后转人工总数</span></article>
+        <article class="summary-card"><strong>{{ handoffOverview ? `${handoffOverview.window_days} 天` : "—" }}</strong><span>当前统计窗口</span></article>
+        <article class="summary-card"><strong>{{ topHandoffCount() }}</strong><span>最高频原因 · {{ topHandoffCategory() }}</span></article>
+        <article class="summary-card"><strong>{{ cases.length || "—" }}</strong><span>当前可查看事项</span></article>
+      </section>
       <section class="operations-card handoff-overview-card" aria-label="转人工概览">
         <p class="card-caption">转人工概览</p>
         <p v-if="isLoadingOverview" class="operations-note">正在按所选时间窗汇总转人工事项...</p>
@@ -394,7 +410,7 @@ function metricEntries(values: Record<string, number>): Array<[string, number]> 
 </template>
 
 <style scoped>
-.operations-panel { padding: 22px 28px; border-bottom: 1px solid #dbe5ee; background: #f8fbff; }
+.operations-panel { padding: 24px 28px; border-bottom: 1px solid var(--line); background: #fbfdff; }
 .operations-heading, .operations-heading-actions, .operations-toolbar, .analysis-actions { display: flex; align-items: center; }
 .operations-heading { justify-content: space-between; gap: 18px; }
 .operations-heading h2 { margin: 4px 0 8px; color: #1e3a5f; font-size: 18px; }
@@ -402,6 +418,7 @@ function metricEntries(values: Record<string, number>): Array<[string, number]> 
 .operations-heading-actions, .operations-toolbar > div { gap: 11px; }
 .operations-login-form { display: flex; align-items: end; flex-wrap: wrap; gap: 12px; margin-top: 17px; }
 .operations-workspace { margin-top: 16px; }
+.operations-summary-grid { margin-top: 16px; }
 .operations-toolbar { justify-content: space-between; gap: 14px; }
 .operations-toolbar p { margin: 0; color: #64748b; font-size: 13px; }
 .overview-window { display: grid; gap: 4px; color: #475569; font-size: 11px; font-weight: 700; }
@@ -440,5 +457,7 @@ function metricEntries(values: Record<string, number>): Array<[string, number]> 
 .metric-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; }
 .metric-grid div { display: grid; gap: 4px; padding: 9px; border-radius: 8px; background: #f8fafc; color: #475569; font-size: 12px; }
 .metric-grid strong { color: #334155; }
-@media (max-width: 780px) { .operations-panel { padding: 18px; } .operations-heading, .operations-toolbar { align-items: flex-start; flex-direction: column; } .operations-layout { grid-template-columns: 1fr; } .metric-grid, .handoff-category-grid { grid-template-columns: 1fr; } }
+@media (max-width: 900px) { .operations-summary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 780px) { .operations-panel { padding: 18px; } .operations-heading, .operations-toolbar { align-items: flex-start; flex-direction: column; } .operations-toolbar > div { display: flex; align-items: flex-end; flex-wrap: wrap; } .operations-layout { grid-template-columns: 1fr; } .metric-grid, .handoff-category-grid { grid-template-columns: 1fr; } }
+@media (max-width: 520px) { .operations-summary-grid { grid-template-columns: 1fr; } .operations-toolbar > div { align-items: stretch; flex-direction: column; width: 100%; } }
 </style>

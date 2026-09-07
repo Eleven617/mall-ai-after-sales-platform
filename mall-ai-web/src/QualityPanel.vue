@@ -347,22 +347,33 @@ function replayReasonLabel(status: QualityReplayStatus | null): string {
           <span>运行时间：{{ new Date(evaluation.ran_at).toLocaleString() }}</span>
         </header>
 
-        <section v-if="evaluation.run_manifest" class="quality-manifest">
-          <h4>RunManifest（安全元数据）</h4>
-          <p>Profile：{{ evaluation.run_manifest.profile_id }}@{{ evaluation.run_manifest.profile_version }} · Prompt：{{ evaluation.run_manifest.prompt_version }}</p>
-          <p>RAG：{{ evaluation.run_manifest.rag_profile_version }} · Tool Schema：{{ evaluation.run_manifest.tool_schema_version }}</p>
-          <p>夹具指纹：{{ evaluation.run_manifest.fixture_hash.slice(0, 16) }}… · 结果：{{ evaluation.run_manifest.result_kind }} · {{ evaluation.run_manifest.duration_ms }} ms</p>
-          <p>这里不展示客户消息、订单号、Token、RAG 原文或生产 Trace。</p>
+        <section class="summary-grid quality-summary-grid" aria-label="评测摘要">
+          <article class="summary-card"><strong>{{ evaluation.suite_version }}</strong><span>评测套件版本</span></article>
+          <article class="summary-card"><strong>{{ evaluation.total }}</strong><span>总 Case 数</span></article>
+          <article class="summary-card"><strong>{{ evaluation.passed }}</strong><span>通过</span></article>
+          <article class="summary-card"><strong>{{ evaluation.failed }}</strong><span>失败 · {{ evaluation.execution_mode === "contract_mock" ? "确定性合同" : "合成模型" }}</span></article>
         </section>
 
-        <article v-for="item in evaluation.cases" :key="item.case_id" class="quality-case">
-          <header>
+        <details v-if="evaluation.run_manifest" class="quality-manifest">
+          <summary>查看 RunManifest 与安全范围</summary>
+          <div class="quality-manifest-body">
+            <h4>RunManifest（安全元数据）</h4>
+            <p>Profile：{{ evaluation.run_manifest.profile_id }}@{{ evaluation.run_manifest.profile_version }} · Prompt：{{ evaluation.run_manifest.prompt_version }}</p>
+            <p>RAG：{{ evaluation.run_manifest.rag_profile_version }} · Tool Schema：{{ evaluation.run_manifest.tool_schema_version }}</p>
+            <p>夹具指纹：{{ evaluation.run_manifest.fixture_hash.slice(0, 16) }}… · 结果：{{ evaluation.run_manifest.result_kind }} · {{ evaluation.run_manifest.duration_ms }} ms</p>
+            <p>这里不展示客户消息、订单号、Token、RAG 原文或生产 Trace。</p>
+          </div>
+        </details>
+
+        <details v-for="item in evaluation.cases" :key="item.case_id" class="quality-case">
+          <summary class="quality-case-summary">
             <div>
               <strong>{{ item.case_id }}</strong>
               <span>{{ targetLabel(item.target_agent) }}</span>
             </div>
             <span :class="['quality-status', item.status.toLowerCase()]">{{ item.status }}</span>
-          </header>
+          </summary>
+          <div class="quality-case-body">
           <p><b>预期：</b>{{ item.expected }}</p>
           <p><b>实际安全投影：</b>{{ item.actual }}</p>
           <p v-if="item.violations.length"><b>合同代码：</b>{{ item.violations.join("、") }}</p>
@@ -390,7 +401,8 @@ function replayReasonLabel(status: QualityReplayStatus | null): string {
               >标记需复核</button>
             </div>
           </footer>
-        </article>
+          </div>
+        </details>
       </section>
 
       <section class="quality-support-grid" aria-label="质量治理安全投影">
@@ -442,7 +454,7 @@ function replayReasonLabel(status: QualityReplayStatus | null): string {
 </template>
 
 <style scoped>
-.quality-panel { padding: 28px; color: #1e293b; }
+.quality-panel { padding: 24px 28px; color: var(--ink-800); background: #fbfdff; }
 .quality-login, .quality-workspace { display: grid; gap: 18px; max-width: 980px; margin: 0 auto; }
 .quality-login { max-width: 440px; padding: 28px; border: 1px solid #dbe5ee; border-radius: 16px; background: #fff; }
 .quality-login label { display: grid; gap: 7px; font-size: 13px; font-weight: 700; }
@@ -464,10 +476,18 @@ function replayReasonLabel(status: QualityReplayStatus | null): string {
 .quality-run-control button { width: fit-content; }
 .quality-replay-control { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; font-size: 13px; color: #334155; }
 .quality-results { display: grid; gap: 12px; }
+.quality-summary-grid { margin: 4px 0 2px; }
 .quality-results-header { align-items: flex-end; }
 .quality-results-header p { font-size: 13px; }
 .quality-results-header > span { color: #64748b; font-size: 12px; }
-.quality-case { display: grid; gap: 9px; padding: 16px; border: 1px solid #dbe5ee; border-radius: 12px; background: #fff; }
+.quality-case { display: grid; gap: 9px; padding: 14px 16px; border: 1px solid #dbe5ee; border-radius: 12px; background: #fff; }
+.quality-case > summary { cursor: pointer; list-style: none; }
+.quality-case > summary::-webkit-details-marker { display: none; }
+.quality-case > summary::after { content: "展开详情"; float: right; color: var(--brand); font-size: 11px; font-weight: 700; }
+.quality-case[open] > summary::after { content: "收起详情"; }
+.quality-case-summary { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.quality-case-summary > div { display: grid; gap: 3px; }
+.quality-case-body { display: grid; gap: 9px; }
 .quality-case header strong { display: block; font-size: 14px; }
 .quality-case header div > span { color: #64748b; font-size: 12px; }
 .quality-case p { font-size: 13px; }
@@ -479,7 +499,9 @@ function replayReasonLabel(status: QualityReplayStatus | null): string {
 .quality-case footer button { min-height: 30px; background: #334155; font-size: 12px; }
 .quality-analysis { padding: 12px; border-left: 3px solid #f59e0b; background: #fffbeb; font-size: 13px; }
 .quality-analysis p { margin: 5px 0 0; }
-.quality-manifest { display: grid; gap: 4px; padding: 14px 16px; border: 1px solid #bfdbfe; border-radius: 12px; background: #eff6ff; font-size: 12px; color: #334155; }
+.quality-manifest { padding: 14px 16px; border: 1px solid #bfdbfe; border-radius: 12px; background: #eff6ff; font-size: 12px; color: #334155; }
+.quality-manifest summary { cursor: pointer; color: #1d4ed8; font-weight: 750; }
+.quality-manifest-body { display: grid; gap: 4px; margin-top: 10px; }
 .quality-manifest h4, .quality-manifest p { margin: 0; }
 .quality-support-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
 .quality-support-card { display: grid; gap: 9px; padding: 16px; border: 1px solid #dbe5ee; border-radius: 12px; background: #fff; }
@@ -495,6 +517,7 @@ function replayReasonLabel(status: QualityReplayStatus | null): string {
 .quality-error { color: #b91c1c !important; font-size: 13px; }
 .quality-note { color: #0f766e !important; }
 .quality-muted { padding: 28px; color: #64748b; text-align: center; }
-@media (max-width: 900px) { .quality-support-grid { grid-template-columns: 1fr; } }
+@media (max-width: 900px) { .quality-support-grid { grid-template-columns: 1fr; } .quality-summary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 680px) { .quality-panel { padding: 18px; } .quality-workspace-header, .quality-results-header, .quality-case header, .quality-case footer { align-items: flex-start; flex-direction: column; } }
+@media (max-width: 520px) { .quality-summary-grid { grid-template-columns: 1fr; } }
 </style>

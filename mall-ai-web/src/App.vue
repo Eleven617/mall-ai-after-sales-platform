@@ -794,8 +794,9 @@ async function scrollToLatest(): Promise<void> {
         <div class="brand-block">
           <span class="brand-mark" aria-hidden="true">AI</span>
           <div>
-            <p class="eyebrow">MALL SUPPORT</p>
-            <h1>商城售后咨询</h1>
+            <p class="eyebrow">MALL AI AFTER-SALES</p>
+            <h1>Mall AI 售后平台</h1>
+            <p class="brand-subtitle">可信电商售后 Agent</p>
           </div>
         </div>
         <div class="topbar-actions">
@@ -819,6 +820,11 @@ async function scrollToLatest(): Promise<void> {
           <a class="employee-link" href="/service-operations">人工处理</a>
         </div>
       </header>
+
+      <div class="product-explainer-strip" aria-label="售后处理路径">
+        <strong>可信售后闭环</strong>
+        <span>自然语言目标</span><span aria-hidden="true">→</span><span>事实与政策核验</span><span aria-hidden="true">→</span><span>方案确认</span><span aria-hidden="true">→</span><span>售后协同</span>
+      </div>
 
       <section v-if="settingsOpen" class="account-panel" aria-label="商城账号登录">
         <div v-if="currentMember" class="account-summary">
@@ -920,12 +926,6 @@ async function scrollToLatest(): Promise<void> {
         </section>
       </section>
 
-      <AgentTaskWorkspace
-        v-if="currentMember"
-        :authorization="buildAuthorizationHeader(accessToken) || ''"
-        :session-id="sessionId"
-      />
-
       <div class="workspace">
         <aside class="history-sidebar" aria-label="历史会话">
           <div class="history-heading">
@@ -976,7 +976,7 @@ async function scrollToLatest(): Promise<void> {
                 <h3>{{ messages[messages.length - 1].response?.task?.task_label }}</h3>
                 <p>{{ messages[messages.length - 1].response?.task?.task_hint }}</p>
               </div>
-              <span class="return-status">{{ messages[messages.length - 1].response?.task?.task_status === "paused" ? "可恢复" : "进行中" }}</span>
+              <span class="status-badge agent">{{ messages[messages.length - 1].response?.task?.task_status === "paused" ? "可恢复" : "进行中" }}</span>
             </section>
             <article v-for="item in messages" :key="item.id" class="message-row" :class="item.role">
               <div v-if="item.role !== 'user'" class="avatar" aria-hidden="true">AI</div>
@@ -1088,6 +1088,20 @@ async function scrollToLatest(): Promise<void> {
             <p class="composer-note">Enter 发送；Shift + Enter 换行。涉及写操作时，系统会先要求明确确认。</p>
           </div>
         </section>
+
+        <aside class="agent-sidebar" aria-label="开放任务 Agent 工作台">
+          <AgentTaskWorkspace
+            v-if="currentMember"
+            :authorization="buildAuthorizationHeader(accessToken) || ''"
+            :session-id="sessionId"
+          />
+          <section v-else class="agent-login-prompt">
+            <p class="panel-kicker">OPEN TASK AGENT</p>
+            <h2>登录后开启多步任务</h2>
+            <p>登录商城账号后，Agent 可以围绕订单、物流、政策和售后事实形成可追踪的任务计划。</p>
+            <button class="secondary-button" type="button" @click="settingsOpen = true">先登录账号</button>
+          </section>
+        </aside>
       </div>
     </section>
   </main>
