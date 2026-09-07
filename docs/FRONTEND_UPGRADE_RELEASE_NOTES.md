@@ -21,11 +21,11 @@
 
 ## 当前证据
 
-- 当前发布提交：`67f5c938a8fddbf2b5f86c5a9f849dfbb94479d8`，已推送到 `origin/main`。
+- 当前发布提交：`eb2bd11ff732709dded35ef5948957c5934b7619`，已推送到 `origin/main`。
 - `mall-ai-web/npm run build`：通过，退出码 `0`。
 - `git diff --check`：通过。
 - `docker compose config --quiet`：通过。
-- 当前提交对应的 [`mall-ci` run 34114111878](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34114111878) 与 [`quality-evaluation` run 34114111633](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34114111633) 均成功。
+- 当前提交对应的 [`mall-ci` run 34114454156](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34114454156) 与 [`quality-evaluation` run 34114454153](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34114454153) 均成功。
 - 证据记录：[frontend-unified-upgrade.md](evidence/frontend-unified-upgrade.md)。
 
 ## 发布限制

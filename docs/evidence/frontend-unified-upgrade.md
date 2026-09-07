@@ -28,7 +28,7 @@ docker compose config --quiet
 
 结果：通过，退出码 `0`。
 
-当前 Commit 的 GitHub Actions：[`mall-ci` run 34114111878](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34114111878) 与 [`quality-evaluation` run 34114111633](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34114111633) 均为 `success`。
+发布提交 `eb2bd11` 的 GitHub Actions：[`mall-ci` run 34114454156](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34114454156) 与 [`quality-evaluation` run 34114454153](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34114454153) 均为 `success`。
 
 ## 本次展示改动
 

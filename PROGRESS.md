@@ -118,13 +118,13 @@
 
 ## 2026-09-07 — 前端统一展示升级与 GitHub 发布收口复核
 
-- 当前 HEAD：`67f5c938a8fddbf2b5f86c5a9f849dfbb94479d8`，分支 `main`，工作区干净；该提交已推送到 `origin/main`。
+- 当前 HEAD：`eb2bd11ff732709dded35ef5948957c5934b7619`，分支 `main`，工作区干净；该提交已推送到 `origin/main`。
 - 已完成前端统一展示升级：客户页三栏工作台、开放任务 Agent 状态/时间线/事实产物/行动卡、运营摘要卡、人工协同步骤条、质量评测摘要与折叠详情，详见 `docs/evidence/frontend-unified-upgrade.md`。
 - 实际构建命令：`Push-Location .\mall-ai-web; npm run build; Pop-Location`，`vue-tsc --noEmit` 与 Vite build 均通过，退出码 `0`。
 - `git diff --check` 通过；`docker compose config --quiet` 通过。
 - 已新增并提交前端需求说明 `docs/FRONTEND_UNIFIED_UPGRADE_SPEC.md` 与验收记录 `docs/evidence/frontend-unified-upgrade.md`；没有修改后端 API、Java 写入、权限、数据库、Outbox 或评测契约。
 - 当前 Docker Desktop 进程虽已请求启动，但 Docker Linux 引擎未就绪：`docker info` 与 `docker compose ps` 无法连接 `dockerDesktopLinuxEngine`。因此本轮未重新生成升级后的真实截图，也没有把旧截图冒充新截图。
-- `67f5c93` 已成功推送到 `origin/main`。该 SHA 对应的 GitHub Actions 均已实际成功：[`mall-ci` run 34114111878](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34114111878)、[`quality-evaluation` run 34114111633](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34114111633)。
+- `eb2bd11` 已成功推送到 `origin/main`。该 SHA 对应的 GitHub Actions 均已实际成功：[`mall-ci` run 34114454156](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34114454156)、[`quality-evaluation` run 34114454153](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34114454153)。
 - GitHub 仓库公开状态、Description 和 11 个 Topics 已通过 GitHub API 核对；没有修改个人主页、仓库可见性或创建新仓库。
 
 ### 当前发布门禁
