@@ -115,3 +115,18 @@
 - 完整浏览器 E2E `24`、Java/MySQL integration `30`、fault injection `36`、durable async recovery `32` 本轮未逐条现场执行；因缺少一次性本地账号/订单环境变量，7 个现场脚本均标为 `environment_blocked`，没有把 manifest 注册数当作通过数。
 - 已完成：证据文件通过 `git diff --check` 并提交推送；验证提交 `9fba15ddac537016fca2116286e7238121b1236a` 对应 `mall-ci` [33901002046](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/33901002046) 与 `quality-evaluation` [33901002043](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/33901002043) 均为 GitHub 实际 success。
 - Grounding 已重新执行并保存为被忽略的 `tmp/rag2_grounding_current_head.json`（SHA-256 `f254dea3c765251ae49385a3f6c1fd93276b474717f040557b8c7a57093cf0be`）：`11 passed / 4 quality_failed / 0 environment_blocked`，Token `20,550`，p95 `2,098.64 ms`；4 条 `UNAPPROVED_EVIDENCE_SOURCE` 原样保留。
+
+## 2026-09-07 — 前端统一展示升级与 GitHub 发布收口复核
+
+- 本地当前 HEAD：`e6e5f6382d54c8f1048f8dd7078fe4c337236f6f`，分支 `main`，工作区干净。
+- 已完成前端统一展示升级：客户页三栏工作台、开放任务 Agent 状态/时间线/事实产物/行动卡、运营摘要卡、人工协同步骤条、质量评测摘要与折叠详情，详见 `docs/evidence/frontend-unified-upgrade.md`。
+- 实际构建命令：`Push-Location .\mall-ai-web; npm run build; Pop-Location`，`vue-tsc --noEmit` 与 Vite build 均通过，退出码 `0`。
+- `git diff --check` 通过；`docker compose config --quiet` 通过。
+- 已新增并提交前端需求说明 `docs/FRONTEND_UNIFIED_UPGRADE_SPEC.md` 与验收记录 `docs/evidence/frontend-unified-upgrade.md`；没有修改后端 API、Java 写入、权限、数据库、Outbox 或评测契约。
+- 当前 Docker Desktop 虽已请求启动，但 Docker Linux 引擎未就绪：`docker info` 与 `docker compose ps` 无法连接 `dockerDesktopLinuxEngine`。因此本轮未重新生成升级后的真实截图，也没有把旧截图冒充新截图。
+- 当前 GitHub 网络访问失败：`git push origin main` / `git ls-remote origin refs/heads/main` 均因无法连接或连接被重置退出码 `128`。本地提交存在，但尚未证明远程已包含 `e6e5f63`。
+- GitHub Actions、仓库 Topics/Description 本轮未重新验证或修改；不得把历史 Actions 成功记录外推到 `e6e5f63`。
+
+### 当前发布门禁
+
+本次“GitHub 发布收口”状态为**未完成**：代码本地提交和前端构建已完成，但真实升级截图、远程推送、当前 SHA 的 Actions 和仓库 About 信息仍待网络/Docker 环境恢复后完成。

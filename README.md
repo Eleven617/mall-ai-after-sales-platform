@@ -1,9 +1,11 @@
-# Mall v3.0｜可信电商 Agent Runtime
+# Mall AI 售后平台｜可信电商 Agent Runtime
 
 [![mall-ci](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/workflows/ci.yml)
 [![quality-evaluation](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/workflows/quality-evaluation.yml/badge.svg?branch=main)](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/workflows/quality-evaluation.yml)
 
-面向复杂商品、订单与售后目标的本地可运行演示：Agent 形成计划、发现版本化 Skill、执行只读事实调查、观察结果并在必要时重规划，再把需要副作用的行动交给 Java 领域服务确认和提交。
+面向电商售后的可信 AI Agent 平台：围绕用户目标完成订单、物流、库存和政策事实核验，并生成可确认的售后行动。本项目是本地可运行演示，不是生产 SaaS。
+
+Agent 负责理解目标、调查受控事实并形成方案；涉及售后写入时必须经过明确确认，由 Java 业务侧完成最终状态校验、幂等和写入。系统同时提供人工协同和质量评测闭环。
 
 ## 30 秒了解项目
 
@@ -40,6 +42,8 @@ flowchart LR
 开发者侧查看 contract_mock 评测结果、合同差异和人工审批状态。
 
 本次前端统一展示升级已将客户页、开放任务 Agent、运营台、人工协同台和质量评测台收敛到同一套视觉变量与页面外壳；其中 Agent 计划时间线、事实产物、行动确认和质量 Case 详情均由现有接口驱动。由于当前工作站的 Docker Desktop 未运行，升级后的三张新现场截图尚未重新生成，以上图片仍是上一轮真实合成演示素材，不代表本次升级后的最终截图。重新启动 Docker 后应按 [前端升级验收记录](docs/evidence/frontend-unified-upgrade.md) 的命令重新截取并单独提交素材更新。
+
+开放任务 Agent 工作台的独立截图 `docs/assets/agent-task-workspace.png` 也将在 Docker 现场复验后补入；当前不引用不存在的图片文件。
 
 ## 产品能力
 
