@@ -2,7 +2,7 @@
 
 ## 当前代码
 
-- 当前发布 Commit：`67f5c938a8fddbf2b5f86c5a9f849dfbb94479d8`（已推送到 `origin/main`）
+- 前端代码发布 Commit：`ddb466489dffcb2bec0ec15151e8cb0121518691`（已推送到 `origin/main`）；后续提交仅补充发布证据文档。
 - 变更范围：`mall-ai-web/src/` 的客户页、开放任务 Agent、运营台、人工协同台、质量评测台和公共样式。
 - 未修改：FastAPI/Java API、权限、数据库、Outbox、评测契约和业务写入逻辑。
 
@@ -28,7 +28,7 @@ docker compose config --quiet
 
 结果：通过，退出码 `0`。
 
-发布提交 `eb2bd11` 的 GitHub Actions：[`mall-ci` run 34114454156](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34114454156) 与 [`quality-evaluation` run 34114454153](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34114454153) 均为 `success`。
+发布提交 `ddb4664` 的 GitHub Actions：[`mall-ci` run 34114651785](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34114651785) 与 [`quality-evaluation` run 34114651788](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34114651788) 均为 `success`。
 
 ## 本次展示改动
 
@@ -40,7 +40,7 @@ docker compose config --quiet
 
 ## 尚未现场验证
 
-本机 Docker Desktop 当前未运行，`docker compose ps` 无法连接 Docker API。因此本次没有重新生成截图，也没有把旧素材标记为新版本。待 Docker 可用后，执行：
+本机 Docker Desktop 进程已启动但 Linux 引擎尚未就绪，`docker compose ps` 无法连接 Docker API。因此本次没有重新生成截图，也没有把旧素材标记为新版本。待 Docker 可用后，执行：
 
 ```powershell
 .\scripts\start-demo.ps1

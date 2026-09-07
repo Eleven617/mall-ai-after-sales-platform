@@ -21,15 +21,14 @@
 
 ## 当前证据
 
-- 当前发布提交：`eb2bd11ff732709dded35ef5948957c5934b7619`，已推送到 `origin/main`。
+- 前端代码发布提交：`ddb466489dffcb2bec0ec15151e8cb0121518691`，已推送到 `origin/main`；后续提交仅补充发布证据文档。
 - `mall-ai-web/npm run build`：通过，退出码 `0`。
 - `git diff --check`：通过。
 - `docker compose config --quiet`：通过。
-- 当前提交对应的 [`mall-ci` run 34114454156](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34114454156) 与 [`quality-evaluation` run 34114454153](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34114454153) 均成功。
+- 当前提交对应的 [`mall-ci` run 34114651785](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34114651785) 与 [`quality-evaluation` run 34114651788](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34114651788) 均成功。
 - 证据记录：[frontend-unified-upgrade.md](evidence/frontend-unified-upgrade.md)。
 
 ## 发布限制
 
 - 当前工作站 Docker Linux 引擎未就绪，无法启动真实 Compose 演示并重新生成升级后的三张截图；`docs/assets/` 中现有素材仍是上一轮真实合成演示，不应标记为本次升级后的最终素材。
-- 当前无法连接 GitHub `443`，因此本地提交尚未完成远程推送和当前 SHA 的 Actions 验证。
-- 真实页面素材、远程 Actions、仓库 Description/Topics 需要在 Docker 与 GitHub 网络恢复后单独完成并记录。
+- 真实页面素材仍待 Docker Linux 引擎就绪后重新生成；远程推送、当前 SHA Actions 和仓库 Description/Topics 已完成核对。
