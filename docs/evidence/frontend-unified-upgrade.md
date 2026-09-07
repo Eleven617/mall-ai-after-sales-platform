@@ -2,7 +2,7 @@
 
 ## 当前代码
 
-- Commit 基线：`4ddf23ef3e9fdfdb9a0c1f68792f5a3021de378d`（实施时的工作区基线）
+- 当前发布 Commit：`67f5c938a8fddbf2b5f86c5a9f849dfbb94479d8`（已推送到 `origin/main`）
 - 变更范围：`mall-ai-web/src/` 的客户页、开放任务 Agent、运营台、人工协同台、质量评测台和公共样式。
 - 未修改：FastAPI/Java API、权限、数据库、Outbox、评测契约和业务写入逻辑。
 
@@ -27,6 +27,8 @@ docker compose config --quiet
 ```
 
 结果：通过，退出码 `0`。
+
+当前 Commit 的 GitHub Actions：[`mall-ci` run 34114111878](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34114111878) 与 [`quality-evaluation` run 34114111633](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34114111633) 均为 `success`。
 
 ## 本次展示改动
 

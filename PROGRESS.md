@@ -118,15 +118,15 @@
 
 ## 2026-09-07 — 前端统一展示升级与 GitHub 发布收口复核
 
-- 本地当前 HEAD：`e6e5f6382d54c8f1048f8dd7078fe4c337236f6f`，分支 `main`，工作区干净。
+- 当前 HEAD：`67f5c938a8fddbf2b5f86c5a9f849dfbb94479d8`，分支 `main`，工作区干净；该提交已推送到 `origin/main`。
 - 已完成前端统一展示升级：客户页三栏工作台、开放任务 Agent 状态/时间线/事实产物/行动卡、运营摘要卡、人工协同步骤条、质量评测摘要与折叠详情，详见 `docs/evidence/frontend-unified-upgrade.md`。
 - 实际构建命令：`Push-Location .\mall-ai-web; npm run build; Pop-Location`，`vue-tsc --noEmit` 与 Vite build 均通过，退出码 `0`。
 - `git diff --check` 通过；`docker compose config --quiet` 通过。
 - 已新增并提交前端需求说明 `docs/FRONTEND_UNIFIED_UPGRADE_SPEC.md` 与验收记录 `docs/evidence/frontend-unified-upgrade.md`；没有修改后端 API、Java 写入、权限、数据库、Outbox 或评测契约。
-- 当前 Docker Desktop 虽已请求启动，但 Docker Linux 引擎未就绪：`docker info` 与 `docker compose ps` 无法连接 `dockerDesktopLinuxEngine`。因此本轮未重新生成升级后的真实截图，也没有把旧截图冒充新截图。
-- 当前 GitHub 网络访问失败：`git push origin main` / `git ls-remote origin refs/heads/main` 均因无法连接或连接被重置退出码 `128`。本地提交存在，但尚未证明远程已包含 `e6e5f63`。
-- GitHub Actions、仓库 Topics/Description 本轮未重新验证或修改；不得把历史 Actions 成功记录外推到 `e6e5f63`。
+- 当前 Docker Desktop 进程虽已请求启动，但 Docker Linux 引擎未就绪：`docker info` 与 `docker compose ps` 无法连接 `dockerDesktopLinuxEngine`。因此本轮未重新生成升级后的真实截图，也没有把旧截图冒充新截图。
+- `67f5c93` 已成功推送到 `origin/main`。该 SHA 对应的 GitHub Actions 均已实际成功：[`mall-ci` run 34114111878](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34114111878)、[`quality-evaluation` run 34114111633](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34114111633)。
+- GitHub 仓库公开状态、Description 和 11 个 Topics 已通过 GitHub API 核对；没有修改个人主页、仓库可见性或创建新仓库。
 
 ### 当前发布门禁
 
-本次“GitHub 发布收口”状态为**未完成**：代码本地提交和前端构建已完成，但真实升级截图、远程推送、当前 SHA 的 Actions 和仓库 About 信息仍待网络/Docker 环境恢复后完成。
+本次“GitHub 发布收口”状态为**部分完成，尚未完全通过**：代码、README、前端构建、远程推送、当前 SHA 的 Actions 和仓库 About 信息已完成；但升级后的 `agent-task-workspace.png` 及三张最终现场截图尚未在当前 Docker 环境重新生成，因此不能称为全部发布收口完成。
