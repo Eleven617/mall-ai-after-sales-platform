@@ -1,5 +1,16 @@
 # Mall v3.0 Release Gate 复核
 
+## 2026-09-07 公开收口状态更新
+
+本文件主体保留 2026-09-05 对审计基线 `7f9cfb2d5171a88b2f6c5714f965e528c2543cc5` 的原始复核结论，不能再把其中“尚未推送、当前提交没有远程 CI”的描述理解为仓库现状。三份事实包随后已在提交 `157032896b1659d018bbaa486a43d042a2358fa7` 发布到 `main`，并由 GitHub 对该提交完成远程验证：
+
+- `mall-ci`：<https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/33985232690>，**success**。
+- `quality-evaluation`：<https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/33985232668>，**success**。
+
+因此，项目的**公开作品集工程收口**已经通过：代码、README、真实合成截图、确定性测试证据、上游归属、安全扫描和远程 CI 均已有可追溯入口。这里的“收口”不等于生产发布，也不抹掉真实模型评测中的失败：开放任务 Agent 历史报告仍为 `24/72` 严格合同通过，Grounding 仍为 `11/15`，完整浏览器、Java/MySQL、故障注入和 durable recovery 清单也没有全部逐条现场执行。对应原始报告继续保存在被 Git 忽略的 `tmp/`，公开仓库只提交脱敏汇总、报告哈希、命令与失败边界。
+
+后续不应为了制造更好看的数字重复昂贵 live-model 测试或放宽比较器。只有在 Prompt、模型、Tool Schema、RAG、Runtime 或相关业务边界发生实质变化时，才重新运行对应套件并生成新的版本化证据。
+
 复核时间：2026-09-05（Asia/Shanghai）  
 当前 HEAD：`7f9cfb2d5171a88b2f6c5714f965e528c2543cc5`  
 分支：`main`  
