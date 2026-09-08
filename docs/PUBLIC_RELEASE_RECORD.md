@@ -4,7 +4,7 @@
 
 Docker Desktop 恢复后，使用当前 Compose 服务、真实 Chrome headless/CDP 和合成账号重新生成客户、开放任务 Agent、运营和质量四张截图。八个常驻服务均为 `healthy`，Docker Engine `29.7.2`；没有删除命名卷、演示数据或数据库。资产哈希和尺寸见 [`docs/TEST_AND_DEMO_EVIDENCE.md`](TEST_AND_DEMO_EVIDENCE.md)。
 
-本节在截图/证据尚未提交时记录现场基线；提交后须等待该新提交的 `mall-ci` 与 `quality-evaluation` 完成，远程结果确认前不称为本次发布门禁通过。
+截图/证据提交 `4dae57fc8d0876fb2b343f898489750f8b95c4ab` 已推送并完成远程门禁：[`mall-ci` run 34179749694](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34179749694) 与 [`quality-evaluation` run 34179749709](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34179749709) 均为 `success`。这只覆盖当前工作流门禁，不等价于生产部署、完整浏览器 E2E 或真实模型准确率。
 
 ## 2026-09-05 — 当前 HEAD 剩余关键结果补测（代码提交 `38cf3809e48ec08bead6accc07a4ace27ebf5f59`）
 

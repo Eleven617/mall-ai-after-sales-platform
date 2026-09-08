@@ -32,4 +32,4 @@
 ## 发布限制
 
 - 本次 Docker/浏览器现场已完成，但它不是完整浏览器 E2E 清单，也不等价于 Java/MySQL 全量集成、真实支付/仓储/物流/维修或生产 SLA。
-- 远程推送、当前 SHA Actions 和仓库 Description/Topics 已完成核对；本次截图更新需随当前工作区提交后重新等待对应 SHA 的 Actions。
+- 截图/证据提交 `4dae57f` 已推送；其 `mall-ci` run `34179749694` 与 `quality-evaluation` run `34179749709` 均为 `success`。仓库 Description/Topics 已完成核对。

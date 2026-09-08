@@ -13,7 +13,7 @@ Docker Desktop 恢复后重新执行了前端演示现场。`docker compose conf
 | `docs/assets/operations-handoff-overview.png` | `1369×1214` | `c14ec987d0d9d0e87367866acfbf1cedc60788735dad00ee1ced38a2a7655ff2` |
 | `docs/assets/quality-evaluation-dashboard.png` | `1354×2710` | `d5a5ce42901dcf649b81c3bbbd2489851635fc105d6b1ee2d974833aae000593` |
 
-本次截图证明的是本地合成演示页面可访问和公开字段边界；它不替代完整浏览器 E2E、Java/MySQL 全量集成、真实模型泛化或生产 SLA。待本节改动提交后，必须以新提交对应的 GitHub Actions 结果作为远程证据，不能沿用旧 SHA 的运行链接。
+本次截图证明的是本地合成演示页面可访问和公开字段边界；它不替代完整浏览器 E2E、Java/MySQL 全量集成、真实模型泛化或生产 SLA。截图/证据提交 `4dae57fc8d0876fb2b343f898489750f8b95c4ab` 的 GitHub Actions 已真实完成：[`mall-ci` run 34179749694](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34179749694) 与 [`quality-evaluation` run 34179749709](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34179749709) 均为 `success`。
 
 ## 2026-09-05 — 当前 HEAD 剩余关键结果补测（代码提交 `38cf3809e48ec08bead6accc07a4ace27ebf5f59`）
 

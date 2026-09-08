@@ -43,6 +43,8 @@ docker compose config --quiet
 
 资产尺寸与哈希和当前工作区文件一致。
 
+截图/证据提交 `4dae57fc8d0876fb2b343f898489750f8b95c4ab` 已推送到 `origin/main`，其 GitHub Actions 已完成：[`mall-ci` run 34179749694](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34179749694) 与 [`quality-evaluation` run 34179749709](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34179749709) 均为 `success`。这两个运行只证明该提交的既有门禁通过，不代表生产部署或真实模型泛化。
+
 ## 本次展示改动
 
 - 客户页：产品说明带、历史会话/对话/开放任务三栏；移动端按“任务→对话→记录”堆叠。

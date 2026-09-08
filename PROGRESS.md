@@ -137,5 +137,5 @@
 - `docker compose config --quiet` 通过；`docker compose up -d --no-build` 后八个常驻服务均为 `healthy`。
 - 已用真实 Chrome headless/CDP 和合成页面重新生成四张公开截图：`customer-policy-conversation.png`、`agent-task-workspace.png`、`operations-handoff-overview.png`、`quality-evaluation-dashboard.png`。尺寸与 SHA-256 记录见 `docs/evidence/frontend-unified-upgrade.md` 和 `docs/TEST_AND_DEMO_EVIDENCE.md`。
 - README、前端发布说明和现场证据已同步“截图已重新生成”的事实；临时脚本仍在被忽略的 `tmp/`，不提交。
-- 当前工作区待提交内容仅为 README、前端证据文档和四张截图；没有业务代码、依赖或配置变更。下一步是 `git diff --check`、`docker compose config --quiet`、提交并推送，然后等待**新提交**对应的两个 Actions 运行完成。
+- 截图、README 和前端证据已提交为 `4dae57fc8d0876fb2b343f898489750f8b95c4ab` 并推送；该 SHA 的 `mall-ci` run `34179749694` 与 `quality-evaluation` run `34179749709` 均为 GitHub 实际 `success`。本次待办仅剩将本段状态同步提交并验证该同步提交的 Actions。
 - 本次现场可证明本地合成演示和展示边界；不证明完整浏览器 E2E、Java/MySQL 全量集成、真实支付/仓储/物流/维修、真实模型泛化或生产 SLA。此前“Docker 未就绪/截图未生成”的段落是当时状态，已由本节后续现场结果 supersede，不删除历史记录。
