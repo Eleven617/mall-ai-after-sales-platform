@@ -10,6 +10,8 @@ Java/MySQL 真实连接补测使用不入库的 `tmp/maven-local-test.properties
 
 两个边界必须保留：Build 14A 旧场景改用当前统一售后 API 后，当前合成订单不满足 Java `return_refund` 资格，退出码 `1`，没有伪造通过；Build 21 在后续独立重跑出现一次真实 `waiting diagnosis task is missing or malformed`，保留为模型/运行时波动，不能宣称稳定通过率。manifest 注册的 `browser_e2e 24`、`java_mysql_integration 30`、`fault_injection 36`、`durable_async_recovery 32` 仍没有逐条现场执行器，继续记为 `environment_blocked`，不与 deterministic 478/478 相加。
 
+本次现场证据提交 `dbbd18c029acf8bacc21cada2c161da15185cc42` 的 GitHub Actions 已真实完成：[`mall-ci` run 34200061061](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34200061061) 与 [`quality-evaluation` run 34200061063](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34200061063) 均为 `success`。
+
 ## 2026-09-08 — Docker 恢复后的前端现场收口（截图源基线 `3700dde210e9b7737a2181980c50a7885059ead3`）
 
 Docker Desktop 恢复后重新执行了前端演示现场。`docker compose config --quiet` 通过；`docker compose up -d --no-build` 后，MySQL、Redis、Mongo、RabbitMQ、`mall-portal`、`mall-admin`、`mall-ai-service`、`mall-ai-web` 八个常驻服务均为 `healthy`。`docker info` 显示 Engine `29.7.2`。未执行 `docker compose down`、卷删除、数据库清空或迁移回滚。

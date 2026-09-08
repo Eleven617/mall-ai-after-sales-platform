@@ -149,3 +149,5 @@
 - Build 14A 退货状态脚本退出码 `1`：当前合成订单不满足 Java `return_refund` 资格；Build 21 后续两次独立重跑退出码 `1`，错误为 `waiting diagnosis task is missing or malformed`。失败均保留，未放宽断言。
 - 完整 manifest 的 browser `24`、Java/MySQL `30`、fault `36`、durable recovery `32` 没有独立逐条现场执行器，继续标记 `environment_blocked`；不能把 deterministic `478/478` 写成这些现场套件通过。
 - 本次新增/修改工作区文件：四张 `docs/assets/*.png`、`docs/evidence/v3.0-current-head-evidence.md/.json`、`docs/TEST_AND_DEMO_EVIDENCE.md`、`docs/PUBLIC_RELEASE_RECORD.md`、`mall-ai-service/scripts/verify_return_status_flow.py`。待完成：运行最终校验、提交、推送、等待 Actions 并回填当前 SHA。
+- 已提交并推送 `dbbd18c029acf8bacc21cada2c161da15185cc42`（`test: record live release gate verification`）。对应 `mall-ci` [34200061061](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34200061061) 与 `quality-evaluation` [34200061063](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34200061063) 均为 GitHub 实际 `success`。
+- 远程门禁已通过；当前工作区仍需提交本次 Actions 链接与最终证据同步，随后以最终 SHA 交接。完整 24/30/36/32 现场清单仍属环境阻塞，不得宣传为通过。

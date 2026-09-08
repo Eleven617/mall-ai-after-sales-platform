@@ -6,6 +6,8 @@
 
 完整 manifest 的 24/30/36/32 条浏览器、Java/MySQL、故障注入和 durable recovery 场景仍未逐条现场执行；它们不能由 deterministic manifest 478/478 代替。项目仍不宣称生产 SLA、真实用户泛化或真实支付/仓储/物流/维修接入。
 
+本次现场证据提交 `dbbd18c029acf8bacc21cada2c161da15185cc42` 已推送并完成远程门禁：[`mall-ci` run 34200061061](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34200061061) 与 [`quality-evaluation` run 34200061063](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34200061063) 均为 `success`。
+
 ## 2026-09-08 — 前端展示资产最终现场复验（截图源基线 `3700dde210e9b7737a2181980c50a7885059ead3`）
 
 Docker Desktop 恢复后，使用当前 Compose 服务、真实 Chrome headless/CDP 和合成账号重新生成客户、开放任务 Agent、运营和质量四张截图。八个常驻服务均为 `healthy`，Docker Engine `29.7.2`；没有删除命名卷、演示数据或数据库。该段记录 `4dae57f` 发布提交的资产；2026-09-08 重截后的当前资产哈希见补测证据。
