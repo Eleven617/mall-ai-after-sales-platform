@@ -16,6 +16,11 @@
         "commit": "dbbd18c029acf8bacc21cada2c161da15185cc42",
         "mallCi": {"runId": 34200061061, "status": "success", "url": "https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34200061061"},
         "qualityEvaluation": {"runId": 34200061063, "status": "success", "url": "https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34200061063"}
+      },
+      "latestEvidenceSync": {
+        "commit": "73d12c5ecde9c56a21ce7be78e194d8fbc1e837c",
+        "mallCi": {"runId": 34204868188, "status": "success", "url": "https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34204868188"},
+        "qualityEvaluation": {"runId": 34204868215, "status": "success", "url": "https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34204868215"}
       }
     }
   },

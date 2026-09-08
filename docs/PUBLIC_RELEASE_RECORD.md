@@ -8,6 +8,8 @@
 
 本次结果和命令已同步到 [`v3.0 当前 HEAD 证据`](evidence/v3.0-current-head-evidence.md)；不宣称生产 SLA、真实用户泛化或真实支付/仓储/物流/维修接入。
 
+本次证据同步提交 `73d12c5ecde9c56a21ce7be78e194d8fbc1e837c` 的 GitHub 门禁已完成：[`mall-ci` run 34204868188](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34204868188) 与 [`quality-evaluation` run 34204868215](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34204868215) 均为 `success`。
+
 ## 2026-09-08 — 现场验证增量
 
 本次现场补测使用 Docker Compose 的本地合成数据和进程内随机密码。真实 Chrome 页面、统一售后、双账号权限、MCP 只读隔离、人工协同和 Redis/RabbitMQ 重启后的健康恢复均有独立命令证据；Java/MySQL `MallPortalApplicationTests` 在临时本地连接配置下 `1/1` 通过。Build 14A 退货申请因 Java 资格不满足保留失败，Build 21 独立重跑出现一次等待任务缺失，均未转写为通过。
