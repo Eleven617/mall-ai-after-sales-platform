@@ -139,3 +139,13 @@
 - README、前端发布说明和现场证据已同步“截图已重新生成”的事实；临时脚本仍在被忽略的 `tmp/`，不提交。
 - 截图、README 和前端证据已提交为 `4dae57fc8d0876fb2b343f898489750f8b95c4ab` 并推送；该 SHA 的 `mall-ci` run `34179749694` 与 `quality-evaluation` run `34179749709` 均为 GitHub 实际 `success`。本次待办仅剩将本段状态同步提交并验证该同步提交的 Actions。
 - 本次现场可证明本地合成演示和展示边界；不证明完整浏览器 E2E、Java/MySQL 全量集成、真实支付/仓储/物流/维修、真实模型泛化或生产 SLA。此前“Docker 未就绪/截图未生成”的段落是当时状态，已由本节后续现场结果 supersede，不删除历史记录。
+
+## 2026-09-08 — 现场补测与发布收口续记
+
+- Docker Engine `29.7.2` 可用；Redis、RabbitMQ 单容器重启后等待恢复，最终 Compose `8/8 healthy`、endpoint `3/3`。
+- 真实 Chrome/CDP 截图脚本退出码 `0`，四张合成数据截图已刷新；未提交临时密码、Token、订单号或 `tmp/` 临时脚本。
+- 一次性本地现场批次：权限双账号、统一售后创建/确认/查询/取消、Build 21 首次重启恢复、MCP 只读隔离、人工协同入队/领取/补件/处理/结案均退出码 `0`。
+- Java/MySQL `MallPortalApplicationTests` 使用被忽略的临时 Compose 配置 `1/1` 通过；默认 `localhost:3306` 配置因 `Public Key Retrieval is not allowed` 失败，未修改正式配置。
+- Build 14A 退货状态脚本退出码 `1`：当前合成订单不满足 Java `return_refund` 资格；Build 21 后续两次独立重跑退出码 `1`，错误为 `waiting diagnosis task is missing or malformed`。失败均保留，未放宽断言。
+- 完整 manifest 的 browser `24`、Java/MySQL `30`、fault `36`、durable recovery `32` 没有独立逐条现场执行器，继续标记 `environment_blocked`；不能把 deterministic `478/478` 写成这些现场套件通过。
+- 本次新增/修改工作区文件：四张 `docs/assets/*.png`、`docs/evidence/v3.0-current-head-evidence.md/.json`、`docs/TEST_AND_DEMO_EVIDENCE.md`、`docs/PUBLIC_RELEASE_RECORD.md`、`mall-ai-service/scripts/verify_return_status_flow.py`。待完成：运行最终校验、提交、推送、等待 Actions 并回填当前 SHA。

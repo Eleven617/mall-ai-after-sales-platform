@@ -1,8 +1,14 @@
 # 公开发布记录
 
+## 2026-09-08 — 现场验证增量
+
+本次现场补测使用 Docker Compose 的本地合成数据和进程内随机密码。真实 Chrome 页面、统一售后、双账号权限、MCP 只读隔离、人工协同和 Redis/RabbitMQ 重启后的健康恢复均有独立命令证据；Java/MySQL `MallPortalApplicationTests` 在临时本地连接配置下 `1/1` 通过。Build 14A 退货申请因 Java 资格不满足保留失败，Build 21 独立重跑出现一次等待任务缺失，均未转写为通过。
+
+完整 manifest 的 24/30/36/32 条浏览器、Java/MySQL、故障注入和 durable recovery 场景仍未逐条现场执行；它们不能由 deterministic manifest 478/478 代替。项目仍不宣称生产 SLA、真实用户泛化或真实支付/仓储/物流/维修接入。
+
 ## 2026-09-08 — 前端展示资产最终现场复验（截图源基线 `3700dde210e9b7737a2181980c50a7885059ead3`）
 
-Docker Desktop 恢复后，使用当前 Compose 服务、真实 Chrome headless/CDP 和合成账号重新生成客户、开放任务 Agent、运营和质量四张截图。八个常驻服务均为 `healthy`，Docker Engine `29.7.2`；没有删除命名卷、演示数据或数据库。资产哈希和尺寸见 [`docs/TEST_AND_DEMO_EVIDENCE.md`](TEST_AND_DEMO_EVIDENCE.md)。
+Docker Desktop 恢复后，使用当前 Compose 服务、真实 Chrome headless/CDP 和合成账号重新生成客户、开放任务 Agent、运营和质量四张截图。八个常驻服务均为 `healthy`，Docker Engine `29.7.2`；没有删除命名卷、演示数据或数据库。该段记录 `4dae57f` 发布提交的资产；2026-09-08 重截后的当前资产哈希见补测证据。
 
 截图/证据提交 `4dae57fc8d0876fb2b343f898489750f8b95c4ab` 已推送并完成远程门禁：[`mall-ci` run 34179749694](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34179749694) 与 [`quality-evaluation` run 34179749709](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34179749709) 均为 `success`。这只覆盖当前工作流门禁，不等价于生产部署、完整浏览器 E2E 或真实模型准确率。
 

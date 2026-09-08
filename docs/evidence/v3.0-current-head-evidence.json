@@ -1,11 +1,11 @@
 {
   "schemaVersion": "v3.0-current-head-evidence.v1",
-  "generatedAt": "2026-09-05T01:40:00+08:00",
+  "generatedAt": "2026-09-08T14:10:00+08:00",
   "repository": {
     "remote": "https://github.com/Eleven617/mall-ai-after-sales-platform.git",
     "branch": "main",
-    "testedCodeCommit": "38cf3809e48ec08bead6accc07a4ace27ebf5f59",
-    "evidenceHeadCommit": "94d782053c8ba188d2d79af0b3d5632ac685a8b8",
+    "testedCodeCommit": "477a85572eab7d5948331d80c45fc1be5cd514bc",
+    "evidenceHeadCommit": "477a85572eab7d5948331d80c45fc1be5cd514bc",
     "remoteCommitAtStart": "cbb951f9815b7483d2aeec0620947fdb1eba59b0",
     "workspaceCleanAtStart": true,
     "remoteVerification": {
@@ -101,7 +101,18 @@
       "durable_async_recovery": {"registered": 32, "executed": 0, "passed": 0, "failed": 0, "environmentBlocked": 32}
     },
     "executedSyntheticSafetyChecks": {"crossAccountRejected": {"passed": 3, "total": 3}, "noUnconfirmedCommit": {"passed": 2, "total": 2}, "subtaskOwnerCheck": {"passed": 3, "total": 3}, "forbiddenSideEffects": 0},
-    "notClaimed": ["full_cross_account_leak_rate", "full_unconfirmed_write_rate", "duplicate_outbox_events_converged"]
+    "notClaimed": ["full_cross_account_leak_rate", "full_unconfirmed_write_rate", "duplicate_outbox_events_converged"],
+    "liveSupplementalChecks": {
+      "browserScreenshots": {"status": "passed", "exitCode": 0, "pages": 4},
+      "authFlow": {"status": "passed", "exitCode": 0},
+      "unifiedAfterSales": {"status": "passed", "exitCode": 0, "scope": "create_confirm_list_status_cancel_cross_account"},
+      "build21AuthenticatedRecovery": {"status": "passed_with_rerun_failure", "initialExitCode": 0, "rerunExitCodes": [1, 1], "failure": "waiting diagnosis task is missing or malformed"},
+      "mcpAuthenticated": {"status": "passed", "exitCode": 0},
+      "serviceCase": {"status": "passed", "exitCode": 0},
+      "javaMysqlSpringContext": {"status": "passed", "tests": 1, "passed": 1, "failed": 0, "exitCode": 0, "temporaryLocalConfig": true},
+      "redisRabbitRestart": {"status": "passed", "restartExitCodes": {"redis": 0, "rabbitmq": 0}, "endpointChecks": {"passed": 3, "total": 3}, "containersHealthy": {"healthy": 8, "total": 8}},
+      "build14ReturnStatus": {"status": "failed", "exitCode": 1, "reason": "Java return_refund eligibility rejected the current synthetic order"}
+    }
   },
   "commands": [
     "Push-Location .\\mall-ai-service; .\\.venv\\Scripts\\python.exe -m compileall -q app; Pop-Location",
@@ -121,8 +132,15 @@
     "Push-Location .\\mall2; mvn -pl mall-admin -am \"-Dtest=AiServiceOperationsServiceImplTest,AiServiceOperationsControllerTest\" \"-DskipTests=false\" \"-Dsurefire.failIfNoSpecifiedTests=false\" test; Pop-Location",
     "docker compose --env-file .env.example config --quiet",
     "Push-Location .\\mall-ai-service; .\\.venv\\Scripts\\python.exe scripts\\verify_compose_stack.py; Pop-Location",
-    "docker compose ps --format json"
+    "docker compose ps --format json",
+    "tmp\\run_browser_live.ps1",
+    "tmp\\run_local_live_batch.ps1",
+    "docker compose restart redis",
+    "docker compose restart rabbitmq",
+    "Push-Location .\\mall2; mvn -pl mall-portal -am \"-Dtest=MallPortalApplicationTests\" \"-DskipTests=false\" \"-Dsurefire.failIfNoSpecifiedTests=false\" \"-Dspring.config.additional-location=file:C:/Users/12969/Desktop/mall/tmp/maven-local-test.properties\" test; Pop-Location",
+    "Push-Location .\\mall-ai-service; .\\.venv\\Scripts\\python.exe -m pytest -q; Pop-Location",
+    "git diff --check"
   ],
-  "environmentBlockedLiveScripts": ["verify_build21_authenticated_live.py", "verify_unified_after_sales_live.py", "verify_service_case_live.py", "verify_return_status_flow.py", "verify_mcp_authenticated_live.py", "verify_auth_flow.py", "verify_build14_live.py"],
+  "environmentBlockedLiveScripts": ["full_browser_e2e_manifest_24", "full_java_mysql_integration_manifest_30", "full_fault_injection_manifest_36", "full_durable_async_recovery_manifest_32"],
   "claims": {"productionAccuracy": false, "productionSla": false, "realUserGeneralization": false, "realPaymentWarehouseLogisticsRepair": false}
 }

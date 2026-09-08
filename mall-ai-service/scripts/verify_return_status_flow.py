@@ -130,13 +130,20 @@ def _create_or_find_return_application(
     order_item_id = _require_int(items[0].get("orderItemId"), "orderItemId")
 
     create_response = client.post(
-        f"{java_base}/returnApply/ai/create",
-        headers={"Authorization": authorization},
+        f"{java_base}/after-sales/ai/applications",
+        headers={
+            "Authorization": authorization,
+            "X-AI-After-Sales-Key": os.getenv(
+                "AI_AFTER_SALES_SERVICE_KEY", "local-build21-after-sales-key"
+            ),
+        },
         json={
             "orderSn": order_sn,
+            "applicationType": "return_refund",
             "orderItemId": order_item_id,
             "reason": "质量问题",
             "description": "Build 14A local live verification",
+            "idempotencyKey": __import__("uuid").uuid4().hex,
         },
     )
     create_payload = _require_dict(
@@ -145,7 +152,8 @@ def _create_or_find_return_application(
     )
     _expect(
         create_response.status_code == 200 and create_payload.get("code") == 200,
-        "Java did not create the disposable return application",
+        "Java did not create the disposable return application "
+        f"(http={create_response.status_code}, code={create_payload.get('code')})",
     )
     java_summary = _require_dict(create_payload.get("data"), "Java return summary")
     _expect(isinstance(java_summary.get("applicationId"), int), "Java did not return applicationId")
@@ -165,7 +173,7 @@ def _list_return_applications(
     authorization: str,
 ) -> list[dict[str, Any]]:
     response = client.get(
-        f"{ai_base}/customer-service/return-applications",
+        f"{ai_base}/customer-service/after-sales-applications",
         headers={"Authorization": authorization},
     )
     payload = _json(response, "FastAPI return history")

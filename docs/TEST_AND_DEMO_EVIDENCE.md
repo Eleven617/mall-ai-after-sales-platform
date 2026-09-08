@@ -1,5 +1,15 @@
 # 测试与演示证据
 
+## 2026-09-08 — 真实现场补测与故障恢复
+
+Docker Desktop 已恢复，Engine `29.7.2`；Compose 8 个常驻服务最终 `healthy`。本轮使用本地合成账号、订单和运行期随机密码，未写入密码/Token/完整订单号。真实 Chrome/CDP 页面脚本退出码 `0`，四张公开截图已重新生成。
+
+现场网站代理结果（每项独立退出码）：权限双账号 `verify_auth_flow.py` **0**；统一售后创建/确认/查询/取消/跨账号隔离 `verify_unified_after_sales_live.py` **0**；Build 21 同会话服务重启恢复（首次批次）**0**；MCP 只读主体隔离 `verify_mcp_authenticated_live.py` **0**；人工协同入队→领取→补件→处理→结案 `verify_service_case_live.py` **0**。Redis 与 RabbitMQ 单容器重启命令均退出 `0`，等待恢复后 `verify_compose_stack.py` **3/3**、Compose **8/8 healthy**。
+
+Java/MySQL 真实连接补测使用不入库的 `tmp/maven-local-test.properties` 指向 Compose MySQL `127.0.0.1:3307`，`MallPortalApplicationTests.contextLoads` **1/1 passed**。默认 dev 配置的 `localhost:3306` 运行因 `Public Key Retrieval is not allowed` 失败，属于本机连接配置差异；正式仓库配置没有修改。
+
+两个边界必须保留：Build 14A 旧场景改用当前统一售后 API 后，当前合成订单不满足 Java `return_refund` 资格，退出码 `1`，没有伪造通过；Build 21 在后续独立重跑出现一次真实 `waiting diagnosis task is missing or malformed`，保留为模型/运行时波动，不能宣称稳定通过率。manifest 注册的 `browser_e2e 24`、`java_mysql_integration 30`、`fault_injection 36`、`durable_async_recovery 32` 仍没有逐条现场执行器，继续记为 `environment_blocked`，不与 deterministic 478/478 相加。
+
 ## 2026-09-08 — Docker 恢复后的前端现场收口（截图源基线 `3700dde210e9b7737a2181980c50a7885059ead3`）
 
 Docker Desktop 恢复后重新执行了前端演示现场。`docker compose config --quiet` 通过；`docker compose up -d --no-build` 后，MySQL、Redis、Mongo、RabbitMQ、`mall-portal`、`mall-admin`、`mall-ai-service`、`mall-ai-web` 八个常驻服务均为 `healthy`。`docker info` 显示 Engine `29.7.2`。未执行 `docker compose down`、卷删除、数据库清空或迁移回滚。

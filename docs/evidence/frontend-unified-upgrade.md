@@ -41,7 +41,7 @@ docker compose config --quiet
 | `docs/assets/operations-handoff-overview.png` | `1369×1214` | `c14ec987d0d9d0e87367866acfbf1cedc60788735dad00ee1ced38a2a7655ff2` |
 | `docs/assets/quality-evaluation-dashboard.png` | `1354×2710` | `d5a5ce42901dcf649b81c3bbbd2489851635fc105d6b1ee2d974833aae000593` |
 
-资产尺寸与哈希和当前工作区文件一致。
+该表是 `4dae57f` 发布提交时的历史资产指纹；2026-09-08 现场重截后的当前工作区指纹见文末补充，不与本表合并。
 
 截图/证据提交 `4dae57fc8d0876fb2b343f898489750f8b95c4ab` 已推送到 `origin/main`，其 GitHub Actions 已完成：[`mall-ci` run 34179749694](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34179749694) 与 [`quality-evaluation` run 34179749709](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34179749709) 均为 `success`。这两个运行只证明该提交的既有门禁通过，不代表生产部署或真实模型泛化。
 
@@ -89,3 +89,16 @@ docker compose up -d --no-build mall-ai-web
 ```
 
 使用合成账号打开客户页、`/operations`、`/service-operations`、`/quality`，重新截取真实页面素材，再提交一个只包含 `docs/assets/` 与 README 说明的截图更新 commit。不得使用假数据或 ImageGen。
+
+## 2026-09-08 现场重截补充
+
+Docker 恢复后再次使用真实 Chrome headless/CDP 和合成账号访问四个页面，截图脚本退出码 `0`。当前工作区资产指纹：
+
+| 文件 | SHA-256 |
+| --- | --- |
+| `docs/assets/agent-task-workspace.png` | `cfa3e7a502d58fd02400a71285209aeb79db7bdbdcd37b5647b2be902ec8ac` |
+| `docs/assets/customer-policy-conversation.png` | `56d5b8a645c4dbcf36a8b20d70c152175a0194f3dfaaa8b393832c4ff61b9b45` |
+| `docs/assets/operations-handoff-overview.png` | `3676b9903c003847ee42962d24ae9c1d74630233ce4dae2b5486cdf41fb92ba1` |
+| `docs/assets/quality-evaluation-dashboard.png` | `3ec40b0daf8b56df31a1d26f2799c188998e1ff631826ecbdbbcec28b49adaae` |
+
+该现场仍只证明本地合成展示页面和公开字段边界，不证明完整浏览器 E2E 清单、真实模型泛化或生产能力。
