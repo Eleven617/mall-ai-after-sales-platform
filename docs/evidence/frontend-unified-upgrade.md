@@ -30,6 +30,19 @@ docker compose config --quiet
 
 发布提交 `ddb4664` 的 GitHub Actions：[`mall-ci` run 34114651785](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34114651785) 与 [`quality-evaluation` run 34114651788](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34114651788) 均为 `success`。
 
+## 截图资产与现场哈希（2026-09-07）
+
+截图生成时的代码基线为 `3700dde210e9b7737a2181980c50a7885059ead3`；本节截图和文档在该基线之后作为发布证据提交。四张 PNG 均来自本地 Compose、真实 Chrome headless/CDP 和合成数据页面，未使用 ImageGen；哈希由 PowerShell `Get-FileHash -Algorithm SHA256` 计算。
+
+| 文件 | 尺寸 | SHA-256 |
+| --- | --- | --- |
+| `docs/assets/agent-task-workspace.png` | `1399×1641` | `1ff2b70d10bed017148e0c9f4a1fbecf91a9eeb523febf6d2a5be55096afd251` |
+| `docs/assets/customer-policy-conversation.png` | `1384×1641` | `693786e407a3d2fe8536f0892df53438c0c0351ab93123d779532b1fd9f6ce29` |
+| `docs/assets/operations-handoff-overview.png` | `1369×1214` | `c14ec987d0d9d0e87367866acfbf1cedc60788735dad00ee1ced38a2a7655ff2` |
+| `docs/assets/quality-evaluation-dashboard.png` | `1354×2710` | `d5a5ce42901dcf649b81c3bbbd2489851635fc105d6b1ee2d974833aae000593` |
+
+资产尺寸与哈希和当前工作区文件一致。
+
 ## 本次展示改动
 
 - 客户页：产品说明带、历史会话/对话/开放任务三栏；移动端按“任务→对话→记录”堆叠。
@@ -38,9 +51,36 @@ docker compose config --quiet
 - 人工协同台：统一品牌外壳、队列/详情布局和 `待领取 → 已领取 → 核验中 → 已处理 → 已结案` 步骤条。
 - 质量评测台：统一品牌外壳、套件/Case/通过/失败摘要卡、RunManifest 折叠和 Case 详情折叠。
 
-## 尚未现场验证
+## Docker 与浏览器现场复验（2026-09-07）
 
-本机 Docker Desktop 进程已启动但 Linux 引擎尚未就绪，`docker compose ps` 无法连接 Docker API。因此本次没有重新生成截图，也没有把旧素材标记为新版本。待 Docker 可用后，执行：
+Docker Desktop 4.89.0 在 Windows 26200 上先后出现 AF_UNIX 运行时 socket 和 WSL 迁移路径故障。处理过程仅隔离了 `%LOCALAPPDATA%\Docker\run`、`%LOCALAPPDATA%\docker-secrets-engine` 运行时目录，并让 Docker 重新创建 `wsl\main` 目录；`D:\DockerData\DockerDesktopWSL\disk\docker_data.vhdx`、镜像、容器和命名卷均未删除或重置。之后 `docker info` 返回 Engine `29.7.2`，Compose 8 个常驻服务均为 `healthy`。
+
+实际现场命令：
+
+```powershell
+docker compose config --quiet
+docker compose up -d --no-build
+docker compose ps
+docker compose build mall-ai-web
+docker compose up -d --no-build mall-ai-web
+```
+
+结果：Compose 配置通过；MySQL、Redis、Mongo、RabbitMQ、mall-portal、mall-admin、mall-ai-service、mall-ai-web 均健康；Web 镜像构建内含 `vue-tsc --noEmit` 与 Vite production build，退出码 `0`。
+
+使用本地合成账号、真实 Chrome headless/CDP 和当前 Compose 页面重新生成了四张公开截图：
+
+- `docs/assets/customer-policy-conversation.png`
+- `docs/assets/agent-task-workspace.png`
+- `docs/assets/operations-handoff-overview.png`
+- `docs/assets/quality-evaluation-dashboard.png`
+
+截图脚本只创建一个无业务写入的合成开放任务；模型若要求订单标识，页面展示安全等待/限制状态，不在公开图片中显示完整业务标识、Token、RAG 原文或原始工具载荷。
+
+## 仍未现场验证的边界
+
+本次截图现场不是完整浏览器 E2E 清单，也不等价于 Java/MySQL 全量集成、真实支付/仓储/物流/维修或生产 SLA。真实模型开放任务评测仍以 `docs/evidence/v3.0-current-head-evidence.md` 的分层结果为准，不能由截图外推准确率。
+
+此前的待启动说明保留如下，供下一次复验参考：
 
 ```powershell
 .\scripts\start-demo.ps1

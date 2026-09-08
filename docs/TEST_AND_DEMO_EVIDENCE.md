@@ -1,5 +1,20 @@
 # 测试与演示证据
 
+## 2026-09-08 — Docker 恢复后的前端现场收口（截图源基线 `3700dde210e9b7737a2181980c50a7885059ead3`）
+
+Docker Desktop 恢复后重新执行了前端演示现场。`docker compose config --quiet` 通过；`docker compose up -d --no-build` 后，MySQL、Redis、Mongo、RabbitMQ、`mall-portal`、`mall-admin`、`mall-ai-service`、`mall-ai-web` 八个常驻服务均为 `healthy`。`docker info` 显示 Engine `29.7.2`。未执行 `docker compose down`、卷删除、数据库清空或迁移回滚。
+
+使用 `tmp/capture_demo_screenshots.py` 驱动真实 Chrome headless/CDP 访问当前 Compose 页面，重新生成四张只含合成数据的公开截图。脚本位于被 Git 忽略的 `tmp/`，未提交；截图中没有密码、Token、完整业务编号、客户原话、RAG 原文、原始工具载荷或内部 Trace。
+
+| 文件 | 尺寸 | SHA-256 |
+| --- | --- | --- |
+| `docs/assets/agent-task-workspace.png` | `1399×1641` | `1ff2b70d10bed017148e0c9f4a1fbecf91a9eeb523febf6d2a5be55096afd251` |
+| `docs/assets/customer-policy-conversation.png` | `1384×1641` | `693786e407a3d2fe8536f0892df53438c0c0351ab93123d779532b1fd9f6ce29` |
+| `docs/assets/operations-handoff-overview.png` | `1369×1214` | `c14ec987d0d9d0e87367866acfbf1cedc60788735dad00ee1ced38a2a7655ff2` |
+| `docs/assets/quality-evaluation-dashboard.png` | `1354×2710` | `d5a5ce42901dcf649b81c3bbbd2489851635fc105d6b1ee2d974833aae000593` |
+
+本次截图证明的是本地合成演示页面可访问和公开字段边界；它不替代完整浏览器 E2E、Java/MySQL 全量集成、真实模型泛化或生产 SLA。待本节改动提交后，必须以新提交对应的 GitHub Actions 结果作为远程证据，不能沿用旧 SHA 的运行链接。
+
 ## 2026-09-05 — 当前 HEAD 剩余关键结果补测（代码提交 `38cf3809e48ec08bead6accc07a4ace27ebf5f59`）
 
 本次补测的分层汇总见 [`docs/evidence/v3.0-current-head-evidence.md`](evidence/v3.0-current-head-evidence.md) 与同名 JSON。确定性回归、Docker 健康和 Java 定向测试通过；开放任务真实模型合成评测为 `24/72 passed`、Grounding 为 `11/15 passed`，其余失败和环境阻塞均按原始结果保留。验证提交 `9fba15ddac537016fca2116286e7238121b1236a` 的 `mall-ci` [33901002046](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/33901002046) 与 `quality-evaluation` [33901002043](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/33901002043) 均为 GitHub 实际 success；不要把本节或历史 Actions 运行外推为生产能力。

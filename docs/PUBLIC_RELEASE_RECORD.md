@@ -1,5 +1,11 @@
 # 公开发布记录
 
+## 2026-09-08 — 前端展示资产最终现场复验（截图源基线 `3700dde210e9b7737a2181980c50a7885059ead3`）
+
+Docker Desktop 恢复后，使用当前 Compose 服务、真实 Chrome headless/CDP 和合成账号重新生成客户、开放任务 Agent、运营和质量四张截图。八个常驻服务均为 `healthy`，Docker Engine `29.7.2`；没有删除命名卷、演示数据或数据库。资产哈希和尺寸见 [`docs/TEST_AND_DEMO_EVIDENCE.md`](TEST_AND_DEMO_EVIDENCE.md)。
+
+本节在截图/证据尚未提交时记录现场基线；提交后须等待该新提交的 `mall-ci` 与 `quality-evaluation` 完成，远程结果确认前不称为本次发布门禁通过。
+
 ## 2026-09-05 — 当前 HEAD 剩余关键结果补测（代码提交 `38cf3809e48ec08bead6accc07a4ace27ebf5f59`）
 
 当前补测的完整、可审计分层结果见 [`docs/evidence/v3.0-current-head-evidence.md`](evidence/v3.0-current-head-evidence.md) 与同名 JSON。确定性门禁和本机 Compose 健康通过；真实模型开放任务与 Grounding 存在明确质量失败，完整浏览器/Java-MySQL/故障恢复 manifest 尚未逐条现场执行。验证提交 `9fba15ddac537016fca2116286e7238121b1236a` 的 `mall-ci` [33901002046](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/33901002046) 与 `quality-evaluation` [33901002043](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/33901002043) 均为 GitHub 实际 success；历史提交的其他 Actions 链接只代表各自提交。

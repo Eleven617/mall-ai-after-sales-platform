@@ -27,8 +27,9 @@
 - `docker compose config --quiet`：通过。
 - 当前提交对应的 [`mall-ci` run 34114651785](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34114651785) 与 [`quality-evaluation` run 34114651788](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34114651788) 均成功。
 - 证据记录：[frontend-unified-upgrade.md](evidence/frontend-unified-upgrade.md)。
+- 2026-09-07 Docker Compose 现场复验：8 个常驻服务均为 `healthy`，`docker info` 返回 Engine `29.7.2`；真实 Chrome headless/CDP 重新生成客户、开放任务 Agent、运营和质量四张合成数据截图。
 
 ## 发布限制
 
-- 当前工作站 Docker Linux 引擎未就绪，无法启动真实 Compose 演示并重新生成升级后的三张截图；`docs/assets/` 中现有素材仍是上一轮真实合成演示，不应标记为本次升级后的最终素材。
-- 真实页面素材仍待 Docker Linux 引擎就绪后重新生成；远程推送、当前 SHA Actions 和仓库 Description/Topics 已完成核对。
+- 本次 Docker/浏览器现场已完成，但它不是完整浏览器 E2E 清单，也不等价于 Java/MySQL 全量集成、真实支付/仓储/物流/维修或生产 SLA。
+- 远程推送、当前 SHA Actions 和仓库 Description/Topics 已完成核对；本次截图更新需随当前工作区提交后重新等待对应 SHA 的 Actions。

@@ -30,10 +30,13 @@ flowchart LR
 
 ## 真实运行截图
 
-以下截图于 2026-09-04 从本地 Compose 演示重新获取，使用合成账号和合成数据；图片不代表线上部署或生产数据。完整命令和边界见 [测试与演示证据](docs/TEST_AND_DEMO_EVIDENCE.md)。
+以下截图于 2026-09-07 从本地 Compose 演示重新获取，使用合成账号和合成数据；图片不代表线上部署或生产数据。完整命令和边界见 [测试与演示证据](docs/TEST_AND_DEMO_EVIDENCE.md)。
 
 ![客户政策咨询与售后对话](docs/assets/customer-policy-conversation.png)
 客户侧政策咨询与安全回答，业务写入仍需后续确认。
+
+![开放任务 Agent 工作台](docs/assets/agent-task-workspace.png)
+开放任务 Agent 的目标、计划、事实产物、补充信息和服务端限制均通过安全公开 DTO 展示。
 
 ![运营转人工概览](docs/assets/operations-handoff-overview.png)
 运营侧只读的脱敏转人工聚合与时间窗概览。
@@ -41,9 +44,7 @@ flowchart LR
 ![AI 质量评测页面](docs/assets/quality-evaluation-dashboard.png)
 开发者侧查看 contract_mock 评测结果、合同差异和人工审批状态。
 
-本次前端统一展示升级已将客户页、开放任务 Agent、运营台、人工协同台和质量评测台收敛到同一套视觉变量与页面外壳；其中 Agent 计划时间线、事实产物、行动确认和质量 Case 详情均由现有接口驱动。由于当前工作站的 Docker Linux 引擎尚未就绪，升级后的三张新现场截图尚未重新生成，以上图片仍是上一轮真实合成演示素材，不代表本次升级后的最终截图。重新启动 Docker 后应按 [前端升级验收记录](docs/evidence/frontend-unified-upgrade.md) 的命令重新截取并单独提交素材更新。
-
-开放任务 Agent 工作台的独立截图 `docs/assets/agent-task-workspace.png` 也将在 Docker 现场复验后补入；当前不引用不存在的图片文件。
+本次前端统一展示升级已将客户页、开放任务 Agent、运营台、人工协同台和质量评测台收敛到同一套视觉变量与页面外壳；其中 Agent 计划时间线、事实产物、行动确认和质量 Case 详情均由现有接口驱动。四张图均来自 2026-09-07 的本地 Compose/Chrome 现场复验，不代表线上部署或生产数据。
 
 ## 产品能力
 
