@@ -1,5 +1,13 @@
 # 公开发布记录
 
+## 2026-09-08 — Docker 运行时恢复后的最终现场复验
+
+在最终补测前，Docker Desktop 因 Windows 残留 AF_UNIX/reparse socket 无法启动；已采用可恢复的内部运行时目录改名方案并重新启动，未执行 factory reset、`docker compose down`、卷/VHDX 删除或数据库清空。Docker Engine `29.7.2` 恢复后，Compose 8/8 常驻服务 healthy，`verify_compose_stack.py` 的 Vue/FastAPI/Java readiness `3/3` 通过。
+
+恢复后的合成现场批次：双账号权限、统一售后创建/确认/列表/状态/取消/跨账号、Build 21 同会话重启恢复、MCP 只读隔离、人工协同均 exit `0`；Build 14A 退货状态 exit `1`，原因是当前合成订单被 Java `return_refund` 资格规则拒绝，未放宽断言或伪造通过。完整 `browser_e2e 24`、`java_mysql_integration 30`、`fault_injection 36`、`durable_async_recovery 32` 仍没有逐条独立现场执行器，继续标记 `environment_blocked`，不能由 deterministic `478/478` 代替。
+
+本次结果和命令已同步到 [`v3.0 当前 HEAD 证据`](evidence/v3.0-current-head-evidence.md)；不宣称生产 SLA、真实用户泛化或真实支付/仓储/物流/维修接入。
+
 ## 2026-09-08 — 现场验证增量
 
 本次现场补测使用 Docker Compose 的本地合成数据和进程内随机密码。真实 Chrome 页面、统一售后、双账号权限、MCP 只读隔离、人工协同和 Redis/RabbitMQ 重启后的健康恢复均有独立命令证据；Java/MySQL `MallPortalApplicationTests` 在临时本地连接配置下 `1/1` 通过。Build 14A 退货申请因 Java 资格不满足保留失败，Build 21 独立重跑出现一次等待任务缺失，均未转写为通过。

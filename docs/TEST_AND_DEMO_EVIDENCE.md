@@ -1,5 +1,11 @@
 # 测试与演示证据
 
+## 2026-09-08 16:27 — Docker 恢复后再次现场验证
+
+Docker Desktop 曾因 Windows 内部 AF_UNIX/reparse socket 残留无法启动；只保留性改名内部运行时目录后恢复，未 factory reset、删卷、删 VHDX 或清空数据库。Engine `29.7.2` 重新可用，`docker compose ps` 最终为 8/8 healthy，`scripts/verify_compose_stack.py` exit `0`、endpoint `3/3`。
+
+同一批次的真实本地合成验证结果：`verify_auth_flow.py`、`verify_unified_after_sales_live.py`、`verify_build21_authenticated_live.py`、`verify_mcp_authenticated_live.py`、`verify_service_case_live.py` 均 exit `0`；`verify_return_status_flow.py` exit `1`，因为当前合成订单不满足 Java `return_refund` 资格。失败保留为资格边界，不修改断言。完整 manifest 的 24/30/36/32 条现场清单仍没有独立执行器，继续记录为 `environment_blocked`。
+
 ## 2026-09-08 — 真实现场补测与故障恢复
 
 Docker Desktop 已恢复，Engine `29.7.2`；Compose 8 个常驻服务最终 `healthy`。本轮使用本地合成账号、订单和运行期随机密码，未写入密码/Token/完整订单号。真实 Chrome/CDP 页面脚本退出码 `0`，四张公开截图已重新生成。

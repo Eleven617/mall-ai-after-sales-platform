@@ -1,6 +1,6 @@
 {
   "schemaVersion": "v3.0-current-head-evidence.v1",
-  "generatedAt": "2026-09-08T14:10:00+08:00",
+  "generatedAt": "2026-09-08T16:27:10+08:00",
   "repository": {
     "remote": "https://github.com/Eleven617/mall-ai-after-sales-platform.git",
     "branch": "main",
@@ -116,7 +116,23 @@
       "serviceCase": {"status": "passed", "exitCode": 0},
       "javaMysqlSpringContext": {"status": "passed", "tests": 1, "passed": 1, "failed": 0, "exitCode": 0, "temporaryLocalConfig": true},
       "redisRabbitRestart": {"status": "passed", "restartExitCodes": {"redis": 0, "rabbitmq": 0}, "endpointChecks": {"passed": 3, "total": 3}, "containersHealthy": {"healthy": 8, "total": 8}},
-      "build14ReturnStatus": {"status": "failed", "exitCode": 1, "reason": "Java return_refund eligibility rejected the current synthetic order"}
+      "build14ReturnStatus": {"status": "failed", "exitCode": 1, "reason": "Java return_refund eligibility rejected the current synthetic order"},
+      "postDockerRecoveryBatch": {
+        "status": "passed_with_qualification_boundary",
+        "authFlow": {"exitCode": 0},
+        "unifiedAfterSales": {"exitCode": 0, "scope": "create_confirm_list_status_cancel_cross_account"},
+        "build21AuthenticatedRecovery": {"exitCode": 0, "scope": "same_session_restart_recovery"},
+        "mcpAuthenticated": {"exitCode": 0},
+        "serviceCase": {"exitCode": 0},
+        "build14ReturnStatus": {"exitCode": 1, "reason": "Java return_refund eligibility rejected the current synthetic order"}
+      },
+      "dockerRuntimeRecovery": {
+        "status": "passed",
+        "engineVersion": "29.7.2",
+        "composeHealthy": {"healthy": 8, "total": 8},
+        "verifyComposeStack": {"exitCode": 0, "endpointChecksPassed": 3, "endpointChecksTotal": 3},
+        "dataSafety": "runtime socket directories were renamed aside; images, volumes, VHDX and demo data were not deleted"
+      }
     }
   },
   "commands": [
@@ -145,6 +161,10 @@
     "Push-Location .\\mall2; mvn -pl mall-portal -am \"-Dtest=MallPortalApplicationTests\" \"-DskipTests=false\" \"-Dsurefire.failIfNoSpecifiedTests=false\" \"-Dspring.config.additional-location=file:C:/Users/12969/Desktop/mall/tmp/maven-local-test.properties\" test; Pop-Location",
     "Push-Location .\\mall-ai-service; .\\.venv\\Scripts\\python.exe -m pytest -q; Pop-Location",
     "git diff --check"
+    ,"docker info --format '{{.ServerVersion}}' (after runtime recovery)"
+    ,"docker compose up -d mall-ai-service mall-ai-web"
+    ,"Push-Location .\\mall-ai-service; .\\.venv\\Scripts\\python.exe scripts\\verify_compose_stack.py; Pop-Location"
+    ,"tmp\\run_local_live_batch.ps1 (post-Docker-recovery synthetic batch)"
   ],
   "environmentBlockedLiveScripts": ["full_browser_e2e_manifest_24", "full_java_mysql_integration_manifest_30", "full_fault_injection_manifest_36", "full_durable_async_recovery_manifest_32"],
   "claims": {"productionAccuracy": false, "productionSla": false, "realUserGeneralization": false, "realPaymentWarehouseLogisticsRepair": false}

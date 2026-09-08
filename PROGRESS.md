@@ -151,3 +151,12 @@
 - 本次新增/修改工作区文件：四张 `docs/assets/*.png`、`docs/evidence/v3.0-current-head-evidence.md/.json`、`docs/TEST_AND_DEMO_EVIDENCE.md`、`docs/PUBLIC_RELEASE_RECORD.md`、`mall-ai-service/scripts/verify_return_status_flow.py`。待完成：运行最终校验、提交、推送、等待 Actions 并回填当前 SHA。
 - 已提交并推送 `dbbd18c029acf8bacc21cada2c161da15185cc42`（`test: record live release gate verification`）。对应 `mall-ci` [34200061061](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34200061061) 与 `quality-evaluation` [34200061063](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34200061063) 均为 GitHub 实际 `success`。
 - 远程门禁已通过；当前工作区仍需提交本次 Actions 链接与最终证据同步，随后以最终 SHA 交接。完整 24/30/36/32 现场清单仍属环境阻塞，不得宣传为通过。
+
+## 2026-09-08 — Docker 恢复后最终复验（本次续记）
+
+- 最终复验时 Docker Desktop 再次因 Windows 内部 AF_UNIX/reparse socket 残留退出；已将 Docker 内部 `run`/Secrets Engine 运行时目录改名保留为 `.stale.manual`，并确认未执行 factory reset、`docker compose down`、卷/VHDX 删除或数据库清空。Docker Engine `29.7.2` 恢复。
+- `docker compose up -d mall-ai-service mall-ai-web` 完成后，MySQL、Redis、Mongo、RabbitMQ、mall-portal、mall-admin、mall-ai-service、mall-ai-web 共 `8/8 healthy`；`scripts/verify_compose_stack.py` exit `0`，Vue/FastAPI/Java readiness `3/3`。
+- 恢复后的现场批次重新执行：权限双账号、统一售后创建/确认/列表/状态/取消/跨账号、Build 21 同会话重启恢复、MCP 只读隔离、人工协同均 exit `0`。Build 14A 退货状态仍 exit `1`，当前合成订单被 Java `return_refund` 资格拒绝，未伪造通过。
+- 本次本机确定性复验：FastAPI `349 passed`、7 subtests；Vue `npm run build` 成功；v3 manifest/preflight `478/478`、代表性 `8/8`；Compose config、`git diff --check` 均通过。
+- 公开证据已同步到 `docs/evidence/v3.0-current-head-evidence.md/.json`、`docs/TEST_AND_DEMO_EVIDENCE.md`、`docs/PUBLIC_RELEASE_RECORD.md`。这些文档仍明确：完整 browser `24`、Java/MySQL `30`、fault `36`、durable recovery `32` 没有逐条独立现场执行器，继续 `environment_blocked`；deterministic `478/478` 不能代替现场套件。
+- 当前无需用户补充授权；下一步提交并推送本次证据同步，等待该新 SHA 的 `mall-ci` 与 `quality-evaluation`，然后以真实结果交接。
