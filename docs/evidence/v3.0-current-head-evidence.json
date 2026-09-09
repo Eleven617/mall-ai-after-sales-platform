@@ -1,11 +1,11 @@
 {
   "schemaVersion": "v3.0-current-head-evidence.v1",
-  "generatedAt": "2026-09-09T15:50:00+08:00",
+  "generatedAt": "2026-09-09T20:30:00+08:00",
   "repository": {
     "remote": "https://github.com/Eleven617/mall-ai-after-sales-platform.git",
     "branch": "main",
-    "testedCodeCommit": "45f842f9ed6c0a9b636e0420fe489312e71a28fb",
-    "evidenceHeadCommit": "45f842f9ed6c0a9b636e0420fe489312e71a28fb",
+    "testedCodeCommit": "38601904595b6ae82a1e692d88c33d83d1ba1e01",
+    "evidenceHeadCommit": "38601904595b6ae82a1e692d88c33d83d1ba1e01",
     "remoteCommitAtStart": "cbb951f9815b7483d2aeec0620947fdb1eba59b0",
     "workspaceCleanAtStart": true,
     "remoteVerification": {
@@ -13,9 +13,9 @@
       "mallCi": {"runId": 33901530634, "status": "success", "url": "https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/33901530634"},
       "qualityEvaluation": {"runId": 33901530719, "status": "success", "url": "https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/33901530719"},
       "currentHead": {
-        "commit": "45f842f9ed6c0a9b636e0420fe489312e71a28fb",
-        "mallCi": {"runId": 34325864445, "status": "in_progress", "url": "https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34325864445"},
-        "qualityEvaluation": {"runId": 34325864631, "status": "in_progress", "url": "https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34325864631"}
+        "commit": "38601904595b6ae82a1e692d88c33d83d1ba1e01",
+        "mallCi": {"runId": 34333690241, "status": "success", "url": "https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34333690241"},
+        "qualityEvaluation": {"runId": 34333690290, "status": "success", "url": "https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34333690290"}
       },
       "latestEvidenceSync": {
         "commit": "73d12c5ecde9c56a21ce7be78e194d8fbc1e837c",
@@ -31,6 +31,15 @@
     "externalFulfillment": "not connected",
     "defaultRagMode": "dense",
     "hybridAndRerank": "reproducible experiments only"
+  },
+  "securityDependencyFix": {
+    "file": "mall2/pom.xml",
+    "dependency": "io.netty:netty-handler",
+    "originalVersion": "4.1.136.Final",
+    "fixedVersion": "4.1.137.Final",
+    "advisories": ["GHSA-c4c3-7fpv-j4q5", "GHSA-fccg-mwvh-qqg4"],
+    "localScannerResult": "0 packages affected / 0 known vulnerabilities before local resolver exit 127",
+    "remoteGate": {"mallCi": "success", "qualityEvaluation": "success"}
   },
   "fixtureHashes": {
     "evals/v3/release-manifest.json": "d9fc72be81e2f67330710052c03287d49677bf7eb6f54eed51b87c01db2ac1ad",
@@ -151,6 +160,8 @@
     "environmentBlocked": 122,
     "notExecuted": 0,
     "releaseGate": "not_passed",
+    "staleDueToCodeCommitMismatch": true,
+    "currentCodeCommit": "38601904595b6ae82a1e692d88c33d83d1ba1e01",
     "blocker": "Docker Desktop backend cannot rename sailor-ingest.sock (Windows error 1920); no fixture was bound",
     "categories": {
       "browser_e2e": {"registered": 24, "runnerReady": 24, "passed": 0, "failed": 0, "environmentBlocked": 24},
@@ -197,5 +208,11 @@
     ,"tmp\\run_local_live_batch.ps1 (post-Docker-recovery synthetic batch)"
   ],
   "environmentBlockedLiveScripts": ["full_browser_e2e_manifest_24", "full_java_mysql_integration_manifest_30", "full_fault_injection_manifest_36", "full_durable_async_recovery_manifest_32"],
-  "claims": {"productionAccuracy": false, "productionSla": false, "realUserGeneralization": false, "realPaymentWarehouseLogisticsRepair": false, "currentFieldReleaseGate": "not_passed"}
+  "currentEnvironment": {
+    "dockerDesktop": "blocked",
+    "blocker": "Docker Desktop backend cannot rename sailor-ingest.sock (Windows error 1920)",
+    "safeActionsTaken": ["stopped repeated retries", "rotated runtime socket directory without touching images, volumes, VHDX or database"],
+    "fieldRunnerReexecution": "blocked"
+  },
+  "claims": {"productionAccuracy": false, "productionSla": false, "realUserGeneralization": false, "realPaymentWarehouseLogisticsRepair": false, "currentFieldReleaseGate": "not_passed", "currentCi": "passed"}
 }

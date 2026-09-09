@@ -253,3 +253,14 @@ SHA-256：`7da1d8efdd399d354ea535d32f9c24f9405508f5c57f9cb3364223219487e32a`
 | durable_async_recovery | 32/32 | 32 `environment_blocked` |
 
 阻断是 Docker Desktop 后端的 `sailor-ingest.sock` 重命名 `error 1920`，不是业务断言失败；报告已记录 Docker 命令、错误摘要、退出码和重试入口。当前 Release Gate **未通过**。此前 2026-09-08 的 24/30/36/32 现场报告均绑定旧 Commit `314f5d9`，已在 `docs/evidence/v3.0-current-head-evidence.md` 标为 stale，不能与当前结果合并。
+
+## 2026-09-09｜Netty 依赖安全修复与当前 CI
+
+当前代码提交为 `38601904595b6ae82a1e692d88c33d83d1ba1e01`。GitHub Actions 曾因 `io.netty:netty-handler:4.1.136.Final` 命中 `GHSA-c4c3-7fpv-j4q5` 与 `GHSA-fccg-mwvh-qqg4` 失败；`mall2/pom.xml` 已升级到 `4.1.137.Final`。没有忽略规则、跳过扫描或降低门槛。
+
+- `mall-ci` [34333690241](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34333690241)：**success**，包括 dependency-and-secret-risk。
+- `quality-evaluation` [34333690290](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34333690290)：**success**。
+- Java portal 定向测试 **14/14**、admin **6/6**，均显式 `-DskipTests=false`；FastAPI **353/353**；Vue build 和 Compose config 通过。
+- 本地 OSV 修复后识别 **0 个受影响包**，但本地扫描器因未解析的本地 SNAPSHOT 模块返回 `127`；不把该本地退出码写成远程成功，远程 Actions 是安全门禁依据。
+
+依赖修复只改变安全版本，不改变现场 Runner 报告。`tmp/field-acceptance/field-20260909T074151Z-d56eb7fe/field-acceptance.json` 仍绑定 `45f842f`，所以相对当前代码为 stale；Docker Desktop 后端 IPC 错误仍使当前 `122` 条现场执行保持 `environment_blocked`。不能将 deterministic `478/478` 或旧提交的现场报告当作当前 `122/122`。

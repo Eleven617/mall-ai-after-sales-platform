@@ -188,3 +188,18 @@
 
 - 不能把 `45f842f` 的当前 `environment_blocked` 改写成 passed；不能把旧 `314f5d9` 报告与当前结果合并。
 - 不能删除失败/阻断记录、降低断言、用 deterministic `478/478` 代替现场 122 条，或用 `docker compose down -v`、删卷、删 VHDX、factory reset 解决 Docker。
+
+## 2026-09-09 — Netty 安全修复与 Docker 外部阻塞收口
+
+### 已完成
+
+- `mall2/pom.xml` 将 Netty 从 `4.1.136.Final` 升级到 `4.1.137.Final`，针对 GitHub `dependency-and-secret-risk` 报告的 `GHSA-c4c3-7fpv-j4q5`（CVSS 9.1）和 `GHSA-fccg-mwvh-qqg4`（CVSS 6.9）完成根因修复；未关闭扫描、未跳过测试。
+- 当前代码提交 `38601904595b6ae82a1e692d88c33d83d1ba1e01` 已推送。远程 [mall-ci run 34333690241](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34333690241) 与 [quality-evaluation run 34333690290](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34333690290) 均为 GitHub 实际 `success`。
+- 本机复验：Java portal `14/14`、admin `6/6`（显式 `-DskipTests=false`）；FastAPI `353 passed`；Vue build、Compose config 通过。修复后的本地 OSV 识别 0 个受影响包，但因本地 SNAPSHOT 模块不可解析退出 `127`，不替代远程门禁结论。
+- 现场 Runner 报告仍真实记录 `122 environment_blocked`；此前现场报告与当前提交不一致，已标 stale。Docker Desktop 后端错误为 `sailor-ingest.sock` Windows `error 1920`，本轮停止重复重试，未 factory reset、未删卷/VHDX/数据库。
+
+### 当前未完成与下一步
+
+- 当前 v3.0 Release Gate **未通过**：需要先由 Windows/Docker Desktop 层修复该 IPC 文件错误，再以当前提交、一次性合成 Fixture 重新运行 `scripts\\Verify-FieldAcceptance.ps1`。
+- 未运行出有效的当前提交 `browser 24`、`Java/MySQL 30`、`fault 36`、`durable 32` 逐条现场结果；不能把 deterministic `478/478`、远程 CI success 或旧提交现场报告当作替代。
+- 本轮没有修改业务 API、数据库契约、测试预期或公开安全边界；没有新增敏感文件。

@@ -1,5 +1,15 @@
 # 公开发布记录
 
+## 2026-09-09 — 当前 CI 安全门禁修复（代码提交 `38601904595b6ae82a1e692d88c33d83d1ba1e01`）
+
+本次更新只修复 `mall2/pom.xml` 的 Netty 安全版本：`4.1.136.Final` → `4.1.137.Final`。此前 `dependency-and-secret-risk` 对 `netty-handler` 报告 `GHSA-c4c3-7fpv-j4q5`（CVSS 9.1）与 `GHSA-fccg-mwvh-qqg4`（CVSS 6.9）；没有关闭扫描或绕过失败。
+
+- `mall-ci` [34333690241](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34333690241)：**success**。
+- `quality-evaluation` [34333690290](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34333690290)：**success**。
+- 当前提交本机定向 Java 测试：portal **14/14**、admin **6/6**；FastAPI **353/353**；Vue build、Compose config 通过。
+
+这次提交不改变现场验收边界。当前提交尚无新的逐条 browser `24`、Java/MySQL `30`、fault `36`、durable `32` 现场报告；此前 `45f842f` 报告因提交不一致已 stale，且 Docker Desktop 后端 `sailor-ingest.sock` Windows `error 1920` 仍未解除。因此当前 v3.0 Release Gate **未通过**，不能宣传 `122/122` 现场通过。
+
 ## 2026-09-09 — v3.0 统一现场 Runner 与当前提交 Release Gate
 
 当前代码提交：`45f842f9ed6c0a9b636e0420fe489312e71a28fb`。本次新增统一入口 `scripts/Verify-FieldAcceptance.ps1` 及四类数据驱动 Runner；新增 Runner 合同测试，未修改业务代码、测试预期、Java 资格或数据库契约。
