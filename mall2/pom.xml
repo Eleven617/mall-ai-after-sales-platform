@@ -51,7 +51,7 @@
         -->
         <micrometer.version>1.15.12</micrometer.version>
         <mongodb.version>4.11.5</mongodb.version>
-        <netty.version>4.1.136.Final</netty.version>
+        <netty.version>4.1.137.Final</netty.version>
         <snakeyaml.version>2.0</snakeyaml.version>
         <spring-framework.version>5.3.39</spring-framework.version>
         <tomcat.version>9.0.121</tomcat.version>
