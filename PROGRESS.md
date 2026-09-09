@@ -219,3 +219,11 @@
 
 - 本轮没有修改业务代码、测试预期、Java API 或数据库契约；只更新本地忽略的现场报告和待提交的证据文档。
 - 122/122 只证明当前机器、当前 Docker/Chrome、当前合成 Fixture 的现场路径；不宣称生产 SLA、真实用户泛化、真实支付/仓储/物流/维修接入。
+# 2026-09-09｜最终现场补测与交接前复核（最新）
+
+- 网络已恢复；`origin/main` 与本地 `main` 在复核开始时一致，当前基线为 `5ea119970a2a4a9a9194dc3e1e46eff412bd406e`，工作区干净。
+- Docker Engine `29.7.2` 正常；主 Compose 和隔离 fault Compose 均启动，主服务/隔离服务各 `8/8 healthy`，`verify_compose_stack.py` readiness `3/3`。
+- 最新现场 Runner 报告 `tmp/field-acceptance/field-20260909T105750Z-12222b15/field-acceptance.json`（SHA-256 `6a301cd28072ebbf01fa07e81d7aaf5c4b2de9741c14ceb351122cac18f21567`），运行时代码绑定 `84e111d17e4117287660421ea5772a9ddcf44382`，合成 Fixture SHA-256 `7573e19271528e904d2eb40cef2765f05d4e5f489f2b35cc1b1359bcd5128759`。
+- 四类现场结果：browser `24/24`、Java/MySQL `30/30`、fault `36/36`、durable recovery `32/32`；合计 `122/122 passed`、`0 failed`、`0 environment_blocked`。此前旧 Fixture 导致的阻断报告仅作为 superseded 证据保留。
+- Build 14A 最新重跑：`tmp/run_build14.ps1` → `verify_build14_eligibility_live.py`，退出码 `0`；负资格拒绝、正资格通过、第二账号隔离、同幂等键复用和事务性 Outbox 均通过。密码只存在进程环境。
+- 当前只剩证据交接：补齐 `docs/final-handoff/` 八份文件，提交并推送；然后等待该文档提交对应的 `mall-ci` 与 `quality-evaluation` 真实结果。运行时代码没有新增修改。

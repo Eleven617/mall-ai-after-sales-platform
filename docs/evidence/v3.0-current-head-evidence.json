@@ -5,7 +5,8 @@
     "remote": "https://github.com/Eleven617/mall-ai-after-sales-platform.git",
     "branch": "main",
     "testedCodeCommit": "84e111d17e4117287660421ea5772a9ddcf44382",
-    "evidenceHeadCommit": "84e111d17e4117287660421ea5772a9ddcf44382",
+    "evidenceHeadCommit": "5ea119970a2a4a9a9194dc3e1e46eff412bd406e",
+    "evidenceHeadIsDocsOnlyAfterRuntimeTest": true,
     "remoteCommitAtStart": "cbb951f9815b7483d2aeec0620947fdb1eba59b0",
     "workspaceCleanAtStart": true,
     "remoteVerification": {
@@ -130,7 +131,22 @@
       "serviceCase": {"status": "passed", "exitCode": 0},
       "javaMysqlSpringContext": {"status": "passed", "tests": 1, "passed": 1, "failed": 0, "exitCode": 0, "temporaryLocalConfig": true},
       "redisRabbitRestart": {"status": "passed", "restartExitCodes": {"redis": 0, "rabbitmq": 0}, "endpointChecks": {"passed": 3, "total": 3}, "containersHealthy": {"healthy": 8, "total": 8}},
-      "build14ReturnStatus": {"status": "failed", "exitCode": 1, "reason": "Java return_refund eligibility rejected the current synthetic order"},
+      "build14ReturnStatus": {"status": "historical_boundary_failed", "exitCode": 1, "reason": "Earlier fixture was not eligible; retained as a negative qualification boundary"},
+      "build14Eligibility": {
+        "status": "passed",
+        "exitCode": 0,
+        "testedRepositoryCommit": "5ea119970a2a4a9a9194dc3e1e46eff412bd406e",
+        "runtimeCodeCommit": "84e111d17e4117287660421ea5772a9ddcf44382",
+        "script": "mall-ai-service/scripts/verify_build14_eligibility_live.py",
+        "runner": "tmp/run_build14.ps1",
+        "fixtureKind": "local-demo-synthetic.v1",
+        "negativeEligibilityRejected": true,
+        "positiveEligibilityAccepted": true,
+        "ownerIsolation": true,
+        "idempotentDuplicate": true,
+        "transactionalOutbox": true,
+        "databaseDirectWrite": false
+      },
       "postDockerRecoveryBatch": {
         "status": "passed_with_qualification_boundary",
         "authFlow": {"exitCode": 0},

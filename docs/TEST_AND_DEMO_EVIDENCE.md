@@ -1,5 +1,15 @@
 # 测试与演示证据
 
+## 2026-09-09｜最终 Docker 现场与 Build 14A 收口（最新权威记录）
+
+最终现场 Runner 已在 Docker Desktop 恢复后重新执行：运行时代码提交 `84e111d17e4117287660421ea5772a9ddcf44382`，证据同步提交 `5ea119970a2a4a9a9194dc3e1e46eff412bd406e`（仅文档）。主 Compose 与隔离 fault Compose 均可用，四类现场结果为：browser `24/24`、Java/MySQL `30/30`、fault `36/36`、durable recovery `32/32`，合计 `122/122 passed`、`0 failed`、`0 environment_blocked`。
+
+- 报告：`tmp/field-acceptance/field-20260909T105750Z-12222b15/field-acceptance.json`；SHA-256：`6a301cd28072ebbf01fa07e81d7aaf5c4b2de9741c14ceb351122cac18f21567`。
+- Fixture：`tmp/field-fixture-current.json`；SHA-256：`7573e19271528e904d2eb40cef2765f05d4e5f489f2b35cc1b1359bcd5128759`。
+- Build 14A：`tmp/run_build14.ps1` → `verify_build14_eligibility_live.py`，退出码 `0`；负资格拒绝、正资格通过、归属隔离、幂等重复和事务性 Outbox 均通过。密码只存在于进程环境，未写入报告或仓库。
+
+上述结果是本机 Docker/Chrome/Java/MySQL/Redis/RabbitMQ 与合成数据证据；不宣称生产 SLA、真实用户泛化或真实支付/仓储/物流/维修接入。此前因旧 Fixture 产生的 `environment_blocked` 报告与早期 Build 14A 资格失败均保留为历史/边界，不与最新通过结果相加。
+
 ## 2026-09-08 16:27 — Docker 恢复后再次现场验证
 
 Docker Desktop 曾因 Windows 内部 AF_UNIX/reparse socket 残留无法启动；只保留性改名内部运行时目录后恢复，未 factory reset、删卷、删 VHDX 或清空数据库。Engine `29.7.2` 重新可用，`docker compose ps` 最终为 8/8 healthy，`scripts/verify_compose_stack.py` exit `0`、endpoint `3/3`。

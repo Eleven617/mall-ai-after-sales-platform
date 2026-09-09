@@ -1,5 +1,19 @@
 # 公开发布记录
 
+## 2026-09-09｜最终现场与 Release Gate 复核（最新权威记录）
+
+当前远程 `main` 在证据复核开始时为 `5ea119970a2a4a9a9194dc3e1e46eff412bd406e`；该提交及本次后续提交只新增证据/交接文档，现场运行时代码仍绑定 `84e111d17e4117287660421ea5772a9ddcf44382`。Docker Engine `29.7.2` 可用，主 Compose 与隔离 fault Compose 均健康。
+
+| 现场类别 | 实际执行 | 通过 | 失败 | environment_blocked |
+| --- | ---: | ---: | ---: | ---: |
+| browser_e2e | 24 | **24** | 0 | 0 |
+| java_mysql_integration | 30 | **30** | 0 | 0 |
+| fault_injection | 36 | **36** | 0 | 0 |
+| durable_async_recovery | 32 | **32** | 0 | 0 |
+| 合计 | **122** | **122** | 0 | 0 |
+
+现场报告为 `tmp/field-acceptance/field-20260909T105750Z-12222b15/field-acceptance.json`（SHA-256 `6a301cd28072ebbf01fa07e81d7aaf5c4b2de9741c14ceb351122cac18f21567`），Fixture SHA-256 为 `7573e19271528e904d2eb40cef2765f05d4e5f489f2b35cc1b1359bcd5128759`。Build 14A 正/负资格脚本最新退出码 `0`，覆盖资格拒绝、资格通过、归属隔离、幂等和事务性 Outbox。当前本地现场 Gate **PASSED**；范围仅限本机合成数据，不能外推为生产 SLA、真实用户泛化或真实外部履约接入。
+
 ## 2026-09-09 — Docker 恢复后当前提交 Release Gate 通过
 
 当前仓库 HEAD：`84e111d17e4117287660421ea5772a9ddcf44382`。Docker Desktop 已恢复，未修改业务代码、测试预期、Java 契约或数据库结构。主 Compose 以 `docker compose up -d --no-build` 启动，8/8 常驻服务 healthy；`scripts/verify_compose_stack.py` readiness `3/3` 通过。另启动隔离 fault Compose 项目 `mall-field-20260909`，8/8 服务 healthy。
