@@ -203,3 +203,19 @@
 - 当前 v3.0 Release Gate **未通过**：需要先由 Windows/Docker Desktop 层修复该 IPC 文件错误，再以当前提交、一次性合成 Fixture 重新运行 `scripts\\Verify-FieldAcceptance.ps1`。
 - 未运行出有效的当前提交 `browser 24`、`Java/MySQL 30`、`fault 36`、`durable 32` 逐条现场结果；不能把 deterministic `478/478`、远程 CI success 或旧提交现场报告当作替代。
 - 本轮没有修改业务 API、数据库契约、测试预期或公开安全边界；没有新增敏感文件。
+
+## 2026-09-09 — Docker 恢复后的完整现场验收收口
+
+### 已完成
+
+- Docker Desktop/Linux Engine `29.7.2` 已恢复；主 Compose `docker compose up -d --no-build` 后 8/8 常驻服务 healthy，`verify_compose_stack.py` exit `0`、readiness `3/3`。
+- 启动隔离 fault Compose 项目 `mall-field-20260909`，8/8 服务 healthy；故障停止/恢复只作用于该隔离项目。
+- 使用当前 HEAD `84e111d17e4117287660421ea5772a9ddcf44382` 和新的合成 Fixture（SHA-256 `7573e19271528e904d2eb40cef2765f05d4e5f489f2b35cc1b1359bcd5128759`）完整执行现场 Runner。
+- 最新报告：`tmp/field-acceptance/field-20260909T105750Z-12222b15/field-acceptance.json`，SHA-256 `6a301cd28072ebbf01fa07e81d7aaf5c4b2de9741c14ceb351122cac18f21567`。
+- 当前现场结果：browser `24/24`、Java/MySQL `30/30`、fault `36/36`、Durable recovery `32/32`，合计 **122/122 passed、0 failed、0 environment_blocked**；Release Gate **passed**。
+- 第一轮因旧随机账号 Fixture 导致 Java `30 environment_blocked`，已保留为 superseded 证据；没有与最终通过数相加，也没有放宽断言。
+
+### 当前边界
+
+- 本轮没有修改业务代码、测试预期、Java API 或数据库契约；只更新本地忽略的现场报告和待提交的证据文档。
+- 122/122 只证明当前机器、当前 Docker/Chrome、当前合成 Fixture 的现场路径；不宣称生产 SLA、真实用户泛化、真实支付/仓储/物流/维修接入。

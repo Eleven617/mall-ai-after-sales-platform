@@ -1,5 +1,21 @@
 # 公开发布记录
 
+## 2026-09-09 — Docker 恢复后当前提交 Release Gate 通过
+
+当前仓库 HEAD：`84e111d17e4117287660421ea5772a9ddcf44382`。Docker Desktop 已恢复，未修改业务代码、测试预期、Java 契约或数据库结构。主 Compose 以 `docker compose up -d --no-build` 启动，8/8 常驻服务 healthy；`scripts/verify_compose_stack.py` readiness `3/3` 通过。另启动隔离 fault Compose 项目 `mall-field-20260909`，8/8 服务 healthy。
+
+当前现场 Runner 报告：`tmp/field-acceptance/field-20260909T105750Z-12222b15/field-acceptance.json`，SHA-256 `6a301cd28072ebbf01fa07e81d7aaf5c4b2de9741c14ceb351122cac18f21567`；合成 Fixture SHA-256 `7573e19271528e904d2eb40cef2765f05d4e5f489f2b35cc1b1359bcd5128759`。
+
+| 现场类别 | 执行 | 通过 | 失败 | 阻断 |
+| --- | ---: | ---: | ---: | ---: |
+| browser_e2e | 24 | **24** | 0 | 0 |
+| java_mysql_integration | 30 | **30** | 0 | 0 |
+| fault_injection | 36 | **36** | 0 | 0 |
+| durable_async_recovery | 32 | **32** | 0 | 0 |
+| 合计 | **122** | **122** | 0 | 0 |
+
+当前 v3.0 现场 Release Gate：**PASSED**。此前因旧 Fixture 登录阻断的 30 条报告已标记 superseded；不与本轮通过结果相加。该证据只适用于本机 Docker、Chrome、Java/MySQL、Redis/RabbitMQ 和合成数据，不代表生产 SLA、真实用户泛化或真实外部履约接入。
+
 ## 2026-09-09 — 当前 CI 安全门禁修复（代码提交 `38601904595b6ae82a1e692d88c33d83d1ba1e01`）
 
 本次更新只修复 `mall2/pom.xml` 的 Netty 安全版本：`4.1.136.Final` → `4.1.137.Final`。此前 `dependency-and-secret-risk` 对 `netty-handler` 报告 `GHSA-c4c3-7fpv-j4q5`（CVSS 9.1）与 `GHSA-fccg-mwvh-qqg4`（CVSS 6.9）；没有关闭扫描或绕过失败。

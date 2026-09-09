@@ -264,3 +264,23 @@ SHA-256：`7da1d8efdd399d354ea535d32f9c24f9405508f5c57f9cb3364223219487e32a`
 - 本地 OSV 修复后识别 **0 个受影响包**，但本地扫描器因未解析的本地 SNAPSHOT 模块返回 `127`；不把该本地退出码写成远程成功，远程 Actions 是安全门禁依据。
 
 依赖修复只改变安全版本，不改变现场 Runner 报告。`tmp/field-acceptance/field-20260909T074151Z-d56eb7fe/field-acceptance.json` 仍绑定 `45f842f`，所以相对当前代码为 stale；Docker Desktop 后端 IPC 错误仍使当前 `122` 条现场执行保持 `environment_blocked`。不能将 deterministic `478/478` 或旧提交的现场报告当作当前 `122/122`。
+
+## 2026-09-09｜Docker 恢复后的当前提交现场验收（最新）
+
+Docker Desktop 已恢复，主 Compose 与独立 fault Compose 项目均成功启动。本轮没有修改业务代码、测试断言或 Java/数据库契约。
+
+- 当前提交：`84e111d17e4117287660421ea5772a9ddcf44382`。
+- 主 Compose：`docker compose up -d --no-build`，8/8 服务 healthy；`scripts/verify_compose_stack.py` exit `0`，readiness `3/3`。
+- 隔离 fault Compose：项目 `mall-field-20260909`，8/8 服务 healthy；故障场景只在该隔离项目停止/恢复。
+- Fixture：`tmp/field-fixture-current.json`，SHA-256 `7573e19271528e904d2eb40cef2765f05d4e5f489f2b35cc1b1359bcd5128759`。
+- 现场报告：`tmp/field-acceptance/field-20260909T105750Z-12222b15/field-acceptance.json`，SHA-256 `6a301cd28072ebbf01fa07e81d7aaf5c4b2de9741c14ceb351122cac18f21567`。
+
+| 类别 | 执行 | 通过 | 失败 | environment_blocked |
+| --- | ---: | ---: | ---: | ---: |
+| browser_e2e | 24 | **24** | 0 | 0 |
+| java_mysql_integration | 30 | **30** | 0 | 0 |
+| fault_injection | 36 | **36** | 0 | 0 |
+| durable_async_recovery | 32 | **32** | 0 | 0 |
+| 合计 | **122** | **122** | 0 | 0 |
+
+当前现场 Release Gate：**PASSED**。上一份因旧随机账号 Fixture 登录阻断的 `30 environment_blocked` 报告仅作为 superseded 失败证据保留，不计入本轮结果；最终报告使用新 Fixture 完整重跑，所有 Case 均绑定当前 Commit。

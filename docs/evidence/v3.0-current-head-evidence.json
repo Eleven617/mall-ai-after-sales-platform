@@ -1,11 +1,11 @@
 {
   "schemaVersion": "v3.0-current-head-evidence.v1",
-  "generatedAt": "2026-09-09T20:30:00+08:00",
+  "generatedAt": "2026-09-09T19:04:01+08:00",
   "repository": {
     "remote": "https://github.com/Eleven617/mall-ai-after-sales-platform.git",
     "branch": "main",
-    "testedCodeCommit": "38601904595b6ae82a1e692d88c33d83d1ba1e01",
-    "evidenceHeadCommit": "38601904595b6ae82a1e692d88c33d83d1ba1e01",
+    "testedCodeCommit": "84e111d17e4117287660421ea5772a9ddcf44382",
+    "evidenceHeadCommit": "84e111d17e4117287660421ea5772a9ddcf44382",
     "remoteCommitAtStart": "cbb951f9815b7483d2aeec0620947fdb1eba59b0",
     "workspaceCleanAtStart": true,
     "remoteVerification": {
@@ -13,14 +13,14 @@
       "mallCi": {"runId": 33901530634, "status": "success", "url": "https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/33901530634"},
       "qualityEvaluation": {"runId": 33901530719, "status": "success", "url": "https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/33901530719"},
       "currentHead": {
-        "commit": "38601904595b6ae82a1e692d88c33d83d1ba1e01",
-        "mallCi": {"runId": 34333690241, "status": "success", "url": "https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34333690241"},
-        "qualityEvaluation": {"runId": 34333690290, "status": "success", "url": "https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34333690290"}
+        "commit": "84e111d17e4117287660421ea5772a9ddcf44382",
+        "mallCi": {"runId": 34335488265, "status": "success", "url": "https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34335488265"},
+        "qualityEvaluation": {"runId": 34335488213, "status": "success", "url": "https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34335488213"}
       },
       "latestEvidenceSync": {
-        "commit": "73d12c5ecde9c56a21ce7be78e194d8fbc1e837c",
-        "mallCi": {"runId": 34204868188, "status": "success", "url": "https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34204868188"},
-        "qualityEvaluation": {"runId": 34204868215, "status": "success", "url": "https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34204868215"}
+        "commit": "84e111d17e4117287660421ea5772a9ddcf44382",
+        "mallCi": {"runId": 34335488265, "status": "success", "url": "https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34335488265"},
+        "qualityEvaluation": {"runId": 34335488213, "status": "success", "url": "https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34335488213"}
       }
     }
   },
@@ -114,10 +114,10 @@
     "containersHealthy": {"healthy": 8, "total": 8},
     "endpointChecks": {"passed": 3, "total": 3},
     "manifestFieldResults": {
-      "browser_e2e": {"registered": 24, "executed": 0, "passed": 0, "failed": 0, "environmentBlocked": 24},
-      "java_mysql_integration": {"registered": 30, "executed": 0, "passed": 0, "failed": 0, "environmentBlocked": 30},
-      "fault_injection": {"registered": 36, "executed": 0, "passed": 0, "failed": 0, "environmentBlocked": 36},
-      "durable_async_recovery": {"registered": 32, "executed": 0, "passed": 0, "failed": 0, "environmentBlocked": 32}
+      "browser_e2e": {"registered": 24, "executed": 24, "passed": 24, "failed": 0, "environmentBlocked": 0},
+      "java_mysql_integration": {"registered": 30, "executed": 30, "passed": 30, "failed": 0, "environmentBlocked": 0},
+      "fault_injection": {"registered": 36, "executed": 36, "passed": 36, "failed": 0, "environmentBlocked": 0},
+      "durable_async_recovery": {"registered": 32, "executed": 32, "passed": 32, "failed": 0, "environmentBlocked": 0}
     },
     "executedSyntheticSafetyChecks": {"crossAccountRejected": {"passed": 3, "total": 3}, "noUnconfirmedCommit": {"passed": 2, "total": 2}, "subtaskOwnerCheck": {"passed": 3, "total": 3}, "forbiddenSideEffects": 0},
     "notClaimed": ["full_cross_account_leak_rate", "full_unconfirmed_write_rate", "duplicate_outbox_events_converged"],
@@ -150,25 +150,27 @@
     }
   },
   "currentFieldAcceptance": {
-    "testedCodeCommit": "45f842f9ed6c0a9b636e0420fe489312e71a28fb",
-    "reportPath": "tmp/field-acceptance/field-20260909T074151Z-d56eb7fe/field-acceptance.json",
-    "reportSha256": "7da1d8efdd399d354ea535d32f9c24f9405508f5c57f9cb3364223219487e32a",
+    "testedCodeCommit": "84e111d17e4117287660421ea5772a9ddcf44382",
+    "reportPath": "tmp/field-acceptance/field-20260909T105750Z-12222b15/field-acceptance.json",
+    "reportSha256": "6a301cd28072ebbf01fa07e81d7aaf5c4b2de9741c14ceb351122cac18f21567",
+    "fixtureSha256": "7573e19271528e904d2eb40cef2765f05d4e5f489f2b35cc1b1359bcd5128759",
     "runnerReady": 122,
     "executed": 122,
-    "passed": 0,
+    "passed": 122,
     "failed": 0,
-    "environmentBlocked": 122,
+    "environmentBlocked": 0,
     "notExecuted": 0,
-    "releaseGate": "not_passed",
-    "staleDueToCodeCommitMismatch": true,
-    "currentCodeCommit": "38601904595b6ae82a1e692d88c33d83d1ba1e01",
-    "blocker": "Docker Desktop backend cannot rename sailor-ingest.sock (Windows error 1920); no fixture was bound",
+    "releaseGate": "passed",
+    "staleDueToCodeCommitMismatch": false,
+    "currentCodeCommit": "84e111d17e4117287660421ea5772a9ddcf44382",
+    "executionMode": "live_browser/live_java_mysql/isolated_compose_fault/live_build21_restart_recovery",
     "categories": {
-      "browser_e2e": {"registered": 24, "runnerReady": 24, "passed": 0, "failed": 0, "environmentBlocked": 24},
-      "java_mysql_integration": {"registered": 30, "runnerReady": 30, "passed": 0, "failed": 0, "environmentBlocked": 30},
-      "fault_injection": {"registered": 36, "runnerReady": 36, "passed": 0, "failed": 0, "environmentBlocked": 36},
-      "durable_async_recovery": {"registered": 32, "runnerReady": 32, "passed": 0, "failed": 0, "environmentBlocked": 32}
+      "browser_e2e": {"registered": 24, "runnerReady": 24, "passed": 24, "failed": 0, "environmentBlocked": 0},
+      "java_mysql_integration": {"registered": 30, "runnerReady": 30, "passed": 30, "failed": 0, "environmentBlocked": 0},
+      "fault_injection": {"registered": 36, "runnerReady": 36, "passed": 36, "failed": 0, "environmentBlocked": 0},
+      "durable_async_recovery": {"registered": 32, "runnerReady": 32, "passed": 32, "failed": 0, "environmentBlocked": 0}
     },
+    "supersededBlockedRun": {"report": "tmp/field-acceptance/field-20260909T074151Z-d56eb7fe/field-acceptance.json", "testedCodeCommit": "45f842f9ed6c0a9b636e0420fe489312e71a28fb", "result": "122 environment_blocked", "status": "superseded"},
     "staleHistoricalReports": [
       {"report": "tmp/field-acceptance/field-20260908T100428Z-3865032c/field-acceptance.json", "testedCodeCommit": "314f5d9d3409cbdd8487d94a5a07ccbc705fd2a8", "result": "browser 24/24 passed", "status": "stale"},
       {"report": "tmp/field-acceptance/field-20260908T100458Z-1f99435e/field-acceptance.json", "testedCodeCommit": "314f5d9d3409cbdd8487d94a5a07ccbc705fd2a8", "result": "Java/MySQL 30/30 passed", "status": "stale"},
@@ -207,12 +209,14 @@
     ,"Push-Location .\\mall-ai-service; .\\.venv\\Scripts\\python.exe scripts\\verify_compose_stack.py; Pop-Location"
     ,"tmp\\run_local_live_batch.ps1 (post-Docker-recovery synthetic batch)"
   ],
-  "environmentBlockedLiveScripts": ["full_browser_e2e_manifest_24", "full_java_mysql_integration_manifest_30", "full_fault_injection_manifest_36", "full_durable_async_recovery_manifest_32"],
+  "environmentBlockedLiveScripts": [],
+  "historicalEnvironmentBlockedLiveScripts": ["full_browser_e2e_manifest_24", "full_java_mysql_integration_manifest_30", "full_fault_injection_manifest_36", "full_durable_async_recovery_manifest_32"],
   "currentEnvironment": {
-    "dockerDesktop": "blocked",
-    "blocker": "Docker Desktop backend cannot rename sailor-ingest.sock (Windows error 1920)",
-    "safeActionsTaken": ["stopped repeated retries", "rotated runtime socket directory without touching images, volumes, VHDX or database"],
-    "fieldRunnerReexecution": "blocked"
+    "dockerDesktop": "available",
+    "engineVersion": "29.7.2",
+    "mainComposeHealthy": {"healthy": 8, "total": 8},
+    "isolatedFaultComposeHealthy": {"healthy": 8, "total": 8},
+    "fieldRunnerReexecution": "passed"
   },
-  "claims": {"productionAccuracy": false, "productionSla": false, "realUserGeneralization": false, "realPaymentWarehouseLogisticsRepair": false, "currentFieldReleaseGate": "not_passed", "currentCi": "passed"}
+  "claims": {"productionAccuracy": false, "productionSla": false, "realUserGeneralization": false, "realPaymentWarehouseLogisticsRepair": false, "currentFieldReleaseGate": "passed", "currentCi": "passed"}
 }
