@@ -160,3 +160,31 @@
 - 本次本机确定性复验：FastAPI `349 passed`、7 subtests；Vue `npm run build` 成功；v3 manifest/preflight `478/478`、代表性 `8/8`；Compose config、`git diff --check` 均通过。
 - 公开证据已同步到 `docs/evidence/v3.0-current-head-evidence.md/.json`、`docs/TEST_AND_DEMO_EVIDENCE.md`、`docs/PUBLIC_RELEASE_RECORD.md`。这些文档仍明确：完整 browser `24`、Java/MySQL `30`、fault `36`、durable recovery `32` 没有逐条独立现场执行器，继续 `environment_blocked`；deterministic `478/478` 不能代替现场套件。
 - 当前无需用户补充授权；下一步提交并推送本次证据同步，等待该新 SHA 的 `mall-ci` 与 `quality-evaluation`，然后以真实结果交接。
+
+## 2026-09-09 — 统一现场 Runner 当前提交复核
+
+### 已完成
+
+- 新增并提交统一现场入口 `scripts/Verify-FieldAcceptance.ps1`，底层 Runner 为 `mall-ai-service/scripts/verify_field_acceptance.py`；它按 manifest 自动发现 browser 24、Java/MySQL 30、fault 36、durable 32 条 Case，并为每条结果保存 runner/execution 状态、failure class、Commit、Fixture hash、断言、依赖、trace 摘要和证据路径。
+- 新增 `mall-ai-service/scripts/field_browser_support.py`、`verify_build14_eligibility_live.py` 与 `tests/test_field_acceptance.py`；故障 Runner 已收紧为先验证服务确实停止，再验证启动后健康，避免仅凭命令退出码判定通过。
+- 当前代码提交：`45f842f9ed6c0a9b636e0420fe489312e71a28fb`，已推送到 `origin/main`。
+- 当前提交确定性复验：FastAPI `353 passed`、`7 subtests passed`；Runner 合同 `11 passed`；manifest/preflight `478/478`、`8/8`；Vue build、Compose config、Java portal `14/14`、admin `6/6` 均通过。
+- 当前提交现场入口已真实启动并生成报告：`tmp/field-acceptance/field-20260909T074151Z-d56eb7fe/field-acceptance.json`，SHA-256 `7da1d8efdd399d354ea535d32f9c24f9405508f5c57f9cb3364223219487e32a`；四类 Runner `122/122 ready`，本轮 `0 passed / 122 environment_blocked`，Release Gate 未通过。
+- Docker 阻断已定位到 Docker Desktop 后端 `sailor-ingest.sock` 重命名 `error 1920`；未执行 factory reset、全局清理、卷/VHDX 删除或数据库清空。
+- README、`docs/evidence/v3.0-current-head-evidence.md`、`docs/TEST_AND_DEMO_EVIDENCE.md`、`docs/PUBLIC_RELEASE_RECORD.md` 已同步当前 SHA、命令、报告 hash、旧报告 stale 规则和真实边界。
+
+### 旧报告与当前结果的边界
+
+- 2026-09-08 曾在旧提交 `314f5d9` 的 Docker/Chrome/Compose 环境中执行并得到 browser `24/24`、Java/MySQL `30/30`、durable `32/32`、fault `36/36`（fault 报告 Gate 因 Fixture 未绑定而为 false）。这些报告保留为历史证据，但因 Commit 与当前不一致已标为 stale，不能与当前结果相加，也不能写成当前 Release Gate 通过。
+- Build 14A 正/负资格验证器已实现；此前一次旧提交运行通过，但当前 SHA 尚未在 Docker 恢复后重跑，因此不扩大为当前 Gate 通过。
+
+### 下一步
+
+1. Docker Desktop 修复后，以当前 `45f842f` 重新运行 `scripts\\Verify-FieldAcceptance.ps1`，必须绑定一次性合成 Fixture，并确认 122 条均不再 `environment_blocked`。
+2. 重新运行 Build 14A 正/负验证，保存当前 SHA 报告；随后更新三份公开证据并再跑 `git diff --check`。
+3. 只在当前 SHA 的现场报告 Gate 通过后，才可在 README/简历写“当前提交的 122 条现场 Case 通过”；当前只能写“统一 Runner 已实现，确定性门禁通过，现场复验受 Docker 环境阻断”。
+
+### 不能做
+
+- 不能把 `45f842f` 的当前 `environment_blocked` 改写成 passed；不能把旧 `314f5d9` 报告与当前结果合并。
+- 不能删除失败/阻断记录、降低断言、用 deterministic `478/478` 代替现场 122 条，或用 `docker compose down -v`、删卷、删 VHDX、factory reset 解决 Docker。

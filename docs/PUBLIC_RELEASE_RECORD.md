@@ -1,5 +1,16 @@
 # 公开发布记录
 
+## 2026-09-09 — v3.0 统一现场 Runner 与当前提交 Release Gate
+
+当前代码提交：`45f842f9ed6c0a9b636e0420fe489312e71a28fb`。本次新增统一入口 `scripts/Verify-FieldAcceptance.ps1` 及四类数据驱动 Runner；新增 Runner 合同测试，未修改业务代码、测试预期、Java 资格或数据库契约。
+
+当前提交的本机确定性结果：FastAPI **353 passed、7 subtests passed**；Runner 合同 **11 passed**；manifest/preflight **478/478、8/8**；Vue build、Compose config、Java portal **14/14**、admin **6/6** 通过。
+
+当前提交现场报告 `tmp/field-acceptance/field-20260909T074151Z-d56eb7fe/field-acceptance.json`（SHA-256 `7da1d8efdd399d354ea535d32f9c24f9405508f5c57f9cb3364223219487e32a`）发现四类 Runner 均为 ready，但 Docker Desktop 后端的 `sailor-ingest.sock` 重命名错误 `error 1920` 阻断了 24 + 30 + 36 + 32 条现场执行，因此当前 Release Gate **未通过**：`0 passed / 122 environment_blocked`。这不是业务测试失败，也不是把未执行写成通过。
+
+2026-09-08 的旧现场报告曾在 Docker/Chrome/Compose 中执行过 browser 24/24、Java/MySQL 30/30、fault 36/36、durable 32/32，但它们绑定 `314f5d9`，与当前代码提交不一致，已在当前证据中标记 **stale**，不与本次报告合并。恢复 Docker 后必须以当前 SHA 重新运行入口；在此之前不能公开写“当前 Commit 的 122 条现场 Case 全部通过”。
+
+
 ## 2026-09-08 — Docker 运行时恢复后的最终现场复验
 
 在最终补测前，Docker Desktop 因 Windows 残留 AF_UNIX/reparse socket 无法启动；已采用可恢复的内部运行时目录改名方案并重新启动，未执行 factory reset、`docker compose down`、卷/VHDX 删除或数据库清空。Docker Engine `29.7.2` 恢复后，Compose 8/8 常驻服务 healthy，`verify_compose_stack.py` 的 Vue/FastAPI/Java readiness `3/3` 通过。

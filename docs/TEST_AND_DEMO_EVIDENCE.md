@@ -232,3 +232,24 @@ cd C:\Users\12969\Desktop\mall
 docker compose config --quiet
 docker compose ps
 ```
+
+## 2026-09-09｜统一现场 Runner 当前提交复核
+
+当前执行器代码提交：`45f842f9ed6c0a9b636e0420fe489312e71a28fb`。新增入口为 `scripts/Verify-FieldAcceptance.ps1`，底层为 `mall-ai-service/scripts/verify_field_acceptance.py`；每条 Case 都会记录 Runner 状态、执行状态、Commit、Fixture hash、断言、依赖和安全证据路径。
+
+本机确定性复验：FastAPI **353 passed、7 subtests passed**；Runner 合同 **11 passed**；v3 manifest/preflight **478/478、8/8**；Vue build、Compose config、Java portal **14/14**、admin **6/6** 均通过。上述结果不等于现场 E2E 或真实模型效果。
+
+当前提交的现场入口执行报告：
+
+报告路径：`tmp/field-acceptance/field-20260909T074151Z-d56eb7fe/field-acceptance.json`
+
+SHA-256：`7da1d8efdd399d354ea535d32f9c24f9405508f5c57f9cb3364223219487e32a`
+
+| 类别 | Runner ready | 当前执行结果 |
+| --- | ---: | ---: |
+| browser_e2e | 24/24 | 24 `environment_blocked` |
+| java_mysql_integration | 30/30 | 30 `environment_blocked` |
+| fault_injection | 36/36 | 36 `environment_blocked` |
+| durable_async_recovery | 32/32 | 32 `environment_blocked` |
+
+阻断是 Docker Desktop 后端的 `sailor-ingest.sock` 重命名 `error 1920`，不是业务断言失败；报告已记录 Docker 命令、错误摘要、退出码和重试入口。当前 Release Gate **未通过**。此前 2026-09-08 的 24/30/36/32 现场报告均绑定旧 Commit `314f5d9`，已在 `docs/evidence/v3.0-current-head-evidence.md` 标为 stale，不能与当前结果合并。

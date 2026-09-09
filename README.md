@@ -136,6 +136,20 @@ Pop-Location
 
 预检只覆盖合成 deterministic Case 和代表性运行时分支；36 条 live synthetic、浏览器 E2E、Java/Compose 现场路径必须单独执行并单独记录。完整证据见 [v3.0 发布证据](docs/evidence/v3.0-release-evidence.md)。
 
+### v3.0 现场验收 Runner
+
+四类现场清单（浏览器 24、Java/MySQL 30、故障注入 36、Durable Recovery 32）由同一个数据驱动入口执行；它会为每条 Case 记录 `runnerStatus`、`executionStatus`、Commit、Fixture SHA-256、断言和安全证据路径，不会把注册数量当作通过数量：
+
+```powershell
+.\scripts\Verify-FieldAcceptance.ps1 `
+  -Fixture .\tmp\live-fixture.json `
+  -Password (Read-Host "一次性本地验收密码") `
+  -FaultComposeProject "mall-field-<run-id>" `
+  -FaultComposeOverride .\tmp\field-compose.override.yml
+```
+
+只想核对当前环境是否能运行现场门禁，可省略 Fixture/密码；Runner 会将依赖缺失逐条记录为 `environment_blocked`，并以非零退出码阻止 Release Gate 假通过。报告默认写入被 Git 忽略的 `tmp/field-acceptance/`，不提交账号、Token、订单号或原始工具载荷。
+
 ## 本地演示身份：由你自行设置密码
 
 这是“下载后在自己电脑运行”的本地 Demo，不是向所有 GitHub 访客开放同一组线上测试账号。完整 AI 对话需要运行者自己的 DeepSeek Key；不配置 Key 时仍可启动结构和权限验证，但模型请求会安全停止。
