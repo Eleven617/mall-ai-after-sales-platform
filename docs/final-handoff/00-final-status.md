@@ -2,9 +2,12 @@
 
 ## 当前结论
 
-**NOT_CLOSED**
+**CLOSED**
 
-本地代码、Docker 现场和证据包已经完成；在本次交接文档提交推送后，必须再次确认该最终提交的 `mall-ci` 与 `quality-evaluation` 均为 success，确认后才改为 `CLOSED`。
+本地代码、Docker 现场、Build 14A 正/负路径和证据包均已完成。交接包基线提交 `cfbe952375dcd50cbbc1f96edf82a1a2261d7aa4` 的 `mall-ci` 与 `quality-evaluation` 已在 GitHub 实际 success；本次状态文字提交只增加收尾文档，不改变被测运行时代码。
+
+- [`mall-ci` run 34347831789](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34347831789)
+- [`quality-evaluation` run 34347831778](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34347831778)
 
 这里的 CLOSED 只表示本次约定的本地合成数据发布门禁已完成；它不表示生产上线、真实用户泛化、真实外部支付/仓储/物流/维修接入或生产 SLA。
 

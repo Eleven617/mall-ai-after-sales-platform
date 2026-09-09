@@ -49,8 +49,10 @@
   },
   "ci": {
     "required": ["mall-ci", "quality-evaluation"],
-    "status": "verify_after_final_push",
-    "priorVerifiedRuns": [34345740600, 34345740697]
+    "status": "passed",
+    "verificationCommit": "cfbe952375dcd50cbbc1f96edf82a1a2261d7aa4",
+    "mallCi": {"runId": 34347831789, "conclusion": "success", "url": "https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34347831789"},
+    "qualityEvaluation": {"runId": 34347831778, "conclusion": "success", "url": "https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34347831778"}
   },
   "limitations": [
     "synthetic local data only",
@@ -59,4 +61,3 @@
     "historical stale/superseded reports are not merged into current counts"
   ]
 }
-
