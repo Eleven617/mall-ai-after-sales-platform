@@ -77,7 +77,12 @@
 - [`mall-ci` run 34467222374](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34467222374) — **success**
 - [`quality-evaluation` run 34467222378](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34467222378) — **success**
 
-这两个链接与展示实现提交 SHA 一致。后续 docs-only 证据提交不会改变业务代码，但交接时仍应再用 GitHub Actions 页面核对最新 `main` 运行状态。
+随后补充开放任务案例和 Bad Case 说明的 docs-only 提交为 `7b9a54d4f901a153a07f5bb2ea61de27e2fe097f`：
+
+- [`mall-ci` run 34468309174](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34468309174) — **success**
+- [`quality-evaluation` run 34468309202](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34468309202) — **success**
+
+这些链接分别与对应提交 SHA 一致。当前证据文件本身是其后的 docs-only 提交，不改变业务代码；交接时仍应再用 GitHub Actions 页面核对最新 `main` 运行状态。
 
 ## 6. GitHub 网页端仍需手动做的动作
 
@@ -97,4 +102,3 @@
 - 不能宣称生产 SLA、QPS、成本下降、用户量、线上告警或真实支付/仓储/物流/维修成功。
 - 不能把 `macrozheng/mall` 上游商城、订单和会员基础代码说成个人原创。
 - 不能把历史 live-model/Grounding 数字当作当前 HEAD 的稳定泛化结果。
-
