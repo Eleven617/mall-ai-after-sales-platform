@@ -1,54 +1,101 @@
-# 最终架构与责任边界
+# Mall AI 售后平台：架构与责任边界
 
-项目定位为本地、合成数据的“可信 AI 售后与 AgentOps 平台（基于 Apache-2.0 开源 mall 的二次开发）”。它不是自动退款系统、生产 SaaS 或 Agent Swarm。
+本项目是基于 Apache-2.0 `macrozheng/mall` 的二次开发。本页描述当前仓库中的本地合成演示与代码边界，不表示生产部署、真实用户数据或生产 SLA。
+
+## 四层结构
 
 ```mermaid
-flowchart LR
-  C[消费者 Vue 工作台] -->|JWT + session + correlation| F[FastAPI 受控编排]
-  O[运营工作台] -->|独立身份| F
-  Q[质量开发者工作台] -->|独立身份| F
-  H[人工售后处理工作台] -->|独立身份| J
-  F -->|只读事实 / 受保护服务头| J[Java mall 业务权威]
-  F -->|静态政策证据| R[RAG: 本地 Embedding / Chroma / BM25 / 可选 Rerank]
-  F -->|会话、草案、锁、限流、checkpoint| D[(Redis)]
-  J -->|事务内| M[(MySQL)]
-  J -->|Outbox opaque reference| B[RabbitMQ]
-  B -->|幂等消费 / 回调| J
-  X[MCP 客户端] -->|认证的只读 Streamable HTTP| F
-  F -->|合成夹具、确定性合同| E[质量评测 / Profile / RunManifest]
+flowchart TB
+  subgraph I[交互层]
+    C[客户 Vue 工作台]
+    O[运营分析工作台]
+    Q[质量评测工作台]
+    H[人工售后工作台]
+  end
+  subgraph R[Agent Runtime 层]
+    API[FastAPI API / Session]
+    X[开放任务售后 Agent]
+    K[Context Curator / Task Memory]
+    S[版本化 Skill Catalog / Tool Registry]
+    G[LangGraph 确定性边界]
+  end
+  subgraph E[证据与工具层]
+    JF[Java 只读事实 Gateway]
+    RG[政策 RAG：Dense 默认]
+    MCP[MCP 认证只读工具]
+    TR[Trace / Eval / RunManifest]
+  end
+  subgraph T[可信执行层]
+    JV[Java mall2：身份/归属/资格/状态/幂等]
+    DB[(MySQL 事务)]
+    OUT[Outbox / RabbitMQ]
+    RS[(Redis 会话/锁/短期状态)]
+  end
+  C --> API
+  O --> API
+  Q --> API
+  H --> JV
+  API --> X
+  X --> K
+  X --> S
+  S --> G
+  S --> JF
+  S --> RG
+  MCP --> API
+  API --> TR
+  JF --> JV
+  G --> RS
+  JV --> DB
+  JV --> OUT
 ```
 
-## 不可替代的职责
+核心写路径是：`Agent 计划 → 只读事实/政策证据 → ActionProposal → 客户明确确认 → Java 重新校验 → MySQL 事务/幂等 → Outbox/RabbitMQ`。模型不能直连商城数据库、创建设备外的 Skill、绕过确认或把自由文本当作业务命令。
 
-| 层 | 负责 | 明确不负责 |
-| --- | --- | --- |
-| Vue | 展示公开 DTO、发起已确认动作、角色页面隔离 | 保存内部 ID/Trace/Token，决定权限或直接业务写入 |
-| FastAPI | 受限结构化意图、LangGraph 编排、RAG 证据、公开投影、Redis 待确认状态、离线评测与 MCP | 直连商城业务库、判断最终归属/资格、直接写订单/售后/退款 |
-| Java | JWT、订单/物流/资格事实、售后状态机、幂等、事务、Outbox、人工案件动作 | 把模型建议当成交易事实 |
-| RAG | 审核过的静态政策证据与来源 | 实时订单、物流、资格或业务状态 |
-| LLM | Schema 内的意图/字段线索、受控只读下一步、运营草稿、失败归因建议 | 自创工具、修改权限、直接写业务数据或替代确定性合同裁决 |
-| MCP | 认证范围内的六项只读工具 | 写售后、取消/修改、退款、履约、SQL、Shell、文件或任意 URL 代理 |
+## 产品角色
 
-## 三类 AI 角色与人工处理人员
+系统只有一个在线核心 Agent：**统一售后开放任务 Agent**。运营分析 AI 与 AI 质量评测是两个受限的辅助能力；MCP 只读工具、人工工作台和确定性 Workflow 是执行设施，不是第四个在线 Agent。
 
-| 身份 | 可读范围 | 可写范围 | 主要输出 |
+| 角色/组件 | 输入 | 允许输出 | 明确禁止 |
 | --- | --- | --- | --- |
-| 统一售后 Agent | 当前会员会话、本人 Java 事实、静态政策 | 仅经确认后转交 Java；自身不写库 | 回答、事实卡、草案、公开状态、最小 Handoff |
-| 运营分析 Agent | 最小 Handoff、7/30 天聚合 | 无 | 人工阅读的分析草稿 |
-| 质量评测 Agent | 版本化合成 EvalCase、Profile、安全失败投影 | 无；人工才可审核候选 | 确定性评测结果与可选失败归因 |
-| 人工售后处理人员 | 可领取/已领取的最小案件 | Java 状态机允许的领取、补件、处理、结案动作 | 客户可见状态与内部处理记录分离 |
+| 客户 | 自然语言目标、确认/撤回 | 公开事实卡、政策引用、候选方案、状态 | 接触内部 intent、Token、完整订单号或工具载荷 |
+| 开放任务 Agent | 目标、活动任务摘要、允许的 Artifact | TaskPlan、只读 Skill 选择、澄清、ActionProposal 草案 | 直接写订单/售后/退款，猜权限或内部 ID |
+| 运营分析 AI | Java 可信聚合、固定 7/30 天窗口 | 受限分析草稿 | 改窗口、编造指标、业务写入 |
+| 质量评测 AI | 版本化合成 EvalCase、Profile | 硬规则结果、可选失败归因候选 | 读取真实聊天/订单，自动修改 Prompt/代码 |
+| Java mall2 | JWT、事实、Proposal、确认 | 资格/状态判断、事务写入、审计与事件 | 把模型建议当作事实 |
+| RAG | 审核过的政策文档 | 带来源的证据投影 | 判断订单、物流、资格或最终状态 |
+| MCP | 认证身份和 allow-list | 只读事实/政策工具结果 | 写操作、SQL、任意 URL、越权跨账号访问 |
 
-## 关键数据流
+## 真实代码位置
 
-1. 消费者请求先由 FastAPI 从 JWT/Java 推导当前身份与会话范围；模型不能提供 `memberId`、角色或权限。
-2. 政策问题进入 RAG；订单、物流、资格和售后状态进入 Java 只读事实接口。无证据或依赖失败时安全停止。
-3. 创建、取消、修改必须形成绑定用户/会话/内容哈希/TTL 的 pending proposal/action，并等待消费者明确确认。
-4. Java 在写入前重新校验 JWT、归属、资格、状态、版本和幂等键；申请/动作/审计/Outbox 在同一事务中提交。
-5. RabbitMQ 消息只携带 opaque reference；发布、消费与回调均由 Java 幂等处理，客户页面不会把“已投递”表述为“已完成”。
-6. 复杂案例只交接最小安全摘要；运营与质量页不读取原始客户聊天、订单号、Token、RAG 原文或生产 Trace。
+| 能力 | 主要代码位置 | 责任 |
+| --- | --- | --- |
+| 客户 API | `mall-ai-service/app/routers/customer_service.py`、`agent_tasks.py` | 认证会话、公开 DTO、任务创建/继续/确认 |
+| Runtime | `mall-ai-service/app/runtime/task_runtime.py`、`task_planner.py`、`task_store.py` | 有界计划、Skill 发现、观察、Context 更新、Proposal 门 |
+| Context/Memory | `mall-ai-service/app/runtime/context_curator.py`、`task_memory.py`、`app/schemas/agent_task.py` | 允许的 Artifact 摘要、owner/TTL、恢复投影 |
+| Skill/Tool | `mall-ai-service/app/skills/catalog.py`、`app/services/tool_registry.py`、`commerce_gateway.py` | 版本、Schema、工具白名单、身份范围、预算与超时 |
+| 统一售后 | `mall-ai-service/app/services/unified_after_sales_graph.py`、`after_sales_application_service.py` | 政策、资格、申请、列表、状态、取消、修改与跟进的确定性业务边界 |
+| RAG | `app/services/chunking_service.py`、`policy_retrieval.py`、`rag_service.py`、`vector_store.py` | Chunk/metadata、Dense 检索、证据核验与无证据拒答 |
+| Trace/Eval | `app/services/trace_service.py`、`app/runtime/release_evaluation.py`、`scripts/run_quality_agent_evaluation.py` | 脱敏 Trace、合成 Case、确定性比较器与 Release Manifest |
+| MCP | `app/routers/mcp.py`、`app/schemas/mcp.py` | 认证 Streamable HTTP/SSE 只读工具边界 |
+| Java 权威 | `mall2/mall-portal/.../AiAfterSalesApplicationServiceImpl.java`、`AiCaseHandoffServiceImpl.java`、`AiAfterSalesOutboxPublisher.java` | JWT、归属、资格、状态机、幂等、事务、Outbox/RabbitMQ、最终写入 |
+| 前端 | `mall-ai-web/src/App.vue`、`AgentTaskWorkspace.vue`、`OperationsPanel.vue`、`QualityPanel.vue` | 公开投影、确认卡、角色隔离；不持有内部写权限 |
 
-## 观测与删除边界
+## 一次请求的边界
 
-安全 Trace、RunManifest、FeedbackCandidate 都采用 allow-list 投影。它们禁止保存 Token、完整 Prompt/聊天、完整订单号、地址、电话、RAG 原文和原始工具载荷。删除一段客户会话会清理该会员该会话关联的临时反馈、候选和审核记录；仓库中独立版本化的合成 EvalCase 不受影响。
+1. FastAPI 从登录会话和 Java 返回事实确定身份范围；模型不能提供 `memberId`、角色或权限。
+2. Agent 读取活动任务/唯一暂停任务的脱敏摘要，决定继续、澄清、临时切题、恢复或结束；只在注册 Skill 的工具范围内规划。
+3. Java 订单/物流/资格/售后事实与政策 RAG 证据分开提供。无证据、依赖失败或结构化输出非法时安全停止。
+4. 有副作用的请求先形成绑定 owner、版本、TTL、内容哈希和确认状态的 ActionProposal。浏览器不能绕过确认卡直达 Java 写接口。
+5. 客户确认后，Java 重新读取必要事实，执行 JWT、归属、资格、状态机和幂等校验，并在同一事务中写入业务、审计和 Outbox。
+6. RabbitMQ 消息只携带 opaque reference；消费者和回调幂等。支付、仓储、物流、维修等外部履约未接入时，状态保持 `NOT_STARTED`/`MANUAL_REQUIRED`，不会伪造成功。
 
-本图描述代码边界与本地演示路径，不表示生产部署、真实用户数据、真实支付退款、线上 SLA 或真实模型准确率。
+## 数据、可见性和失败处理
+
+- Redis 只保存会话、锁、待确认状态和短期可过期事件；任务/Proposal 索引使用独立的可追溯存储。进程重启不能重复执行已成功的 Java 动作。
+- 公开 DTO 只包含脱敏摘要、状态和 opaque reference；禁止 Token、原始 Prompt/聊天、完整订单号、地址、电话、RAG 原文、原始工具载荷、内部 Trace 和模型思维链。
+- 客户、运营、质量开发者和人工售后处理人员使用不同身份、页面、工具范围和 DTO。
+- 观测/评测故障不阻塞客户业务，也不改变 Java 写入结果。质量硬门由确定性比较器裁决，LLM 只能辅助失败解释。
+
+## 验证口径
+
+仓库同时保留无模型 deterministic contract、合成 live-model/Provider 评测、本地 Docker/Chrome/Java 现场和 GitHub Actions 四种证据；它们必须在报告中分开。当前公开验证的真实范围、报告提交号和仍不能宣称的能力见 [测试与演示证据](TEST_AND_DEMO_EVIDENCE.md)、[GitHub 展示升级证据](evidence/github-showcase-refresh.md) 和 [公开发布记录](PUBLIC_RELEASE_RECORD.md)。
