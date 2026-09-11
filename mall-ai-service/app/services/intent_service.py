@@ -12,7 +12,7 @@ from app.services.structured_output_gateway import (
 class IntentServiceError(RuntimeError):
     """模型输出不符合意图协议或意图模型不可用。"""
 
-INTENT_PROMPT_VERSION = "task_aware_turn_plan_v6"
+INTENT_PROMPT_VERSION = "task_aware_turn_plan_v7"
 
 
 INTENT_SYSTEM_PROMPT = """
@@ -86,6 +86,12 @@ INTENT_SYSTEM_PROMPT = """
   task_kind=order_diagnosis，task_relation=start_new_task。
 - “订单为什么未按预期完成、是否存在配送异常、我现在应如何处理？” -> query_logistics，
   route=agent，task_kind=order_diagnosis，task_relation=start_new_task。
+- 如果 active_task 是 status=waiting_input 的 order_diagnosis、pending_question 表示等待订单标识，
+  当前消息仅补充一个订单号（例如“订单号：<唯一订单标识>”），它是在继续原诊断：
+  business_intent=query_logistics，route=agent，task_kind=order_diagnosis，
+  task_relation=continue_active，rationale_code=active_task_match，confirmation_intent=none。
+  如果同样的任务在 paused_task 中，则只把 task_relation 改为 resume_paused、rationale_code 改为
+  paused_task_match。不能把这类补充资料当成 general_chat、standalone_answer 或新的售后申请。
 - “你好，今天心情怎么样？” -> general_chat，chat_scope=greeting。
 
 任务关系规则：
