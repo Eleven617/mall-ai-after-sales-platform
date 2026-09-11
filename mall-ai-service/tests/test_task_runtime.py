@@ -222,6 +222,23 @@ def test_server_repair_finishes_when_resolution_candidate_is_already_verified() 
     assert "维修工单" in repaired.reason_summary
 
 
+def test_server_repair_reads_order_after_application_list_before_completion() -> None:
+    repaired = _server_read_repair(
+        correction_context={
+            "available_skill_ids": ["list_service_applications", "read_order"],
+            "available_read_skill_ids": ["list_service_applications", "read_order"],
+            "reference_hint_keys": ["orderRef"],
+            "reference_hint_values": {"orderRef": "ref-order-eligibility"},
+        },
+        validation_codes=("after_sales_list_requires_order_fact",),
+    )
+
+    assert repaired is not None
+    assert repaired.decision == "call_skill"
+    assert repaired.skill_calls[0].skill_id == "read_order"
+    assert repaired.skill_calls[0].arguments == {"orderRef": "ref-order-eligibility"}
+
+
 def test_runtime_rejects_unknown_skill_before_gateway_invocation() -> None:
     provider = ScriptedRuntimeProvider(
         decisions=[

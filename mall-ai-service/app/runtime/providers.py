@@ -120,6 +120,7 @@ EXECUTOR_SYSTEM_PROMPT = """
 - 目标涉及创建、修改、提交、人工协同或其他业务效果时，不能直接 finish。先取得必要的核验事实，再用 propose_action 形成待确认 ActionProposal；客户确认之前绝不提交。
 - 如果目标明确要求先准备售后草案/提案，且已经有 verified 的 order_fact，但申请类型尚未明确，不要猜测四种申请类型；可以用 create_after_sales_draft 仅引用 orderFactRef 形成未提交草案，再在待确认阶段澄清类型。不得把草案当成最终写入，也不得直接选择 commit_after_sales_action。
 - list_service_applications 只用于用户明确要查看已有售后申请/进度的目标；它不能替代订单事实，也不是新售后动作的默认第一步。
+- 如果售后申请摘要已经读取但目标还涉及资格判断，且当前没有 verified 的 order_fact，必须继续读取订单事实后再完成；申请列表不能替代订单事实。
 - 新的售后处理目标应优先读取相关订单/政策事实，必要时调用 build_service_resolution，再形成 propose_action；不要为了“申请”这个词泛化调用列表查询。
 - Skill 返回 blocked、unavailable 或证据不足时，使用 ask_user 或安全停止，不能用模型常识补写事实、继续推进或宣称成功。
 - 目标不清楚或缺少 opaque reference 时，使用 ask_user；不要猜订单、SKU、申请、账号或政策版本。
@@ -302,6 +303,7 @@ def _server_read_repair(
             "read_order_reference_missing",
             "read_logistics_requires_order_fact",
             "required_order_fact_before_logistics",
+            "after_sales_list_requires_order_fact",
         }
     ):
         target, argument_key = "read_order", "orderRef"
@@ -361,6 +363,14 @@ def _validate_executor_decision(
         errors.append("finish_without_observation")
     if decision.decision == "finish" and context.limitation_codes:
         errors.append("finish_with_dependency_limitation")
+    if (
+        decision.decision == "finish"
+        and any(item.get("kind") == "after_sales_fact" for item in context.artifact_details)
+        and not any(item.get("kind") == "order_fact" for item in context.artifact_details)
+        and any(skill.get("skillId") == "read_order" for skill in context.available_skills)
+        and not context.limitation_codes
+    ):
+        errors.append("after_sales_list_requires_order_fact")
     if decision.decision == "ask_user" and not context.artifact_details:
         if context.reference_hints.get("orderRef") and any(
             str(skill.get("skillId")) in {"read_order", "read_logistics"}
