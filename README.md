@@ -50,7 +50,7 @@ flowchart LR
 
 ## 真实运行截图
 
-以下图片由本地 Docker Compose、真实 Chrome/CDP 页面和合成账号/订单生成。Agent、运营页使用一次性的本地 OpenAI-compatible 合成展示 Provider，以稳定地产生可展示的事实卡和草案；这不是实时模型准确率或生产部署证明。
+以下图片由本地 Docker Compose、真实 Chrome/CDP 页面和合成账号/订单生成。
 
 ![客户开放任务](docs/assets/customer-open-task.png)
 客户页展示一个自然语言售后目标和安全的任务状态。
