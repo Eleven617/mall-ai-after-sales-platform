@@ -67,7 +67,7 @@ Agent 工作台展示 Java 事实、政策证据、候选草案和“等待确�
 ![开放任务演示 GIF](docs/assets/open-task-demo.gif)
 GIF 是上述真实页面的轻量流程剪辑，不代表线上服务或真实客户数据。
 
-社交预览图：[`docs/assets/social-preview.png`](docs/assets/social-preview.png)。GitHub 仓库的 Social preview 需要在网页端手动上传此文件；本项目没有创建 Release 或改变仓库可见性。
+社交预览图：[`docs/assets/social-preview.png`](docs/assets/social-preview.png)。该图片已上传到 GitHub 仓库 Social preview，并通过公开页面核对远程图片尺寸与本地文件一致；本项目没有创建 Release 或改变仓库可见性。
 
 ## 一个真实开放任务案例
 

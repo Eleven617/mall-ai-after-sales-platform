@@ -84,14 +84,16 @@
 
 这些链接分别与对应提交 SHA 一致。当前证据文件本身是其后的 docs-only 提交，不改变业务代码；交接时仍应再用 GitHub Actions 页面核对最新 `main` 运行状态。
 
-## 6. GitHub 网页端仍需手动做的动作
+## 6. GitHub 网页端动作
 
-仓库 Description 和 Topics 已存在并已核对，无需再次设置。若希望仓库卡片显示自定义预览图：
+仓库 Description 和 Topics 已存在并已核对。Social preview 已由仓库所有者在 GitHub 网页端上传并完成公开页面复核：
 
-1. 打开仓库的 **Settings → General**。
-2. 找到 **Social preview**，选择 **Upload an image**。
-3. 上传 `docs/assets/social-preview.png`（必须是本文件记录的 1280×640 合成图片）。
-4. 保存后回到仓库首页检查预览，不要创建 Release，不要修改仓库可见性。
+- 远程图片：`https://repository-images.githubusercontent.com/1332860044/1a599bf9-83c7-4d50-ac5f-69678a0357ca`
+- 远程尺寸：`1280×640`
+- 远程 SHA-256：`baf0590a1a40130d9acb32ca9913df15c1366d6819a8efd6f0a5915eff41d206`
+- 与本地 `docs/assets/social-preview.png` 完全一致。
+
+没有创建 Release，也没有修改仓库可见性。
 
 个人主页 README 已存在于 `Eleven617/Eleven617`；本次没有覆盖个人主页内容，也没有创建额外账号。
 
