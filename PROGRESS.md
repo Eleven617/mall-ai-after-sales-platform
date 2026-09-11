@@ -244,9 +244,9 @@
 - 合成 Fixture SHA-256：`d4829bd272dad498b17890b24595c288150ed89d4f59b062424b70067513e093`。
 - 主 live 报告 SHA-256：`b4041b3541e125b48e4b1114ff1e100aeeb6c40bea29f426d048850414be87d2`；holdout：`822775b454e921dc50817f764783ddd14fc65910e267b27aa2e559ecc5869612`。
 
-### 尚未完成
+### 已完成的远程交付
 
-- 证据文档尚未提交本轮最终 commit，GitHub Actions 尚未对该新 SHA 重新运行；不能把旧 Actions 链接当作本轮远程 CI 结论。
+- 证据已提交并推送：`efd3dcdd5d9c628a98b697ad63b57fe78b932cd9`；该 SHA 对应的 [`mall-ci` run 34646346032](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34646346032) 与 [`quality-evaluation` run 34646346115](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34646346115) 均为 `success`。
 - `tmp/` 下的运行报告被 Git 忽略，不提交原始报告/密码/Token；公开仓库只提交脱敏摘要和 hash。
 
 ### 下一步

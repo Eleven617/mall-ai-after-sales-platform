@@ -13,7 +13,7 @@
     "branch": "main",
     "remote": "https://github.com/Eleven617/mall-ai-after-sales-platform.git",
     "workspaceAtEvidenceStart": "clean_except_ignored_tmp",
-    "remoteCi": "pending until final push and SHA-specific verification"
+    "remoteCi": {"status": "passed", "commit": "efd3dcdd5d9c628a98b697ad63b57fe78b932cd9", "mallCi": "https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34646346032", "qualityEvaluation": "https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34646346115"}
   },
   "architecture": {
     "frontend": "mall-ai-web Vue 3/TypeScript public DTOs",

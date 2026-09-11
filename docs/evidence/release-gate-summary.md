@@ -2,7 +2,7 @@
 
 ## 当前权威结论（2026-09-12）
 
-运行时代码提交：`52d5482455e2389cfd6c2ef15d233712607ffa9f`；分支：`main`。工作区在本次运行开始时除 Git 忽略的 `tmp/` 外干净。当前本机合成 Release Gate：**通过**；最终推送后的 GitHub Actions 仍需按新提交 SHA 单独核对。
+运行时代码提交：`52d5482455e2389cfd6c2ef15d233712607ffa9f`；证据推送提交：`efd3dcdd5d9c628a98b697ad63b57fe78b932cd9`；分支：`main`。工作区在本次运行开始时除 Git 忽略的 `tmp/` 外干净。本机合成 Release Gate：**通过**；证据提交对应的远程 Actions 也已通过：[`mall-ci` run 34646346032](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34646346032)、[`quality-evaluation` run 34646346115](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34646346115)。
 
 ## 门禁矩阵
 

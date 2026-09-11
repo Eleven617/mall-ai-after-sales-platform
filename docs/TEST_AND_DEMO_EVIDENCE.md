@@ -21,6 +21,8 @@
 
 这组结果不允许外推为生产 SLA、真实用户准确率、真实支付/仓储/物流/维修成功或模型成本。旧的 122 `environment_blocked`、Grounding 11/15 和 live-model 失败报告继续保留并在 [最终失败矩阵](evidence/final-agent-failure-matrix.md) 中解释。
 
+证据提交 `efd3dcdd5d9c628a98b697ad63b57fe78b932cd9` 的远程门禁：[`mall-ci` run 34646346032](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34646346032)、[`quality-evaluation` run 34646346115](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34646346115)，均为 `success`。这只证明该提交的 CI 门禁通过，不等于生产部署。
+
 ## 2026-09-09｜最终 Docker 现场与 Build 14A 收口（最新权威记录）
 
 最终现场 Runner 已在 Docker Desktop 恢复后重新执行：运行时代码提交 `84e111d17e4117287660421ea5772a9ddcf44382`，证据同步提交 `5ea119970a2a4a9a9194dc3e1e46eff412bd406e`（仅文档）。主 Compose 与隔离 fault Compose 均可用，四类现场结果为：browser `24/24`、Java/MySQL `30/30`、fault `36/36`、durable recovery `32/32`，合计 `122/122 passed`、`0 failed`、`0 environment_blocked`。

@@ -9,7 +9,7 @@
 - 本地现场 Runner：browser 24/24、Java/MySQL 30/30、fault 36/36、durable 32/32，合计 122/122，0 failed，0 environment_blocked。
 - 现场报告：`tmp/field-acceptance-final/field-20260911T203212Z-95f5755e/field-acceptance.json`，SHA-256 `a0fbcd5c22638be8be480ae08344596a14d7874eafcd65194242b3f4df8c803e`；Fixture SHA-256 `d4829bd272dad498b17890b24595c288150ed89d4f59b062424b70067513e093`。
 
-当前本机合成 Gate 通过；本轮最终文档提交后的远程 Actions 仍需按新 SHA 复核。以上不代表生产部署、生产 SLA、真实用户泛化或真实支付/仓储/物流/维修接入。
+当前本机合成 Gate 通过；证据提交 `efd3dcdd5d9c628a98b697ad63b57fe78b932cd9` 的远程 Actions 也已通过：[`mall-ci` run 34646346032](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34646346032)、[`quality-evaluation` run 34646346115](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34646346115)。以上不代表生产部署、生产 SLA、真实用户泛化或真实支付/仓储/物流/维修接入。
 
 ## 当前结论
 

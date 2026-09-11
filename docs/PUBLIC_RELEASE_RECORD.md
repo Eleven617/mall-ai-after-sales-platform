@@ -13,7 +13,7 @@
 | Java/Web | portal 12/12、admin 6/6、Spring 1/1、Vue build passed | 显式 `-DskipTests=false`；本地 Compose |
 | 现场 Runner | 122/122，0 failed，0 blocked | 当前代码 + 合成 Fixture + Docker/Chrome/Java/MySQL/Redis/RabbitMQ |
 
-当前本地合成 Release Gate：**passed**。它不是生产发布结论。没有接入真实支付、仓储、物流、维修；未宣称生产 SLA、真实用户泛化、真实成本或真实业务数据。远程 GitHub Actions 必须在本次最终推送后按新 SHA 单独核对，历史成功运行不能代替新 SHA。
+当前本地合成 Release Gate：**passed**。证据提交 `efd3dcdd5d9c628a98b697ad63b57fe78b932cd9` 的远程 Actions 也已通过：[`mall-ci` run 34646346032](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34646346032)、[`quality-evaluation` run 34646346115](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34646346115)。它不是生产发布结论。没有接入真实支付、仓储、物流、维修；未宣称生产 SLA、真实用户泛化、真实成本或真实业务数据。
 
 ## 2026-09-09｜最终现场与 Release Gate 复核（最新权威记录）
 

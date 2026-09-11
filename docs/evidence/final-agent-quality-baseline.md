@@ -38,6 +38,7 @@ Holdout 报告：`mall-ai-service/tmp/final-agent-quality-holdout-final4-2026091
 - Vue：`npm run build` 通过，Vite 产物 JS 171.94 kB、CSS 40.03 kB。
 - Compose：主栈和隔离 fault 栈均通过 `docker compose config --quiet`，各 8/8 服务 healthy；Engine `29.7.2`。
 - 现场 Runner：报告 `tmp/field-acceptance-final/field-20260911T203212Z-95f5755e/field-acceptance.json`，SHA-256 `a0fbcd5c22638be8be480ae08344596a14d7874eafcd65194242b3f4df8c803e`，Fixture SHA-256 `d4829bd272dad498b17890b24595c288150ed89d4f59b062424b70067513e093`，`testedCodeCommit=52d5482`；browser 24/24、Java/MySQL 30/30、fault 36/36、durable recovery 32/32，合计 **122/122 passed、0 failed、0 environment_blocked**。
+- 证据提交 `efd3dcdd5d9c628a98b697ad63b57fe78b932cd9` 的 GitHub Actions 已成功：[`mall-ci` run 34646346032](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34646346032)、[`quality-evaluation` run 34646346115](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34646346115)。
 
 ## 不可扩大结论
 

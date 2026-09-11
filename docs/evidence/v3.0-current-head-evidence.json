@@ -5,7 +5,7 @@
     "remote": "https://github.com/Eleven617/mall-ai-after-sales-platform.git",
     "branch": "main",
     "testedCodeCommit": "52d5482455e2389cfd6c2ef15d233712607ffa9f",
-    "evidenceCommit": "b48bb11fff62570e52152a632946a2762560bbbb",
+    "evidenceCommit": "efd3dcdd5d9c628a98b697ad63b57fe78b932cd9",
     "workspaceAtStart": "clean_except_ignored_tmp"
   },
   "scope": {
@@ -70,7 +70,7 @@
   },
   "claims": {
     "currentLocalSyntheticFieldGate": "passed",
-    "currentRemoteCi": "pending until final push and SHA-specific Actions verification",
+    "currentRemoteCi": {"status": "passed", "commit": "efd3dcdd5d9c628a98b697ad63b57fe78b932cd9", "mallCi": "https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34646346032", "qualityEvaluation": "https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34646346115"},
     "productionAccuracy": false,
     "productionSla": false,
     "realUserGeneralization": false,
