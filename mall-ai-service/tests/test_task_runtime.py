@@ -572,6 +572,37 @@ def test_context_pack_is_present_on_the_executor_turn_after_a_read() -> None:
     assert second.memory_hints == ["后续仅复用仍有效的事实引用。"]
 
 
+def test_invalid_curator_memory_projection_is_dropped_without_runtime_failure() -> None:
+    """A model-generated context hint cannot crash an otherwise safe read task."""
+
+    provider = ScriptedRuntimeProvider(
+        decisions=[
+            _decision(
+                name="call_skill",
+                summary="读取已核验订单事实。",
+                calls=[SkillCall(skill_id="read_order", arguments={"orderRef": "ref-order-alpha"})],
+            ),
+            _decision(name="finish", summary="已完成事实核验。"),
+        ],
+        curator_output=CuratorModelOutput(
+            verified_facts=["Java 已核验当前账号的合成订单事实。"],
+            memory_hints=["模型生成的摘要包含 123456789012，不应持久化。"],
+        ),
+    )
+
+    runtime = _runtime(provider, RecordingGateway({"read_order": _observation()}))
+    result = runtime.create_task(
+        session_id=SESSION_ID,
+        goal="核验合成订单事实",
+        member_id=MEMBER_ID,
+        authorization=AUTHORIZATION,
+    )
+
+    assert result.view.status == "completed"
+    bundle = runtime._store._items[result.view.task_ref]  # noqa: SLF001 - validates safe context projection
+    assert bundle.context_packs[-1].memory_hints == []
+
+
 def test_task_memory_skill_is_owner_scoped_and_never_calls_gateway() -> None:
     """MALL-R4: memory lookup is a Runtime-safe projection, not a tool payload."""
 
