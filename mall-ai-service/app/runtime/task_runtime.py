@@ -370,8 +370,9 @@ class TaskRuntime:
                     )
                     self._save(bundle)
                     transient_input = (
-                        "服务端已执行相同参数的只读 Skill；不要重复读取。"
-                        "请使用已有事实完成只读回答，或在需要业务效果时形成待确认行动提案。"
+                        "服务端已拒绝相同参数的重复只读 Skill；当前已有事实不会因重复调用而增加。"
+                        "下一次决策必须使用已有事实 finish，或在确实缺少信息时 ask_user；"
+                        "不得再次 call_skill，也不得把重复读取当成新的证据。"
                     )
                     continue
                 self._validate_decision(decision, task, discovered, bundle)

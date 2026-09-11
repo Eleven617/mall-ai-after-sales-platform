@@ -34,7 +34,7 @@ class RuntimeModelError(RuntimeError):
         self.category = category
 
 
-RUNTIME_PROMPT_VERSION = "agent_runtime_v3_1"
+RUNTIME_PROMPT_VERSION = "agent_runtime_v3_2"
 
 
 class RuntimeModelContext(BaseModel):
@@ -143,6 +143,8 @@ EXECUTOR_SYSTEM_PROMPT = """
 [停止与重试边界]
 - 已经取得足以回答只读目标的已核验事实后，使用 finish；不要为了“再确认一次”重复调用同一 Skill。
 - 同一 Skill 只有在参数确实不同且目标仍缺少必要事实时才可再次调用；不要先用空参数试探。
+- 如果服务端明确说明已拒绝相同参数的重复只读调用，下一步只能使用现有事实 finish，
+  或 ask_user 说明缺口；严禁再次 call_skill。
 - 如果没有可用的 opaque reference，使用 ask_user 请求必要信息；不要猜订单、SKU、申请或政策版本。
 - 如果上下文提供了 reference_hints，只能原样使用其中与当前 Skill 输入匹配的 opaque reference；不要改写、拼接或回显其原始业务值。
 - 当 reference_hints 包含当前只读 Skill 所需的引用时，应直接使用该服务端引用读取事实，不要再次追问同一个已提供的引用。
