@@ -1,136 +1,78 @@
 {
-  "schemaVersion": "resume-fact-pack.v1",
-  "generatedAt": "2026-09-05T13:35:00+08:00",
+  "schemaVersion": "resume-fact-pack.v2",
+  "generatedAt": "2026-09-12T04:45:00+08:00",
   "project": {
-    "name": "Mall v3.0 Trusted E-commerce After-sales and AgentOps Platform",
+    "name": "Mall AI After-sales Platform",
     "repository": "https://github.com/Eleven617/mall-ai-after-sales-platform",
-    "branch": "main",
-    "problem": "可信电商订单、物流、政策和售后协同",
+    "problem": "可信电商订单、物流、政策与售后协同",
     "userRoles": ["customer", "operations", "quality_developer", "after_sales_processor"],
-    "upstream": "macrozheng/mall 二次开发，Apache-2.0 归属见 UPSTREAM.md/NOTICE"
+    "upstream": "macrozheng/mall 二次开发，Apache-2.0 归属见 UPSTREAM.md 和 NOTICE"
   },
   "revision": {
-    "currentHead": "7f9cfb2d5171a88b2f6c5714f965e528c2543cc5",
+    "testedCodeCommit": "52d5482455e2389cfd6c2ef15d233712607ffa9f",
     "branch": "main",
-    "workspaceCleanBeforeFactPack": true,
     "remote": "https://github.com/Eleven617/mall-ai-after-sales-platform.git",
-    "aheadOfOriginByCommits": 1,
-    "testedBusinessCodeCommit": "38cf3809e48ec08bead6accc07a4ace27ebf5f59",
-    "testedBusinessCodeCommitRelation": "current HEAD 后续仅为证据/进度文档提交；严格报告身份仍按 currentHead 匹配",
-    "pushPerformed": false
+    "workspaceAtEvidenceStart": "clean_except_ignored_tmp",
+    "remoteCi": "pending until final push and SHA-specific verification"
   },
   "architecture": {
-    "frontend": "mall-ai-web Vue 3/TypeScript，只展示安全公开 DTO",
-    "api": "mall-ai-service FastAPI routers，客户、运营、质量、人工处理和 MCP 入口",
-    "agentRuntime": "app/runtime/task_runtime.py + task_store.py + task_planner.py，受限计划/Skill/观察/重规划/Proposal",
-    "supervisorExecutorCritic": ["commerce_executor/runtime provider", "context_curator", "resolution_critic 条件触发"],
-    "workflowBoundary": "统一售后和 LangGraph 只保留事实、资格、Proposal、确认、Java 写入等确定边界",
-    "javaAuthority": "mall2 portal/admin 负责 JWT、归属、资格、状态机、幂等、事务、Outbox、最终写入",
+    "frontend": "mall-ai-web Vue 3/TypeScript public DTOs",
+    "api": "mall-ai-service FastAPI customer, operations, quality, processor and MCP routes",
+    "agentRuntime": "task_runtime.py + task_planner.py + task_store.py",
+    "contextMemory": "context_curator.py + task_memory.py with owner/TTL and safe Artifact projections",
+    "workflowBoundary": "LangGraph/unified after-sales keeps fact, eligibility, proposal, confirmation and Java write boundaries",
+    "javaAuthority": "mall2 portal/admin owns identity, ownership, eligibility, state machine, idempotency, transactions, Outbox and final write",
     "storage": ["MySQL", "Redis", "Mongo task store", "RabbitMQ/MySQL Outbox"],
-    "mcp": "认证 Streamable HTTP/SSE，只读工具",
-    "externalSystems": "支付、仓储、物流、维修未接入真实系统"
+    "rag": "versioned policy chunks, Dense default, Hybrid/Rerank experiments",
+    "mcp": "authenticated read-only tools"
   },
   "agentCapabilities": {
-    "dynamicSkillSelection": true,
-    "multiStepTasks": true,
-    "contextPack": true,
-    "ownerScopedMemoryWithTtl": true,
-    "pauseResume": "有 Task Runtime 状态和待确认门；完整现场恢复套件未全部运行",
-    "replanning": true,
-    "proposalAndHumanConfirmation": true,
-    "ragEvidenceAndAbstention": true,
-    "multiAgentHandoff": "运营/质量/人工角色存在，但不宣称 swarm",
-    "streaming": "有限 SSE 事件快照",
-    "businessWrites": "只有确认后的 Java 受控写入"
+    "openTask": ["goal understanding", "bounded Skill selection", "read-only multi-step investigation", "Context projection", "proposal/resume", "safe stop"],
+    "liveSynthetic": {"mainRuns": "72/72", "holdoutRuns": "36/36", "forbiddenSideEffects": 0, "duplicateFinalBusinessWrites": 0},
+    "fieldAcceptance": {"browser": "24/24", "javaMysql": "30/30", "fault": "36/36", "durableRecovery": "32/32", "total": "122/122"}
   },
-  "techStack": ["Java", "Spring Boot", "MyBatis", "FastAPI", "Pydantic", "LangGraph", "Vue 3", "TypeScript", "Redis", "MySQL", "MongoDB", "RabbitMQ", "Docker Compose", "Chroma", "BM25", "RRF", "Cross-Encoder", "MCP", "pytest", "Maven", "GitHub Actions"],
-  "fixtures": {
-    "evals/v3/release-manifest.json": "d9fc72be81e2f67330710052c03287d49677bf7eb6f54eed51b87c01db2ac1ad",
-    "evals/v3/caseSetSha256": "18a3ad20485417bbebd8bad875490cf80b171ed28760b1dc2dfbd203d1938ccd",
-    "mall-ai-service/evals/live_model_agent_runtime_cases.v1.json": "d5de1e85fa40eace714b051e78e830bee4b367545d154e0b435fc247b2a7b99d",
-    "mall-ai-service/evals/rag2_golden_cases.v1.json": "632f36c30a21c0b76a5ae18cc2f4b74ff887f70b37c42235f4b776aad8a4fcc1",
-    "mall-ai-service/evals/rag_grounding_cases.json": "72d36be4dfec0888fcac57eb211fb85413018c8254db7d52f1914d6703966f11",
-    "mall-ai-service/evals/rag_chunk_metadata_cases.v1.json": "a10f963c4dfba5de0b4b7efb6e60c8238f59553e53b9c090da86c9702b040c24",
-    "mall-ai-service/evals/quality_agent_cases.v2.json": "ef3cbcb70b92b82a7e115886b6d771c358cd459da9633bd4201dd766b6d878a7",
-    "mall-ai-service/evals/task_orchestration_cases.v1.json": "c8489ec40ff99a23fb146aca752a19f072bf042d9d0ec04313041cf184eab3b8",
-    "tmp/live_model_agent_runtime_report_current_head.json": "20e82406f4f8eceaf722dfc13249fe08f3d13e31b64eb791c122c54c7f112e0b",
-    "tmp/rag2_grounding_current_head.json": "f254dea3c765251ae49385a3f6c1fd93276b474717f040557b8c7a57093cf0be"
-  },
+  "techStack": ["Java", "Spring Boot", "FastAPI", "LangGraph", "Vue 3", "Redis", "MySQL", "MongoDB", "RabbitMQ", "RAG", "MCP", "AgentOps", "Eval"],
   "tests": {
-    "currentHeadDeterministic": [
-      {"suite": "FastAPI", "command": ".\\.venv\\Scripts\\python.exe -m pytest -q", "passed": 349, "failed": 0, "blocked": 0, "exitCode": 0},
-      {"suite": "v3 manifest", "command": "python scripts/validate_v3_release_manifest.py --json", "passed": 478, "registered": 478, "failed": 0, "exitCode": 0},
-      {"suite": "v3 preflight", "command": "python scripts/run_v3_release_preflight.py --json", "passed": 478, "representativePassed": 8, "failed": 0, "exitCode": 0},
-      {"suite": "Quality Agent contract_mock", "command": "python scripts/run_quality_agent_evaluation.py", "passed": 17, "failed": 0, "exitCode": 0},
-      {"suite": "Task orchestration contract_mock", "command": "python scripts/evaluate_task_orchestration.py --mode contract_mock", "passed": 11, "failed": 0, "environmentBlocked": 0, "exitCode": 0},
-      {"suite": "Chunk/Metadata", "command": "python scripts/evaluate_chunk_metadata.py --summary", "passed": 8, "failed": 0, "externalModelCalls": 0, "exitCode": 0},
-      {"suite": "RAG Dense", "command": "python scripts/evaluate_rag2.py --summary", "passed": 52, "failed": 0, "mrr": 0.948718, "ndcgAt3": 0.962147, "exitCode": 0},
-      {"suite": "RAG Hybrid", "command": "python scripts/evaluate_rag2.py --summary", "passed": 52, "failed": 0, "mrr": 0.935897, "ndcgAt3": 0.952683, "exitCode": 0},
-      {"suite": "RAG Hybrid+Rerank", "command": "python scripts/evaluate_rag2.py --summary", "passed": 52, "failed": 0, "p95Ms": 2817.72, "exitCode": 0},
-      {"suite": "Java portal", "command": "mvn -pl mall-portal -am -DskipTests=false -Dsurefire.failIfNoSpecifiedTests=false test", "passed": 14, "failed": 0, "skipped": 0, "exitCode": 0},
-      {"suite": "Java admin", "command": "mvn -pl mall-admin -am -DskipTests=false -Dsurefire.failIfNoSpecifiedTests=false test", "passed": 6, "failed": 0, "skipped": 0, "exitCode": 0},
-      {"suite": "Vue production build", "command": "npm run build", "status": "passed", "exitCode": 0},
-      {"suite": "Compose contract", "command": "docker compose --env-file .env.example config --quiet", "status": "passed", "exitCode": 0}
-    ],
-    "currentHeadLiveModel": {"status": "stale_report", "report": "tmp/live_model_agent_runtime_report_current_head.json", "cases": 24, "runs": 72, "passed": 24, "failed": 48, "environmentBlocked": 0, "testedCommit": "38cf3809e48ec08bead6accc07a4ace27ebf5f59"},
-    "currentHeadGrounding": {"status": "stale_report", "report": "tmp/rag2_grounding_current_head.json", "cases": 15, "passed": 11, "qualityFailed": 4, "environmentBlocked": 0, "testedCommit": "38cf3809e48ec08bead6accc07a4ace27ebf5f59"},
-    "manifestRegisteredButNotFieldRun": {"browserE2E": 24, "javaMySqlIntegration": 30, "faultInjection": 36, "durableAsyncRecovery": 32}
+    "fastapi": {"passed": 362, "failed": 0, "warnings": 1, "subtests": 7, "exitCode": 0},
+    "v3": {"deterministic": "478/478", "representative": "8/8", "exitCode": 0},
+    "java": {"portal": "12/12", "admin": "6/6", "springContext": "1/1"},
+    "web": "npm run build passed",
+    "grounding": {"cases": "15/15", "checks": "57/57", "environmentBlocked": 0},
+    "field": {"total": "122/122", "environmentBlocked": 0, "reportSha256": "a0fbcd5c22638be8be480ae08344596a14d7874eafcd65194242b3f4df8c803e"}
   },
   "metrics": {
-    "ragDense": {"recallAt3": 1.0, "mrr": 0.948718, "ndcgAt3": 0.962147, "dataset": "rag2-golden.v1, 52 synthetic cases"},
-    "ragHybrid": {"recallAt3": 1.0, "mrr": 0.935897, "ndcgAt3": 0.952683, "dataset": "rag2-golden.v1, 52 synthetic cases"},
-    "ragHybridRerank": {"recallAt3": 1.0, "mrr": 0.935897, "ndcgAt3": 0.952683, "p95Ms": 2817.72, "dataset": "rag2-golden.v1, 52 synthetic cases"},
-    "liveModelSyntheticHistorical": {"taskSuccess": "46/72", "clarificationCorrect": "62/72", "requiredSkillOrFactCoverage": "29/72", "proposalOrResume": "56/72", "p95Ms": 7859, "tokens": 333383, "cost": "unavailable", "status": "stale_report"},
-    "groundingHistorical": {"passRate": 0.733333, "passed": 11, "qualityFailed": 4, "cost": "unavailable", "status": "stale_report"}
+    "mainLiveReportSha256": "b4041b3541e125b48e4b1114ff1e100aeeb6c40bea29f426d048850414be87d2",
+    "mainRuntimeLatencyMs": {"p50": 6297, "p95": 10672, "max": 13406},
+    "mainTotalTokens": 558431,
+    "holdoutReportSha256": "822775b454e921dc50817f764783ddd14fc65910e267b27aa2e559ecc5869612",
+    "holdoutRuntimeLatencyMs": {"p50": 5891, "p95": 9422, "max": 9546},
+    "holdoutTotalTokens": 280390,
+    "pricingConfigured": false,
+    "cost": null
   },
   "reliability": {
-    "traceSchema": "trace-v2 allow-list",
-    "forbiddenSideEffectsHistoricalLive": 0,
-    "duplicateFinalBusinessWritesHistoricalLive": 0,
-    "javaIdempotencyAndOutbox": "implemented in Java source and targeted tests; full integration/fault recovery not field-run",
-    "failureStop": true,
-    "fullFaultRecoveryEvidence": "unavailable"
+    "fieldFaultAndRecovery": "passed on local isolated Compose",
+    "noUnconfirmedBusinessWrite": true,
+    "noDuplicateFinalWrite": true,
+    "historicalFailures": "retained in docs/evidence/final-agent-failure-matrix.md"
   },
   "security": {
-    "llmDirectBusinessDbWrite": false,
-    "javaAuthoritativeFacts": true,
-    "roleIsolation": true,
-    "publicDtoRedaction": true,
-    "mcpReadOnly": true,
-    "gitleaksAndOsVHistorical": "remote success exists for prior commit; current HEAD has no new remote run"
+    "secretPolicy": "no .env, password, token, key, raw customer message, full order ID or raw trace committed",
+    "authority": "Java owns permission, ownership, eligibility, state, idempotency and final write",
+    "crossAccount": "covered by synthetic field/runtime checks"
   },
-  "personalContribution": {
-    "implementedOrIntegrated": ["AI 售后入口与统一售后编排", "Task Runtime/Skill/Proposal 边界", "RAG 2.0 与证据核验", "Trace/Eval/Release Manifest", "Java facts/proposal/outbox integration", "role-specific Vue pages", "tests and evidence documents"],
-    "humanResponsibilities": ["业务范围", "权限/隐私边界", "Java 写入权威", "幂等和消息语义", "最终验收口径"],
-    "aiAssistance": ["代码检索", "实现草案", "测试设计", "文档和验证编排"],
-    "notClaimed": ["独立完成 macrozheng/mall 上游全部代码", "生产运维或真实外部履约系统所有权"]
-  },
-  "upstreamBoundary": {"upstream": "macrozheng/mall", "license": "Apache-2.0", "evidence": ["UPSTREAM.md", "NOTICE", "docs/CONTRIBUTION_MATRIX.md"]},
-  "aiAssistance": {"disclosure": "AI 辅助参与检索、草案、测试和文档；人工审阅、决定边界并验证", "noSensitiveDataInFactPack": true},
+  "personalContribution": ["Agent Runtime safety contracts", "after-sales proposal/confirmation boundary", "Context and read-loop hardening", "tests/evals/field evidence", "README and release evidence"],
+  "upstreamBoundary": "mall2 order/member/admin foundations remain macrozheng/mall upstream; not claimed as original",
+  "aiAssistance": "AI assistance may generate drafts; contribution claims are limited to reviewed design, edits, tests and verification",
   "resumeReadyClaims": [
-    {"claim": "基于 macrozheng/mall 二次开发可信电商售后与 AgentOps 平台，Java 权威处理事实、权限、状态机、幂等、事务和最终写入。", "evidence": ["docs/architecture.md", "docs/CONTRIBUTION_MATRIX.md"], "commit": "7f9cfb2d5171a88b2f6c5714f965e528c2543cc5", "fixtureOrReportHash": null, "dataBoundary": "本地合成/开源上游", "confidence": "high", "followUp": "哪些是上游，哪些是新增？", "cannotExpand": "不能说成原创商城或生产 SaaS"},
-    {"claim": "建立 v3 版本化发布清单和确定性 preflight，478/478 deterministic Case、8/8 代表性 Runtime 通过。", "evidence": ["evals/v3/release-manifest.json", "scripts/validate_v3_release_manifest.py", "scripts/run_v3_release_preflight.py"], "commit": "7f9cfb2d5171a88b2f6c5714f965e528c2543cc5", "fixtureOrReportHash": "d9fc72be81e2f67330710052c03287d49677bf7eb6f54eed51b87c01db2ac1ad", "dataBoundary": "无模型、无业务写入的确定性合同", "confidence": "high", "followUp": "manifest 如何防止 skip/空断言？", "cannotExpand": "不能说成 478 条真实用户任务"},
-    {"claim": "实现受限 Agent Runtime：计划、版本化 Skill、只读调查、Context Pack、owner 隔离和 ActionProposal 确认门。", "evidence": ["mall-ai-service/app/runtime/task_runtime.py", "mall-ai-service/app/runtime/task_store.py", "mall-ai-service/app/skills/catalog.py"], "commit": "7f9cfb2d5171a88b2f6c5714f965e528c2543cc5", "fixtureOrReportHash": "c8489ec40ff99a23fb146aca752a19f072bf042d9d0ec04313041cf184eab3b8", "dataBoundary": "contract_mock 11/11", "confidence": "high", "followUp": "模型如何不能自创工具？", "cannotExpand": "不能说成通用自治 Agent"},
-    {"claim": "在 52 条版本化合成政策集上对比 Dense、Hybrid 和 Cross-Encoder Rerank，并保持 Dense 默认。", "evidence": ["mall-ai-service/scripts/evaluate_rag2.py", "mall-ai-service/evals/rag2_golden_cases.v1.json"], "commit": "7f9cfb2d5171a88b2f6c5714f965e528c2543cc5", "fixtureOrReportHash": "632f36c30a21c0b76a5ae18cc2f4b74ff887f70b37c42235f4b776aad8a4fcc1", "dataBoundary": "当前小型合成政策语料", "confidence": "high", "followUp": "为何不默认 Rerank？", "cannotExpand": "不能写生产准确率/成本下降"},
-    {"claim": "用 allow-list Trace、Quality Agent contract_mock 和任务编排合同测试覆盖模型不可用、越权、工具失败、非法结构化输出和重复调用。", "evidence": ["mall-ai-service/app/services/trace_service.py", "mall-ai-service/scripts/run_quality_agent_evaluation.py"], "commit": "7f9cfb2d5171a88b2f6c5714f965e528c2543cc5", "fixtureOrReportHash": "ef3cbcb70b92b82a7e115886b6d771c358cd459da9633bd4201dd766b6d878a7", "dataBoundary": "Quality 17/17、Task 11/11 synthetic contract", "confidence": "high", "followUp": "硬失败由谁裁决？", "cannotExpand": "不能说完整故障现场已通过"},
-    {"claim": "Java portal/admin 定向协同与运营测试 14/14、6/6 通过，并完成 Vue production build。", "evidence": ["mall2/mall-portal/src/test", "mall2/mall-admin/src/test", "mall-ai-web/package.json"], "commit": "7f9cfb2d5171a88b2f6c5714f965e528c2543cc5", "fixtureOrReportHash": null, "dataBoundary": "本机定向单测与构建", "confidence": "high", "followUp": "是否做过 MySQL 全量集成？", "cannotExpand": "不能说 Java/MySQL 全量现场通过"}
+    "实现受限开放任务 Agent Runtime，支持 Skill 白名单、只读调查、Context 和 ActionProposal",
+    "DeepSeek 合成只读网关主集 72/72、holdout 36/36，通过且无禁止副作用",
+    "Java 权威事实/权限/状态/幂等/事务/Outbox，LLM 无直接业务库写权限",
+    "版本化政策 RAG Dense 默认，grounding contract 15/15、57/57 checks",
+    "本地 Docker/Chrome/Java/MySQL/消息栈四类现场 Runner 122/122",
+    "建立 FastAPI、Java、Vue、manifest 和质量评测门禁"
   ],
-  "interviewOnlyClaims": [
-    {"claim": "历史 live_model_agent_synthetic 24/72 通过，失败类别可用于讲 Agent 评测闭环。", "status": "stale_report", "reportHash": "20e82406f4f8eceaf722dfc13249fe08f3d13e31b64eb791c122c54c7f112e0b"},
-    {"claim": "历史 Grounding 11/15 通过，4 条 UNAPPROVED_EVIDENCE_SOURCE。", "status": "stale_report", "reportHash": "f254dea3c765251ae49385a3f6c1fd93276b474717f040557b8c7a57093cf0be"},
-    {"claim": "历史 Docker 8/8 healthy、endpoint 3/3、旧提交 GitHub Actions success。", "status": "historical_commit_only"}
-  ],
-  "notReadyClaims": [
-    "当前 HEAD GitHub Actions 全绿",
-    "生产准确率、真实用户泛化、生产 SLA/QPS/成本",
-    "24 browser E2E、30 Java/MySQL integration、36 fault injection、32 durable async recovery 全部现场通过",
-    "真实支付、仓储、物流、维修接入",
-    "个人独立完成 macrozheng/mall 全部上游代码"
-  ],
-  "limitations": [
-    "当前 HEAD 未推送，远程 Actions 只对应旧提交",
-    "live model/Grounding 报告 commit 不匹配，按 stale 处理",
-    "完整浏览器、跨服务集成和故障恢复未逐条现场运行",
-    "模型成本 unavailable，当前 RAG/模型指标只适用于合成数据和本机环境"
-  ]
+  "interviewOnlyClaims": ["历史失败归因与通用 Runtime 修复", "Prompt v3_3 与订单事实 repair", "现场 Runner 的隔离故障与恢复设计"],
+  "notReadyClaims": ["生产 SLA/QPS", "真实用户泛化准确率", "真实支付/仓储/物流/维修", "模型成本优化", "将上游 Mall 基础能力写成原创"],
+  "limitations": ["最终推送后需以新 SHA 核对 GitHub Actions", "价格未配置所以成本 unavailable", "本机结果不等于生产", "旧 Commit 报告必须标 stale/superseded"]
 }

@@ -227,3 +227,36 @@
 - 四类现场结果：browser `24/24`、Java/MySQL `30/30`、fault `36/36`、durable recovery `32/32`；合计 `122/122 passed`、`0 failed`、`0 environment_blocked`。此前旧 Fixture 导致的阻断报告仅作为 superseded 证据保留。
 - Build 14A 最新重跑：`tmp/run_build14.ps1` → `verify_build14_eligibility_live.py`，退出码 `0`；负资格拒绝、正资格通过、第二账号隔离、同幂等键复用和事务性 Outbox 均通过。密码只存在进程环境。
 - 当前只剩证据交接：补齐 `docs/final-handoff/` 八份文件，提交并推送；然后等待该文档提交对应的 `mall-ci` 与 `quality-evaluation` 真实结果。运行时代码没有新增修改。
+
+## 2026-09-12｜最终技术负责人收口（当前记录）
+
+### 已完成
+
+- 运行时代码基线为 `52d5482455e2389cfd6c2ef15d233712607ffa9f`，本轮没有删除测试、放宽断言、关闭扫描或修改业务数据库契约。
+- 全量 FastAPI 回归 **362 passed**、1 条第三方弃用警告、7 个子断言；Vue `npm run build` 通过；Java portal 定向 **12/12**、admin **6/6**；`MallPortalApplicationTests.contextLoads` 使用临时 Compose MySQL 配置 **1/1**。
+- v3 manifest/preflight **478/478、8/8**；Grounding **15/15、57/57 checks**；DeepSeek live synthetic 主集 **72/72**、holdout **36/36**，均无禁止副作用和重复最终写入。
+- Docker Engine `29.7.2` 已恢复；主栈与隔离 fault 栈各 8/8 healthy。当前合成 Fixture 绑定的现场 Runner 报告为 `tmp/field-acceptance-final/field-20260911T203212Z-95f5755e/field-acceptance.json`，四类合计 **122/122 passed、0 failed、0 environment_blocked**。
+- 已新增/更新最终事实包：`docs/evidence/final-agent-quality-baseline.md/.json`、`final-agent-failure-matrix.md`、`v3.0-current-head-evidence.md/.json`、`release-gate-summary.md`、`resume-fact-pack.md/.json`，并同步 README、测试证据、公开发布记录和 claim matrix。
+
+### 证据指纹
+
+- 现场报告 SHA-256：`a0fbcd5c22638be8be480ae08344596a14d7874eafcd65194242b3f4df8c803e`。
+- 合成 Fixture SHA-256：`d4829bd272dad498b17890b24595c288150ed89d4f59b062424b70067513e093`。
+- 主 live 报告 SHA-256：`b4041b3541e125b48e4b1114ff1e100aeeb6c40bea29f426d048850414be87d2`；holdout：`822775b454e921dc50817f764783ddd14fc65910e267b27aa2e559ecc5869612`。
+
+### 尚未完成
+
+- 证据文档尚未提交本轮最终 commit，GitHub Actions 尚未对该新 SHA 重新运行；不能把旧 Actions 链接当作本轮远程 CI 结论。
+- `tmp/` 下的运行报告被 Git 忽略，不提交原始报告/密码/Token；公开仓库只提交脱敏摘要和 hash。
+
+### 下一步
+
+1. 校验 JSON、`git diff --check` 和当前工作区。
+2. 提交证据与 README 更新，推送 `main`。
+3. 等待并核对该 SHA 对应的 `mall-ci`、`quality-evaluation`；只在真实成功后更新远程 CI 结论。
+
+### 不可扩大
+
+- 122/122 是当前机器、本地 Docker/Chrome 和合成 Fixture 的现场证据，不是生产 SLA 或真实用户泛化。
+- 没有真实支付、仓储、物流、维修系统；不能宣称外部履约成功。
+- 上游 `macrozheng/mall` 的商城基础能力不归为个人原创。

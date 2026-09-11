@@ -1,5 +1,9 @@
 # 测试、评测与现场证据
 
+## 2026-09-12 当前代码补测
+
+当前运行时代码：`52d5482455e2389cfd6c2ef15d233712607ffa9f`。FastAPI **362 passed**；live model main **72/72**、holdout **36/36**；Grounding **15/15、57/57 checks**；v3 deterministic **478/478、8/8**；Java portal/admin **12/12、6/6**；Vue build 通过；本地四类现场 Runner **122/122**。原始报告和 hash 见 [`final-agent-quality-baseline.md`](../evidence/final-agent-quality-baseline.md)。旧数字如与本节冲突，按 stale/superseded 处理。
+
 ## 证据原则
 
 每个结果都绑定命令、退出码、运行模式、Commit、Fixture/报告 hash 和限制。确定性合同、真实 Docker 现场、合成模型评测和远程 GitHub CI 分开统计，不能相加。
@@ -52,4 +56,3 @@
 ## 历史与限制
 
 旧 Fixture 产生的阻断报告是 superseded；旧 Commit 的现场结果是 stale。历史 Build 21 曾出现等待任务缺失的独立重跑失败，已保留为运行时波动，不被隐藏。没有真实支付/仓储/物流/维修系统、生产告警、生产 SLA 或真实客户数据。
-

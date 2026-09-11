@@ -18,3 +18,12 @@
 ## 当前结论
 
 真实模型结果必须按当前提交的最新报告读取。即使某轮通过率提升，也不能删除失败 Case、把合成网关结果写成真实业务成功，或由 LLM-as-a-Judge 覆盖硬失败。新失败先进入本文件和失败矩阵；只有抽象为通用缺口并补回归测试后，才可调整 Prompt、Schema 或 Skill 元数据。
+
+## 2026-09-12｜当前代码闭环
+
+当前运行时代码 `52d5482455e2389cfd6c2ef15d233712607ffa9f` 的通用修复已形成可回归证据：
+
+- Prompt 版本升至 `agent_runtime_v3_3`，对售后草案在订单事实已验证但类型未明时只形成未提交 draft，不猜四类业务类型；`task_runtime` 还会在申请摘要不能替代订单事实时强制只读补查 order fact。
+- 已验证事实出现 resolution candidate 时，服务端拒绝无必要的重复 `spawn_subtask`；服务端 repair 会安全结束，不增加无关 Skill 调用。
+- 受影响 Runtime 回归：`mall-ai-service/.venv/Scripts/python.exe -m pytest -q` 全量 **362 passed**；live main `72/72`、holdout `36/36`，两套均为 synthetic read-only gateway。
+- 旧失败数字仍作为归因材料保留：70/72、71/72 等历史运行不是“被删除”，而是证明缺口已被通用合同/服务端修复覆盖；当前报告的失败数为 0，仍不等于自然语言泛化率。

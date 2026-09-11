@@ -1,5 +1,20 @@
 # 公开发布记录
 
+## 2026-09-12｜最终收口复核（当前权威记录）
+
+运行时代码基线：`52d5482455e2389cfd6c2ef15d233712607ffa9f`，分支 `main`。本节覆盖当前真实执行；下方旧日期内容仅作历史审计，不能覆盖本节或与其相加。
+
+| 门禁 | 当前结果 | 证据 |
+| --- | --- | --- |
+| FastAPI | 362 passed，0 failed | `mall-ai-service/.venv/Scripts/python.exe -m pytest -q`，exit 0 |
+| Live model synthetic | main 72/72、holdout 36/36 | DeepSeek + synthetic read-only gateway；无业务写入 |
+| Grounding | 15/15，57/57 checks | `tmp/final-grounding-20260912.txt`，exit 0 |
+| v3 deterministic | 478/478，代表性 8/8 | manifest/preflight，exit 0 |
+| Java/Web | portal 12/12、admin 6/6、Spring 1/1、Vue build passed | 显式 `-DskipTests=false`；本地 Compose |
+| 现场 Runner | 122/122，0 failed，0 blocked | 当前代码 + 合成 Fixture + Docker/Chrome/Java/MySQL/Redis/RabbitMQ |
+
+当前本地合成 Release Gate：**passed**。它不是生产发布结论。没有接入真实支付、仓储、物流、维修；未宣称生产 SLA、真实用户泛化、真实成本或真实业务数据。远程 GitHub Actions 必须在本次最终推送后按新 SHA 单独核对，历史成功运行不能代替新 SHA。
+
 ## 2026-09-09｜最终现场与 Release Gate 复核（最新权威记录）
 
 当前远程 `main` 在证据复核开始时为 `5ea119970a2a4a9a9194dc3e1e46eff412bd406e`；该提交及本次后续提交只新增证据/交接文档，现场运行时代码仍绑定 `84e111d17e4117287660421ea5772a9ddcf44382`。Docker Engine `29.7.2` 可用，主 Compose 与隔离 fault Compose 均健康。

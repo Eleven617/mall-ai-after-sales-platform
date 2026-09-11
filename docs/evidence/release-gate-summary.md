@@ -1,101 +1,37 @@
 # Mall v3.0 Release Gate 复核
 
-## 2026-09-07 公开收口状态更新
+## 当前权威结论（2026-09-12）
 
-本文件主体保留 2026-09-05 对审计基线 `7f9cfb2d5171a88b2f6c5714f965e528c2543cc5` 的原始复核结论，不能再把其中“尚未推送、当前提交没有远程 CI”的描述理解为仓库现状。三份事实包随后已在提交 `157032896b1659d018bbaa486a43d042a2358fa7` 发布到 `main`，并由 GitHub 对该提交完成远程验证：
+运行时代码提交：`52d5482455e2389cfd6c2ef15d233712607ffa9f`；分支：`main`。工作区在本次运行开始时除 Git 忽略的 `tmp/` 外干净。当前本机合成 Release Gate：**通过**；最终推送后的 GitHub Actions 仍需按新提交 SHA 单独核对。
 
-- `mall-ci`：<https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/33985232690>，**success**。
-- `quality-evaluation`：<https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/33985232668>，**success**。
+## 门禁矩阵
 
-因此，项目的**公开作品集工程收口**已经通过：代码、README、真实合成截图、确定性测试证据、上游归属、安全扫描和远程 CI 均已有可追溯入口。这里的“收口”不等于生产发布，也不抹掉真实模型评测中的失败：开放任务 Agent 历史报告仍为 `24/72` 严格合同通过，Grounding 仍为 `11/15`，完整浏览器、Java/MySQL、故障注入和 durable recovery 清单也没有全部逐条现场执行。对应原始报告继续保存在被 Git 忽略的 `tmp/`，公开仓库只提交脱敏汇总、报告哈希、命令与失败边界。
-
-后续不应为了制造更好看的数字重复昂贵 live-model 测试或放宽比较器。只有在 Prompt、模型、Tool Schema、RAG、Runtime 或相关业务边界发生实质变化时，才重新运行对应套件并生成新的版本化证据。
-
-复核时间：2026-09-05（Asia/Shanghai）  
-当前 HEAD：`7f9cfb2d5171a88b2f6c5714f965e528c2543cc5`  
-分支：`main`  
-结论：**未通过**
-
-“未通过”不是因为当前确定性门禁失败，而是因为发布门禁要求同时满足当前提交身份、远程验证和现场范围。本次当前 HEAD 尚未推送；最近成功的 `mall-ci` / `quality-evaluation` 对应旧提交 `94d782053c8ba188d2d79af0b3d5632ac685a8b8`，不能外推到当前 HEAD。另有 live model/Grounding 报告记录的是 `38cf380`，必须标为 stale；完整浏览器、Java/MySQL、故障注入和 durable recovery 清单也没有逐条现场执行。
-
-## 当前提交和工作区
-
-| 项目 | 结果 |
-| --- | --- |
-| `git status --short --branch`（生成事实包前） | `## main`，干净 |
-| `git rev-parse HEAD` | `7f9cfb2d5171a88b2f6c5714f965e528c2543cc5` |
-| `git branch --show-current` | `main` |
-| `git diff --stat` | 空 |
-| `git remote -v` | `https://github.com/Eleven617/mall-ai-after-sales-platform.git` |
-| 与 `origin/main` | 本地领先 1 个提交，未推送 |
-| 事实包写入后 | 仅本文件、`resume-fact-pack.md`、`resume-fact-pack.json` 为未提交文档改动 |
-
-## 当前 HEAD 实际执行的命令
-
-以下命令退出码均为 `0`，没有删除测试、skip、`continue-on-error` 或放宽断言：
-
-```powershell
-Push-Location .\mall-ai-service
-.\.venv\Scripts\python.exe -m pytest -q
-.\.venv\Scripts\python.exe scripts\validate_v3_release_manifest.py --json
-.\.venv\Scripts\python.exe scripts\run_v3_release_preflight.py --json
-.\.venv\Scripts\python.exe scripts\run_quality_agent_evaluation.py
-.\.venv\Scripts\python.exe scripts\evaluate_task_orchestration.py --mode contract_mock
-.\.venv\Scripts\python.exe scripts\evaluate_chunk_metadata.py --summary
-.\.venv\Scripts\python.exe scripts\evaluate_rag2.py --summary
-Pop-Location
-
-Push-Location .\mall-ai-web
-npm run build
-Pop-Location
-
-Push-Location .\mall2
-mvn -pl mall-portal -am "-Dtest=AiCaseHandoffServiceImplTest,AiServiceCaseServiceImplTest,AiServiceCaseOutboxPublisherTest,AiServiceCaseEventReceiverTest,SpringDataWebExposureContractTest,MongoMicrometerCompatibilityTest" "-DskipTests=false" "-Dsurefire.failIfNoSpecifiedTests=false" test
-mvn -pl mall-admin -am "-Dtest=AiServiceOperationsServiceImplTest,AiServiceOperationsControllerTest" "-DskipTests=false" "-Dsurefire.failIfNoSpecifiedTests=false" test
-Pop-Location
-
-docker compose --env-file .env.example config --quiet
-```
-
-结果分开统计：FastAPI `349 passed`；manifest/preflight `478/478`、代表性 Runtime `8/8`；Quality `17/17`；Task orchestration `11/11`；Chunk/Metadata `8/8`；RAG Dense/Hybrid/Hybrid+Rerank 各 `52/52`；Java portal `14/14`；Java admin `6/6`；Vue build passed；Compose contract passed。
-
-## 远程 CI
-
-历史成功运行确实存在，但不属于当前 HEAD：
-
-- `mall-ci`：<https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/33901530634>，对应 `94d7820`，success。
-- `quality-evaluation`：<https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/33901530719>，对应 `94d7820`，success。
-
-当前 HEAD 没有新的远程运行链接。事实包没有把历史 success 写成当前 HEAD 的 CI 结论。
-
-## 质量和现场缺口
-
-| 范围 | 当前证据 | Gate 影响 |
+| 门禁 | 结果 | 证据/范围 |
 | --- | --- | --- |
-| live model open-task | 旧提交报告：24/72 passed，48 failed，0 blocked；报告 SHA `20e82406f4f8eceaf722dfc13249fe08f3d13e31b64eb791c122c54c7f112e0b` | stale，不能当当前 HEAD 通过；失败需保留。 |
-| Grounding | 旧提交报告：11/15 passed，4 quality_failed，均 `UNAPPROVED_EVIDENCE_SOURCE`；报告 SHA `f254dea3c765251ae49385a3f6c1fd93276b474717f040557b8c7a57093cf0be` | 质量 Gate 未通过。 |
-| browser E2E | manifest 注册 24，现场执行 0 | `environment_blocked` 24，不能宣称通过。 |
-| Java/MySQL integration | manifest 注册 30，现场执行 0 | `environment_blocked` 30，不能宣称通过。 |
-| fault injection | manifest 注册 36，现场执行 0 | `environment_blocked` 36，不能宣称通过。 |
-| durable async recovery | manifest 注册 32，现场执行 0 | `environment_blocked` 32，不能宣称通过。 |
-| 真实外部履约 | 支付/仓储/物流/维修未接入 | 只能写未接入或待人工。 |
+| FastAPI 回归 | **362 passed / 0 failed** | `.venv/Scripts/python.exe -m pytest -q`，exit 0；1 条第三方弃用警告、7 子断言 |
+| v3 deterministic | **478/478；代表性 8/8** | manifest/preflight，合同模式、无模型/无写入 |
+| Live model main | **72/72** | 24 Case × 3，DeepSeek + synthetic read-only gateway |
+| Live model holdout | **36/36** | 独立 12 Case × 3，非生产泛化率 |
+| Grounding | **15/15；57/57 checks** | 当前 grounding runner，成本未配置 |
+| Java | **portal 12/12；admin 6/6；Spring 1/1** | 显式 `-DskipTests=false`；Spring smoke 指向本地 Compose MySQL |
+| Web | **passed** | `npm run build` |
+| Docker/Compose | **8/8 + 8/8 healthy** | 主栈与隔离 fault 栈，Engine 29.7.2 |
+| 现场 Runner | **122/122** | browser 24、Java/MySQL 30、fault 36、durable 32 |
 
-## Release Gate 判定
+## 报告指纹
 
-| Gate | 判定 | 依据 |
-| --- | --- | --- |
-| 当前代码确定性回归 | 通过 | 本次当前 HEAD 退出码 0，结果见上表。 |
-| 代码/fixture 可追溯 | 通过 | manifest、case set 和主要 fixture SHA 已写入事实包。 |
-| 远程 CI 与当前 HEAD 一致 | 未通过 | 当前 HEAD 未推送；成功 Actions 对应旧提交。 |
-| live model 行为质量 | 未通过/待重跑 | 旧报告 stale 且 24/72；不能合并为当前通过。 |
-| Grounding 证据质量 | 未通过 | 旧报告 4 条 `UNAPPROVED_EVIDENCE_SOURCE`。 |
-| 浏览器/集成/故障现场 | 未通过/环境阻塞 | 24/30/36/32 条尚未逐条现场执行。 |
-| 生产能力 | 未声明 | 没有生产部署、SLA、真实用户、真实支付/仓储/物流/维修证据。 |
+- 现场报告：`tmp/field-acceptance-final/field-20260911T203212Z-95f5755e/field-acceptance.json`；SHA-256 `a0fbcd5c22638be8be480ae08344596a14d7874eafcd65194242b3f4df8c803e`。
+- Fixture：`tmp/field-fixture.json`；SHA-256 `d4829bd272dad498b17890b24595c288150ed89d4f59b062424b70067513e093`。
+- 主 live：`mall-ai-service/tmp/final-agent-quality-main-final5-20260912.json`；SHA-256 `b4041b3541e125b48e4b1114ff1e100aeeb6c40bea29f426d048850414be87d2`。
+- Holdout：`mall-ai-service/tmp/final-agent-quality-holdout-final4-20260912.json`；SHA-256 `822775b454e921dc50817f764783ddd14fc65910e267b27aa2e559ecc5869612`。
+- Grounding：`mall-ai-service/tmp/final-grounding-20260912.txt`；SHA-256 `fb90a00cdb4b835270126600190eb175ae13583db97b678080452c8be252d715`。
 
-## 允许的简历表述
+## 历史失败与处理
 
-可以写“在本地合成数据上实现并验证了受限 Agent Runtime、RAG 2.0、Proposal/确认/Java 权威写入边界和版本化确定性发布门禁”；可以写具体的 `349 passed`、`478/478`、`52/52`、`17/17`、`11/11`、`14/14`、`6/6`，并标注本机/合成范围。
+- 旧的 122 `environment_blocked` 报告是 Docker Desktop/Fixture 阻断，已被 Docker 恢复后的当前提交现场报告 superseded；不能与 122/122 相加。
+- live main-final2/3/4 的 70/72、71/72 失败保留在 [最终失败矩阵](final-agent-failure-matrix.md)，当前通过来自通用 Runtime/Prompt 修复后的新报告，不是删除 Case 或放宽断言。
+- Build 14A 退货状态资格拒绝被保留为真实 Java 资格负向边界；未伪造成功。
 
-不能写“当前 main 的 GitHub CI 已绿”“真实模型准确率”“生产 SLA/吞吐/成本”“全部 E2E 或故障恢复通过”“已接入真实支付、仓储、物流、维修”。
+## 不能宣称
 
-本次没有提交或推送。下一次若要把 Release Gate 改为通过，需要：提交这三份事实文档或另一个明确版本、推送当前 HEAD、等待两条 Actions 对应当前 SHA 成功；在可控环境重新运行同一版本的 live model/Grounding、浏览器 E2E、Java/MySQL、故障注入和 durable recovery，并保留每套件的退出码、fixture hash 与报告路径。
+本 Gate 仅覆盖本机合成数据、DeepSeek 合成只读网关和本地 Docker 现场。没有真实支付、仓储、物流、维修系统；不能宣称生产 SLA/QPS、真实用户准确率、模型成本或线上部署。上游 `macrozheng/mall` 基础能力不归为个人原创。

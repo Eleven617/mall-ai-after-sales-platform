@@ -1,5 +1,26 @@
 # 测试与演示证据
 
+## 2026-09-12｜最终技术负责人收口（当前权威快照）
+
+本节覆盖运行时代码提交 `52d5482455e2389cfd6c2ef15d233712607ffa9f`；后文 2026-09-09 及更早内容是历史证据，若提交号或报告 hash 不一致，按 stale/superseded 处理，不与本节相加。
+
+| 范围 | 命令/报告 | passed | failed | environment_blocked | 退出码/说明 |
+| --- | --- | ---: | ---: | ---: | --- |
+| FastAPI | `mall-ai-service/.venv/Scripts/python.exe -m pytest -q` | **362** | 0 | 0 | `0`；1 条第三方弃用警告、7 个子断言 |
+| Live model main | `tmp/final-agent-quality-main-final5-20260912.json` | **72/72** | 0 | 0 | DeepSeek + synthetic read-only gateway |
+| Live model holdout | `tmp/final-agent-quality-holdout-final4-20260912.json` | **36/36** | 0 | 0 | 独立合成 holdout；不等于泛化率 |
+| Grounding | `tmp/final-grounding-20260912.txt` | **15/15；57/57 checks** | 0 | 0 | `evaluate_rag_grounding.py`，`0` |
+| v3 deterministic | `validate_v3_release_manifest.py` / `run_v3_release_preflight.py` | **478/478；8/8** | 0 | 0 | 无模型/无写入合同 |
+| Java | portal 定向 / admin 定向 / `MallPortalApplicationTests` | **12/12；6/6；1/1** | 0 | 0 | `-DskipTests=false`；Spring smoke 使用临时本地 MySQL 配置 |
+| Vue | `npm run build` | **通过** | 0 | 0 | TypeScript + Vite production build |
+| 现场 Runner | `tmp/field-acceptance-final/field-20260911T203212Z-95f5755e/field-acceptance.json` | **122/122** | 0 | 0 | browser 24、Java/MySQL 30、fault 36、durable 32 |
+
+现场报告 SHA-256：`a0fbcd5c22638be8be480ae08344596a14d7874eafcd65194242b3f4df8c803e`；合成 Fixture SHA-256：`d4829bd272dad498b17890b24595c288150ed89d4f59b062424b70067513e093`。现场报告记录 `testedCodeCommit=52d5482`，使用 Docker Engine `29.7.2`、Chrome、Java/MySQL/Redis/RabbitMQ 和隔离 fault Compose。所有结果只适用于当前机器和合成数据。
+
+主集 live 报告 SHA-256：`b4041b3541e125b48e4b1114ff1e100aeeb6c40bea29f426d048850414be87d2`；holdout 报告 SHA-256：`822775b454e921dc50817f764783ddd14fc65910e267b27aa2e559ecc5869612`；Grounding 文本报告 SHA-256：`fb90a00cdb4b835270126600190eb175ae13583db97b678080452c8be252d715`。
+
+这组结果不允许外推为生产 SLA、真实用户准确率、真实支付/仓储/物流/维修成功或模型成本。旧的 122 `environment_blocked`、Grounding 11/15 和 live-model 失败报告继续保留并在 [最终失败矩阵](evidence/final-agent-failure-matrix.md) 中解释。
+
 ## 2026-09-09｜最终 Docker 现场与 Build 14A 收口（最新权威记录）
 
 最终现场 Runner 已在 Docker Desktop 恢复后重新执行：运行时代码提交 `84e111d17e4117287660421ea5772a9ddcf44382`，证据同步提交 `5ea119970a2a4a9a9194dc3e1e46eff412bd406e`（仅文档）。主 Compose 与隔离 fault Compose 均可用，四类现场结果为：browser `24/24`、Java/MySQL `30/30`、fault `36/36`、durable recovery `32/32`，合计 `122/122 passed`、`0 failed`、`0 environment_blocked`。

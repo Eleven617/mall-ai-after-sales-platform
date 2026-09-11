@@ -1,5 +1,16 @@
 # Mall v3.0 最终交付状态
 
+## 2026-09-12｜当前代码最终快照
+
+本节覆盖运行时代码提交 `52d5482455e2389cfd6c2ef15d233712607ffa9f`。此前日期段落是历史交接记录；若提交或报告不一致，以本节和 `docs/evidence/final-agent-quality-baseline.md` 为准。
+
+- FastAPI：362 passed；Java portal/admin：12/12、6/6；Spring context：1/1；Vue build：passed。
+- Live synthetic：main 72/72、holdout 36/36；Grounding 15/15、57/57 checks；v3 deterministic 478/478、代表性 8/8。
+- 本地现场 Runner：browser 24/24、Java/MySQL 30/30、fault 36/36、durable 32/32，合计 122/122，0 failed，0 environment_blocked。
+- 现场报告：`tmp/field-acceptance-final/field-20260911T203212Z-95f5755e/field-acceptance.json`，SHA-256 `a0fbcd5c22638be8be480ae08344596a14d7874eafcd65194242b3f4df8c803e`；Fixture SHA-256 `d4829bd272dad498b17890b24595c288150ed89d4f59b062424b70067513e093`。
+
+当前本机合成 Gate 通过；本轮最终文档提交后的远程 Actions 仍需按新 SHA 复核。以上不代表生产部署、生产 SLA、真实用户泛化或真实支付/仓储/物流/维修接入。
+
 ## 当前结论
 
 **CLOSED**

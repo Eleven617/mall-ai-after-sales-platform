@@ -1,5 +1,7 @@
 # 学习输入地图（第一轮新顺序）
 
+> 当前证据基线：运行时代码 `52d5482455e2389cfd6c2ef15d233712607ffa9f`；live main `72/72`、holdout `36/36`、grounding `15/15`。历史 `24/72` 和 `11/15` 只作为失败归因材料，已在最终失败矩阵中标 stale，不再是当前结果。
+
 项目现在可以冻结并进入学习；建议按以下顺序，每个模块都沿着“完整链路 → 3 个重点代码文件 → 已验证结果/边界/面试表达”学习。
 
 ## 1. Agent 运行循环
@@ -36,7 +38,7 @@
 
 - 链路：合成 EvalCase → deterministic comparator → contract_mock CI → live_model_synthetic 手动运行 → 失败归因/人工审批。
 - 重点：`run_quality_agent_evaluation.py`、`evaluate_task_orchestration.py`、`release-manifest.json`。
-- 必会：478/478 是合同通过，不是任务完成率；grounding 11/15 和 live model 24/72 的真实边界。
+- 必会：478/478 是合同通过，不是任务完成率；当前 live main/holdout 是合成只读网关的 72/72、36/36，Grounding 是 15/15；这些都不能扩大为真实用户泛化率。
 
 ## 7. 可靠执行
 
@@ -47,4 +49,3 @@
 ## 学习时的面试练习
 
 每个模块都要能回答：一次请求从哪里进来？谁决定下一步？哪些字段是模型输出？谁验证？哪里可以暂停/恢复？如果模型/Redis/Java/RabbitMQ失败，系统如何停止且不写错？
-

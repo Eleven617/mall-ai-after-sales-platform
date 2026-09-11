@@ -1,29 +1,12 @@
 {
-  "schemaVersion": "v3.0-current-head-evidence.v1",
-  "generatedAt": "2026-09-09T19:04:01+08:00",
+  "schemaVersion": "v3.0-current-head-evidence.v2",
+  "generatedAt": "2026-09-12T04:45:00+08:00",
   "repository": {
     "remote": "https://github.com/Eleven617/mall-ai-after-sales-platform.git",
     "branch": "main",
-    "testedCodeCommit": "84e111d17e4117287660421ea5772a9ddcf44382",
-    "evidenceHeadCommit": "5ea119970a2a4a9a9194dc3e1e46eff412bd406e",
-    "evidenceHeadIsDocsOnlyAfterRuntimeTest": true,
-    "remoteCommitAtStart": "cbb951f9815b7483d2aeec0620947fdb1eba59b0",
-    "workspaceCleanAtStart": true,
-    "remoteVerification": {
-      "commit": "94d782053c8ba188d2d79af0b3d5632ac685a8b8",
-      "mallCi": {"runId": 33901530634, "status": "success", "url": "https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/33901530634"},
-      "qualityEvaluation": {"runId": 33901530719, "status": "success", "url": "https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/33901530719"},
-      "currentHead": {
-        "commit": "84e111d17e4117287660421ea5772a9ddcf44382",
-        "mallCi": {"runId": 34335488265, "status": "success", "url": "https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34335488265"},
-        "qualityEvaluation": {"runId": 34335488213, "status": "success", "url": "https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34335488213"}
-      },
-      "latestEvidenceSync": {
-        "commit": "84e111d17e4117287660421ea5772a9ddcf44382",
-        "mallCi": {"runId": 34335488265, "status": "success", "url": "https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34335488265"},
-        "qualityEvaluation": {"runId": 34335488213, "status": "success", "url": "https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34335488213"}
-      }
-    }
+    "testedCodeCommit": "52d5482455e2389cfd6c2ef15d233712607ffa9f",
+    "evidenceCommit": "to_be_set_after_commit",
+    "workspaceAtStart": "clean_except_ignored_tmp"
   },
   "scope": {
     "data": "versioned synthetic fixtures and local demo data only",
@@ -33,206 +16,64 @@
     "defaultRagMode": "dense",
     "hybridAndRerank": "reproducible experiments only"
   },
-  "securityDependencyFix": {
-    "file": "mall2/pom.xml",
-    "dependency": "io.netty:netty-handler",
-    "originalVersion": "4.1.136.Final",
-    "fixedVersion": "4.1.137.Final",
-    "advisories": ["GHSA-c4c3-7fpv-j4q5", "GHSA-fccg-mwvh-qqg4"],
-    "localScannerResult": "0 packages affected / 0 known vulnerabilities before local resolver exit 127",
-    "remoteGate": {"mallCi": "success", "qualityEvaluation": "success"}
-  },
   "fixtureHashes": {
     "evals/v3/release-manifest.json": "d9fc72be81e2f67330710052c03287d49677bf7eb6f54eed51b87c01db2ac1ad",
     "evals/v3/caseSetSha256": "18a3ad20485417bbebd8bad875490cf80b171ed28760b1dc2dfbd203d1938ccd",
     "mall-ai-service/evals/live_model_agent_runtime_cases.v1.json": "d5de1e85fa40eace714b051e78e830bee4b367545d154e0b435fc247b2a7b99d",
-    "mall-ai-service/evals/rag2_golden_cases.v1.json": "632f36c30a21c0b76a5ae18cc2f4b74ff887f70b37c42235f4b776aad8a4fcc1",
     "mall-ai-service/evals/rag_grounding_cases.json": "72d36be4dfec0888fcac57eb211fb85413018c8254db7d52f1914d6703966f11",
-    "mall-ai-service/evals/rag_chunk_metadata_cases.v1.json": "a10f963c4dfba5de0b4b7efb6e60c8238f59553e53b9c090da86c9702b040c24",
-    "mall-ai-service/evals/quality_agent_cases.v2.json": "ef3cbcb70b92b82a7e115886b6d771c358cd459da9633bd4201dd766b6d878a7",
-    "mall-ai-service/evals/task_orchestration_cases.v1.json": "c8489ec40ff99a23fb146aca752a19f072bf042d9d0ec04313041cf184eab3b8",
-    "tmp/live_model_agent_runtime_report_current_head.json": "20e82406f4f8eceaf722dfc13249fe08f3d13e31b64eb791c122c54c7f112e0b",
-    "tmp/rag2_grounding_current_head.json": "f254dea3c765251ae49385a3f6c1fd93276b474717f040557b8c7a57093cf0be"
+    "tmp/field-fixture.json": "d4829bd272dad498b17890b24595c288150ed89d4f59b062424b70067513e093"
   },
   "deterministic": {
-    "fastapi": {"compileall": "passed", "collected": 353, "passed": 353, "warnings": 1, "subtestsPassed": 7},
-    "qualityAgentContractMock": {"suiteVersion": "quality-agent.v2", "total": 17, "passed": 17, "failed": 0},
-    "taskOrchestrationContractMock": {"suiteVersion": "task-orchestration.v1", "total": 11, "passed": 11, "failed": 0, "environmentBlocked": 0},
-    "v3Manifest": {"suiteVersion": "mall-v3.0.release.v1", "deterministicRegistered": 478, "liveRegistered": 36, "performanceProfiles": 12, "manifestSha256": "2f9d60f3903b3046236a71e1557d89fac87e916d9586d787a193c6deb4c71d2e", "caseSetSha256": "18a3ad20485417bbebd8bad875490cf80b171ed28760b1dc2dfbd203d1938ccd"},
-    "v3Preflight": {"deterministicPassed": 478, "deterministicRegistered": 478, "representativePassed": 8, "representativeRegistered": 8, "failed": 0},
-    "chunkMetadata": {"suiteVersion": "rag-chunk-metadata.v1", "total": 8, "passed": 8, "failed": 0, "syntheticChunkCount": 5, "externalModelCalls": 0},
-    "ragRetrieval": {
-      "suiteVersion": "rag2-golden.v1",
-      "totalCasesPerMode": 52,
-      "modes": [
-        {"mode": "dense", "status": "passed", "supportedCases": 39, "recallAtK": 1.0, "mrr": 0.948718, "ndcgAtK": 0.962147, "abstentionCases": 13, "averageMs": 21.78, "p95Ms": 11.95, "maxMs": 644.82},
-        {"mode": "hybrid", "status": "passed", "supportedCases": 39, "recallAtK": 1.0, "mrr": 0.935897, "ndcgAtK": 0.952683, "abstentionCases": 13, "averageMs": 11.5, "p95Ms": 15.83, "maxMs": 26.91},
-        {"mode": "hybrid_rerank", "status": "passed", "supportedCases": 39, "recallAtK": 1.0, "mrr": 0.935897, "ndcgAtK": 0.952683, "abstentionCases": 13, "averageMs": 1587.18, "p95Ms": 1915.45, "maxMs": 4333.62}
-      ]
-    },
-    "ragVerifier": {"status": "completed", "total": 36, "supported": {"total": 28, "passed": 28}, "noEvidence": {"total": 8, "passed": 8}, "environmentBlocked": 0, "evidenceMaxDistance": 0.48},
-    "java": {"portal": {"tests": 14, "passed": 14, "failed": 0, "skipped": 0}, "admin": {"tests": 6, "passed": 6, "failed": 0, "skipped": 0}},
-    "web": {"build": "passed"},
-    "composeConfig": {"status": "passed"}
+    "fastapi": {"passed": 362, "failed": 0, "warnings": 1, "subtestsPassed": 7, "exitCode": 0},
+    "v3Manifest": {"deterministicRegistered": 478, "liveRegistered": 36, "performanceProfiles": 12, "manifestSha256": "2f9d60f3903b3046236a71e1557d89fac87e916d9586d787a193c6deb4c71d2e", "caseSetSha256": "18a3ad20485417bbebd8bad875490cf80b171ed28760b1dc2dfbd203d1938ccd"},
+    "v3Preflight": {"deterministicPassed": 478, "deterministicRegistered": 478, "representativePassed": 8, "representativeRegistered": 8, "failed": 0, "exitCode": 0},
+    "java": {"portalTargeted": {"passed": 12, "failed": 0}, "adminTargeted": {"passed": 6, "failed": 0}, "springContext": {"passed": 1, "failed": 0}},
+    "web": {"build": "passed", "exitCode": 0},
+    "grounding": {"totalCases": 15, "passedCases": 15, "failedCases": 0, "environmentBlockedCases": 0, "checks": "57/57", "reportSha256": "fb90a00cdb4b835270126600190eb175ae13583db97b678080452c8be252d715"}
   },
-  "openTaskAgent": {
-    "reportPath": "tmp/live_model_agent_runtime_report_current_head.json",
-    "suiteVersion": "live-model-agent-runtime.v1",
-    "suiteSha256": "ef6c0ad66556eb03127e85ee6607a5cdf79bb8f69ddfa8749ecc29e913e97d53",
-    "mode": "live_model_agent_synthetic",
-    "uniqueCases": 24,
-    "requiredRunsPerCase": 3,
-    "executedRuns": 72,
-    "passed": 24,
-    "failed": 48,
-    "environmentBlocked": 0,
-    "taskSuccess": {"passed": 46, "total": 72},
-    "clarificationCorrect": {"passed": 62, "total": 72},
-    "requiredSkillOrFactCoverage": {"passed": 29, "total": 72},
-    "proposalOrResumeSuccess": {"passed": 56, "total": 72},
-    "irrelevantCalls": 3,
-    "forbiddenSideEffects": 0,
-    "duplicateFinalBusinessWrites": 0,
-    "runtimeCalls": {"model": 133, "tool": 42, "context": 34, "critic": 0},
-    "llm": {"totalCalls": 189, "succeededCalls": 189, "totalTokens": 333383, "pricingConfigured": false, "estimatedCost": null, "p50Ms": 3282, "p95Ms": 7859, "maxMs": 10219},
-    "failureCategoryCounts": {"required_skill_or_fact_missing": 33, "terminal_status_mismatch": 16, "runtime_exception_validationerror": 10, "unsafe_no_evidence_or_failure_continuation": 10, "proposal_or_resume_missing": 6, "expired_proposal_rejected": 3, "duplicate_confirmation_single_commit": 2, "irrelevant_skill_call": 2},
-    "model": {"provider": "DeepSeekRuntimeProvider", "name": "deepseek-chat", "promptVersion": "agent_runtime_v3_0", "skillCatalogVersion": "skill_catalog_v3_0", "executionBoundary": "synthetic_read_only_gateway"}
+  "liveModel": {
+    "provider": "DeepSeekRuntimeProvider",
+    "model": "deepseek-chat",
+    "promptVersion": "agent_runtime_v3_3",
+    "skillCatalogVersion": "skill_catalog_v3_0",
+    "executionBoundary": "synthetic_read_only_gateway",
+    "main": {"cases": 24, "runs": 72, "passed": 72, "failed": 0, "environmentBlocked": 0, "report": "mall-ai-service/tmp/final-agent-quality-main-final5-20260912.json", "reportSha256": "b4041b3541e125b48e4b1114ff1e100aeeb6c40bea29f426d048850414be87d2", "suiteSha256": "ef6c0ad66556eb03127e85ee6607a5cdf79bb8f69ddfa8749ecc29e913e97d53", "runtimeLatencyMs": {"p50": 6297, "p95": 10672, "max": 13406}, "llmCalls": 259, "tokens": 558431, "pricingConfigured": false, "cost": null, "forbiddenSideEffects": 0, "duplicateFinalBusinessWrites": 0},
+    "holdout": {"cases": 12, "runs": 36, "passed": 36, "failed": 0, "environmentBlocked": 0, "report": "mall-ai-service/tmp/final-agent-quality-holdout-final4-20260912.json", "reportSha256": "822775b454e921dc50817f764783ddd14fc65910e267b27aa2e559ecc5869612", "suiteSha256": "1a82b6bcaa9ce246590b3f10ef08897bea07f81af675c128f9b96542acb10e90", "runtimeLatencyMs": {"p50": 5891, "p95": 9422, "max": 9546}, "llmCalls": 130, "tokens": 280390, "pricingConfigured": false, "cost": null, "forbiddenSideEffects": 0, "duplicateFinalBusinessWrites": 0}
   },
-  "grounding": {
-    "reportPath": "tmp/rag2_grounding_current_head.json",
-    "suiteVersion": "rag2-golden.v1",
-    "mode": "dense",
-    "totalCases": 15,
-    "passedCases": 11,
-    "qualityFailedCases": 4,
-    "environmentBlockedCases": 0,
-    "passRate": 0.733333,
-    "violations": {"UNAPPROVED_EVIDENCE_SOURCE": ["rag2-007", "rag2-011", "rag2-012", "rag2-013"]},
-    "provider": {"totalCalls": 30, "succeededCalls": 30, "totalTokens": 20550, "pricingConfigured": false, "estimatedCost": null},
-    "latencyMs": {"average": 1549.01, "p95": 2098.64, "max": 2098.64}
-  },
-  "composeAndReliability": {
-    "containersHealthy": {"healthy": 8, "total": 8},
-    "endpointChecks": {"passed": 3, "total": 3},
-    "manifestFieldResults": {
-      "browser_e2e": {"registered": 24, "executed": 24, "passed": 24, "failed": 0, "environmentBlocked": 0},
-      "java_mysql_integration": {"registered": 30, "executed": 30, "passed": 30, "failed": 0, "environmentBlocked": 0},
-      "fault_injection": {"registered": 36, "executed": 36, "passed": 36, "failed": 0, "environmentBlocked": 0},
-      "durable_async_recovery": {"registered": 32, "executed": 32, "passed": 32, "failed": 0, "environmentBlocked": 0}
-    },
-    "executedSyntheticSafetyChecks": {"crossAccountRejected": {"passed": 3, "total": 3}, "noUnconfirmedCommit": {"passed": 2, "total": 2}, "subtaskOwnerCheck": {"passed": 3, "total": 3}, "forbiddenSideEffects": 0},
-    "notClaimed": ["full_cross_account_leak_rate", "full_unconfirmed_write_rate", "duplicate_outbox_events_converged"],
-    "liveSupplementalChecks": {
-      "browserScreenshots": {"status": "passed", "exitCode": 0, "pages": 4},
-      "authFlow": {"status": "passed", "exitCode": 0},
-      "unifiedAfterSales": {"status": "passed", "exitCode": 0, "scope": "create_confirm_list_status_cancel_cross_account"},
-      "build21AuthenticatedRecovery": {"status": "passed_with_rerun_failure", "initialExitCode": 0, "rerunExitCodes": [1, 1], "failure": "waiting diagnosis task is missing or malformed"},
-      "mcpAuthenticated": {"status": "passed", "exitCode": 0},
-      "serviceCase": {"status": "passed", "exitCode": 0},
-      "javaMysqlSpringContext": {"status": "passed", "tests": 1, "passed": 1, "failed": 0, "exitCode": 0, "temporaryLocalConfig": true},
-      "redisRabbitRestart": {"status": "passed", "restartExitCodes": {"redis": 0, "rabbitmq": 0}, "endpointChecks": {"passed": 3, "total": 3}, "containersHealthy": {"healthy": 8, "total": 8}},
-      "build14ReturnStatus": {"status": "historical_boundary_failed", "exitCode": 1, "reason": "Earlier fixture was not eligible; retained as a negative qualification boundary"},
-      "build14Eligibility": {
-        "status": "passed",
-        "exitCode": 0,
-        "testedRepositoryCommit": "5ea119970a2a4a9a9194dc3e1e46eff412bd406e",
-        "runtimeCodeCommit": "84e111d17e4117287660421ea5772a9ddcf44382",
-        "script": "mall-ai-service/scripts/verify_build14_eligibility_live.py",
-        "runner": "tmp/run_build14.ps1",
-        "fixtureKind": "local-demo-synthetic.v1",
-        "negativeEligibilityRejected": true,
-        "positiveEligibilityAccepted": true,
-        "ownerIsolation": true,
-        "idempotentDuplicate": true,
-        "transactionalOutbox": true,
-        "databaseDirectWrite": false
-      },
-      "postDockerRecoveryBatch": {
-        "status": "passed_with_qualification_boundary",
-        "authFlow": {"exitCode": 0},
-        "unifiedAfterSales": {"exitCode": 0, "scope": "create_confirm_list_status_cancel_cross_account"},
-        "build21AuthenticatedRecovery": {"exitCode": 0, "scope": "same_session_restart_recovery"},
-        "mcpAuthenticated": {"exitCode": 0},
-        "serviceCase": {"exitCode": 0},
-        "build14ReturnStatus": {"exitCode": 1, "reason": "Java return_refund eligibility rejected the current synthetic order"}
-      },
-      "dockerRuntimeRecovery": {
-        "status": "passed",
-        "engineVersion": "29.7.2",
-        "composeHealthy": {"healthy": 8, "total": 8},
-        "verifyComposeStack": {"exitCode": 0, "endpointChecksPassed": 3, "endpointChecksTotal": 3},
-        "dataSafety": "runtime socket directories were renamed aside; images, volumes, VHDX and demo data were not deleted"
-      }
-    }
-  },
-  "currentFieldAcceptance": {
-    "testedCodeCommit": "84e111d17e4117287660421ea5772a9ddcf44382",
-    "reportPath": "tmp/field-acceptance/field-20260909T105750Z-12222b15/field-acceptance.json",
-    "reportSha256": "6a301cd28072ebbf01fa07e81d7aaf5c4b2de9741c14ceb351122cac18f21567",
-    "fixtureSha256": "7573e19271528e904d2eb40cef2765f05d4e5f489f2b35cc1b1359bcd5128759",
-    "runnerReady": 122,
-    "executed": 122,
+  "fieldAcceptance": {
+    "report": "tmp/field-acceptance-final/field-20260911T203212Z-95f5755e/field-acceptance.json",
+    "reportSha256": "a0fbcd5c22638be8be480ae08344596a14d7874eafcd65194242b3f4df8c803e",
+    "testedCodeCommit": "52d5482455e2389cfd6c2ef15d233712607ffa9f",
+    "fixtureSha256": "d4829bd272dad498b17890b24595c288150ed89d4f59b062424b70067513e093",
+    "releaseGate": "passed",
+    "total": 122,
     "passed": 122,
     "failed": 0,
     "environmentBlocked": 0,
-    "notExecuted": 0,
-    "releaseGate": "passed",
-    "staleDueToCodeCommitMismatch": false,
-    "currentCodeCommit": "84e111d17e4117287660421ea5772a9ddcf44382",
-    "executionMode": "live_browser/live_java_mysql/isolated_compose_fault/live_build21_restart_recovery",
-    "categories": {
-      "browser_e2e": {"registered": 24, "runnerReady": 24, "passed": 24, "failed": 0, "environmentBlocked": 0},
-      "java_mysql_integration": {"registered": 30, "runnerReady": 30, "passed": 30, "failed": 0, "environmentBlocked": 0},
-      "fault_injection": {"registered": 36, "runnerReady": 36, "passed": 36, "failed": 0, "environmentBlocked": 0},
-      "durable_async_recovery": {"registered": 32, "runnerReady": 32, "passed": 32, "failed": 0, "environmentBlocked": 0}
-    },
-    "supersededBlockedRun": {"report": "tmp/field-acceptance/field-20260909T074151Z-d56eb7fe/field-acceptance.json", "testedCodeCommit": "45f842f9ed6c0a9b636e0420fe489312e71a28fb", "result": "122 environment_blocked", "status": "superseded"},
-    "staleHistoricalReports": [
-      {"report": "tmp/field-acceptance/field-20260908T100428Z-3865032c/field-acceptance.json", "testedCodeCommit": "314f5d9d3409cbdd8487d94a5a07ccbc705fd2a8", "result": "browser 24/24 passed", "status": "stale"},
-      {"report": "tmp/field-acceptance/field-20260908T100458Z-1f99435e/field-acceptance.json", "testedCodeCommit": "314f5d9d3409cbdd8487d94a5a07ccbc705fd2a8", "result": "Java/MySQL 30/30 passed", "status": "stale"},
-      {"report": "tmp/field-acceptance/field-20260908T100625Z-9e587842/field-acceptance.json", "testedCodeCommit": "314f5d9d3409cbdd8487d94a5a07ccbc705fd2a8", "result": "durable 32/32 passed", "status": "stale"},
-      {"report": "tmp/field-acceptance/field-20260908T102006Z-f674a3bf/field-acceptance.json", "testedCodeCommit": "314f5d9d3409cbdd8487d94a5a07ccbc705fd2a8", "result": "fault 36/36 passed; gate false because fixture was unbound", "status": "stale"}
-    ]
+    "categories": {"browser_e2e": "24/24", "java_mysql_integration": "30/30", "fault_injection": "36/36", "durable_async_recovery": "32/32"},
+    "mode": "live_browser/live_java_mysql/isolated_compose_fault/live_build21_restart_recovery"
   },
   "commands": [
-    "Push-Location .\\mall-ai-service; .\\.venv\\Scripts\\python.exe -m compileall -q app; Pop-Location",
-    "Push-Location .\\mall-ai-service; .\\.venv\\Scripts\\python.exe -m pytest --collect-only -q; Pop-Location",
-    "Push-Location .\\mall-ai-service; .\\.venv\\Scripts\\python.exe -m pytest -q; Pop-Location",
-    "Push-Location .\\mall-ai-service; .\\.venv\\Scripts\\python.exe scripts\\run_quality_agent_evaluation.py; Pop-Location",
-    "Push-Location .\\mall-ai-service; .\\.venv\\Scripts\\python.exe scripts\\evaluate_task_orchestration.py --mode contract_mock; Pop-Location",
-    "Push-Location .\\mall-ai-service; .\\.venv\\Scripts\\python.exe scripts\\validate_v3_release_manifest.py --json; Pop-Location",
-    "Push-Location .\\mall-ai-service; .\\.venv\\Scripts\\python.exe scripts\\run_v3_release_preflight.py --json; Pop-Location",
-    "Push-Location .\\mall-ai-service; .\\.venv\\Scripts\\python.exe scripts\\evaluate_rag2.py --summary; Pop-Location",
-    "Push-Location .\\mall-ai-service; .\\.venv\\Scripts\\python.exe scripts\\evaluate_rag_verifier.py; Pop-Location",
-    "Push-Location .\\mall-ai-service; .\\.venv\\Scripts\\python.exe scripts\\evaluate_chunk_metadata.py --summary; Pop-Location",
-    "Push-Location .\\mall-ai-service; .\\.venv\\Scripts\\python.exe scripts\\evaluate_rag2_grounding.py --mode dense --max-cases 15 --timeout-seconds 20 --max-attempts 1; Pop-Location",
-    "Push-Location .\\mall-ai-service; .\\.venv\\Scripts\\python.exe scripts\\run_live_model_agent_synthetic.py --max-total-seconds 1200 --timeout-seconds 25 --max-attempts 1 --report ..\\tmp\\live_model_agent_runtime_report_current_head.json --summary; Pop-Location",
-    "Push-Location .\\mall-ai-web; npm run build; Pop-Location",
-    "Push-Location .\\mall2; mvn -pl mall-portal -am \"-Dtest=AiCaseHandoffServiceImplTest,AiServiceCaseServiceImplTest,AiServiceCaseOutboxPublisherTest,AiServiceCaseEventReceiverTest,SpringDataWebExposureContractTest,MongoMicrometerCompatibilityTest\" \"-DskipTests=false\" \"-Dsurefire.failIfNoSpecifiedTests=false\" test; Pop-Location",
-    "Push-Location .\\mall2; mvn -pl mall-admin -am \"-Dtest=AiServiceOperationsServiceImplTest,AiServiceOperationsControllerTest\" \"-DskipTests=false\" \"-Dsurefire.failIfNoSpecifiedTests=false\" test; Pop-Location",
-    "docker compose --env-file .env.example config --quiet",
-    "Push-Location .\\mall-ai-service; .\\.venv\\Scripts\\python.exe scripts\\verify_compose_stack.py; Pop-Location",
-    "docker compose ps --format json",
-    "tmp\\run_browser_live.ps1",
-    "tmp\\run_local_live_batch.ps1",
-    "docker compose restart redis",
-    "docker compose restart rabbitmq",
-    "Push-Location .\\mall2; mvn -pl mall-portal -am \"-Dtest=MallPortalApplicationTests\" \"-DskipTests=false\" \"-Dsurefire.failIfNoSpecifiedTests=false\" \"-Dspring.config.additional-location=file:C:/Users/12969/Desktop/mall/tmp/maven-local-test.properties\" test; Pop-Location",
-    "Push-Location .\\mall-ai-service; .\\.venv\\Scripts\\python.exe -m pytest -q; Pop-Location",
-    "git diff --check"
-    ,"docker info --format '{{.ServerVersion}}' (after runtime recovery)"
-    ,"docker compose up -d mall-ai-service mall-ai-web"
-    ,"Push-Location .\\mall-ai-service; .\\.venv\\Scripts\\python.exe scripts\\verify_compose_stack.py; Pop-Location"
-    ,"tmp\\run_local_live_batch.ps1 (post-Docker-recovery synthetic batch)"
+    "mall-ai-service/.venv/Scripts/python.exe -m pytest -q",
+    "mall-ai-service/.venv/Scripts/python.exe scripts/validate_v3_release_manifest.py --json",
+    "mall-ai-service/.venv/Scripts/python.exe scripts/run_v3_release_preflight.py --json",
+    "mall-ai-service/.venv/Scripts/python.exe scripts/evaluate_rag_grounding.py",
+    "mall-ai-web/npm run build",
+    "mall2/mvn portal and admin targeted tests with -DskipTests=false",
+    "docker compose config --quiet and docker compose ps --format json",
+    "verify_field_acceptance.py with synthetic fixture and isolated fault Compose"
   ],
-  "environmentBlockedLiveScripts": [],
-  "historicalEnvironmentBlockedLiveScripts": ["full_browser_e2e_manifest_24", "full_java_mysql_integration_manifest_30", "full_fault_injection_manifest_36", "full_durable_async_recovery_manifest_32"],
-  "currentEnvironment": {
-    "dockerDesktop": "available",
-    "engineVersion": "29.7.2",
-    "mainComposeHealthy": {"healthy": 8, "total": 8},
-    "isolatedFaultComposeHealthy": {"healthy": 8, "total": 8},
-    "fieldRunnerReexecution": "passed"
+  "historical": {
+    "previousBlockedRun": "tmp/field-acceptance/field-20260909T074151Z-d56eb7fe/field-acceptance.json",
+    "previousBlockedResult": "122 environment_blocked; superseded after Docker recovery",
+    "previousLiveFailures": "main-final2/main-final3/main-final4; retained in final-agent-failure-matrix.md"
   },
-  "claims": {"productionAccuracy": false, "productionSla": false, "realUserGeneralization": false, "realPaymentWarehouseLogisticsRepair": false, "currentFieldReleaseGate": "passed", "currentCi": "passed"}
+  "claims": {
+    "currentLocalSyntheticFieldGate": "passed",
+    "currentRemoteCi": "pending until final push and SHA-specific Actions verification",
+    "productionAccuracy": false,
+    "productionSla": false,
+    "realUserGeneralization": false,
+    "realPaymentWarehouseLogisticsRepair": false
+  }
 }

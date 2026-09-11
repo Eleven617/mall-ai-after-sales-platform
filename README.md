@@ -88,13 +88,15 @@ GIF 是上述真实页面的轻量流程剪辑，不代表线上服务或真实�
 
 | 范围 | 真实结果 | 口径 |
 | --- | --- | --- |
-| FastAPI 回归 | `353 passed`、`7` 个参数化子断言 | 当前本地 Python 环境；命令见下方 |
+| FastAPI 回归 | `362 passed`、`7` 个参数化子断言 | 运行时代码基线 `52d5482` 的当前本地 Python 环境；命令见下方 |
 | Java 定向测试 | portal `14/14`，admin `6/6` | Spring/Maven 合同与人工协同/运营边界 |
 | Vue | `npm run build` 通过 | TypeScript 检查与 Vite production build |
 | RAG 2.0 | Dense/Hybrid/Hybrid+Rerank 各 `52/52` | 52 条版本化合成黄金集；Dense 默认，Dense MRR `0.948718`、nDCG@3 `0.962147` |
 | Agent/质量合同 | quality `17/17`；任务编排 `11/11`；Chunk/Metadata `8/8` | 无真实模型 Key、无业务写入 |
 | v3 deterministic | `478/478`，代表性 Runtime `8/8` | Release Manifest 合同，不是 478 条现场 E2E |
 | 本地字段验收 | browser `24/24`、Java/MySQL `30/30`、fault `36/36`、durable `32/32` | 最新报告来自合成 Docker/Chrome 现场；详见 [测试证据](docs/TEST_AND_DEMO_EVIDENCE.md)，不宣称生产能力 |
+| Live model synthetic | 主集 `72/72`、holdout `36/36` | DeepSeek + synthetic read-only gateway；不是自然语言泛化率或生产准确率 |
+| Grounding | `15/15`、`57/57` checks | 当前 grounding contract；成本未配置，证据范围见 [最终 Agent 基线](docs/evidence/final-agent-quality-baseline.md) |
 | GitHub Actions | 以当前提交对应的最新运行链接为准 | 不能用历史绿色运行外推新提交；见 [展示升级证据](docs/evidence/github-showcase-refresh.md) |
 
 `live_model_synthetic` 的历史报告、完整自然语言泛化和真实外部履约系统必须单独理解；旧报告如果提交号与当前 HEAD 不一致，会被标记为 stale，不与当前结果合并。
