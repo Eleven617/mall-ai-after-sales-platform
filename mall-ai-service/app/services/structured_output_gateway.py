@@ -37,6 +37,12 @@ _SAFE_CORRECTION_CONTEXT_KEYS = {
     "required_fields",
     "schema_version",
     "source_count",
+    "artifact_count",
+    "available_skill_ids",
+    "available_read_skill_ids",
+    "reference_hint_keys",
+    "reference_hint_values",
+    "limitation_codes",
 }
 
 
@@ -284,7 +290,7 @@ def _safe_correction_context(value: Mapping[str, Any] | None) -> dict[str, Any] 
             return None
         if raw_key not in _SAFE_CORRECTION_CONTEXT_KEYS:
             return None
-        if raw_key in {"candidate_count", "source_count"}:
+        if raw_key in {"candidate_count", "source_count", "artifact_count"}:
             if not isinstance(raw_value, int) or isinstance(raw_value, bool) or not 0 <= raw_value <= 100:
                 return None
             sanitized[raw_key] = raw_value
@@ -292,7 +298,16 @@ def _safe_correction_context(value: Mapping[str, Any] | None) -> dict[str, Any] 
             if not isinstance(raw_value, str) or not _SAFE_CONTEXT_VERSION.fullmatch(raw_value):
                 return None
             sanitized[raw_key] = raw_value
-        elif raw_key in {"allowed_chunk_ids", "allowed_enum_values", "output_fields", "required_fields"}:
+        elif raw_key in {
+            "allowed_chunk_ids",
+            "allowed_enum_values",
+            "output_fields",
+            "required_fields",
+            "available_skill_ids",
+            "available_read_skill_ids",
+            "reference_hint_keys",
+            "limitation_codes",
+        }:
             if not isinstance(raw_value, (list, tuple)) or len(raw_value) > 32:
                 return None
             if not all(
@@ -301,6 +316,15 @@ def _safe_correction_context(value: Mapping[str, Any] | None) -> dict[str, Any] 
             ):
                 return None
             sanitized[raw_key] = list(raw_value)
+        elif raw_key == "reference_hint_values":
+            if not isinstance(raw_value, Mapping) or set(raw_value) - {"orderRef", "skuRef"}:
+                return None
+            values: dict[str, str] = {}
+            for key, value in raw_value.items():
+                if not isinstance(value, str) or not _SAFE_CONTEXT_IDENTIFIER.fullmatch(value):
+                    return None
+                values[key] = value
+            sanitized[raw_key] = values
         elif raw_key == "candidate_projection":
             if not isinstance(raw_value, Mapping) or set(raw_value) - {"sufficient", "supporting_chunk_ids"}:
                 return None

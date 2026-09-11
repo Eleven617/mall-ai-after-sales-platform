@@ -21,7 +21,7 @@ from pathlib import Path
 from typing import Any, Callable, Mapping
 
 from app.config import settings
-from app.runtime.providers import DeepSeekRuntimeProvider, RuntimeModelError
+from app.runtime.providers import DeepSeekRuntimeProvider, RuntimeModelError, RUNTIME_PROMPT_VERSION
 from app.runtime.task_runtime import TaskRuntime, TaskRuntimeError
 from app.runtime.task_store import InMemoryTaskStore
 from app.schemas.agent_task import TaskExecutionBudget
@@ -33,6 +33,8 @@ from app.skills.commerce_gateway import SkillObservation
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_SUITE_PATH = PROJECT_ROOT / "evals" / "live_model_agent_runtime_cases.v1.json"
 SUITE_VERSION = "live-model-agent-runtime.v1"
+HOLDOUT_SUITE_VERSION = "live-model-agent-runtime-holdout.v1"
+_MIN_CASES_BY_SUITE_VERSION = {SUITE_VERSION: 24, HOLDOUT_SUITE_VERSION: 12}
 SYNTHETIC_AUTHORIZATION = "Bearer synthetic-agent-evaluation"
 SYNTHETIC_MEMBER_ID = 7001
 _CASE_ID = re.compile(r"^[a-z][a-z0-9_.:-]{2,79}$")
@@ -59,6 +61,7 @@ class CaseRunResult:
     status: str
     execution_kind: str
     terminal_status: str | None
+    limitation_codes: tuple[str, ...]
     failure_categories: tuple[str, ...]
     invoked_skills: tuple[str, ...]
     successful_skills: tuple[str, ...]
@@ -186,11 +189,12 @@ def load_live_agent_suite(path: Path = DEFAULT_SUITE_PATH) -> dict[str, Any]:
         payload = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError) as exc:
         raise LiveAgentEvaluationError("live agent suite 无法加载。") from exc
-    if not isinstance(payload, dict) or payload.get("suiteVersion") != SUITE_VERSION:
+    if not isinstance(payload, dict) or payload.get("suiteVersion") not in _MIN_CASES_BY_SUITE_VERSION:
         raise LiveAgentEvaluationError("live agent suite 版本不匹配。")
     cases = payload.get("cases")
-    if not isinstance(cases, list) or len(cases) < 24:
-        raise LiveAgentEvaluationError("live agent suite 至少需要 24 个独立案例。")
+    minimum_cases = _MIN_CASES_BY_SUITE_VERSION[payload["suiteVersion"]]
+    if not isinstance(cases, list) or len(cases) < minimum_cases:
+        raise LiveAgentEvaluationError(f"live agent suite 至少需要 {minimum_cases} 个独立案例。")
     seen: set[str] = set()
     for case in cases:
         _validate_case(case, seen)
@@ -229,6 +233,7 @@ def run_live_model_agent_evaluation(
                             status="environment_blocked",
                             execution_kind="not_run_budget",
                             terminal_status=None,
+                            limitation_codes=("evaluation_budget_exhausted",),
                             failure_categories=("evaluation_budget_exhausted",),
                             invoked_skills=(),
                             successful_skills=(),
@@ -286,6 +291,12 @@ def _run_case(
         store=store,
         provider=provider,
         gateway=gateway,
+        reference_hints=_synthetic_reference_hints(fixture),
+        read_skill_allowlist={
+            str(skill_id)
+            for skill_id in (fixture.get("observations") or {})
+            if isinstance(skill_id, str)
+        },
     )
     terminal_status: str | None = None
     proposal_present = False
@@ -294,9 +305,12 @@ def _run_case(
     required_coverage = False
     proposal_resume_success = False
     post_checks: dict[str, bool] = {}
+    limitation_codes: tuple[str, ...] = ()
     failure_categories: list[str] = []
     task_ref: str | None = None
     outcome = None
+    observed_skills: set[str] = set()
+    successful_observed_skills: set[str] = set()
     try:
         outcome = runtime.create_task(
             session_id=f"live-agent-{case_id}-{run_index}",
@@ -310,7 +324,16 @@ def _run_case(
             ),
         )
         terminal_status = outcome.view.status
+        limitation_codes = tuple(outcome.view.limitation_codes)
         task_ref = outcome.view.task_ref
+        if task_ref in store._items:  # noqa: SLF001 - evidence-only inspection
+            artifacts = store._items[task_ref].artifacts  # noqa: SLF001
+            observed_skills = {artifact.source_skill for artifact in artifacts}
+            successful_observed_skills = {
+                artifact.source_skill
+                for artifact in artifacts
+                if artifact.factuality in {"verified", "derived", "proposal"}
+            }
         # Runtime turns provider faults into a safe blocked projection. Keep
         # only model-originated codes here so they can be classified as an
         # environment block; expected Skill/RAG failures are checked by the
@@ -322,9 +345,11 @@ def _run_case(
         proposal_present = outcome.view.action is not None and outcome.view.action.confirmation_status == "awaiting_confirmation"
         task_success = terminal_status in set(case["expect"].get("terminal_statuses", []))
         clarification_correct = _check_clarification(case, outcome.view)
-        required_coverage = _check_required_coverage(case, gateway)
+        required_coverage = _check_required_coverage(case, gateway, observed_skills, successful_observed_skills)
         proposal_resume_success = _check_proposal_expectation(case, proposal_present)
-        failure_categories.extend(_contract_failures(case, outcome.view, gateway, proposal_present))
+        failure_categories.extend(
+            _contract_failures(case, outcome.view, gateway, proposal_present, observed_skills)
+        )
         if not task_success:
             failure_categories.append("terminal_status_mismatch")
         if not clarification_correct:
@@ -383,10 +408,18 @@ def _run_case(
         status=status,
         execution_kind=provider_kind,
         terminal_status=terminal_status,
+        limitation_codes=limitation_codes,
         failure_categories=tuple(dict.fromkeys(failure_categories)),
-        invoked_skills=tuple(gateway.invocations),
+        invoked_skills=tuple(dict.fromkeys([*gateway.invocations, *sorted(observed_skills)])),
         successful_skills=tuple(
-            skill for skill, status_value in gateway._invocation_statuses if status_value == "succeeded"
+            dict.fromkeys(
+                [
+                    skill
+                    for skill, status_value in gateway._invocation_statuses
+                    if status_value == "succeeded"
+                ]
+                + sorted(successful_observed_skills)
+            )
         ),
         model_calls=_model_calls(store, task_ref),
         tool_calls=_tool_calls(store, task_ref),
@@ -398,7 +431,7 @@ def _run_case(
         clarification_correct=clarification_correct,
         required_skill_or_fact_coverage=required_coverage,
         proposal_or_resume_success=proposal_resume_success,
-        irrelevant_calls=_irrelevant_calls(case, gateway),
+        irrelevant_calls=_irrelevant_calls(case, gateway, observed_skills),
         forbidden_side_effects=forbidden_side_effects,
         elapsed_ms=max(0, round((time.monotonic() - started) * 1000)),
         post_checks=post_checks,
@@ -413,14 +446,20 @@ def _check_clarification(case: Mapping[str, Any], view: Any) -> bool:
     return bool(expected) == actual
 
 
-def _check_required_coverage(case: Mapping[str, Any], gateway: SyntheticReadOnlyGateway) -> bool:
+def _check_required_coverage(
+    case: Mapping[str, Any],
+    gateway: SyntheticReadOnlyGateway,
+    observed_skills: set[str] | None = None,
+    successful_observed_skills: set[str] | None = None,
+) -> bool:
     expect = case["expect"]
     successful = {
         skill
         for skill, status in gateway._invocation_statuses
         if status == "succeeded"
     }
-    invoked = set(gateway.invocations)
+    successful.update(successful_observed_skills or set())
+    invoked = set(gateway.invocations) | (observed_skills or set())
     coverage_pool = successful | (invoked if expect.get("safe_stop") else set())
     all_skills = expect.get("required_skills_all", [])
     any_groups = expect.get("required_skills_any", [])
@@ -448,14 +487,16 @@ def _contract_failures(
     view: Any,
     gateway: SyntheticReadOnlyGateway,
     proposal_present: bool,
+    observed_skills: set[str] | None = None,
 ) -> list[str]:
     failures: list[str] = []
+    invoked_skills = set(gateway.invocations) | (observed_skills or set())
     allowed = set(case["expect"].get("allowed_skills", []))
-    irrelevant = [skill for skill in gateway.invocations if allowed and skill not in allowed]
+    irrelevant = [skill for skill in invoked_skills if allowed and skill not in allowed]
     if irrelevant:
         failures.append("irrelevant_skill_call")
     forbidden = set(case["expect"].get("forbidden_skills", []))
-    if forbidden.intersection(gateway.invocations):
+    if forbidden.intersection(invoked_skills):
         failures.append("forbidden_skill_call")
     if case["expect"].get("safe_stop"):
         safe_statuses = set(case["expect"].get("safe_stop_statuses", ["blocked", "waiting_for_user"]))
@@ -546,9 +587,14 @@ def _run_post_checks(
     return checks
 
 
-def _irrelevant_calls(case: Mapping[str, Any], gateway: SyntheticReadOnlyGateway) -> int:
+def _irrelevant_calls(
+    case: Mapping[str, Any],
+    gateway: SyntheticReadOnlyGateway,
+    observed_skills: set[str] | None = None,
+) -> int:
     allowed = set(case["expect"].get("allowed_skills", []))
-    return sum(1 for skill in gateway.invocations if allowed and skill not in allowed)
+    invoked = set(gateway.invocations) | (observed_skills or set())
+    return sum(1 for skill in invoked if allowed and skill not in allowed)
 
 
 def _bundle_value(store: InMemoryTaskStore, task_ref: str | None, key: str) -> int:
@@ -593,6 +639,7 @@ def _build_report(
             "status": item.status,
             "executionKind": item.execution_kind,
             "terminalStatus": item.terminal_status,
+            "limitationCodes": list(item.limitation_codes),
             "failureCategories": list(item.failure_categories),
             "invokedSkills": list(item.invoked_skills),
             "successfulSkills": sorted(set(item.successful_skills)),
@@ -647,7 +694,7 @@ def _build_report(
         "model": {
             "provider": "DeepSeekRuntimeProvider",
             "model": settings.deepseek_model,
-            "promptVersion": "agent_runtime_v3_0",
+            "promptVersion": RUNTIME_PROMPT_VERSION,
             "skillCatalogVersion": SKILL_CATALOG_VERSION,
             "executionBoundary": "synthetic_read_only_gateway",
         },
@@ -705,6 +752,27 @@ def _default_artifact_kind(skill_id: str) -> str:
         "search_task_memory": "memory_hint",
         "spawn_subtask": "async_task",
     }.get(skill_id, "action_result")
+
+
+def _synthetic_reference_hints(fixture: Mapping[str, Any]) -> dict[str, str]:
+    """Expose only reviewed opaque references to the model in live fixtures.
+
+    The production Runtime receives references from an authenticated server
+    adapter or asks the customer for the missing identifier.  The synthetic
+    gateway has no real order/SKU, so it provides stable placeholders through
+    the same model-facing reference contract instead of making the model
+    invent identifiers.  No raw fixture value is copied into the context.
+    """
+
+    observations = fixture.get("observations")
+    if not isinstance(observations, Mapping):
+        return {}
+    hints: dict[str, str] = {}
+    if any(key in observations for key in ("read_order", "read_logistics")):
+        hints["orderRef"] = "ref-synthetic-order"
+    if "read_inventory" in observations:
+        hints["skuRef"] = "ref-synthetic-sku"
+    return hints
 
 
 def _reference(prefix: str, value: object) -> str:

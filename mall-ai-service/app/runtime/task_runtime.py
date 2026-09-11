@@ -97,6 +97,8 @@ class TaskRuntime:
         gateway: SkillGateway | None = None,
         memory: TaskMemory | None = None,
         now_fn=time.time,
+        reference_hints: Mapping[str, str] | None = None,
+        read_skill_allowlist: set[str] | None = None,
     ) -> None:
         self._store = store or get_task_store()
         if provider is None:
@@ -105,6 +107,12 @@ class TaskRuntime:
         self._gateway = gateway or SafeCommerceSkillGateway()
         self._memory = memory or TaskMemory()
         self._now = now_fn
+        self._reference_hints = {
+            str(key): str(value)
+            for key, value in (reference_hints or {}).items()
+            if isinstance(key, str) and isinstance(value, str) and key and value
+        }
+        self._read_skill_allowlist = None if read_skill_allowlist is None else set(read_skill_allowlist)
         self._curator = ContextCurator(self._provider)
         self._critic = ResolutionCritic(self._provider)
 
@@ -297,6 +305,13 @@ class TaskRuntime:
             return TaskRuntimeResult(self._public_view(bundle), list(bundle.events))
         task.status = "executing"
         self._save(bundle)
+        # Discovery is deterministic, bounded metadata lookup performed by the
+        # server before each model turn.  Keep this turn-local marker explicit
+        # so the Executor cannot spend its budget repeating discovery instead
+        # of reading facts or asking a safe clarification.
+        discovery_complete = True
+        repeated_discovery = 0
+        executed_read_signatures: set[str] = set()
         while True:
             if self._now() - started > task.execution_budget.max_wall_clock_seconds:
                 self._block(bundle, "wall_clock_budget_exhausted", "任务达到时间预算，已安全停止。")
@@ -313,6 +328,18 @@ class TaskRuntime:
                 discovered,
                 transient_input=transient_input,
                 context_pack=bundle.latest_context_pack(),
+                discovery_complete=discovery_complete,
+                reference_hints=self._reference_hints,
+                artifact_details=[
+                    {
+                        "kind": artifact.kind,
+                        "sourceSkill": artifact.source_skill,
+                        "factuality": artifact.factuality,
+                        "summary": artifact.summary[:320],
+                    }
+                    for artifact in bundle.artifacts[-12:]
+                ],
+                limitation_codes=list(task.limitation_codes[-8:]),
             )
             try:
                 decision = self._provider.decide(context)
@@ -328,6 +355,25 @@ class TaskRuntime:
                 record_trace("task_runtime", "invalid_decision", task.task_ref, result_kind="blocked", contract_violation="invalid_executor_decision")
                 break
             try:
+                duplicate_read = self._duplicate_read_decision(decision, executed_read_signatures)
+                if duplicate_read:
+                    if task.limitation_codes:
+                        task.status = "waiting_for_user"
+                        task.waiting_question = "当前事实暂时无法核验，请补充必要信息后再试。"
+                        self._append_event(bundle, "waiting_for_user", task.waiting_question)
+                        self._save(bundle)
+                        break
+                    self._append_event(
+                        bundle,
+                        "plan_updated",
+                        "相同参数的只读 Skill 已执行，未重复调用；请继续处理已有事实或安全澄清。",
+                    )
+                    self._save(bundle)
+                    transient_input = (
+                        "服务端已执行相同参数的只读 Skill；不要重复读取。"
+                        "请使用已有事实完成只读回答，或在需要业务效果时形成待确认行动提案。"
+                    )
+                    continue
                 self._validate_decision(decision, task, discovered, bundle)
             except TaskRuntimeError as exc:
                 task.invalid_decisions += 1
@@ -335,12 +381,23 @@ class TaskRuntime:
                 record_trace("task_runtime", "decision_rejected", task.task_ref, result_kind="blocked", contract_violation=exc.code)
                 break
             if decision.decision == "discover_skills":
+                discovery_complete = True
+                repeated_discovery += 1
                 self._append_event(bundle, "plan_updated", "已发现与当前目标相关的受控 Skill。")
                 self._save(bundle)
-                transient_input = "继续根据已发现的 Skill 形成下一步行动"
+                transient_input = (
+                    "服务端已完成本轮能力发现；不要再次发现。请直接选择一个与目标最相关的只读 Skill、"
+                    "必要的用户澄清、受控行动提案或只读完成决策。"
+                )
+                if repeated_discovery >= 2:
+                    transient_input += " 重复发现不会产生事实，必须推进到下一种决策。"
                 continue
             if decision.decision == "call_skill":
                 self._execute_skill_calls(bundle, decision, authorization, member_id)
+                executed_read_signatures.update(
+                    self._read_signature(call.skill_id, call.arguments)
+                    for call in decision.skill_calls
+                )
                 self._refresh_context(bundle, discovered)
                 if bundle.artifacts and self._critic.should_trigger(
                     artifacts=bundle.artifacts,
@@ -423,11 +480,21 @@ class TaskRuntime:
     def _discover_for_turn(self, task: AgentTask, transient_input: str, bundle: TaskRecordBundle) -> list[SkillDefinition]:
         query = f"{task.normalized_goal} {transient_input}"
         selected = discover_skills(query, limit=8)
+        if self._read_skill_allowlist is not None:
+            selected = [
+                skill
+                for skill in selected
+                if skill.action_mode != "read" or skill.skill_id in self._read_skill_allowlist
+            ]
         known = {skill.skill_id for skill in selected}
         for artifact in bundle.artifacts[-8:]:
             if artifact.source_skill and artifact.source_skill not in known:
                 skill = get_skill(artifact.source_skill)
-                if skill is not None:
+                if skill is not None and (
+                    skill.action_mode != "read"
+                    or self._read_skill_allowlist is None
+                    or skill.skill_id in self._read_skill_allowlist
+                ):
                     selected.append(skill)
                     known.add(skill.skill_id)
         return selected[:8]
@@ -445,6 +512,26 @@ class TaskRuntime:
                 raise TaskRuntimeError("一次调用的 Skill 数量超过并行预算。", code="parallel_budget_exceeded")
             if task.tool_calls + len(decision.skill_calls) > task.execution_budget.max_tool_calls:
                 raise TaskRuntimeError("任务达到 Skill 调用预算。", code="tool_call_budget_exhausted")
+            decision_skill_ids = {call.skill_id for call in decision.skill_calls}
+            has_order_fact = any(
+                artifact.kind == "order_fact" and artifact.factuality == "verified"
+                for artifact in bundle.artifacts
+            )
+            # Logistics is an order-scoped fact.  When the catalog has exposed
+            # the order reader, do not let a plan that requests both facts
+            # silently finish after a logistics-only read.  A first-turn
+            # parallel read of both remains valid; a logistics-only catalog
+            # (for example an upstream failure fixture) is also preserved.
+            if (
+                "read_logistics" in decision_skill_ids
+                and "read_order" in discovered_ids
+                and "read_order" not in decision_skill_ids
+                and not has_order_fact
+            ):
+                raise TaskRuntimeError(
+                    "物流事实需要先绑定当前订单事实。",
+                    code="required_order_fact_before_logistics",
+                )
             for call in decision.skill_calls:
                 skill = get_skill(call.skill_id)
                 if skill is None or call.skill_id not in discovered_ids:
@@ -457,6 +544,7 @@ class TaskRuntime:
                 if self._skill_call_count(bundle, call.skill_id) >= skill.max_calls_per_task:
                     raise TaskRuntimeError("当前 Skill 已达到该任务的调用上限。", code="skill_call_budget_exhausted")
                 self._validate_skill_arguments(call.skill_id, call.arguments)
+                self._validate_reference_arguments(call.skill_id, call.arguments, bundle)
         if decision.decision == "spawn_subtask":
             skill = get_skill("spawn_subtask")
             if skill is None or skill.skill_id not in discovered_ids:
@@ -498,6 +586,11 @@ class TaskRuntime:
                         raise TaskRuntimeError("重规划引用了未知 Skill。", code="unknown_skill")
         if decision.decision == "finish" and not decision.reason_summary:
             raise TaskRuntimeError("完成决策缺少用户可见摘要。", code="finish_summary_missing")
+        if decision.decision == "finish" and task.limitation_codes:
+            raise TaskRuntimeError(
+                "当前任务存在未解决的 Skill 或事实失败，不能宣称完成。",
+                code="finish_after_dependency_failure",
+            )
 
     def _validate_skill_arguments(self, skill_id: str, arguments: Mapping[str, Any]) -> None:
         if not isinstance(arguments, Mapping) or len(arguments) > 8:
@@ -511,7 +604,7 @@ class TaskRuntime:
             "retrieve_policy": {"query", "policy_version"},
             "list_service_applications": set(),
             "build_service_resolution": {"factRefs", "facts"},
-            "create_after_sales_draft": {"proposalRef"},
+            "create_after_sales_draft": {"proposalRef", "orderFactRef", "applicationType"},
             "amend_after_sales_draft": {"proposalRef"},
             # The Runtime owns the idempotency key.  It must never be accepted
             # from an Executor decision, even when the value has a valid shape.
@@ -539,6 +632,47 @@ class TaskRuntime:
         if skill_id == "commit_after_sales_action":
             if arguments.get("applicationType") not in {"cancel_refund", "return_refund", "exchange", "repair"}:
                 raise TaskRuntimeError("提交行动必须使用受支持的售后类型。", code="application_type_invalid")
+
+    def _validate_reference_arguments(
+        self,
+        skill_id: str,
+        arguments: Mapping[str, Any],
+        bundle: TaskRecordBundle,
+    ) -> None:
+        """Accept only server-provided or current-task artifact references."""
+
+        if skill_id not in {"read_order", "read_logistics", "read_inventory"}:
+            return
+        key = "skuRef" if skill_id == "read_inventory" else "orderRef"
+        supplied = arguments.get(key) or arguments.get("sku_id" if key == "skuRef" else "order_sn")
+        if not isinstance(supplied, str) or not supplied.strip():
+            return
+        known = set(self._reference_hints.values())
+        known.update(artifact.reference for artifact in bundle.artifacts)
+        if known and supplied not in known:
+            raise TaskRuntimeError(
+                "Skill 参数不是当前服务端提供的 opaque reference。",
+                code="unapproved_reference",
+            )
+
+    @staticmethod
+    def _read_signature(skill_id: str, arguments: Mapping[str, Any]) -> str:
+        return f"{skill_id}:{json.dumps(dict(arguments), ensure_ascii=False, sort_keys=True, separators=(',', ':'))}"
+
+    @classmethod
+    def _duplicate_read_decision(
+        cls,
+        decision: ExecutorDecision,
+        executed_signatures: set[str],
+    ) -> bool:
+        if decision.decision != "call_skill" or not decision.skill_calls:
+            return False
+        signatures = [
+            cls._read_signature(call.skill_id, call.arguments)
+            for call in decision.skill_calls
+            if (get_skill(call.skill_id) is not None and get_skill(call.skill_id).action_mode == "read")
+        ]
+        return bool(signatures) and all(signature in executed_signatures for signature in signatures)
 
     @staticmethod
     def _skill_call_count(bundle: TaskRecordBundle, skill_id: str) -> int:
@@ -734,8 +868,8 @@ class TaskRuntime:
         bundle.artifacts.append(artifact)
         bundle.task.artifact_refs.append(artifact.reference)
         if observation.status in {"blocked", "unavailable", "failed"}:
-            code = observation.safe_facts.get("failure_code")
-            if code and code not in bundle.task.limitation_codes:
+            code = observation.safe_facts.get("failure_code") or f"skill_{observation.status}"
+            if code not in bundle.task.limitation_codes:
                 bundle.task.limitation_codes.append(code)
         return artifact
 

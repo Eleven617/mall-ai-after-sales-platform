@@ -12,7 +12,12 @@ from unittest.mock import patch
 
 import pytest
 
-from app.runtime.providers import CuratorModelOutput, RuntimeModelError, ScriptedRuntimeProvider
+from app.runtime.providers import (
+    CuratorModelOutput,
+    RuntimeModelError,
+    ScriptedRuntimeProvider,
+    _server_read_repair,
+)
 from app.runtime.reference_vault import RuntimeReferenceVault
 from app.runtime.task_runtime import TaskRuntime, TaskRuntimeError
 from app.runtime.task_store import InMemoryTaskStore
@@ -115,6 +120,82 @@ def test_runtime_runs_dynamic_read_then_finishes_without_persisting_raw_goal() -
     assert "should-not-persist" not in persisted
 
 
+def test_runtime_does_not_burn_budget_on_duplicate_read_decision() -> None:
+    """A repeated identical read is nudged back to the existing facts."""
+
+    provider = ScriptedRuntimeProvider(
+        decisions=[
+            _decision(
+                name="call_skill",
+                summary="读取当前账号订单事实。",
+                calls=[SkillCall(skill_id="read_order", arguments={"orderRef": "ref-order-alpha"})],
+            ),
+            _decision(
+                name="call_skill",
+                summary="重复读取同一订单事实。",
+                calls=[SkillCall(skill_id="read_order", arguments={"orderRef": "ref-order-alpha"})],
+            ),
+            _decision(name="finish", summary="已使用已核验订单事实完成只读回答。"),
+        ]
+    )
+    gateway = RecordingGateway({"read_order": _observation()})
+
+    result = _runtime(provider, gateway).create_task(
+        session_id=SESSION_ID,
+        goal="查询合成订单状态",
+        member_id=MEMBER_ID,
+        authorization=AUTHORIZATION,
+        execution_budget=TaskExecutionBudget(max_model_calls=3, max_tool_calls=1),
+    )
+
+    assert result.view.status == "completed"
+    assert gateway.invocations == [("read_order", {"orderRef": "ref-order-alpha"})]
+    assert provider.decision_calls == 3
+
+
+def test_logistics_only_read_is_rejected_when_order_reader_is_available() -> None:
+    """A logistics fact cannot silently replace the order fact it scopes."""
+
+    provider = ScriptedRuntimeProvider(
+        decisions=[
+            _decision(
+                name="call_skill",
+                summary="只读取物流但尚未核验订单。",
+                calls=[SkillCall(skill_id="read_logistics", arguments={"orderRef": "ref-order-alpha"})],
+            )
+        ]
+    )
+    gateway = RecordingGateway({"read_logistics": _observation(kind="logistics_fact")})
+    result = _runtime(provider, gateway).create_task(
+        session_id=SESSION_ID,
+        goal="核验合成订单和物流状态",
+        member_id=MEMBER_ID,
+        authorization=AUTHORIZATION,
+    )
+
+    assert result.view.status == "blocked"
+    assert "required_order_fact_before_logistics" in result.view.limitation_codes
+    assert gateway.invocations == []
+
+
+def test_finish_without_observation_repairs_to_safe_clarification() -> None:
+    """A malformed finish cannot turn missing facts into a successful answer."""
+
+    repaired = _server_read_repair(
+        correction_context={
+            "available_skill_ids": ["read_order"],
+            "available_read_skill_ids": ["read_order"],
+            "reference_hint_keys": [],
+            "reference_hint_values": {},
+        },
+        validation_codes=("finish_without_observation",),
+    )
+
+    assert repaired is not None
+    assert repaired.decision == "ask_user"
+    assert repaired.user_question
+
+
 def test_runtime_rejects_unknown_skill_before_gateway_invocation() -> None:
     provider = ScriptedRuntimeProvider(
         decisions=[
@@ -161,6 +242,41 @@ def test_model_failure_safely_blocks_before_any_skill_or_action() -> None:
     assert result.view.status == "blocked"
     assert "model_timeout" in result.view.limitation_codes
     assert gateway.invocations == []
+    assert gateway.commits == []
+
+
+def test_runtime_cannot_finish_after_a_failed_fact_skill() -> None:
+    """A dependency failure remains a safe stop even if the model says finish."""
+
+    provider = ScriptedRuntimeProvider(
+        decisions=[
+            _decision(
+                name="call_skill",
+                summary="读取当前账号订单事实。",
+                calls=[SkillCall(skill_id="read_order", arguments={"orderRef": "ref-order-alpha"})],
+            ),
+            _decision(name="finish", summary="已完成订单核验。"),
+        ]
+    )
+    gateway = RecordingGateway(
+        {
+            "read_order": _observation(
+                status="unavailable",
+                factuality="unavailable",
+                summary="订单事实暂时不可用。",
+            )
+        }
+    )
+
+    result = _runtime(provider, gateway).create_task(
+        session_id=SESSION_ID,
+        goal="查询合成订单状态",
+        member_id=MEMBER_ID,
+        authorization=AUTHORIZATION,
+    )
+
+    assert result.view.status == "blocked"
+    assert "finish_after_dependency_failure" in result.view.limitation_codes
     assert gateway.commits == []
 
 

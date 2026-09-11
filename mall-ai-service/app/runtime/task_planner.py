@@ -87,6 +87,10 @@ def build_model_context(
     skills: list[SkillDefinition],
     transient_input: str = "",
     context_pack: ContextPack | None = None,
+    discovery_complete: bool = False,
+    reference_hints: dict[str, str] | None = None,
+    artifact_details: list[dict[str, str]] | None = None,
+    limitation_codes: list[str] | None = None,
 ) -> RuntimeModelContext:
     plan_summary = "无计划"
     open_questions: list[str] = []
@@ -111,6 +115,8 @@ def build_model_context(
         ),
         memory_hints=context_pack.memory_hints[:6] if context_pack is not None else [],
         context_artifact_refs=(context_pack.source_artifact_refs[:16] if context_pack is not None else []),
+        artifact_details=list(artifact_details or [])[:12],
+        limitation_codes=list(limitation_codes or [])[:8],
         available_skills=[
             {
                 "skillId": skill.skill_id,
@@ -122,6 +128,8 @@ def build_model_context(
             }
             for skill in skills[:8]
         ],
+        discovery_complete=discovery_complete,
+        reference_hints=dict(reference_hints or {}),
         action_pending=task.pending_action_ref is not None,
         model_calls_remaining=max(0, task.execution_budget.max_model_calls - task.model_calls),
         tool_calls_remaining=max(0, task.execution_budget.max_tool_calls - task.tool_calls),

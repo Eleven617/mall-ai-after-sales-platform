@@ -39,6 +39,7 @@ class SkillDefinition(BaseModel):
     artifact_kinds: list[str] = Field(default_factory=list, max_length=4)
     examples: list[str] = Field(default_factory=list, max_length=4)
     discovery_terms: list[str] = Field(default_factory=list, max_length=8)
+    prerequisite_skill_ids: tuple[str, ...] = ()
     allowed_roles: tuple[Literal["customer", "quality_evaluation"] , ...] = ("customer",)
     requires_confirmation: bool = False
     max_calls_per_task: int = Field(default=2, ge=1, le=8)
@@ -149,7 +150,7 @@ _CATALOG: tuple[SkillDefinition, ...] = (
         skill_id="list_service_applications",
         semantic_version="v1",
         domain="after_sales",
-        description="列出当前用户可见的售后申请摘要",
+        description="仅列出当前用户已有且可见的售后申请摘要；不替代订单事实，也不创建新申请",
         input_schema_ref="schemas/skills/list_service_applications.input.json",
         output_schema_ref="schemas/skills/list_service_applications.output.json",
         action_mode="read",
@@ -211,7 +212,7 @@ _CATALOG: tuple[SkillDefinition, ...] = (
         skill_id="commit_after_sales_action",
         semantic_version="v1",
         domain="after_sales",
-        description="提交经客户确认的售后动作，由 Java 校验并写入",
+        description="提交经客户确认的售后动作；必须先有订单事实和候选方案，由 Java 再校验并写入",
         input_schema_ref="schemas/skills/commit_after_sales_action.input.json",
         output_schema_ref="schemas/skills/commit_after_sales_action.output.json",
         action_mode="commit",
@@ -221,6 +222,7 @@ _CATALOG: tuple[SkillDefinition, ...] = (
         examples=["客户确认后提交售后申请"],
         discovery_terms=["提交", "确认", "申请", "售后"],
         requires_confirmation=True,
+        prerequisite_skill_ids=("read_order",),
     ),
     SkillDefinition(
         skill_id="open_human_case",
@@ -329,11 +331,41 @@ def discover_skills(query: str, *, role: str = "customer", limit: int = 8) -> li
         if skill.domain in normalized:
             score += 1
         scored.append((score, skill))
-    scored.sort(key=lambda pair: (-pair[0], pair[1].skill_id))
+    scored.sort(
+        key=lambda pair: (
+            -pair[0],
+            # Read capabilities are the safe first step when a goal also
+            # exposes an action capability. This is metadata ordering, not a
+            # business-intent route or a write decision.
+            0 if pair[1].action_mode == "read" else 1,
+            pair[1].skill_id,
+        )
+    )
     # Discovery always exposes a bounded set; a zero lexical score still
     # returns core runtime capabilities so the Executor can ask for a better
     # plan without receiving the entire catalog.
     selected = [skill for score, skill in scored if score > 0][:limit]
+    selected_ids = {skill.skill_id for skill in selected}
+    # An allow-listed action can declare a safe, read-only prerequisite. Add
+    # that prerequisite to the bounded discovery result when the action was
+    # semantically discovered, replacing the least useful tail entry rather
+    # than widening the model's capability budget.
+    for action in list(selected):
+        for prerequisite_id in action.prerequisite_skill_ids:
+            prerequisite = get_skill(prerequisite_id, role=role)
+            if prerequisite is None or prerequisite.skill_id in selected_ids:
+                continue
+            if len(selected) >= limit:
+                selected.pop()
+            selected.append(prerequisite)
+            selected_ids.add(prerequisite.skill_id)
+    selected.sort(
+        key=lambda skill: (
+            0 if skill.action_mode == "read" else 1,
+            next((index for index, (_, scored_skill) in enumerate(scored) if scored_skill.skill_id == skill.skill_id), 999),
+            skill.skill_id,
+        )
+    )
     if not selected:
         selected = [
             skill

@@ -1,1 +1,1 @@
-{"$schema":"https://json-schema.org/draft/2020-12/schema","title":"create_after_sales_draft input","type":"object","additionalProperties":false}
+{"$schema":"https://json-schema.org/draft/2020-12/schema","title":"create_after_sales_draft input","type":"object","additionalProperties":false,"properties":{"orderFactRef":{"type":"string","pattern":"^[a-z][a-z0-9_-]{7,79}$"},"applicationType":{"type":"string","enum":["cancel_refund","return_refund","exchange","repair"]},"proposalRef":{"type":"string","pattern":"^[a-z][a-z0-9_-]{7,79}$"}},"minProperties":1}
