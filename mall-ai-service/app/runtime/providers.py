@@ -288,6 +288,11 @@ def _server_read_repair(
     hint_keys = set(context.get("reference_hint_keys") or ())
     hint_values = context.get("reference_hint_values") or {}
     codes = set(validation_codes)
+    if "resolution_candidate_already_available" in codes:
+        return ExecutorDecision(
+            decision="finish",
+            reason_summary="已基于核验事实整理候选方案；当前未创建维修工单或执行其他业务动作。",
+        )
     target: str | None = None
     argument_key: str | None = None
     if "orderRef" in hint_keys and "read_order" in skills and codes.intersection(
@@ -375,6 +380,12 @@ def _validate_executor_decision(
             errors.append("required_first_read")
     if decision.decision == "spawn_subtask" and not context.artifact_details and read_skills:
         errors.append("required_first_read")
+    if (
+        decision.decision == "spawn_subtask"
+        and any(item.get("kind") == "resolution_candidate" for item in context.artifact_details)
+        and not context.limitation_codes
+    ):
+        errors.append("resolution_candidate_already_available")
     if decision.decision == "call_skill":
         called_skill_ids = {call.skill_id for call in decision.skill_calls}
         has_order_artifact = any(item.get("kind") == "order_fact" for item in context.artifact_details)

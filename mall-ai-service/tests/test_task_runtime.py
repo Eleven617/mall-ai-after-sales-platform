@@ -206,6 +206,22 @@ def test_finish_without_observation_repairs_to_safe_clarification() -> None:
     assert repaired.user_question
 
 
+def test_server_repair_finishes_when_resolution_candidate_is_already_verified() -> None:
+    repaired = _server_read_repair(
+        correction_context={
+            "available_skill_ids": ["build_service_resolution", "spawn_subtask"],
+            "available_read_skill_ids": ["build_service_resolution"],
+            "reference_hint_keys": [],
+            "reference_hint_values": {},
+        },
+        validation_codes=("resolution_candidate_already_available",),
+    )
+
+    assert repaired is not None
+    assert repaired.decision == "finish"
+    assert "维修工单" in repaired.reason_summary
+
+
 def test_runtime_rejects_unknown_skill_before_gateway_invocation() -> None:
     provider = ScriptedRuntimeProvider(
         decisions=[
