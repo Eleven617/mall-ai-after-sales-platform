@@ -5,7 +5,7 @@
     "remote": "https://github.com/Eleven617/mall-ai-after-sales-platform.git",
     "branch": "main",
     "testedCodeCommit": "52d5482455e2389cfd6c2ef15d233712607ffa9f",
-    "evidenceCommit": "to_be_set_after_commit",
+    "evidenceCommit": "b48bb11fff62570e52152a632946a2762560bbbb",
     "workspaceAtStart": "clean_except_ignored_tmp"
   },
   "scope": {
