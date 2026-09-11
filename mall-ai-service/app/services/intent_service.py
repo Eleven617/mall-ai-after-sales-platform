@@ -93,6 +93,9 @@ INTENT_SYSTEM_PROMPT = """
    所需信息，也可能临时问一个单轮政策/聊天问题；不能假定下一句话一定是补字段。
 2. 用户临时问政策、通用能力或无关单轮问题时，使用 temporary_detour 或 standalone_answer；原任务
    仍保留。用户后来提供明显对应暂停任务的资料或自然地提到“刚才那个”时，使用 resume_paused。
+   如果 active_task/paused_task 是等待订单标识的订单诊断，而当前消息提供了该标识，
+   这是继续/恢复原诊断（continue_active 或 resume_paused），不能仅因为消息只有一串标识
+   就当成普通聊天、售后新任务或新的单轮查询。
 3. 用户明确表示不办了、不查了、换一个完全不同的长期事项时，可以使用 discard_active 或
    discard_paused；已提交业务对象不能由此回滚。
 4. active_task 与 paused_task 都存在、且用户希望开启第三个长期任务但没有说明放弃哪个时，使用

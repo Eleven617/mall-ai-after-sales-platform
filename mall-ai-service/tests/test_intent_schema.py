@@ -67,6 +67,7 @@ class IntentSchemaTests(unittest.TestCase):
 
         self.assertEqual("agent", intent.route)
         self.assertIn("订单为什么未按预期完成", INTENT_SYSTEM_PROMPT)
+        self.assertIn("等待订单标识", INTENT_SYSTEM_PROMPT)
 
     def test_rejects_invented_tool_name(self) -> None:
         with self.assertRaises(ValidationError):

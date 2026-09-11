@@ -54,6 +54,8 @@ DIAGNOSIS_SYSTEM_PROMPT = """
 目标：回答“订单为什么没有按预期完成、我现在怎么办”这类路径不固定的问题。
 规则：
 1. 有订单号时，先核验订单，再按需要查询物流；用户询问处理办法或售后条件时，再检索售后政策。
+   如果当前请求已经进入订单诊断子流程，且用户消息含有一个唯一、格式合法的订单号，
+   首次决策必须先调用 order_service；不能只返回自然语言或声称已经核验。
 2. 每次只根据已经观察到的工具结果决定下一步，可以循环调用不同工具，但不要重复相同参数。
 3. 订单状态、商品、物流和政策内容只能来自工具结果；不要在文本中编造或改写这些事实。
 4. 只允许调用 order_service、logistics_service、inventory_service、rag_search；禁止写订单、退款或售后申请。
@@ -218,6 +220,46 @@ def build_diagnosis_graph(
             result_kind="success",
         )
 
+        # Once the server has selected the read-only diagnosis subflow, a
+        # syntax-valid order identifier is enough to establish the first
+        # deterministic fact prerequisite.  A model prose response here is
+        # not allowed to masquerade as an observed order fact.  This repair
+        # remains inside the already selected diagnosis route and only uses
+        # the identifier parser; it does not classify a new intent.
+        order_resolution = extract_order_sn(state["user_message"])
+        has_order_result = any(
+            tool_name == "order_service" for tool_name, _ in state.get("tool_results", [])
+        )
+        if (
+            response.content
+            and state.get("requires_order_facts", False)
+            and order_resolution.value
+            and not order_resolution.ambiguous
+            and not has_order_result
+        ):
+            record_trace(
+                "analysis_agent",
+                "order_fact_prerequisite_repaired",
+                session_id,
+                step=step,
+                node="agent_decide",
+                result_kind="contract_repair",
+            )
+            return {
+                "step": step,
+                "tool_calls": [
+                    {
+                        "name": "order_service",
+                        "arguments": {"order_sn": order_resolution.value},
+                    }
+                ],
+                "call_counts": {
+                    **state.get("call_counts", {}),
+                    f"order_service:{json.dumps({'order_sn': order_resolution.value}, ensure_ascii=False, sort_keys=True)}": 1,
+                },
+                "next_node": "execute_tools",
+            }
+
         if response.tool_calls:
             valid_calls: list[dict[str, Any]] = []
             call_counts = dict(state.get("call_counts", {}))
@@ -225,7 +267,6 @@ def build_diagnosis_graph(
             # needed. Once the user has explicitly supplied exactly one order
             # number, carry that literal into the tool call instead of relying
             # on the model to copy a long identifier.
-            order_resolution = extract_order_sn(state["user_message"])
             for proposed in response.tool_calls:
                 try:
                     tool_call = ToolCall(

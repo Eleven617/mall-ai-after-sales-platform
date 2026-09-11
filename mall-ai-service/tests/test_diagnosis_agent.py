@@ -178,6 +178,38 @@ class DiagnosisAgentTests(unittest.TestCase):
 
     @patch("app.services.agent_service.call_tool")
     @patch("app.services.agent_service.generate_with_tools")
+    def test_order_diagnosis_repairs_prose_before_first_order_fact(
+        self,
+        generate_with_tools,
+        call_tool,
+    ) -> None:
+        order_sn = "202608110100000009"
+        generate_with_tools.side_effect = [
+            LLMResponse(content="我已经帮你核验订单了。"),
+            LLMResponse(content="已完成第一步核验。"),
+        ]
+        call_tool.return_value = {
+            "order_sn": order_sn,
+            "status": "已发货",
+            "product_names": ["测试耳机"],
+        }
+
+        result = run_agent_result(
+            f"订单号 {order_sn} 为什么一直没到？",
+            session_id="diagnosis-prose-prerequisite",
+            diagnosis=True,
+            diagnosis_requires_order_facts=True,
+        )
+
+        self.assertEqual(1, call_tool.call_count)
+        bound_call = call_tool.call_args.args[0]
+        self.assertEqual("order_service", bound_call.name)
+        self.assertEqual(order_sn, bound_call.arguments["order_sn"])
+        self.assertEqual(2, generate_with_tools.call_count)
+        self.assertEqual("facts_incomplete", result.diagnosis.category)
+
+    @patch("app.services.agent_service.call_tool")
+    @patch("app.services.agent_service.generate_with_tools")
     def test_langgraph_handoffs_when_policy_has_no_evidence(self, generate_with_tools, call_tool) -> None:
         generate_with_tools.side_effect = [
             LLMResponse(tool_calls=[{"name": "order_service", "arguments": {"order_sn": "202607240001"}}]),
