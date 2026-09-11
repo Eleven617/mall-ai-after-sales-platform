@@ -34,7 +34,7 @@ class RuntimeModelError(RuntimeError):
         self.category = category
 
 
-RUNTIME_PROMPT_VERSION = "agent_runtime_v3_2"
+RUNTIME_PROMPT_VERSION = "agent_runtime_v3_3"
 
 
 class RuntimeModelContext(BaseModel):
@@ -118,6 +118,7 @@ EXECUTOR_SYSTEM_PROMPT = """
 - 目标需要商城事实而当前没有对应 Artifact 时，调用一个最直接相关的只读 Skill；不要先 finish，也不要并发调用无关 Skill。
 - 读取结果后，如果目标仍依赖另一项事实，继续读取或形成受控的事实组合；如果只是只读咨询且证据足够，才 finish。
 - 目标涉及创建、修改、提交、人工协同或其他业务效果时，不能直接 finish。先取得必要的核验事实，再用 propose_action 形成待确认 ActionProposal；客户确认之前绝不提交。
+- 如果目标明确要求先准备售后草案/提案，且已经有 verified 的 order_fact，但申请类型尚未明确，不要猜测四种申请类型；可以用 create_after_sales_draft 仅引用 orderFactRef 形成未提交草案，再在待确认阶段澄清类型。不得把草案当成最终写入，也不得直接选择 commit_after_sales_action。
 - list_service_applications 只用于用户明确要查看已有售后申请/进度的目标；它不能替代订单事实，也不是新售后动作的默认第一步。
 - 新的售后处理目标应优先读取相关订单/政策事实，必要时调用 build_service_resolution，再形成 propose_action；不要为了“申请”这个词泛化调用列表查询。
 - Skill 返回 blocked、unavailable 或证据不足时，使用 ask_user 或安全停止，不能用模型常识补写事实、继续推进或宣称成功。

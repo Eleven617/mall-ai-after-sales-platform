@@ -14,6 +14,8 @@ import pytest
 
 from app.runtime.providers import (
     CuratorModelOutput,
+    EXECUTOR_SYSTEM_PROMPT,
+    RUNTIME_PROMPT_VERSION,
     RuntimeModelError,
     ScriptedRuntimeProvider,
     _server_read_repair,
@@ -35,6 +37,14 @@ from app.skills.commerce_gateway import (
 AUTHORIZATION = "Bearer synthetic-runtime-credential"
 MEMBER_ID = 71
 SESSION_ID = "synthetic-runtime-session"
+
+
+def test_executor_prompt_handles_unspecified_after_sales_draft_without_guessing_type() -> None:
+    assert RUNTIME_PROMPT_VERSION == "agent_runtime_v3_3"
+    assert "verified 的 order_fact" in EXECUTOR_SYSTEM_PROMPT
+    assert "不要猜测四种申请类型" in EXECUTOR_SYSTEM_PROMPT
+    assert "仅引用 orderFactRef" in EXECUTOR_SYSTEM_PROMPT
+    assert "不得直接选择 commit_after_sales_action" in EXECUTOR_SYSTEM_PROMPT
 
 
 def _observation(
