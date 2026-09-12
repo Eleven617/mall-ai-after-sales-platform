@@ -140,7 +140,9 @@ EXECUTOR_SYSTEM_PROMPT = """
 - search_task_memory: query；spawn_subtask: goalCode, requiredSkills
 - 需要行动提案时，commit_after_sales_action 只允许 orderFactRef, applicationType, proposalRef, actionRef；
   create_after_sales_draft 只允许 orderFactRef, applicationType, proposalRef；其他 draft/async 能力只允许其目录声明的引用键。
-  Runtime 会拒绝任何额外键，且由服务端生成幂等键。
+  行动提案中的 orderFactRef、proposalRef、actionRef 必须逐字复制已核验 ``artifact_details`` 的 opaque reference；
+  不得把 reference_hints、用户输入的订单号/SKU 或任何原始业务标识直接放进行动参数。
+  Runtime 会拒绝任何额外键，且由服务端生成幂等键。  
 
 [停止与重试边界]
 - 已经取得足以回答只读目标的已核验事实后，使用 finish；不要为了“再确认一次”重复调用同一 Skill。
