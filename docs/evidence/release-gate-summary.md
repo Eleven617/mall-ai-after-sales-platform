@@ -6,6 +6,8 @@
 
 最终 GitHub Actions 尚需绑定本次公开提交 SHA 后确认，历史绿色 run 不替代最终提交。唯一事实源：[`current-release-facts.json`](current-release-facts.json)；展示证据：[`final-showcase-evidence.md`](final-showcase-evidence.md)。
 
+公开提交 `e0c8b36` 的首次 `mall-ci` 只在 OSV 步骤失败：扫描容器对 Java 本地 `1.0-SNAPSHOT` reactor 做传递解析时无法从远程仓库找到内部模块，退出码 127；gitleaks、Python、Java、Web、Compose 和 public-release 均通过。修复为 OSV `--no-resolve` 后仍扫描所有显式 Python/npm lockfile 与 `mall2` POM 的直接依赖，未关闭扫描、未使用 `continue-on-error`，待新提交远程复核。
+
 ## 历史审计记录（以下内容不代表当前 Commit）
 
 ## 当前权威结论（2026-09-12）

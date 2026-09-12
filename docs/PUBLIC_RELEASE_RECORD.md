@@ -18,6 +18,8 @@
 
 事实源：[`current-release-facts.json`](evidence/current-release-facts.json)。公开演示素材和 hash：[`final-showcase-evidence.md`](evidence/final-showcase-evidence.md)。成本、生产 SLA、真实用户泛化和外部履约均 unavailable/未接入。
 
+本次公开提交的首次远程 `mall-ci` 失败仅发生在 OSV：隔离扫描容器无法解析仓库内 Maven `1.0-SNAPSHOT` reactor 依赖，退出码 127；同一日志显示 0 个受影响包。已在保持 Java POM、OSV 扫描和风险例外可见的前提下增加 `--no-resolve`，让扫描检查已声明的直接依赖而不把本地 reactor 解析当成漏洞结果；修复后的新 SHA 仍需重新等待远程门禁。
+
 ## 历史审计记录（以下内容不代表当前 Commit）
 
 ## 2026-09-12｜最终收口复核（当前权威记录）
