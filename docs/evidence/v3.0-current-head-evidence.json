@@ -5,7 +5,7 @@
     "remote": "https://github.com/Eleven617/mall-ai-after-sales-platform.git",
     "branch": "main",
     "testedCodeCommit": "9c7c29045c28446b16a609768cd4b4c1202f8a51",
-    "evidenceCommit": "9c7c29045c28446b16a609768cd4b4c1202f8a51",
+    "evidenceCommit": "78c5c3c980606438175548891fde2666e9a8ddf8",
     "workspaceAtStart": "clean_except_ignored_tmp"
   },
   "scope": {
@@ -70,7 +70,7 @@
   },
   "claims": {
     "currentLocalSyntheticFieldGate": "passed",
-    "currentRemoteCi": {"status": "passed", "commit": "0501d9d7689bb4e980ae00f0855e134df0d3fd0f", "mallCi": "https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34715971696", "qualityEvaluation": "https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34715971746", "note": "后续 docs-only 提交需按自身 SHA 再复核"},
+    "currentRemoteCi": {"status": "passed", "commit": "78c5c3c980606438175548891fde2666e9a8ddf8", "mallCi": "https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34716325261", "qualityEvaluation": "https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34716325231", "note": "当前 final docs-only evidence commit 已复核"},
     "productionAccuracy": false,
     "productionSla": false,
     "realUserGeneralization": false,

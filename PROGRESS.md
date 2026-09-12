@@ -7,7 +7,7 @@
 - 当前唯一事实源：`docs/evidence/current-release-facts.json`；公开素材证据：`docs/evidence/final-showcase-evidence.md`；自动一致性门禁：`scripts/validate_public_release.py`。
 - 已更新 README 的最终演示素材、supplemental 口径、FastAPI/Java 结果；`mall-ai-service/tmp/` 已精确忽略，临时报告保留在本机不提交。
 - `0501d9d` 已推送；该 SHA 的 `mall-ci` 与 `quality-evaluation` 均成功。`e0c8b36` 的首次 `mall-ci` 失败在 OSV 容器解析 Java 本地 `1.0-SNAPSHOT` reactor（退出码 127，0 个受影响包），不是代码测试或密钥扫描失败；已用 `--no-resolve` 保留直接依赖扫描并修复。
-- 当前待做只是把这次 CI URL 回填到事实源后推送文档回填提交；该提交仍需再跑一次远程门禁，不能用 `0501d9d` 的绿色结果替代它。
+- 最终证据回填提交 `78c5c3c` 的 `mall-ci` 与 `quality-evaluation` 也均成功；事实源已绑定该提交，运行时代码仍是 `9c7c290`。
 
 ## 历史记录（以下内容不代表当前 Commit）
 

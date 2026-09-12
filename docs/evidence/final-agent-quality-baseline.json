@@ -10,7 +10,7 @@
   "revision": {
     "branch": "main",
     "testedCodeCommit": "9c7c29045c28446b16a609768cd4b4c1202f8a51",
-    "evidenceCommit": "9c7c29045c28446b16a609768cd4b4c1202f8a51",
+    "evidenceCommit": "78c5c3c980606438175548891fde2666e9a8ddf8",
     "workspaceBeforeEvidence": "clean_except_ignored_tmp",
     "remote": "https://github.com/Eleven617/mall-ai-after-sales-platform.git"
   },
@@ -68,8 +68,8 @@
     "unconfirmedWrite": "blocked by proposal and confirmation boundary",
     "crossAccount": "covered by synthetic field and runtime checks",
     "secretPolicy": "no .env, key, password, token, raw order or customer data committed",
-    "remoteScan": "passed on evidence commit 0501d9d; final docs-only SHA requires a fresh run",
-    "remoteActions": {"status": "passed", "verifiedCommit": "0501d9d7689bb4e980ae00f0855e134df0d3fd0f", "mallCi": "https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34715971696", "qualityEvaluation": "https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34715971746"}
+    "remoteScan": "passed on final evidence commit 78c5c3c",
+    "remoteActions": {"status": "passed", "verifiedCommit": "78c5c3c980606438175548891fde2666e9a8ddf8", "mallCi": "https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34716325261", "qualityEvaluation": "https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34716325231"}
   },
   "personalContribution": ["runtime contract design and hardening", "after-sales safety boundary", "Context projection and read-loop guards", "tests/evals/field evidence", "README and evidence maintenance"],
   "upstreamBoundary": "macrozheng/mall remains upstream; Mall domain/order/admin foundations are not claimed as original",
