@@ -130,6 +130,40 @@ def test_runtime_runs_dynamic_read_then_finishes_without_persisting_raw_goal() -
     assert "should-not-persist" not in persisted
 
 
+def test_explicit_identifier_message_becomes_turn_local_reference_hints() -> None:
+    """A user-supplied order/SKU is syntax-bound for one turn, not guessed or persisted."""
+
+    contexts = []
+
+    class RecordingProvider:
+        def decide(self, context):
+            contexts.append(context)
+            return _decision(
+                name="ask_user",
+                summary="仍需要用户补充可核验信息。",
+                question="请补充缺少的事实。",
+            )
+
+        def curate(self, _context):
+            raise AssertionError("curator must not run")
+
+        def critique(self, _context):
+            raise AssertionError("critic must not run")
+
+    runtime = _runtime(RecordingProvider(), RecordingGateway({}))
+    result = runtime.create_task(
+        session_id=SESSION_ID,
+        goal="订单号 123456789012，SKU110，请继续核验。",
+        member_id=MEMBER_ID,
+        authorization=AUTHORIZATION,
+    )
+
+    assert result.view.status == "waiting_for_user"
+    assert contexts[0].reference_hints == {"orderRef": "123456789012", "skuRef": "SKU110"}
+    persisted = str(runtime._store._items[result.view.task_ref])  # noqa: SLF001 - persistence boundary check
+    assert "123456789012" not in persisted
+
+
 def test_runtime_does_not_burn_budget_on_duplicate_read_decision() -> None:
     """A repeated identical read is nudged back to the existing facts."""
 

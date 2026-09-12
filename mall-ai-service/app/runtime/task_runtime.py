@@ -71,6 +71,7 @@ from app.skills.commerce_gateway import (
     SkillObservation,
 )
 from app.services.trace_service import record_trace
+from app.services.identifier_extraction import extract_order_sn, extract_sku_id
 
 
 class TaskRuntimeError(RuntimeError):
@@ -158,6 +159,7 @@ class TaskRuntime:
             transient_input=goal,
             authorization=authorization,
             member_id=member_id,
+            reference_hints=self._reference_hints_from_input(goal),
         )
         return result
 
@@ -178,7 +180,13 @@ class TaskRuntime:
             raise TaskRuntimeError("继续任务的消息不合法。", code="invalid_message")
         if bundle.task.status in {"completed", "cancelled"}:
             raise TaskRuntimeError("该任务已经结束，不能继续。", code="task_terminal", status_code=409)
-        return self._run_turn(bundle, transient_input=message, authorization=authorization, member_id=member_id)
+        return self._run_turn(
+            bundle,
+            transient_input=message,
+            authorization=authorization,
+            member_id=member_id,
+            reference_hints=self._reference_hints_from_input(message),
+        )
 
     def get_task(self, *, task_ref: str, member_id: int | None, authorization: str | None) -> AgentTaskPublicView:
         owner_ref, _ = self._require_owner("task-session", member_id, authorization, allow_session_placeholder=True)
@@ -294,9 +302,15 @@ class TaskRuntime:
         transient_input: str,
         authorization: str | None,
         member_id: int | None,
+        reference_hints: Mapping[str, str] | None = None,
     ) -> TaskRuntimeResult:
         task = bundle.task
         started = self._now()
+        # Identifier parsing is a syntax/ownership boundary, not intent
+        # routing.  These values are available only for this request's model
+        # turn and are never persisted in the task record, trace, or DTO.
+        turn_reference_hints = dict(self._reference_hints)
+        turn_reference_hints.update(reference_hints or {})
         if task.expires_at <= started:
             task.status = "blocked"
             task.limitation_codes.append("task_expired")
@@ -329,12 +343,16 @@ class TaskRuntime:
                 transient_input=transient_input,
                 context_pack=bundle.latest_context_pack(),
                 discovery_complete=discovery_complete,
-                reference_hints=self._reference_hints,
+                reference_hints=turn_reference_hints,
                 artifact_details=[
                     {
                         "kind": artifact.kind,
                         "sourceSkill": artifact.source_skill,
                         "factuality": artifact.factuality,
+                        # The reference is an opaque server handle, not a
+                        # business identifier or raw tool payload. The
+                        # Executor needs it to form a safe ActionProposal.
+                        "reference": artifact.reference,
                         "summary": artifact.summary[:320],
                     }
                     for artifact in bundle.artifacts[-12:]
@@ -375,7 +393,13 @@ class TaskRuntime:
                         "不得再次 call_skill，也不得把重复读取当成新的证据。"
                     )
                     continue
-                self._validate_decision(decision, task, discovered, bundle)
+                self._validate_decision(
+                    decision,
+                    task,
+                    discovered,
+                    bundle,
+                    reference_hints=turn_reference_hints,
+                )
             except TaskRuntimeError as exc:
                 task.invalid_decisions += 1
                 self._block(bundle, exc.code, "任务决策未通过服务端能力校验，未执行任何业务动作。")
@@ -506,6 +530,8 @@ class TaskRuntime:
         task: AgentTask,
         discovered: list[SkillDefinition],
         bundle: TaskRecordBundle,
+        *,
+        reference_hints: Mapping[str, str] | None = None,
     ) -> None:
         discovered_ids = {skill.skill_id for skill in discovered}
         if decision.decision == "call_skill":
@@ -545,7 +571,12 @@ class TaskRuntime:
                 if self._skill_call_count(bundle, call.skill_id) >= skill.max_calls_per_task:
                     raise TaskRuntimeError("当前 Skill 已达到该任务的调用上限。", code="skill_call_budget_exhausted")
                 self._validate_skill_arguments(call.skill_id, call.arguments)
-                self._validate_reference_arguments(call.skill_id, call.arguments, bundle)
+                self._validate_reference_arguments(
+                    call.skill_id,
+                    call.arguments,
+                    bundle,
+                    reference_hints=reference_hints,
+                )
         if decision.decision == "spawn_subtask":
             skill = get_skill("spawn_subtask")
             if skill is None or skill.skill_id not in discovered_ids:
@@ -639,6 +670,8 @@ class TaskRuntime:
         skill_id: str,
         arguments: Mapping[str, Any],
         bundle: TaskRecordBundle,
+        *,
+        reference_hints: Mapping[str, str] | None = None,
     ) -> None:
         """Accept only server-provided or current-task artifact references."""
 
@@ -648,6 +681,10 @@ class TaskRuntime:
         supplied = arguments.get(key) or arguments.get("sku_id" if key == "skuRef" else "order_sn")
         if not isinstance(supplied, str) or not supplied.strip():
             return
+        # ``self._reference_hints`` are server-approved opaque references
+        # (used by synthetic/live fixtures). A value parsed from the current
+        # user message is a syntax-validated, user-visible identifier and is
+        # intentionally accepted for this turn; it is never persisted.
         known = set(self._reference_hints.values())
         known.update(artifact.reference for artifact in bundle.artifacts)
         if known and supplied not in known:
@@ -655,6 +692,24 @@ class TaskRuntime:
                 "Skill 参数不是当前服务端提供的 opaque reference。",
                 code="unapproved_reference",
             )
+
+    @staticmethod
+    def _reference_hints_from_input(message: str) -> dict[str, str]:
+        """Extract only explicitly formatted, user-visible references.
+
+        The result is a turn-local server hint. It is intentionally limited to
+        the existing conservative identifier parsers; it does not infer an
+        order, SKU, intent, permission, or business state from free text.
+        """
+
+        hints: dict[str, str] = {}
+        order = extract_order_sn(message)
+        if order.value:
+            hints["orderRef"] = order.value
+        sku = extract_sku_id(message)
+        if sku.value:
+            hints["skuRef"] = sku.value
+        return hints
 
     @staticmethod
     def _read_signature(skill_id: str, arguments: Mapping[str, Any]) -> str:

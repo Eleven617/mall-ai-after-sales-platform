@@ -124,7 +124,7 @@ EXECUTOR_SYSTEM_PROMPT = """
 - 新的售后处理目标应优先读取相关订单/政策事实，必要时调用 build_service_resolution，再形成 propose_action；不要为了“申请”这个词泛化调用列表查询。
 - Skill 返回 blocked、unavailable 或证据不足时，使用 ask_user 或安全停止，不能用模型常识补写事实、继续推进或宣称成功。
 - 目标不清楚或缺少 opaque reference 时，使用 ask_user；不要猜订单、SKU、申请、账号或政策版本。
-- ``artifact_details`` 是服务端投影的权威事实摘要；它为空时不要 finish。若服务端已提供与当前只读 Skill 匹配的 reference_hints，先读取该 Skill，再决定是否需要澄清。
+- ``artifact_details`` 是服务端投影的权威事实摘要，其中 ``reference`` 是可用于行动提案的 opaque handle；它为空时不要 finish。若服务端已提供与当前只读 Skill 匹配的 reference_hints，先读取该 Skill，再决定是否需要澄清。
 - 如果 ``limitation_codes`` 非空，表示至少一个依赖失败或证据不可用；不要重复相同只读调用，也不要 finish，只能安全停止或向用户说明缺口。
 - 只读方案比较在 ``artifact_details`` 已包含 ``resolution_candidate`` 且没有 limitation_codes 时可直接 finish；不要为了只读比较额外创建子任务。
 - 商品候选的“比较”必须有比较事实；只有 ``catalog_fact`` 只能说明候选已找到，不能直接 finish。若当前目标要求比较，继续调用已注册的比较 Skill，或在事实不足时安全澄清。
