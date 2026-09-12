@@ -178,7 +178,7 @@ class DeepSeekRuntimeProvider:
     """Provider-neutral role adapter using the existing structured gateway."""
 
     def decide(self, context: RuntimeModelContext) -> ExecutorDecision:
-        return self._structured(
+        decision = self._structured(
             role="commerce_executor",
             message=json.dumps(context.model_dump(), ensure_ascii=False),
             system_prompt=EXECUTOR_SYSTEM_PROMPT,
@@ -203,6 +203,29 @@ class DeepSeekRuntimeProvider:
             },
             mode=StructuredOutputMode.JSON_OBJECT,
         )
+        # A model can echo a turn-local order reference while forming a
+        # proposal. Bind it only when the current task has exactly one
+        # verified order artifact and the echoed value is exactly the
+        # server-supplied hint. This is deterministic reference binding, not
+        # an ID lookup or a fallback guess; ambiguous proposals stay rejected.
+        if decision.decision == "propose_action" and decision.action_arguments:
+            raw_order_ref = context.reference_hints.get("orderRef")
+            verified_order_refs = [
+                item.get("reference")
+                for item in context.artifact_details
+                if item.get("kind") == "order_fact"
+                and item.get("factuality") == "verified"
+                and isinstance(item.get("reference"), str)
+            ]
+            if (
+                raw_order_ref
+                and len(verified_order_refs) == 1
+                and decision.action_arguments.get("orderFactRef") == raw_order_ref
+            ):
+                arguments = dict(decision.action_arguments)
+                arguments["orderFactRef"] = verified_order_refs[0]
+                decision = decision.model_copy(update={"action_arguments": arguments})
+        return decision
 
     def curate(self, context: ContextCuratorInput) -> CuratorModelOutput:
         return self._structured(

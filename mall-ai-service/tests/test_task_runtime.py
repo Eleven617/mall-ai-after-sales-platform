@@ -16,6 +16,8 @@ from app.runtime.providers import (
     CuratorModelOutput,
     EXECUTOR_SYSTEM_PROMPT,
     RUNTIME_PROMPT_VERSION,
+    DeepSeekRuntimeProvider,
+    RuntimeModelContext,
     RuntimeModelError,
     ScriptedRuntimeProvider,
     _server_read_repair,
@@ -172,6 +174,49 @@ def test_explicit_identifier_message_becomes_turn_local_reference_hints() -> Non
         "orderRef": "ref-order-alpha",
         "skuRef": "ref-sku-alpha",
     }
+
+
+def test_provider_binds_echoed_turn_order_ref_to_unique_verified_artifact() -> None:
+    context = RuntimeModelContext(
+        task_ref="taskref-demo",
+        transient_input="准备方案",
+        goal="准备售后方案",
+        task_status="executing",
+        plan_version=1,
+        plan_summary="读取订单后形成待确认方案",
+        reference_hints={"orderRef": "123456789012"},
+        artifact_details=[
+            {
+                "kind": "order_fact",
+                "sourceSkill": "read_order",
+                "factuality": "verified",
+                "reference": "fact-order-opaque",
+                "summary": "订单事实已核验",
+            }
+        ],
+        available_skills=[
+            {
+                "skillId": "commit_after_sales_action",
+                "actionMode": "commit",
+                "requiresConfirmation": True,
+            }
+        ],
+        discovery_complete=True,
+        model_calls_remaining=2,
+        tool_calls_remaining=2,
+    )
+    provider = DeepSeekRuntimeProvider()
+    provider._structured = lambda **_: ExecutorDecision(
+        decision="propose_action",
+        reason_summary="已形成待确认方案",
+        action_skill="commit_after_sales_action",
+        action_arguments={
+            "orderFactRef": "123456789012",
+            "applicationType": "return_refund",
+        },
+    )
+    decision = provider.decide(context)
+    assert decision.action_arguments["orderFactRef"] == "fact-order-opaque"
 
 
 def test_runtime_does_not_burn_budget_on_duplicate_read_decision() -> None:
