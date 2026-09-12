@@ -1,16 +1,16 @@
 {
-  "schemaVersion": "v3.0-current-head-evidence.v2",
-  "generatedAt": "2026-09-12T04:45:00+08:00",
+  "schemaVersion": "v3.0-current-head-evidence.v3",
+  "generatedAt": "2026-09-12T19:29:05Z",
   "repository": {
     "remote": "https://github.com/Eleven617/mall-ai-after-sales-platform.git",
     "branch": "main",
-    "testedCodeCommit": "52d5482455e2389cfd6c2ef15d233712607ffa9f",
-    "evidenceCommit": "efd3dcdd5d9c628a98b697ad63b57fe78b932cd9",
+    "testedCodeCommit": "9c7c29045c28446b16a609768cd4b4c1202f8a51",
+    "evidenceCommit": "9c7c29045c28446b16a609768cd4b4c1202f8a51",
     "workspaceAtStart": "clean_except_ignored_tmp"
   },
   "scope": {
     "data": "versioned synthetic fixtures and local demo data only",
-    "businessWrites": false,
+    "businessWrites": "only through the tested Java confirmation path; no model direct write",
     "productionClaims": false,
     "externalFulfillment": "not connected",
     "defaultRagMode": "dense",
@@ -19,17 +19,17 @@
   "fixtureHashes": {
     "evals/v3/release-manifest.json": "d9fc72be81e2f67330710052c03287d49677bf7eb6f54eed51b87c01db2ac1ad",
     "evals/v3/caseSetSha256": "18a3ad20485417bbebd8bad875490cf80b171ed28760b1dc2dfbd203d1938ccd",
-    "mall-ai-service/evals/live_model_agent_runtime_cases.v1.json": "d5de1e85fa40eace714b051e78e830bee4b367545d154e0b435fc247b2a7b99d",
+    "mall-ai-service/evals/live_model_agent_runtime_cases.v1.json": "ef6c0ad66556eb03127e85ee6607a5cdf79bb8f69ddfa8749ecc29e913e97d53",
     "mall-ai-service/evals/rag_grounding_cases.json": "72d36be4dfec0888fcac57eb211fb85413018c8254db7d52f1914d6703966f11",
-    "tmp/field-fixture.json": "d4829bd272dad498b17890b24595c288150ed89d4f59b062424b70067513e093"
+    "tmp/field-fixture.json": "4dd3d407001aec74e4c9546639c78eb2544b34a0ac4f2b6698eba345c27e3fc3"
   },
   "deterministic": {
-    "fastapi": {"passed": 362, "failed": 0, "warnings": 1, "subtestsPassed": 7, "exitCode": 0},
+    "fastapi": {"passed": 365, "failed": 0, "warnings": 1, "subtestsPassed": 7, "exitCode": 0},
     "v3Manifest": {"deterministicRegistered": 478, "liveRegistered": 36, "performanceProfiles": 12, "manifestSha256": "2f9d60f3903b3046236a71e1557d89fac87e916d9586d787a193c6deb4c71d2e", "caseSetSha256": "18a3ad20485417bbebd8bad875490cf80b171ed28760b1dc2dfbd203d1938ccd"},
     "v3Preflight": {"deterministicPassed": 478, "deterministicRegistered": 478, "representativePassed": 8, "representativeRegistered": 8, "failed": 0, "exitCode": 0},
-    "java": {"portalTargeted": {"passed": 12, "failed": 0}, "adminTargeted": {"passed": 6, "failed": 0}, "springContext": {"passed": 1, "failed": 0}},
+    "java": {"portalCore": {"passed": 12, "failed": 0}, "portalCompatibility": {"passed": 2, "failed": 0}, "admin": {"passed": 6, "failed": 0}, "springContext": {"passed": 1, "failed": 0}},
     "web": {"build": "passed", "exitCode": 0},
-    "grounding": {"totalCases": 15, "passedCases": 15, "failedCases": 0, "environmentBlockedCases": 0, "checks": "57/57", "reportSha256": "fb90a00cdb4b835270126600190eb175ae13583db97b678080452c8be252d715"}
+    "grounding": {"totalCases": 15, "passedCases": 15, "failedCases": 0, "environmentBlockedCases": 0, "checks": "57/57", "reportSha256": "b5e92ebf6df3b2002c7347a4fd32a779a6fb4450f9560dc38cac6ce2de5a73d2"}
   },
   "liveModel": {
     "provider": "DeepSeekRuntimeProvider",
@@ -37,21 +37,21 @@
     "promptVersion": "agent_runtime_v3_3",
     "skillCatalogVersion": "skill_catalog_v3_0",
     "executionBoundary": "synthetic_read_only_gateway",
-    "main": {"cases": 24, "runs": 72, "passed": 72, "failed": 0, "environmentBlocked": 0, "report": "mall-ai-service/tmp/final-agent-quality-main-final5-20260912.json", "reportSha256": "b4041b3541e125b48e4b1114ff1e100aeeb6c40bea29f426d048850414be87d2", "suiteSha256": "ef6c0ad66556eb03127e85ee6607a5cdf79bb8f69ddfa8749ecc29e913e97d53", "runtimeLatencyMs": {"p50": 6297, "p95": 10672, "max": 13406}, "llmCalls": 259, "tokens": 558431, "pricingConfigured": false, "cost": null, "forbiddenSideEffects": 0, "duplicateFinalBusinessWrites": 0},
-    "holdout": {"cases": 12, "runs": 36, "passed": 36, "failed": 0, "environmentBlocked": 0, "report": "mall-ai-service/tmp/final-agent-quality-holdout-final4-20260912.json", "reportSha256": "822775b454e921dc50817f764783ddd14fc65910e267b27aa2e559ecc5869612", "suiteSha256": "1a82b6bcaa9ce246590b3f10ef08897bea07f81af675c128f9b96542acb10e90", "runtimeLatencyMs": {"p50": 5891, "p95": 9422, "max": 9546}, "llmCalls": 130, "tokens": 280390, "pricingConfigured": false, "cost": null, "forbiddenSideEffects": 0, "duplicateFinalBusinessWrites": 0}
+    "main": {"cases": 24, "runs": 72, "passed": 72, "failed": 0, "environmentBlocked": 0, "report": "mall-ai-service/tmp/final-agent-quality-main-final-9c7c290.json", "reportSha256": "40cb0e25d09c13171f581ddd69050a4d4a06fccc7427c3c205df65919f49f400", "suiteSha256": "ef6c0ad66556eb03127e85ee6607a5cdf79bb8f69ddfa8749ecc29e913e97d53", "runtimeLatencyMs": {"p50": 7437, "p95": 13890, "max": 26188}, "llmCalls": 250, "tokens": 562552, "pricingConfigured": false, "cost": "unavailable", "forbiddenSideEffects": 0, "duplicateFinalBusinessWrites": 0},
+    "supplemental": {"cases": 12, "runs": 36, "passed": 36, "failed": 0, "environmentBlocked": 0, "report": "mall-ai-service/tmp/final-agent-quality-supplemental-final-9c7c290.json", "reportSha256": "dd155133a5273ac29175e44ed0d4fe2f42d92296a9856f3cd382b436ac471604", "suiteSha256": "1a82b6bcaa9ce246590b3f10ef08897bea07f81af675c128f9b96542acb10e90", "runtimeLatencyMs": {"p50": 7313, "p95": 11281, "max": 12500}, "llmCalls": 127, "tokens": 285174, "pricingConfigured": false, "cost": "unavailable", "independentBlindSet": false, "forbiddenSideEffects": 0, "duplicateFinalBusinessWrites": 0}
   },
   "fieldAcceptance": {
-    "report": "tmp/field-acceptance-final/field-20260911T203212Z-95f5755e/field-acceptance.json",
-    "reportSha256": "a0fbcd5c22638be8be480ae08344596a14d7874eafcd65194242b3f4df8c803e",
-    "testedCodeCommit": "52d5482455e2389cfd6c2ef15d233712607ffa9f",
-    "fixtureSha256": "d4829bd272dad498b17890b24595c288150ed89d4f59b062424b70067513e093",
+    "report": "tmp/field-acceptance-final-9c7c290/field-20260912T190322Z-6095525f/field-acceptance.json",
+    "reportSha256": "6fcae42f1befeadd439957fe2bbecb114a77f787f29a8ec97fc29fdc6b016ff8",
+    "testedCodeCommit": "9c7c29045c28446b16a609768cd4b4c1202f8a51",
+    "fixtureSha256": "4dd3d407001aec74e4c9546639c78eb2544b34a0ac4f2b6698eba345c27e3fc3",
     "releaseGate": "passed",
     "total": 122,
     "passed": 122,
     "failed": 0,
     "environmentBlocked": 0,
     "categories": {"browser_e2e": "24/24", "java_mysql_integration": "30/30", "fault_injection": "36/36", "durable_async_recovery": "32/32"},
-    "mode": "live_browser/live_java_mysql/isolated_compose_fault/live_build21_restart_recovery"
+    "mode": "live browser/live Java MySQL/isolated Compose fault/live restart recovery"
   },
   "commands": [
     "mall-ai-service/.venv/Scripts/python.exe -m pytest -q",
@@ -59,18 +59,18 @@
     "mall-ai-service/.venv/Scripts/python.exe scripts/run_v3_release_preflight.py --json",
     "mall-ai-service/.venv/Scripts/python.exe scripts/evaluate_rag_grounding.py",
     "mall-ai-web/npm run build",
-    "mall2/mvn portal and admin targeted tests with -DskipTests=false",
-    "docker compose config --quiet and docker compose ps --format json",
+    "mall2 Maven portal/admin targeted tests with -DskipTests=false",
+    "docker compose config --quiet and health checks",
     "verify_field_acceptance.py with synthetic fixture and isolated fault Compose"
   ],
   "historical": {
     "previousBlockedRun": "tmp/field-acceptance/field-20260909T074151Z-d56eb7fe/field-acceptance.json",
     "previousBlockedResult": "122 environment_blocked; superseded after Docker recovery",
-    "previousLiveFailures": "main-final2/main-final3/main-final4; retained in final-agent-failure-matrix.md"
+    "previousLiveFailures": "retained in final-agent-failure-matrix.md and not merged into current totals"
   },
   "claims": {
     "currentLocalSyntheticFieldGate": "passed",
-    "currentRemoteCi": {"status": "passed", "commit": "efd3dcdd5d9c628a98b697ad63b57fe78b932cd9", "mallCi": "https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34646346032", "qualityEvaluation": "https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34646346115"},
+    "currentRemoteCi": {"status": "pending_remote_final_sha", "commit": null, "mallCi": null, "qualityEvaluation": null},
     "productionAccuracy": false,
     "productionSla": false,
     "realUserGeneralization": false,

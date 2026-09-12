@@ -1,5 +1,13 @@
 # Final Agent Quality Baseline
 
+## 当前权威快照｜最终公开收口（2026-09-12 UTC）
+
+运行时代码：`9c7c29045c28446b16a609768cd4b4c1202f8a51`；Provider：`DeepSeekRuntimeProvider/deepseek-chat`；Prompt：`agent_runtime_v3_3`；Skill Catalog：`skill_catalog_v3_0`。主评测为 24 Case × 3，共 **72/72**；补充评测集为 12 Case × 3，共 **36/36**。补充集合参与过开发期回归，历史文件名可含 `holdout`，但不作为独立盲测或真实用户泛化率。
+
+主报告 hash：`40cb0e25d09c13171f581ddd69050a4d4a06fccc7427c3c205df65919f49f400`；补充报告 hash：`dd155133a5273ac29175e44ed0d4fe2f42d92296a9856f3cd382b436ac471604`。主集 LLM 250 次、562552 tokens、延迟 p50/p95/max `7437/13890/26188 ms`；补充集 LLM 127 次、285174 tokens、延迟 `7313/11281/12500 ms`；价格未配置，成本 unavailable。两套均为合成只读网关，无 forbidden side effects/duplicate final business writes。
+
+## 历史审计记录（以下内容不代表当前 Commit）
+
 > 当前权威快照：2026-09-12（Asia/Shanghai）。运行时代码提交：`52d5482455e2389cfd6c2ef15d233712607ffa9f`。本文件记录真实执行结果，不把旧报告或确定性合同扩大为生产能力。
 
 ## 运行边界

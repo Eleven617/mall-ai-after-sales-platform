@@ -1,5 +1,24 @@
 # 测试与演示证据
 
+## 当前权威快照｜最终公开收口
+
+运行时代码：`9c7c29045c28446b16a609768cd4b4c1202f8a51`；分支：`main`。下方旧日期内容是历史审计，提交号或报告 hash 不一致时标记 stale，不与当前结果相加。
+
+| 范围 | passed | failed | environment_blocked | 模式 |
+| --- | ---: | ---: | ---: | --- |
+| FastAPI | **365** | 0 | 0 | 本机 Python，exit 0 |
+| DeepSeek main | **72/72** | 0 | 0 | 24 Case × 3，合成只读网关 |
+| supplemental | **36/36** | 0 | 0 | 12 Case × 3，非独立盲测 |
+| Grounding | **15/15；57/57 checks** | 0 | 0 | 合成证据 |
+| Java | **12/12 + 2/2 + 6/6 + 1/1** | 0 | 0 | portal core/compat/admin/Spring |
+| deterministic | **478/478；8/8** | 0 | 0 | contract_mock，无模型/无写入 |
+| Vue | **passed** | 0 | 0 | production build |
+| 本地现场 | **122/122** | 0 | 0 | Docker/Chrome/Java/MySQL/Redis/RabbitMQ |
+
+主报告、补充报告、现场报告和 Fixture hash 见 [`current-release-facts.json`](evidence/current-release-facts.json)。报告存于本机忽略目录，不提交原始客户数据、Key、Token 或原始 Trace。
+
+## 历史审计记录（以下内容不代表当前 Commit）
+
 ## 2026-09-12｜最终技术负责人收口（当前权威快照）
 
 本节覆盖运行时代码提交 `52d5482455e2389cfd6c2ef15d233712607ffa9f`；后文 2026-09-09 及更早内容是历史证据，若提交号或报告 hash 不一致，按 stale/superseded 处理，不与本节相加。

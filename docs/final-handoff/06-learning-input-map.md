@@ -1,5 +1,11 @@
 # 学习输入地图（第一轮新顺序）
 
+## 当前事实基线（2026-09-12 UTC）
+
+学习应以运行时代码 `9c7c29045c28446b16a609768cd4b4c1202f8a51` 和 [`current-release-facts.json`](../evidence/current-release-facts.json) 为准：FastAPI 365、DeepSeek main 72/72、supplemental 36/36（非独立盲测）、Grounding 15/15、Java portal core 12/12 + compatibility 2/2、admin 6/6、Spring 1/1、deterministic 478/478、现场 122/122。学习表达仍需区分 Runtime 合同、真实模型合成评测、本地现场和远程 CI，不能把这些数字说成生产准确率。
+
+## 历史审计记录（以下内容不代表当前 Commit）
+
 > 当前证据基线：运行时代码 `52d5482455e2389cfd6c2ef15d233712607ffa9f`；live main `72/72`、holdout `36/36`、grounding `15/15`。历史 `24/72` 和 `11/15` 只作为失败归因材料，已在最终失败矩阵中标 stale，不再是当前结果。
 
 项目现在可以冻结并进入学习；建议按以下顺序，每个模块都沿着“完整链路 → 3 个重点代码文件 → 已验证结果/边界/面试表达”学习。

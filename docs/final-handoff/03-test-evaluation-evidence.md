@@ -1,5 +1,13 @@
 # 测试、评测与现场证据
 
+## 当前权威快照｜最终公开收口（2026-09-12 UTC）
+
+运行时代码：`9c7c29045c28446b16a609768cd4b4c1202f8a51`。FastAPI **365 passed**；DeepSeek main **72/72**、supplemental **36/36**（非独立盲测）；Grounding **15/15、57/57 checks**；deterministic **478/478、8/8**；Java portal core **12/12** + compatibility **2/2**、admin **6/6**、Spring **1/1**；Vue production build passed；本地现场 **122/122**。所有套件按本机/合成/远程 CI 分开统计，不能相加为生产准确率。
+
+原始报告路径、退出码和 hash 见 [`current-release-facts.json`](../evidence/current-release-facts.json)；现场报告的 Fixture SHA 为 `4dd3d407001aec74e4c9546639c78eb2544b34a0ac4f2b6698eba345c27e3fc3`。最终远程 CI 必须绑定本次公开提交 SHA 后确认。
+
+## 历史审计记录（以下内容不代表当前 Commit）
+
 ## 2026-09-12 当前代码补测
 
 当前运行时代码：`52d5482455e2389cfd6c2ef15d233712607ffa9f`。FastAPI **362 passed**；live model main **72/72**、holdout **36/36**；Grounding **15/15、57/57 checks**；v3 deterministic **478/478、8/8**；Java portal/admin **12/12、6/6**；Vue build 通过；本地四类现场 Runner **122/122**。原始报告和 hash 见 [`final-agent-quality-baseline.md`](../evidence/final-agent-quality-baseline.md)。旧数字如与本节冲突，按 stale/superseded 处理。

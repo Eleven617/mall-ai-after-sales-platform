@@ -1,63 +1,45 @@
 {
-  "schemaVersion": "mall-final-handoff.v1",
+  "schemaVersion": "mall-final-handoff.v2",
   "project": "Mall AI After-sales Platform",
   "repository": "Eleven617/mall-ai-after-sales-platform",
   "branch": "main",
-  "runtimeCodeCommit": "84e111d17e4117287660421ea5772a9ddcf44382",
-  "evidenceBaselineCommit": "5ea119970a2a4a9a9194dc3e1e46eff412bd406e",
+  "runtimeCodeCommit": "9c7c29045c28446b16a609768cd4b4c1202f8a51",
+  "evidenceBaselineCommit": "9c7c29045c28446b16a609768cd4b4c1202f8a51",
   "fieldAcceptance": {
-    "report": "tmp/field-acceptance/field-20260909T105750Z-12222b15/field-acceptance.json",
-    "reportSha256": "6a301cd28072ebbf01fa07e81d7aaf5c4b2de9741c14ceb351122cac18f21567",
-    "fixtureSha256": "7573e19271528e904d2eb40cef2765f05d4e5f489f2b35cc1b1359bcd5128759",
-    "durationMs": 211947,
+    "report": "tmp/field-acceptance-final-9c7c290/field-20260912T190322Z-6095525f/field-acceptance.json",
+    "reportSha256": "6fcae42f1befeadd439957fe2bbecb114a77f787f29a8ec97fc29fdc6b016ff8",
+    "fixtureSha256": "4dd3d407001aec74e4c9546639c78eb2544b34a0ac4f2b6698eba345c27e3fc3",
     "releaseGate": "passed",
     "categories": {
       "browser_e2e": {"executed": 24, "passed": 24, "failed": 0, "environmentBlocked": 0, "mode": "live_browser"},
       "java_mysql_integration": {"executed": 30, "passed": 30, "failed": 0, "environmentBlocked": 0, "mode": "live_java_mysql"},
       "fault_injection": {"executed": 36, "passed": 36, "failed": 0, "environmentBlocked": 0, "mode": "isolated_compose_fault"},
-      "durable_async_recovery": {"executed": 32, "passed": 32, "failed": 0, "environmentBlocked": 0, "mode": "live_build21_restart_recovery"}
+      "durable_async_recovery": {"executed": 32, "passed": 32, "failed": 0, "environmentBlocked": 0, "mode": "live_restart_recovery"}
     }
   },
   "tests": {
-    "fastapi": {"passed": 353, "subtests": 7, "failed": 0, "exitCode": 0},
-    "javaPortal": {"passed": 14, "failed": 0, "exitCode": 0},
+    "fastapi": {"passed": 365, "subtests": 7, "failed": 0, "exitCode": 0},
+    "javaPortalCore": {"passed": 12, "compatibilityPassed": 2, "failed": 0, "exitCode": 0},
     "javaAdmin": {"passed": 6, "failed": 0, "exitCode": 0},
     "springMysqlContext": {"passed": 1, "failed": 0, "exitCode": 0},
-    "vueBuild": {"exitCode": 0},
-    "qualityAgentContract": {"passed": 17, "failed": 0},
-    "taskOrchestrationContract": {"passed": 11, "failed": 0},
-    "ragVerifier": {"passed": 36, "failed": 0},
-    "chunkMetadata": {"passed": 8, "failed": 0},
+    "vueBuild": {"status": "passed", "exitCode": 0},
     "manifest": {"passed": 478, "failed": 0},
-    "preflight": {"passed": 8, "failed": 0}
+    "preflight": {"passed": 8, "failed": 0},
+    "grounding": {"cases": 15, "passed": 15, "checks": "57/57", "failed": 0}
+  },
+  "liveModel": {
+    "provider": "DeepSeekRuntimeProvider/deepseek-chat",
+    "main": {"cases": 24, "runs": 72, "passed": 72, "failed": 0, "reportSha256": "40cb0e25d09c13171f581ddd69050a4d4a06fccc7427c3c205df65919f49f400"},
+    "supplemental": {"cases": 12, "runs": 36, "passed": 36, "failed": 0, "independentBlindSet": false, "reportSha256": "dd155133a5273ac29175e44ed0d4fe2f42d92296a9856f3cd382b436ac471604"}
   },
   "rag": {
     "goldenCases": 52,
     "default": "dense",
-    "dense": {"recallAt1": 1.0, "mrr": 0.948718, "ndcg": 0.962147},
-    "hybrid": {"recallAt1": 0.935897, "mrr": 0.952683},
-    "grounding": {"total": 15, "passed": 11, "qualityFailed": 4},
-    "liveModelSynthetic": {"passed": 24, "failed": 48, "blocked": 0}
+    "dense": {"recallAt3": 1.0, "mrr": 0.948718, "ndcgAt3": 0.962147},
+    "hybrid": {"mrr": 0.935897, "ndcgAt3": 0.952683},
+    "hybridRerank": {"mrr": 0.935897, "ndcgAt3": 0.952683},
+    "claimBoundary": "retrieval metrics on a small synthetic set, not answer accuracy"
   },
-  "build14A": {
-    "exitCode": 0,
-    "negativeEligibilityRejected": true,
-    "positiveEligibilityAccepted": true,
-    "ownerIsolation": true,
-    "idempotentDuplicate": true,
-    "transactionalOutbox": true
-  },
-  "ci": {
-    "required": ["mall-ci", "quality-evaluation"],
-    "status": "passed",
-    "verificationCommit": "cfbe952375dcd50cbbc1f96edf82a1a2261d7aa4",
-    "mallCi": {"runId": 34347831789, "conclusion": "success", "url": "https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34347831789"},
-    "qualityEvaluation": {"runId": 34347831778, "conclusion": "success", "url": "https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34347831778"}
-  },
-  "limitations": [
-    "synthetic local data only",
-    "no production SLA or user-scale accuracy",
-    "no real payment, warehouse, logistics, or repair provider",
-    "historical stale/superseded reports are not merged into current counts"
-  ]
+  "ci": {"required": ["mall-ci", "quality-evaluation"], "status": "pending_remote_final_sha", "verificationCommit": null, "mallCi": null, "qualityEvaluation": null},
+  "limitations": ["synthetic local data only", "no production SLA or user-scale accuracy", "no real payment, warehouse, logistics, or repair provider", "historical stale/superseded reports are not merged into current counts"]
 }

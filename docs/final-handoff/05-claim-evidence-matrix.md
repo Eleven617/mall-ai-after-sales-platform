@@ -1,5 +1,11 @@
 # 简历/面试事实证据矩阵
 
+## 当前权威快照｜最终公开收口
+
+运行时代码：`9c7c29045c28446b16a609768cd4b4c1202f8a51`。可公开复述的事实：DeepSeek 合成主集 72/72、补充评测集 36/36（非独立盲测）、Grounding 15/15 和 57/57 checks、FastAPI 365、Java portal core 12/12 + compatibility 2/2、admin 6/6、Spring 1/1、deterministic 478/478、现场 122/122。每条主张都受合成数据、当前 Commit 和报告 hash 限制；不能扩大为生产 SLA、真实用户泛化或外部履约。
+
+## 历史审计记录（以下内容不代表当前 Commit）
+
 > 当前运行时代码基线：`52d5482455e2389cfd6c2ef15d233712607ffa9f`。本表中的现场 122/122、live main 72/72、holdout 36/36 和 grounding 15/15 均来自本次当前代码的本地合成证据；旧报告若提交不一致，按 stale/superseded 处理。
 
 | 可核验主张 | 代码/证据 | 当前结果 | 可以怎么说 | 不能扩大为 |

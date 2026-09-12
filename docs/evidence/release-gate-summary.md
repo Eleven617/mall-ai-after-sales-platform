@@ -1,5 +1,13 @@
 # Mall v3.0 Release Gate 复核
 
+## 当前权威结论｜最终公开收口
+
+运行时代码 `9c7c29045c28446b16a609768cd4b4c1202f8a51`，分支 `main`。本地合成 Gate 已通过：FastAPI 365、DeepSeek main 72/72、supplemental 36/36、Grounding 15/15 和 57/57 checks、Java portal core 12/12 + compatibility 2/2、admin 6/6、Spring 1/1、Vue build、deterministic 478/478（代表性 8/8）、现场 122/122。补充集合不是独立盲测；deterministic 不是 E2E；所有现场数字仅适用于合成 Fixture 和本机 Docker 技术栈。
+
+最终 GitHub Actions 尚需绑定本次公开提交 SHA 后确认，历史绿色 run 不替代最终提交。唯一事实源：[`current-release-facts.json`](current-release-facts.json)；展示证据：[`final-showcase-evidence.md`](final-showcase-evidence.md)。
+
+## 历史审计记录（以下内容不代表当前 Commit）
+
 ## 当前权威结论（2026-09-12）
 
 运行时代码提交：`52d5482455e2389cfd6c2ef15d233712607ffa9f`；证据推送提交：`efd3dcdd5d9c628a98b697ad63b57fe78b932cd9`；分支：`main`。工作区在本次运行开始时除 Git 忽略的 `tmp/` 外干净。本机合成 Release Gate：**通过**；证据提交对应的远程 Actions 也已通过：[`mall-ci` run 34646346032](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34646346032)、[`quality-evaluation` run 34646346115](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34646346115)。

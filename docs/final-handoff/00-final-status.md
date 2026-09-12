@@ -1,5 +1,13 @@
 # Mall v3.0 最终交付状态
 
+## 当前权威快照｜最终公开收口（2026-09-12 UTC）
+
+运行时代码：`9c7c29045c28446b16a609768cd4b4c1202f8a51`；分支：`main`。当前本地合成 Release Gate：**通过**。FastAPI 365；DeepSeek main 72/72；supplemental 36/36（非独立盲测）；Grounding 15/15、57/57 checks；Java portal core 12/12、compatibility 2/2、admin 6/6、Spring 1/1；Vue build；deterministic 478/478、代表性 8/8；field 122/122（browser 24、Java/MySQL 30、fault 36、durable 32）。
+
+最终公开提交的 GitHub Actions 需按该 SHA 重新确认后才可写为远程 passed；历史绿色 run 不替代本次提交。不能宣称生产 SLA、真实用户泛化、真实外部支付/仓储/物流/维修履约或模型成本。唯一事实源：[`current-release-facts.json`](../evidence/current-release-facts.json)。
+
+## 历史审计记录（以下内容不代表当前 Commit）
+
 ## 2026-09-12｜当前代码最终快照
 
 本节覆盖运行时代码提交 `52d5482455e2389cfd6c2ef15d233712607ffa9f`。此前日期段落是历史交接记录；若提交或报告不一致，以本节和 `docs/evidence/final-agent-quality-baseline.md` 为准。

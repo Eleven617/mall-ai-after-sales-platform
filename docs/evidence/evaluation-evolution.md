@@ -1,5 +1,11 @@
 # 评测演进与失败归因记录
 
+## 当前权威快照｜最终公开收口
+
+当前运行时代码 `9c7c29045c28446b16a609768cd4b4c1202f8a51` 的最新真实结果：DeepSeek main 72/72、supplemental 36/36（开发期回归、非独立盲测）、FastAPI 365、Grounding 15/15、deterministic 478/478、现场 122/122。补充集合的历史文件名可含 `holdout`，公开口径已统一降级为 supplemental evaluation set；历史失败仍保留，不能与当前结果合并。
+
+## 历史审计记录（以下内容不代表当前 Commit）
+
 本文件保留历史评测中的失败发现，避免把旧数字误读为当前提交的质量结论。每次报告都必须绑定 Runtime Commit、suite/fixture SHA-256、模型与 Prompt 版本、命令和退出码；提交号不一致的报告标记为 stale，不与当前结果合并。
 
 ## 历史发现

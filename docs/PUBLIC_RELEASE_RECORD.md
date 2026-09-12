@@ -1,5 +1,25 @@
 # 公开发布记录
 
+## 当前权威记录｜最终公开收口
+
+更新时间：2026-09-12 UTC；运行时代码 `9c7c29045c28446b16a609768cd4b4c1202f8a51`；分支 `main`。本节是当前唯一结论，后续旧日期内容均为历史审计，不能与本节合并统计。
+
+| 门禁 | 当前结果 | 运行模式/边界 |
+| --- | --- | --- |
+| FastAPI | **365 passed**，0 failed | 本机 `.venv`，exit 0，1 warning、7 subtests |
+| DeepSeek 主评测 | **72/72**（24 Case × 3） | 真实模型 + 合成只读网关 |
+| 补充评测集 | **36/36**（12 Case × 3） | 开发期回归，非独立盲测 |
+| Grounding | **15/15 Case；57/57 checks** | 合成政策证据 |
+| Java | portal core **12/12**、compatibility **2/2**、admin **6/6**、Spring **1/1** | 显式 `-DskipTests=false`；Spring 使用临时本地配置 |
+| Vue | **production build passed** | `npm run build` |
+| deterministic | **478/478；代表性 8/8** | contract_mock，不是 E2E |
+| 本地现场 | **122/122**：browser 24、Java/MySQL 30、fault 36、durable 32 | Docker/Chrome/Java/MySQL/Redis/RabbitMQ + 合成 Fixture |
+| 远程 CI | **待最终公开提交 SHA 重新确认** | 历史绿色 run 不替代最终提交 |
+
+事实源：[`current-release-facts.json`](evidence/current-release-facts.json)。公开演示素材和 hash：[`final-showcase-evidence.md`](evidence/final-showcase-evidence.md)。成本、生产 SLA、真实用户泛化和外部履约均 unavailable/未接入。
+
+## 历史审计记录（以下内容不代表当前 Commit）
+
 ## 2026-09-12｜最终收口复核（当前权威记录）
 
 运行时代码基线：`52d5482455e2389cfd6c2ef15d233712607ffa9f`，分支 `main`。本节覆盖当前真实执行；下方旧日期内容仅作历史审计，不能覆盖本节或与其相加。

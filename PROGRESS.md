@@ -1,5 +1,15 @@
 # 当前工作进度记录
 
+## 2026-09-12｜最终公开收口当前状态
+
+- 运行时代码基线：`9c7c29045c28446b16a609768cd4b4c1202f8a51`，分支 `main`；本轮不再扩展业务功能。
+- 最新真实本机证据：FastAPI 365；DeepSeek 主集 72/72；补充评测集 36/36（非独立盲测）；Grounding 15/15、57/57 checks；Java portal core 12/12 + compatibility 2/2、admin 6/6、Spring 1/1；Vue build；deterministic 478/478、代表性 8/8；现场 browser 24/24、Java/MySQL 30/30、fault 36/36、durable 32/32，共 122/122。
+- 当前唯一事实源：`docs/evidence/current-release-facts.json`；公开素材证据：`docs/evidence/final-showcase-evidence.md`；自动一致性门禁：`scripts/validate_public_release.py`。
+- 已更新 README 的最终演示素材、supplemental 口径、FastAPI/Java 结果；`mall-ai-service/tmp/` 已精确忽略，临时报告保留在本机不提交。
+- 待完成的发布动作只有：运行本地最终门禁、提交/推送公开文档和素材、等待该新 SHA 的 `mall-ci` 与 `quality-evaluation`，然后把 CI URL 回填事实源。远程 CI 未完成前不称为最终远程通过。
+
+## 历史记录（以下内容不代表当前 Commit）
+
 更新时间：2026-09-04（Asia/Shanghai；恢复执行后最终核对）
 仓库：`C:\\Users\\12969\\Desktop\\mall`
 分支：`main`

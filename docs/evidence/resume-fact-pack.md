@@ -1,5 +1,13 @@
 # Mall AI 售后平台｜简历事实包
 
+## 当前事实快照｜最终公开收口
+
+运行时代码：`9c7c29045c28446b16a609768cd4b4c1202f8a51`；唯一事实源：[`current-release-facts.json`](current-release-facts.json)。可核验结果：DeepSeek 合成主评测 **72/72**、补充评测集 **36/36**（非独立盲测）、Grounding **15/15、57/57 checks**、FastAPI **365 passed**、Java portal core **12/12** + compatibility **2/2**、admin **6/6**、Spring **1/1**、Vue build、deterministic **478/478**（代表性 8/8）、本地合成现场 **122/122**。成本、生产 SLA、真实用户泛化、真实外部履约未验证/未接入。
+
+简历可写的是受限 Agent Runtime、Java 权威事实与写入边界、版本化 RAG/grounding、可审计评测和本地合成现场；不能把补充集称为独立盲测，也不能把合同/现场数字写成生产准确率。基于 `macrozheng/mall` 二次开发，上游商城基础能力不归为原创。
+
+## 历史审计记录（以下内容不代表当前 Commit）
+
 生成日期：2026-09-12（Asia/Shanghai）
 运行时代码基线：`52d5482455e2389cfd6c2ef15d233712607ffa9f`
 分支：`main`  

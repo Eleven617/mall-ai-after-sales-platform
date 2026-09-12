@@ -19,8 +19,8 @@ jobs:
       run:
         working-directory: mall-ai-service
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
       - name: Install dependencies
@@ -39,7 +39,7 @@ jobs:
           --junitxml=v3-fastapi-junit.xml
       - name: Upload FastAPI deterministic evidence
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: fastapi-regression-evidence
           path: |
@@ -52,8 +52,8 @@ jobs:
       run:
         working-directory: mall2
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v6
         with:
           distribution: temurin
           java-version: "8"
@@ -77,8 +77,8 @@ jobs:
       run:
         working-directory: mall-ai-web
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: "20"
           cache: npm
@@ -91,7 +91,7 @@ jobs:
   compose-contract:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Validate Compose contract without starting data services
         env:
           DEEPSEEK_API_KEY: ci-placeholder-not-a-secret
@@ -100,15 +100,15 @@ jobs:
   dependency-and-secret-risk:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
       - name: Scan committed content for secrets
-        uses: gitleaks/gitleaks-action@v2
+        uses: gitleaks/gitleaks-action@v3
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Scan dependency manifests and lockfiles for known vulnerabilities
-        uses: google/osv-scanner-action/osv-scanner-action@v2.0.2
+        uses: google/osv-scanner-action/osv-scanner-action@v2.5.1
         with:
           # The Mall Maven reactor contains local SNAPSHOT modules. The
           # isolated scanner container cannot resolve those artifacts, so
@@ -122,3 +122,15 @@ jobs:
             --lockfile=mall-ai-web/package-lock.json
             --recursive
             mall2
+
+  public-release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - name: Validate public claims, evidence links and release assets
+        run: python scripts/validate_public_release.py

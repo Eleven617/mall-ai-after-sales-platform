@@ -1,0 +1,144 @@
+{
+  "schemaVersion": "mall-public-release-facts.v2",
+  "generatedAt": "2026-09-12T19:29:05Z",
+  "runtimeCommit": "9c7c29045c28446b16a609768cd4b4c1202f8a51",
+  "evidenceCommit": "9c7c29045c28446b16a609768cd4b4c1202f8a51",
+  "project": {
+    "name": "Mall AI After-sales Platform",
+    "repository": "https://github.com/Eleven617/mall-ai-after-sales-platform",
+    "problem": "可信电商订单、物流、政策与售后协同",
+    "roles": ["customer", "operations", "quality_developer", "after_sales_processor"]
+  },
+  "model": {
+    "provider": "DeepSeekRuntimeProvider",
+    "model": "deepseek-chat",
+    "promptVersion": "agent_runtime_v3_3",
+    "skillCatalogVersion": "skill_catalog_v3_0",
+    "gateway": "synthetic_read_only_gateway",
+    "pricingConfigured": false,
+    "cost": "unavailable"
+  },
+  "mainEvaluation": {
+    "label": "DeepSeek synthetic main evaluation",
+    "cases": 24,
+    "runsPerCase": 3,
+    "executed": 72,
+    "passed": 72,
+    "failed": 0,
+    "environmentBlocked": 0,
+    "report": "mall-ai-service/tmp/final-agent-quality-main-final-9c7c290.json",
+    "reportSha256": "40cb0e25d09c13171f581ddd69050a4d4a06fccc7427c3c205df65919f49f400",
+    "suiteSha256": "ef6c0ad66556eb03127e85ee6607a5cdf79bb8f69ddfa8749ecc29e913e97d53",
+    "modelCalls": 166,
+    "toolCalls": 94,
+    "llmCalls": 250,
+    "tokens": 562552,
+    "forbiddenSideEffects": 0,
+    "duplicateFinalBusinessWrites": 0
+  },
+  "supplementalEvaluation": {
+    "label": "补充评测集 / supplemental evaluation set",
+    "cases": 12,
+    "runsPerCase": 3,
+    "executed": 36,
+    "passed": 36,
+    "failed": 0,
+    "environmentBlocked": 0,
+    "historicalFilename": "live_model_agent_holdout_cases.v1.json",
+    "report": "mall-ai-service/tmp/final-agent-quality-supplemental-final-9c7c290.json",
+    "reportSha256": "dd155133a5273ac29175e44ed0d4fe2f42d92296a9856f3cd382b436ac471604",
+    "suiteSha256": "1a82b6bcaa9ce246590b3f10ef08897bea07f81af675c128f9b96542acb10e90",
+    "modelCalls": 85,
+    "toolCalls": 42,
+    "llmCalls": 127,
+    "tokens": 285174,
+    "independentBlindSet": false,
+    "note": "历史文件名沿用审计；该集合参与开发期回归，因此公开 Claim 统一称为 supplemental evaluation set，不代表独立盲测或真实用户泛化率。"
+  },
+  "grounding": {
+    "cases": 15,
+    "passed": 15,
+    "failed": 0,
+    "checks": 57,
+    "environmentBlocked": 0,
+    "report": "mall-ai-service/tmp/final-grounding-9c7c290.txt",
+    "reportSha256": "b5e92ebf6df3b2002c7347a4fd32a779a6fb4450f9560dc38cac6ce2de5a73d2"
+  },
+  "ragRetrieval": {
+    "dataset": "52 versioned synthetic policy cases",
+    "default": "Dense",
+    "dense": {"recallAt3": 1.0, "mrr": 0.948718, "ndcgAt3": 0.962147, "p95Ms": 13.72},
+    "hybrid": {"mrr": 0.935897, "ndcgAt3": 0.952683, "p95Ms": 26.9},
+    "hybridRerank": {"mrr": 0.935897, "ndcgAt3": 0.952683, "p95Ms": 2348.99},
+    "claimBoundary": "这些是小型版本化合成政策集上的检索指标，不是答案准确率、真实用户覆盖或生产 SLA。"
+  },
+  "tests": {
+    "fastapi": {"passed": 365, "failed": 0, "warnings": 1, "subtests": 7, "exitCode": 0},
+    "java": {
+      "portalCore": "12/12",
+      "portalCompatibility": "2/2",
+      "portalFull": "14/14",
+      "admin": "6/6",
+      "springContext": "1/1",
+      "localJdk": "11.0.24",
+      "exitCode": 0
+    },
+    "vue": {"command": "npm run build", "status": "passed", "exitCode": 0},
+    "deterministicContract": {"manifest": "478/478", "representative": "8/8", "mode": "contract_mock", "exitCode": 0},
+    "fieldAcceptance": {
+      "browser": "24/24",
+      "javaMysql": "30/30",
+      "faultInjection": "36/36",
+      "durableRecovery": "32/32",
+      "total": "122/122",
+      "failed": 0,
+      "environmentBlocked": 0,
+      "mode": "local Docker/Chrome/Java/MySQL/Redis/RabbitMQ with synthetic fixture",
+      "report": "tmp/field-acceptance-final-9c7c290/field-20260912T190322Z-6095525f/field-acceptance.json",
+      "reportSha256": "6fcae42f1befeadd439957fe2bbecb114a77f787f29a8ec97fc29fdc6b016ff8",
+      "fixtureSha256": "4dd3d407001aec74e4c9546639c78eb2544b34a0ac4f2b6698eba345c27e3fc3",
+      "testedCodeCommit": "9c7c29045c28446b16a609768cd4b4c1202f8a51"
+    }
+  },
+  "latencyAndTokens": {
+    "mainMs": {"p50": 7437, "p95": 13890, "max": 26188},
+    "supplementalMs": {"p50": 7313, "p95": 11281, "max": 12500},
+    "mainLlmCalls": 250,
+    "supplementalLlmCalls": 127,
+    "totalLlmCalls": 377,
+    "mainTokens": 562552,
+    "supplementalTokens": 285174,
+    "totalTokens": 847726,
+    "pricingConfigured": false,
+    "cost": "unavailable"
+  },
+  "reports": {
+    "manifestSha256": "2f9d60f3903b3046236a71e1557d89fac87e916d9586d787a193c6deb4c71d2e",
+    "manifestCaseSetSha256": "18a3ad20485417bbebd8bad875490cf80b171ed28760b1dc2dfbd203d1938ccd",
+    "releaseManifestFileSha256": "d9fc72be81e2f67330710052c03287d49677bf7eb6f54eed51b87c01db2ac1ad",
+    "groundingSha256": "b5e92ebf6df3b2002c7347a4fd32a779a6fb4450f9560dc38cac6ce2de5a73d2",
+    "showcaseEvidence": "docs/evidence/final-showcase-evidence.md"
+  },
+  "ci": {
+    "status": "pending_remote_final_sha",
+    "mallCi": null,
+    "qualityEvaluation": null,
+    "scope": "必须以本次最终 GitHub main SHA 的远程 Actions 为准；历史绿色 run 不替代最终提交。"
+  },
+  "publicClaims": [
+    "DeepSeek 合成主评测集：24 Case × 3，共 72/72。",
+    "补充评测集：12 Case × 3，共 36/36；不是独立盲测集，不代表真实用户泛化率。",
+    "Grounding：15/15 Case、57/57 checks。",
+    "本地合成现场：browser 24/24、Java/MySQL 30/30、fault 36/36、durable recovery 32/32，共 122/122。",
+    "Java 是身份、归属、资格、状态、幂等、事务、Outbox 和最终写入权威。"
+  ],
+  "prohibitedClaims": [
+    "生产 SLA、吞吐、用户量、在线率或部署完成",
+    "真实支付、仓储、物流或维修履约成功",
+    "普遍自然语言泛化率或真实用户准确率",
+    "未配置价格时的真实成本或节省",
+    "将 macrozheng/mall 上游能力说成原创",
+    "将 deterministic contract 或合成现场数字说成生产保证"
+  ],
+  "upstreamBoundary": "本仓库是 Apache-2.0 的 macrozheng/mall 二次开发。mall2 的商城订单、会员和后台基础能力属于上游；新增范围是 AI 售后 Runtime、RAG/评测、Java AI 接口、角色化 Vue 工作台和公开证据。"
+}
