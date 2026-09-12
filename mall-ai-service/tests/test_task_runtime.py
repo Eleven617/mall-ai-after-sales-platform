@@ -107,7 +107,12 @@ def test_runtime_runs_dynamic_read_then_finishes_without_persisting_raw_goal() -
         ]
     )
     gateway = RecordingGateway({"read_order": _observation()})
-    runtime = _runtime(provider, gateway)
+    runtime = TaskRuntime(
+        store=InMemoryTaskStore(),
+        provider=provider,
+        gateway=gateway,
+        reference_hints={"orderRef": "ref-order-alpha"},
+    )
 
     result = runtime.create_task(
         session_id=SESSION_ID,
@@ -162,6 +167,11 @@ def test_explicit_identifier_message_becomes_turn_local_reference_hints() -> Non
     assert contexts[0].reference_hints == {"orderRef": "123456789012", "skuRef": "SKU110"}
     persisted = str(runtime._store._items[result.view.task_ref])  # noqa: SLF001 - persistence boundary check
     assert "123456789012" not in persisted
+
+    assert TaskRuntime._reference_hints_from_input("ref-order-alpha 与 ref-sku-alpha") == {
+        "orderRef": "ref-order-alpha",
+        "skuRef": "ref-sku-alpha",
+    }
 
 
 def test_runtime_does_not_burn_budget_on_duplicate_read_decision() -> None:

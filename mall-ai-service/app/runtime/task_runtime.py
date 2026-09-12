@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 import time
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
@@ -685,7 +686,13 @@ class TaskRuntime:
         # (used by synthetic/live fixtures). A value parsed from the current
         # user message is a syntax-validated, user-visible identifier and is
         # intentionally accepted for this turn; it is never persisted.
+        # The current-turn hints are syntax-validated references explicitly
+        # supplied by the user.  They may be used for this request only; they
+        # are still subject to the Java gateway's owner/eligibility checks and
+        # are never persisted as task state.  Server-provided and artifact
+        # references remain the preferred source.
         known = set(self._reference_hints.values())
+        known.update(str(value) for value in (reference_hints or {}).values())
         known.update(artifact.reference for artifact in bundle.artifacts)
         if known and supplied not in known:
             raise TaskRuntimeError(
@@ -709,6 +716,15 @@ class TaskRuntime:
         sku = extract_sku_id(message)
         if sku.value:
             hints["skuRef"] = sku.value
+        # Synthetic/demo references are opaque but have an explicit, bounded
+        # syntax.  Accept only the user-written ``ref-order-*`` and
+        # ``ref-sku-*`` forms; this is identifier parsing, not intent or
+        # ownership inference.
+        explicit = re.findall(r"\b(ref-(?:order|sku)-[A-Za-z0-9_-]+)\b", message, re.IGNORECASE)
+        for value in explicit:
+            key = "skuRef" if value.lower().startswith("ref-sku-") else "orderRef"
+            if key not in hints:
+                hints[key] = value
         return hints
 
     @staticmethod
