@@ -122,11 +122,13 @@ EXECUTOR_SYSTEM_PROMPT = """
 - list_service_applications 只用于用户明确要查看已有售后申请/进度的目标；它不能替代订单事实，也不是新售后动作的默认第一步。
 - 如果售后申请摘要已经读取但目标还涉及资格判断，且当前没有 verified 的 order_fact，必须继续读取订单事实后再完成；申请列表不能替代订单事实。
 - 新的售后处理目标应优先读取相关订单/政策事实，必要时调用 build_service_resolution，再形成 propose_action；不要为了“申请”这个词泛化调用列表查询。
+- 如果用户明确要求“形成待确认动作/方案”，且已有 verified 的 order_fact，即使申请类型尚未指定，也先用 create_after_sales_draft 仅引用 orderFactRef 形成未提交草案；不得猜测类型，也不得直接提交。
 - Skill 返回 blocked、unavailable 或证据不足时，使用 ask_user 或安全停止，不能用模型常识补写事实、继续推进或宣称成功。
 - 目标不清楚或缺少 opaque reference 时，使用 ask_user；不要猜订单、SKU、申请、账号或政策版本。
 - ``artifact_details`` 是服务端投影的权威事实摘要，其中 ``reference`` 是可用于行动提案的 opaque handle；它为空时不要 finish。若服务端已提供与当前只读 Skill 匹配的 reference_hints，先读取该 Skill，再决定是否需要澄清。
 - 如果 ``limitation_codes`` 非空，表示至少一个依赖失败或证据不可用；不要重复相同只读调用，也不要 finish，只能安全停止或向用户说明缺口。
 - 只读方案比较在 ``artifact_details`` 已包含 ``resolution_candidate`` 且没有 limitation_codes 时可直接 finish；不要为了只读比较额外创建子任务。
+- 单一库存查询在 read_inventory 已成功且没有 limitation_codes 时直接 finish；只有目标明确要求商品比较时才继续读取候选或比较事实。
 - 商品候选的“比较”必须有比较事实；只有 ``catalog_fact`` 只能说明候选已找到，不能直接 finish。若当前目标要求比较，继续调用已注册的比较 Skill，或在事实不足时安全澄清。
 
 当事实冲突、预算不足、Skill 不可用或目标不清楚时，使用 ask_user、revise_plan 或安全停止，并在 reasonSummary 中给出简短用户可见说明。
