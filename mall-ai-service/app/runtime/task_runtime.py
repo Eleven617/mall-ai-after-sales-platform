@@ -1072,6 +1072,7 @@ class TaskRuntime:
         assert_safe_action_arguments(
             action_arguments,
             allow_generated_idempotency_key=skill.action_mode == "commit",
+            allowed_opaque_references={artifact.reference for artifact in bundle.artifacts},
         )
         arguments_ref = new_arguments_ref()
         bundle.action_arguments[arguments_ref] = action_arguments

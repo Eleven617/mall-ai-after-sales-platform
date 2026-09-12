@@ -251,6 +251,7 @@ def assert_safe_action_arguments(
     arguments: Mapping[str, Any],
     *,
     allow_generated_idempotency_key: bool = False,
+    allowed_opaque_references: set[str] | None = None,
 ) -> None:
     """Keep action arguments opaque and free of raw identifiers.
 
@@ -276,28 +277,28 @@ def assert_safe_action_arguments(
             continue
         if key in forbidden_keys or not isinstance(key, str) or len(key) > 64:
             raise TaskStoreError("行动参数包含禁止字段。")
-        _assert_safe_action_value(value)
+        _assert_safe_action_value(value, allowed_opaque_references=allowed_opaque_references)
 
 
-def _assert_safe_action_value(value: Any) -> None:
+def _assert_safe_action_value(value: Any, *, allowed_opaque_references: set[str] | None = None) -> None:
     if isinstance(value, str):
         lowered = value.lower()
         if any(marker in lowered for marker in ("bearer ", "token=", "password")):
             raise TaskStoreError("行动参数包含禁止内容。")
-        if re_contains_long_number(value):
+        if re_contains_long_number(value) and value not in (allowed_opaque_references or set()):
             raise TaskStoreError("行动参数必须使用 opaque reference。")
         return
     if isinstance(value, (bool, int, float)) or value is None:
         return
     if isinstance(value, list):
         for item in value:
-            _assert_safe_action_value(item)
+            _assert_safe_action_value(item, allowed_opaque_references=allowed_opaque_references)
         return
     if isinstance(value, Mapping):
         for nested_key, nested_value in value.items():
             if not isinstance(nested_key, str) or nested_key in {"order_sn", "token", "authorization", "idempotencyKey"}:
                 raise TaskStoreError("行动参数包含禁止字段。")
-            _assert_safe_action_value(nested_value)
+            _assert_safe_action_value(nested_value, allowed_opaque_references=allowed_opaque_references)
         return
     raise TaskStoreError("行动参数类型不支持。")
 

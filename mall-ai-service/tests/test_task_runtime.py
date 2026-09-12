@@ -24,7 +24,7 @@ from app.runtime.providers import (
 )
 from app.runtime.reference_vault import RuntimeReferenceVault
 from app.runtime.task_runtime import TaskRuntime, TaskRuntimeError
-from app.runtime.task_store import InMemoryTaskStore
+from app.runtime.task_store import InMemoryTaskStore, assert_safe_action_arguments
 from app.schemas.agent_task import AgentTask, ExecutorDecision, SkillCall, TaskExecutionBudget, TaskPlan
 from app.runtime.task_planner import build_initial_plan
 from app.runtime.task_store import TaskRecordBundle, owner_ref_for_member, session_ref_for_session
@@ -217,6 +217,13 @@ def test_provider_binds_echoed_turn_order_ref_to_unique_verified_artifact() -> N
     )
     decision = provider.decide(context)
     assert decision.action_arguments["orderFactRef"] == "fact-order-opaque"
+
+
+def test_server_generated_opaque_reference_with_numeric_run_is_allowed() -> None:
+    assert_safe_action_arguments(
+        {"orderFactRef": "fact-order-1234567890"},
+        allowed_opaque_references={"fact-order-1234567890"},
+    )
 
 
 def test_runtime_does_not_burn_budget_on_duplicate_read_decision() -> None:
