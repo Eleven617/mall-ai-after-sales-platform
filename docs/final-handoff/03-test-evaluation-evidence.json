@@ -40,6 +40,6 @@
     "hybridRerank": {"mrr": 0.935897, "ndcgAt3": 0.952683},
     "claimBoundary": "retrieval metrics on a small synthetic set, not answer accuracy"
   },
-  "ci": {"required": ["mall-ci", "quality-evaluation"], "status": "pending_remote_final_sha", "verificationCommit": null, "mallCi": null, "qualityEvaluation": null},
+  "ci": {"required": ["mall-ci", "quality-evaluation"], "status": "passed", "verificationCommit": "0501d9d7689bb4e980ae00f0855e134df0d3fd0f", "mallCi": "https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34715971696", "qualityEvaluation": "https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34715971746", "note": "后续 docs-only 提交需按自身 SHA 再复核"},
   "limitations": ["synthetic local data only", "no production SLA or user-scale accuracy", "no real payment, warehouse, logistics, or repair provider", "historical stale/superseded reports are not merged into current counts"]
 }

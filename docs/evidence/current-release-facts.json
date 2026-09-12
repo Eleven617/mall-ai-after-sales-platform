@@ -2,7 +2,7 @@
   "schemaVersion": "mall-public-release-facts.v2",
   "generatedAt": "2026-09-12T19:29:05Z",
   "runtimeCommit": "9c7c29045c28446b16a609768cd4b4c1202f8a51",
-  "evidenceCommit": "9c7c29045c28446b16a609768cd4b4c1202f8a51",
+  "evidenceCommit": "0501d9d7689bb4e980ae00f0855e134df0d3fd0f",
   "project": {
     "name": "Mall AI After-sales Platform",
     "repository": "https://github.com/Eleven617/mall-ai-after-sales-platform",
@@ -120,10 +120,11 @@
     "showcaseEvidence": "docs/evidence/final-showcase-evidence.md"
   },
   "ci": {
-    "status": "pending_remote_final_sha",
-    "mallCi": null,
-    "qualityEvaluation": null,
-    "scope": "必须以本次最终 GitHub main SHA 的远程 Actions 为准；历史绿色 run 不替代最终提交。"
+    "status": "passed",
+    "verifiedCommit": "0501d9d7689bb4e980ae00f0855e134df0d3fd0f",
+    "mallCi": "https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34715971696",
+    "qualityEvaluation": "https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34715971746",
+    "scope": "两条远程门禁均为该 evidenceCommit 的 success；后续仅文档回填提交需再次按其 SHA 复核。"
   },
   "publicClaims": [
     "DeepSeek 合成主评测集：24 Case × 3，共 72/72。",

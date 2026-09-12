@@ -6,8 +6,8 @@
 - 最新真实本机证据：FastAPI 365；DeepSeek 主集 72/72；补充评测集 36/36（非独立盲测）；Grounding 15/15、57/57 checks；Java portal core 12/12 + compatibility 2/2、admin 6/6、Spring 1/1；Vue build；deterministic 478/478、代表性 8/8；现场 browser 24/24、Java/MySQL 30/30、fault 36/36、durable 32/32，共 122/122。
 - 当前唯一事实源：`docs/evidence/current-release-facts.json`；公开素材证据：`docs/evidence/final-showcase-evidence.md`；自动一致性门禁：`scripts/validate_public_release.py`。
 - 已更新 README 的最终演示素材、supplemental 口径、FastAPI/Java 结果；`mall-ai-service/tmp/` 已精确忽略，临时报告保留在本机不提交。
-- 待完成的发布动作只有：运行本地最终门禁、提交/推送公开文档和素材、等待该新 SHA 的 `mall-ci` 与 `quality-evaluation`，然后把 CI URL 回填事实源。远程 CI 未完成前不称为最终远程通过。
-- `e0c8b36` 已推送；该 SHA 的 `quality-evaluation` 成功，`mall-ci` 首次失败在 OSV 容器解析 Java 本地 `1.0-SNAPSHOT` reactor（退出码 127，0 个受影响包），不是代码测试或密钥扫描失败。已用 `--no-resolve` 保留直接依赖扫描并修复，待新 SHA 复核。
+- `0501d9d` 已推送；该 SHA 的 `mall-ci` 与 `quality-evaluation` 均成功。`e0c8b36` 的首次 `mall-ci` 失败在 OSV 容器解析 Java 本地 `1.0-SNAPSHOT` reactor（退出码 127，0 个受影响包），不是代码测试或密钥扫描失败；已用 `--no-resolve` 保留直接依赖扫描并修复。
+- 当前待做只是把这次 CI URL 回填到事实源后推送文档回填提交；该提交仍需再跑一次远程门禁，不能用 `0501d9d` 的绿色结果替代它。
 
 ## 历史记录（以下内容不代表当前 Commit）
 

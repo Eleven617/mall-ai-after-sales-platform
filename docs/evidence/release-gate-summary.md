@@ -4,7 +4,7 @@
 
 运行时代码 `9c7c29045c28446b16a609768cd4b4c1202f8a51`，分支 `main`。本地合成 Gate 已通过：FastAPI 365、DeepSeek main 72/72、supplemental 36/36、Grounding 15/15 和 57/57 checks、Java portal core 12/12 + compatibility 2/2、admin 6/6、Spring 1/1、Vue build、deterministic 478/478（代表性 8/8）、现场 122/122。补充集合不是独立盲测；deterministic 不是 E2E；所有现场数字仅适用于合成 Fixture 和本机 Docker 技术栈。
 
-最终 GitHub Actions 尚需绑定本次公开提交 SHA 后确认，历史绿色 run 不替代最终提交。唯一事实源：[`current-release-facts.json`](current-release-facts.json)；展示证据：[`final-showcase-evidence.md`](final-showcase-evidence.md)。
+`0501d9d` 的最终修复提交已得到两个远程 success：[`mall-ci`](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34715971696) 与 [`quality-evaluation`](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34715971746)。本轮后续只回填文档和事实绑定；若提交新 SHA，仍必须以新 SHA 的 Actions 复核。唯一事实源：[`current-release-facts.json`](current-release-facts.json)；展示证据：[`final-showcase-evidence.md`](final-showcase-evidence.md)。
 
 公开提交 `e0c8b36` 的首次 `mall-ci` 只在 OSV 步骤失败：扫描容器对 Java 本地 `1.0-SNAPSHOT` reactor 做传递解析时无法从远程仓库找到内部模块，退出码 127；gitleaks、Python、Java、Web、Compose 和 public-release 均通过。修复为 OSV `--no-resolve` 后仍扫描所有显式 Python/npm lockfile 与 `mall2` POM 的直接依赖，未关闭扫描、未使用 `continue-on-error`，待新提交远程复核。
 

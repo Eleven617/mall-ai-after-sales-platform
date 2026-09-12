@@ -14,11 +14,11 @@
 | Vue | **production build passed** | `npm run build` |
 | deterministic | **478/478；代表性 8/8** | contract_mock，不是 E2E |
 | 本地现场 | **122/122**：browser 24、Java/MySQL 30、fault 36、durable 32 | Docker/Chrome/Java/MySQL/Redis/RabbitMQ + 合成 Fixture |
-| 远程 CI | **待最终公开提交 SHA 重新确认** | 历史绿色 run 不替代最终提交 |
+| 远程 CI | **evidenceCommit `0501d9d` 的 mall-ci 与 quality-evaluation 均 success** | 仅文档回填提交仍需按新 SHA 复核 |
 
 事实源：[`current-release-facts.json`](evidence/current-release-facts.json)。公开演示素材和 hash：[`final-showcase-evidence.md`](evidence/final-showcase-evidence.md)。成本、生产 SLA、真实用户泛化和外部履约均 unavailable/未接入。
 
-本次公开提交的首次远程 `mall-ci` 失败仅发生在 OSV：隔离扫描容器无法解析仓库内 Maven `1.0-SNAPSHOT` reactor 依赖，退出码 127；同一日志显示 0 个受影响包。已在保持 Java POM、OSV 扫描和风险例外可见的前提下增加 `--no-resolve`，让扫描检查已声明的直接依赖而不把本地 reactor 解析当成漏洞结果；修复后的新 SHA 仍需重新等待远程门禁。
+本次公开提交 `e0c8b36` 的首次远程 `mall-ci` 失败仅发生在 OSV：隔离扫描容器无法解析仓库内 Maven `1.0-SNAPSHOT` reactor 依赖，退出码 127；同一日志显示 0 个受影响包。修复提交 `0501d9d` 在保持 Java POM、OSV 扫描和风险例外可见的前提下增加 `--no-resolve`，其 `mall-ci` 与 `quality-evaluation` 均为 success；最终文档回填提交只增加证据绑定，仍需按自身 SHA 复核。
 
 ## 历史审计记录（以下内容不代表当前 Commit）
 
