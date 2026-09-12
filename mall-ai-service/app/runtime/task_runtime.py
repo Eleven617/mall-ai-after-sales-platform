@@ -723,8 +723,9 @@ class TaskRuntime:
         explicit = re.findall(r"\b(ref-(?:order|sku)-[A-Za-z0-9_-]+)\b", message, re.IGNORECASE)
         for value in explicit:
             key = "skuRef" if value.lower().startswith("ref-sku-") else "orderRef"
-            if key not in hints:
-                hints[key] = value
+            # Prefer the explicitly typed opaque form over the generic SKU
+            # parser, which may otherwise see the ``sku-*`` suffix.
+            hints[key] = value
         return hints
 
     @staticmethod
