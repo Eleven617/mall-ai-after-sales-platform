@@ -1,6 +1,7 @@
 {
-  "schemaVersion": "final-agent-quality-baseline.v2",
-  "generatedAt": "2026-09-12T19:29:05Z",
+  "schemaVersion": "final-agent-quality-baseline.v3",
+  "generatedAt": "2026-09-13T10:02:42Z",
+  "releaseStatus": "NOT_COMPLETE",
   "project": {
     "name": "Mall AI After-sales Platform",
     "repository": "https://github.com/Eleven617/mall-ai-after-sales-platform",
@@ -9,8 +10,8 @@
   },
   "revision": {
     "branch": "main",
-    "testedCodeCommit": "9c7c29045c28446b16a609768cd4b4c1202f8a51",
-    "evidenceCommit": "78c5c3c980606438175548891fde2666e9a8ddf8",
+    "testedCodeCommit": "1b89500eae4c8f1c6195f7fed064745b300a3fbb",
+    "evidenceCommit": "1b89500eae4c8f1c6195f7fed064745b300a3fbb",
     "workspaceBeforeEvidence": "clean_except_ignored_tmp",
     "remote": "https://github.com/Eleven617/mall-ai-after-sales-platform.git"
   },
@@ -27,16 +28,17 @@
   "agentCapabilities": {
     "openTask": ["goal understanding", "bounded Skill selection", "multi-step read investigation", "Context projection", "proposal/resume", "safe stop"],
     "safety": ["Schema validation", "allow-list", "owner scope", "budget", "no unconfirmed business write"],
-    "syntheticLive": {"main": "72/72", "supplemental": "36/36", "independentBlindSet": false, "environmentBlocked": 0, "forbiddenSideEffects": 0, "duplicateFinalBusinessWrites": 0}
+    "syntheticLive": {"main": null, "supplemental": null, "independentBlindSet": false, "environmentBlocked": 1, "forbiddenSideEffects": 0, "duplicateFinalBusinessWrites": 0, "blocker": "DeepSeek Provider HTTP 402"}
   },
   "techStack": ["Java", "Spring Boot", "FastAPI", "LangGraph", "Vue 3", "Redis", "MySQL", "MongoDB", "RabbitMQ", "RAG", "MCP", "AgentOps", "Eval"],
   "tests": {
-    "fastapi": {"command": "mall-ai-service/.venv/Scripts/python.exe -m pytest -q", "passed": 365, "failed": 0, "warnings": 1, "subtests": 7, "exitCode": 0},
+    "fastapi": {"command": "mall-ai-service/.venv/Scripts/python.exe -m pytest -q", "passed": 366, "failed": 0, "warnings": 1, "subtests": 7, "exitCode": 0},
     "v3Deterministic": {"manifestPassed": 478, "manifestRegistered": 478, "representativePassed": 8, "exitCode": 0, "mode": "contract_mock"},
     "java": {"portalCore": "12/12", "portalCompatibility": "2/2", "admin": "6/6", "springContext": "1/1", "exitCode": 0},
     "web": {"command": "npm run build", "status": "passed", "exitCode": 0},
-    "grounding": {"cases": 15, "passed": 15, "failed": 0, "environmentBlocked": 0, "checks": "57/57", "exitCode": 0},
+    "grounding": {"status": "stale_after_runtime_change", "evaluatedRuntimeCommit": "9c7c29045c28446b16a609768cd4b4c1202f8a51", "cases": 15, "passed": 15, "failed": 0, "environmentBlocked": 0, "checks": "57/57", "exitCode": 0},
     "fieldAcceptance": {
+      "status": "stale_after_runtime_change",
       "report": "tmp/field-acceptance-final-9c7c290/field-20260912T190322Z-6095525f/field-acceptance.json",
       "reportSha256": "6fcae42f1befeadd439957fe2bbecb114a77f787f29a8ec97fc29fdc6b016ff8",
       "testedCodeCommit": "9c7c29045c28446b16a609768cd4b4c1202f8a51",
@@ -59,9 +61,10 @@
     "groundingReportSha256": "b5e92ebf6df3b2002c7347a4fd32a779a6fb4450f9560dc38cac6ce2de5a73d2"
   },
   "reliability": {
+    "currentStatus": "environment_blocked_for_showcase",
     "noForbiddenSideEffects": true,
     "noDuplicateFinalBusinessWrites": true,
-    "fieldFaultAndRecovery": "36/36 fault and 32/32 durable recovery passed in local isolated Compose",
+    "fieldFaultAndRecovery": "Historical 36/36 fault and 32/32 durable recovery; stale after current Runtime patch",
     "limitations": ["not production SLA", "not full external fulfillment integration", "not universal language generalization"]
   },
   "security": {

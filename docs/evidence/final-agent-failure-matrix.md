@@ -1,6 +1,12 @@
 # Final Agent Failure Matrix
 
-本表保留失败发现及修复链路；失败不会被删除或通过放宽断言掩盖。报告与当前运行时代码提交不一致时标为 stale。
+## 当前结论（Runtime `1b89500e`）
+
+失败不会被删除或通过放宽断言掩盖。当前提交的 FastAPI 回归为 **366 passed / 0 failed**；v3 deterministic 为 **478/478**、代表性 Runtime **8/8**。公开展示尝试在真实 DeepSeek Provider 返回 HTTP 402（余额不足）后安全停止，未调用业务写入，三条最终素材仍为 `environment_blocked`。旧 live/field 报告与当前 Runtime 不一致，统一标记 stale。
+
+## 历史审计记录（以下内容不代表当前 Commit）
+
+下表保留旧版本失败发现及修复链路；失败不会被删除或通过放宽断言掩盖。报告与当前运行时代码提交不一致时标为 stale。
 
 | 阶段/报告 | 现象 | 根因/边界 | 修复或处理 | 当前状态 |
 | --- | --- | --- | --- | --- |

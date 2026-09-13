@@ -9,7 +9,7 @@
 
 ## 30 秒了解项目
 
-![完整主链：目标、事实调查、政策证据、待确认方案和结果](docs/assets/showcase-final/main-open-task-closed-loop.gif)
+> 当前展示状态：`NOT_COMPLETE`。上一轮素材停在确认前，不能证明当前提交已经完成 Java 写入与状态回查；本轮尝试受真实 DeepSeek Provider HTTP 402（余额不足）阻断，未使用 mock 冒充。三条素材需在额度恢复后通过 [`scripts/Capture-PublicShowcase.ps1`](scripts/Capture-PublicShowcase.ps1) 重新录制并逐帧复核。
 
 ### 为什么不是普通聊天机器人
 
@@ -42,25 +42,15 @@ flowchart LR
 
 MCP 只读工具、人工售后工作台和 LangGraph 确定性节点是能力边界或执行设施，不是额外的在线 Agent。
 
-## 三条真实展示链路
+## 三条展示链路（当前复核状态）
 
-主链展示开放目标、缺少标识时的澄清、事实与政策证据、候选方案、确认关口以及 Java 权威结果：
+计划中的三条真实链路是：
 
-![主链结果卡](docs/assets/showcase-final/main-open-task-result.png)
+1. 开放目标 → 多步事实/政策调查 → 候选 → 用户确认 → Java 重校验/写入 → 状态回查；
+2. 等待输入 → 暂停保留 → 政策岔开 → 同一任务恢复；
+3. 事实版本变化 → 旧结果失效 → 重新核验 → 新方案或人工交接。
 
-两条次级链路来自真实本地页面和合成受控场景：
-
-![澄清、暂停与自然恢复](docs/assets/showcase-final/clarify-pause-resume.png)
-
-![事实变化后的重新规划与人工交接](docs/assets/showcase-final/fact-change-replan-handoff.png)
-
-运营与质量页面也由相同的本地 Compose 环境生成：
-
-![运营分析工作台](docs/assets/showcase-final/operations-analysis.png)
-
-![质量评测工作台](docs/assets/showcase-final/quality-evaluation.png)
-
-每张图都标记合成演示数据；不包含完整订单号、Token、Key 或原始 Trace。生成时间、Runtime Commit、Fixture、Java 写入边界与 SHA-256 见 [展示素材证据](docs/evidence/final-showcase-evidence.md)。
+当前提交尚未重新生成这三条完整 GIF。旧 PNG/GIF 仅作为历史素材保留，不能在本 README 中被称为当前闭环证据。实际素材、阻断原因和逐帧验收记录见 [展示素材证据](docs/evidence/final-showcase-evidence.md)。
 
 ## 架构与代码入口
 
@@ -76,14 +66,11 @@ MCP 只读工具、人工售后工作台和 LangGraph 确定性节点是能力�
 
 结果按套件独立统计，不相加，也不外推为生产 SLA 或真实用户泛化：
 
-- DeepSeek 主评测集：24 Case × 3，`72/72`；
-- 补充评测集（supplemental evaluation set）：12 Case × 3，`36/36`。该集合参与过开发期回归，不是独立盲测集；历史文件名仅为审计保留；
-- Grounding：`15/15` Case、`57/57` checks；
-- FastAPI：`365 passed`；Java portal 核心 `12/12`、兼容性 `2/2`、admin `6/6`、Spring context `1/1`；
+- 当前提交 FastAPI：`366 passed`；Java portal 核心 `12/12`、兼容性 `2/2`、admin `6/6`、Spring context `1/1`；
+- 历史补充评测集（supplemental evaluation set）参与过开发期回归，不是独立盲测集；其旧 `36/36` 结果已因 Runtime 提交变化标为 stale；
 - RAG：Dense、Hybrid、Hybrid+Rerank 分别在 52 条版本化合成政策 Case 上评测；Dense 当前 MRR `0.948718`、nDCG@3 `0.962147`，作为默认方案；这些是检索指标，不是答案准确率；
 - deterministic 合同：`478/478`，代表性 Runtime `8/8`，不是 E2E；
-- 本地现场：browser `24/24`、Java/MySQL `30/30`、fault `36/36`、durable recovery `32/32`，合计 `122/122`；
-- Vue production build 通过；当前 GitHub Actions 的 `mall-ci` 与 `quality-evaluation` 以远程 SHA 为准。
+- Vue production build 通过；当前代码提交的 DeepSeek 现场展示为 `environment_blocked`（Provider HTTP 402），不能把旧提交的 `72/72`、`36/36`、`122/122` 当作当前结果。
 
 历史失败、根因和修复过程见 [evaluation-evolution](docs/evidence/evaluation-evolution.md) 与 [failure matrix](docs/evidence/final-agent-failure-matrix.md)。当前数字的唯一事实源是 [`current-release-facts.json`](docs/evidence/current-release-facts.json)，并由 [`validate_public_release.py`](scripts/validate_public_release.py) 在 CI 中校验。
 

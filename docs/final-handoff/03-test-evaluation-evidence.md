@@ -2,9 +2,11 @@
 
 ## 当前权威快照｜最终公开收口（2026-09-12 UTC）
 
-运行时代码：`9c7c29045c28446b16a609768cd4b4c1202f8a51`。FastAPI **365 passed**；DeepSeek main **72/72**、supplemental **36/36**（非独立盲测）；Grounding **15/15、57/57 checks**；deterministic **478/478、8/8**；Java portal core **12/12** + compatibility **2/2**、admin **6/6**、Spring **1/1**；Vue production build passed；本地现场 **122/122**。所有套件按本机/合成/远程 CI 分开统计，不能相加为生产准确率。
+当前发布状态：**NOT_COMPLETE**。
 
-原始报告路径、退出码和 hash 见 [`current-release-facts.json`](../evidence/current-release-facts.json)；现场报告的 Fixture SHA 为 `4dd3d407001aec74e4c9546639c78eb2544b34a0ac4f2b6698eba345c27e3fc3`。最终证据提交 `78c5c3c` 的两个远程门禁已 success；运行时代码仍绑定 `9c7c290`。
+运行时代码：`1b89500eae4c8f1c6195f7fed064745b300a3fbb`。FastAPI **366 passed**；deterministic **478/478、8/8**；Compose 配置检查通过。真实 DeepSeek 展示探测因 HTTP 402（余额不足）`environment_blocked`，未产生当前提交的 live-model、三条 GIF 或 Java 写入回查证据。旧报告与当前 Runtime 不一致，统一标记 stale。
+
+原始报告路径、退出码和 hash 见 [`current-release-facts.json`](../evidence/current-release-facts.json)。当前提交对应的远程门禁尚待完成；历史 success 不替代当前 SHA。
 
 ## 历史审计记录（以下内容不代表当前 Commit）
 

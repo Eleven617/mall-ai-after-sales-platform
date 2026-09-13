@@ -62,14 +62,28 @@ def main() -> int:
     tests = facts["tests"]
     field = tests["fieldAcceptance"]
     ci = facts["ci"]
+    release_status = facts.get("releaseStatus", "COMPLETE")
 
     for key in ("schemaVersion", "runtimeCommit", "evidenceCommit", "publicClaims", "prohibitedClaims", "upstreamBoundary"):
         require(key in facts, f"facts missing {key}")
     require(re.fullmatch(r"[0-9a-f]{40}", facts["runtimeCommit"]) is not None, "runtimeCommit must be a full SHA")
-    require(main_eval["passed"] == main_eval["executed"] == 72, "main evaluation facts mismatch")
-    require(supplemental["passed"] == supplemental["executed"] == 36, "supplemental evaluation facts mismatch")
+    require(release_status in {"COMPLETE", "NOT_COMPLETE"}, "releaseStatus must be explicit")
     require(supplemental["independentBlindSet"] is False, "supplemental set must not be declared blind")
-    require(tests["fastapi"]["passed"] == 365 and tests["fastapi"]["failed"] == 0, "FastAPI facts mismatch")
+    if release_status == "COMPLETE":
+        require(main_eval["passed"] == main_eval["executed"] == 72, "main evaluation facts mismatch")
+        require(supplemental["passed"] == supplemental["executed"] == 36, "supplemental evaluation facts mismatch")
+        require(tests["fastapi"]["passed"] == 365 and tests["fastapi"]["failed"] == 0, "FastAPI facts mismatch")
+        require(field["total"] == "122/122" and field["failed"] == field["environmentBlocked"] == 0, "field facts mismatch")
+    else:
+        current = facts.get("currentVerification", {})
+        require(current.get("commit") == facts["runtimeCommit"], "current verification must bind runtimeCommit")
+        require(current.get("fastapi", {}).get("passed") == 366, "current FastAPI facts mismatch")
+        require(current.get("fastapi", {}).get("failed") == 0, "current FastAPI failure count mismatch")
+        require(current.get("deterministic", {}).get("manifest") == "478/478", "current deterministic facts mismatch")
+        require(current.get("deepseek", {}).get("status") == "environment_blocked", "DeepSeek blocker must be explicit")
+        require(current.get("deepseek", {}).get("httpStatus") == 402, "DeepSeek HTTP 402 blocker missing")
+        require(current.get("showcase", {}).get("status") == "environment_blocked", "showcase blocker must be explicit")
+        require(all(item.get("status") == "environment_blocked" for item in current["showcase"].get("scenarios", [])), "showcase scenario status mismatch")
     require(tests["java"]["portalCore"] == "12/12", "Java portal core fact mismatch")
     require(tests["java"]["portalCompatibility"] == "2/2", "Java portal compatibility fact mismatch")
     require(tests["java"]["admin"] == "6/6", "Java admin fact mismatch")
@@ -92,18 +106,13 @@ def main() -> int:
         require(phrase not in readme, f"README contains forbidden public wording: {phrase}")
     required_fragments = (
         "DeepSeek",
-        "72/72",
-        "补充评测集",
-        "36/36",
-        "Grounding",
-        "15/15",
-        "57/57",
+        "NOT_COMPLETE",
+        "environment_blocked",
+        "366 passed",
         "portal 核心 `12/12`",
         "admin `6/6`",
         "Spring context `1/1`",
         "478/478",
-        "122/122",
-        "365 passed",
         "MRR `0.948718`",
         "nDCG@3 `0.962147`",
     )
@@ -131,8 +140,11 @@ def main() -> int:
             require(digest not in image_hashes, f"README images have duplicate hash: {ref}")
             image_hashes.add(digest)
     final_gif = ROOT / "docs" / "assets" / "showcase-final" / "main-open-task-closed-loop.gif"
-    require(final_gif.is_file(), "final showcase GIF is missing")
-    require(final_gif.stat().st_size <= 3 * 1024 * 1024, "final showcase GIF exceeds 3 MB")
+    if release_status == "COMPLETE":
+        require(final_gif.is_file(), "final showcase GIF is missing")
+        require(final_gif.stat().st_size <= 3 * 1024 * 1024, "final showcase GIF exceeds 3 MB")
+    else:
+        require((ROOT / "scripts" / "Capture-PublicShowcase.ps1").is_file(), "tracked showcase capture entry is missing")
 
     ignored = subprocess.run(["git", "check-ignore", "-q", "mall-ai-service/tmp/"], cwd=ROOT)
     require(ignored.returncode == 0, "mall-ai-service/tmp/ is not ignored")
@@ -163,20 +175,25 @@ def main() -> int:
         ROOT / "docs" / "evidence" / "resume-fact-pack.md",
         ROOT / "docs" / "final-handoff" / "00-final-status.md",
         ROOT / "docs" / "final-handoff" / "03-test-evaluation-evidence.md",
+        ROOT / "docs" / "PUBLIC_RELEASE_RECORD.md",
     ]
     for path in current_docs:
         section = current_section(path)
-        require("72/72" in section and "36/36" in section and "122/122" in section, f"current claims incomplete in {path}")
-        require("14/14" not in section and "holdout" not in section.lower(), f"stale wording remains in current document {path}")
-        require("365" in section, f"FastAPI 365 is missing in current document {path}")
-    require("supplemental" in current_section(ROOT / "docs" / "evidence" / "release-gate-summary.md").lower(), "release summary does not label supplemental evaluation")
+        if release_status == "COMPLETE":
+            require("72/72" in section and "36/36" in section and "122/122" in section, f"current claims incomplete in {path}")
+            require("14/14" not in section and "holdout" not in section.lower(), f"stale wording remains in current document {path}")
+            require("365" in section, f"FastAPI 365 is missing in current document {path}")
+        else:
+            require("NOT_COMPLETE" in section and "environment_blocked" in section, f"current blocker missing in {path}")
+            require("366" in section, f"current FastAPI 366 is missing in {path}")
     require(ci["status"] in {"pending_remote_final_sha", "passed"}, "CI status must be explicit")
 
     print(
         "public_release_validation PASSED "
         f"head={head[:12]} runtime={runtime[:12]} "
-        f"main={main_eval['passed']}/{main_eval['executed']} supplemental={supplemental['passed']}/{supplemental['executed']} "
-        f"field={field['total']} images={len(local_images)} ci={ci['status']}"
+        f"status={release_status} current_fastapi={facts.get('currentVerification', {}).get('fastapi', {}).get('passed', tests['fastapi']['passed'])} "
+        f"historical_main={main_eval['passed']}/{main_eval['executed']} historical_field={field['total']} "
+        f"images={len(local_images)} ci={ci['status']}"
     )
     return 0
 

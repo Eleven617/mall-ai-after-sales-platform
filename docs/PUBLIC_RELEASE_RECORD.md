@@ -2,21 +2,21 @@
 
 ## 当前权威记录｜最终公开收口
 
-更新时间：2026-09-12 UTC；运行时代码 `9c7c29045c28446b16a609768cd4b4c1202f8a51`；分支 `main`。本节是当前唯一结论，后续旧日期内容均为历史审计，不能与本节合并统计。
+更新时间：2026-09-13 UTC；运行时代码 `1b89500eae4c8f1c6195f7fed064745b300a3fbb`；分支 `main`。本节是当前唯一结论，后续旧日期内容均为历史审计，不能与本节合并统计。当前发布状态：**NOT_COMPLETE**。
 
 | 门禁 | 当前结果 | 运行模式/边界 |
 | --- | --- | --- |
-| FastAPI | **365 passed**，0 failed | 本机 `.venv`，exit 0，1 warning、7 subtests |
-| DeepSeek 主评测 | **72/72**（24 Case × 3） | 真实模型 + 合成只读网关 |
-| 补充评测集 | **36/36**（12 Case × 3） | 开发期回归，非独立盲测 |
-| Grounding | **15/15 Case；57/57 checks** | 合成政策证据 |
+| FastAPI | **366 passed**，0 failed | 本机 `.venv`，exit 0，1 warning、7 subtests |
+| DeepSeek 主评测 | **environment_blocked** | Provider HTTP 402（余额不足），未冒充通过 |
+| 补充评测集 | **未重跑 / stale** | 旧报告绑定旧 Runtime，不并入当前结果 |
+| Grounding | **stale** | 旧报告绑定旧 Runtime |
 | Java | portal core **12/12**、compatibility **2/2**、admin **6/6**、Spring **1/1** | 显式 `-DskipTests=false`；Spring 使用临时本地配置 |
 | Vue | **production build passed** | `npm run build` |
 | deterministic | **478/478；代表性 8/8** | contract_mock，不是 E2E |
-| 本地现场 | **122/122**：browser 24、Java/MySQL 30、fault 36、durable 32 | Docker/Chrome/Java/MySQL/Redis/RabbitMQ + 合成 Fixture |
-| 远程 CI | **final evidence commit `78c5c3c` 的 mall-ci 与 quality-evaluation 均 success** | 运行时代码绑定 `9c7c290` |
+| 本地现场 | **stale / 未作为当前通过** | 旧报告绑定旧 Runtime；本轮没有伪造现场数字 |
+| 远程 CI | **待当前 SHA 完成** | 历史 success 不能替代 `1b89500` |
 
-事实源：[`current-release-facts.json`](evidence/current-release-facts.json)。公开演示素材和 hash：[`final-showcase-evidence.md`](evidence/final-showcase-evidence.md)。成本、生产 SLA、真实用户泛化和外部履约均 unavailable/未接入。
+事实源：[`current-release-facts.json`](evidence/current-release-facts.json)。公开演示素材和阻断记录：[`final-showcase-evidence.md`](evidence/final-showcase-evidence.md)。成本、生产 SLA、真实用户泛化和外部履约均 unavailable/未接入。
 
 本次公开提交 `e0c8b36` 的首次远程 `mall-ci` 失败仅发生在 OSV：隔离扫描容器无法解析仓库内 Maven `1.0-SNAPSHOT` reactor 依赖，退出码 127；同一日志显示 0 个受影响包。修复提交 `0501d9d` 在保持 Java POM、OSV 扫描和风险例外可见的前提下增加 `--no-resolve`，其门禁通过；最终证据回填提交 `78c5c3c` 的两条远程门禁也均为 success。
 

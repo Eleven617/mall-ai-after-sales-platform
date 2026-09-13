@@ -2,9 +2,11 @@
 
 ## 当前事实快照｜最终公开收口
 
-运行时代码：`9c7c29045c28446b16a609768cd4b4c1202f8a51`；唯一事实源：[`current-release-facts.json`](current-release-facts.json)。可核验结果：DeepSeek 合成主评测 **72/72**、补充评测集 **36/36**（非独立盲测）、Grounding **15/15、57/57 checks**、FastAPI **365 passed**、Java portal core **12/12** + compatibility **2/2**、admin **6/6**、Spring **1/1**、Vue build、deterministic **478/478**（代表性 8/8）、本地合成现场 **122/122**。成本、生产 SLA、真实用户泛化、真实外部履约未验证/未接入。
+当前发布状态：**NOT_COMPLETE**。
 
-简历可写的是受限 Agent Runtime、Java 权威事实与写入边界、版本化 RAG/grounding、可审计评测和本地合成现场；不能把补充集称为独立盲测，也不能把合同/现场数字写成生产准确率。基于 `macrozheng/mall` 二次开发，上游商城基础能力不归为原创。
+运行时代码：`1b89500eae4c8f1c6195f7fed064745b300a3fbb`；唯一事实源：[`current-release-facts.json`](current-release-facts.json)。当前可核验结果：FastAPI **366 passed**、v3 deterministic **478/478**（代表性 8/8）、Compose 配置通过。真实 DeepSeek 展示请求因 HTTP 402（余额不足）为 `environment_blocked`；旧的 72/72、36/36、Grounding 与 122/122 报告均绑定旧 Runtime，现标为 stale。
+
+当前简历只能写受限 Agent Runtime、Java 权威事实与写入边界、版本化 RAG/grounding 设计和可审计合同门；不能把旧报告数字当作当前提交结果，也不能把合同数字写成生产准确率。基于 `macrozheng/mall` 二次开发，上游商城基础能力不归为原创。
 
 ## 历史审计记录（以下内容不代表当前 Commit）
 

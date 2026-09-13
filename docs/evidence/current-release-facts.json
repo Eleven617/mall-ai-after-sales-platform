@@ -1,8 +1,10 @@
 {
-  "schemaVersion": "mall-public-release-facts.v2",
-  "generatedAt": "2026-09-12T19:29:05Z",
-  "runtimeCommit": "9c7c29045c28446b16a609768cd4b4c1202f8a51",
-  "evidenceCommit": "78c5c3c980606438175548891fde2666e9a8ddf8",
+  "schemaVersion": "mall-public-release-facts.v3",
+  "generatedAt": "2026-09-13T10:02:42Z",
+  "releaseStatus": "NOT_COMPLETE",
+  "runtimeCommit": "1b89500eae4c8f1c6195f7fed064745b300a3fbb",
+  "evidenceCommit": "1b89500eae4c8f1c6195f7fed064745b300a3fbb",
+  "statusReason": "当前 Runtime 修复已提交，但真实 DeepSeek 展示与三条公开素材尚未在该提交上完成；Provider 返回 HTTP 402（余额不足），因此不能把历史评测或旧素材冒充当前展示闭环。",
   "project": {
     "name": "Mall AI After-sales Platform",
     "repository": "https://github.com/Eleven617/mall-ai-after-sales-platform",
@@ -19,6 +21,8 @@
     "cost": "unavailable"
   },
   "mainEvaluation": {
+    "status": "stale_after_runtime_change",
+    "evaluatedRuntimeCommit": "9c7c29045c28446b16a609768cd4b4c1202f8a51",
     "label": "DeepSeek synthetic main evaluation",
     "cases": 24,
     "runsPerCase": 3,
@@ -37,6 +41,8 @@
     "duplicateFinalBusinessWrites": 0
   },
   "supplementalEvaluation": {
+    "status": "stale_after_runtime_change",
+    "evaluatedRuntimeCommit": "9c7c29045c28446b16a609768cd4b4c1202f8a51",
     "label": "补充评测集 / supplemental evaluation set",
     "cases": 12,
     "runsPerCase": 3,
@@ -56,6 +62,8 @@
     "note": "历史文件名沿用审计；该集合参与开发期回归，因此公开 Claim 统一称为 supplemental evaluation set，不代表独立盲测或真实用户泛化率。"
   },
   "grounding": {
+    "status": "stale_after_runtime_change",
+    "evaluatedRuntimeCommit": "9c7c29045c28446b16a609768cd4b4c1202f8a51",
     "cases": 15,
     "passed": 15,
     "failed": 0,
@@ -73,7 +81,7 @@
     "claimBoundary": "这些是小型版本化合成政策集上的检索指标，不是答案准确率、真实用户覆盖或生产 SLA。"
   },
   "tests": {
-    "fastapi": {"passed": 365, "failed": 0, "warnings": 1, "subtests": 7, "exitCode": 0},
+    "fastapi": {"passed": 366, "failed": 0, "warnings": 1, "subtests": 7, "exitCode": 0},
     "java": {
       "portalCore": "12/12",
       "portalCompatibility": "2/2",
@@ -86,6 +94,8 @@
     "vue": {"command": "npm run build", "status": "passed", "exitCode": 0},
     "deterministicContract": {"manifest": "478/478", "representative": "8/8", "mode": "contract_mock", "exitCode": 0},
     "fieldAcceptance": {
+      "status": "stale_after_runtime_change",
+      "testedCodeCommit": "9c7c29045c28446b16a609768cd4b4c1202f8a51",
       "browser": "24/24",
       "javaMysql": "30/30",
       "faultInjection": "36/36",
@@ -96,8 +106,7 @@
       "mode": "local Docker/Chrome/Java/MySQL/Redis/RabbitMQ with synthetic fixture",
       "report": "tmp/field-acceptance-final-9c7c290/field-20260912T190322Z-6095525f/field-acceptance.json",
       "reportSha256": "6fcae42f1befeadd439957fe2bbecb114a77f787f29a8ec97fc29fdc6b016ff8",
-      "fixtureSha256": "4dd3d407001aec74e4c9546639c78eb2544b34a0ac4f2b6698eba345c27e3fc3",
-      "testedCodeCommit": "9c7c29045c28446b16a609768cd4b4c1202f8a51"
+      "fixtureSha256": "4dd3d407001aec74e4c9546639c78eb2544b34a0ac4f2b6698eba345c27e3fc3"
     }
   },
   "latencyAndTokens": {
@@ -120,18 +129,46 @@
     "showcaseEvidence": "docs/evidence/final-showcase-evidence.md"
   },
   "ci": {
-    "status": "passed",
-    "verifiedCommit": "78c5c3c980606438175548891fde2666e9a8ddf8",
+    "status": "pending_remote_final_sha",
+    "verifiedCommit": "1b89500eae4c8f1c6195f7fed064745b300a3fbb",
     "mallCi": "https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34716325261",
     "qualityEvaluation": "https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34716325231",
-    "scope": "两条远程门禁均为当前 docs-only evidenceCommit 的 success；运行时代码仍绑定 9c7c290。"
+    "scope": "旧链接属于历史 docs-only evidenceCommit；1b89500 尚待其对应远程门禁完成。"
+  },
+  "currentVerification": {
+    "commit": "1b89500eae4c8f1c6195f7fed064745b300a3fbb",
+    "fastapi": {"passed": 366, "failed": 0, "warnings": 1, "subtests": 7, "exitCode": 0},
+    "deterministic": {"manifest": "478/478", "representative": "8/8", "exitCode": 0},
+    "composeConfig": {"status": "passed", "exitCode": 0},
+    "deepseek": {
+      "status": "environment_blocked",
+      "provider": "DeepSeekRuntimeProvider",
+      "model": "deepseek-chat",
+      "httpStatus": 402,
+      "errorCategory": "provider_http",
+      "calls": 1,
+      "sideEffects": 0,
+      "probeReport": "tmp/showcase-provider-probe-20260913.json",
+      "probeReportSha256": "3ab0b9eee428c630e39036ae363433408e62177a3b1f6c163d10bb5585fdccd8",
+      "note": "本次公开展示尝试未能获得模型决策；没有使用 mock 顶替。"
+    },
+    "showcase": {
+      "status": "environment_blocked",
+      "captureCommand": ".\\scripts\\Capture-PublicShowcase.ps1",
+      "blocker": "真实模型 Provider HTTP 402（余额不足）",
+      "scenarios": [
+        {"scenarioId": "showcase-main-closed-loop", "status": "environment_blocked", "asset": null, "javaWriteObserved": false},
+        {"scenarioId": "showcase-pause-resume", "status": "environment_blocked", "asset": null},
+        {"scenarioId": "showcase-fact-change-replan", "status": "environment_blocked", "asset": null}
+      ],
+      "boundary": "现有旧 PNG/GIF 不是当前提交上的完整三条链路，不能作为本轮完成证据。"
+    }
   },
   "publicClaims": [
-    "DeepSeek 合成主评测集：24 Case × 3，共 72/72。",
-    "补充评测集：12 Case × 3，共 36/36；不是独立盲测集，不代表真实用户泛化率。",
-    "Grounding：15/15 Case、57/57 checks。",
-    "本地合成现场：browser 24/24、Java/MySQL 30/30、fault 36/36、durable recovery 32/32，共 122/122。",
-    "Java 是身份、归属、资格、状态、幂等、事务、Outbox 和最终写入权威。"
+    "当前提交的 FastAPI 确定性回归：366 passed；v3 deterministic 478/478、代表性 Runtime 8/8。",
+    "历史 Runtime 基线曾完成 DeepSeek 主评测 72/72、补充评测集 36/36、Grounding 15/15 和本地现场 122/122；这些报告在 Runtime 修复后标为 stale，不能作为当前提交结果。",
+    "Java 是身份、归属、资格、状态、幂等、事务、Outbox 和最终写入权威。",
+    "当前真实展示因 DeepSeek Provider HTTP 402 environment_blocked，未生成三条新的公开闭环素材。"
   ],
   "prohibitedClaims": [
     "生产 SLA、吞吐、用户量、在线率或部署完成",

@@ -2,9 +2,9 @@
 
 ## 当前权威快照｜最终公开收口（2026-09-12 UTC）
 
-运行时代码：`9c7c29045c28446b16a609768cd4b4c1202f8a51`；分支：`main`。当前本地合成 Release Gate：**通过**。FastAPI 365；DeepSeek main 72/72；supplemental 36/36（非独立盲测）；Grounding 15/15、57/57 checks；Java portal core 12/12、compatibility 2/2、admin 6/6、Spring 1/1；Vue build；deterministic 478/478、代表性 8/8；field 122/122（browser 24、Java/MySQL 30、fault 36、durable 32）。
+运行时代码：`1b89500eae4c8f1c6195f7fed064745b300a3fbb`；分支：`main`。当前公开展示 Release Gate：**NOT_COMPLETE**。FastAPI 366；v3 deterministic 478/478、代表性 8/8；真实 DeepSeek 展示请求因 HTTP 402（余额不足）`environment_blocked`，三条最终 GIF 尚未生成。
 
-最终证据提交 `78c5c3c` 的 GitHub Actions 已通过：[`mall-ci`](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34716325261) 与 [`quality-evaluation`](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34716325231)。运行时代码仍绑定 `9c7c290`，本次提交只回填公开证据；历史绿色 run 不替代当前结果。不能宣称生产 SLA、真实用户泛化、真实外部支付/仓储/物流/维修履约或模型成本。唯一事实源：[`current-release-facts.json`](../evidence/current-release-facts.json)。
+旧的 72/72、36/36、Grounding 和 field 报告绑定旧 Runtime，不能替代当前结果。当前对应远程 Actions 尚待完成；历史绿色 run 不替代当前 SHA。不能宣称生产 SLA、真实用户泛化、真实外部支付/仓储/物流/维修履约或模型成本。唯一事实源：[`current-release-facts.json`](../evidence/current-release-facts.json)。
 
 ## 历史审计记录（以下内容不代表当前 Commit）
 

@@ -2,9 +2,9 @@
 
 ## 当前权威快照｜最终公开收口（2026-09-12 UTC）
 
-运行时代码：`9c7c29045c28446b16a609768cd4b4c1202f8a51`；Provider：`DeepSeekRuntimeProvider/deepseek-chat`；Prompt：`agent_runtime_v3_3`；Skill Catalog：`skill_catalog_v3_0`。主评测为 24 Case × 3，共 **72/72**；补充评测集为 12 Case × 3，共 **36/36**。补充集合参与过开发期回归，历史文件名可含 `holdout`，但不作为独立盲测或真实用户泛化率。
+运行时代码：`1b89500eae4c8f1c6195f7fed064745b300a3fbb`；Provider：`DeepSeekRuntimeProvider/deepseek-chat`。当前提交 FastAPI **366 passed**，v3 deterministic **478/478**、代表性 Runtime **8/8**。真实 DeepSeek 展示请求返回 HTTP 402（余额不足），本轮没有产生新的 live-model 结果；旧主集/补充集报告均标为 `stale_after_runtime_change`，不能当作当前提交结果。
 
-主报告 hash：`40cb0e25d09c13171f581ddd69050a4d4a06fccc7427c3c205df65919f49f400`；补充报告 hash：`dd155133a5273ac29175e44ed0d4fe2f42d92296a9856f3cd382b436ac471604`。主集 LLM 250 次、562552 tokens、延迟 p50/p95/max `7437/13890/26188 ms`；补充集 LLM 127 次、285174 tokens、延迟 `7313/11281/12500 ms`；价格未配置，成本 unavailable。两套均为合成只读网关，无 forbidden side effects/duplicate final business writes。
+当前真实模型调用：1 次探测，`environment_blocked`，`provider_http`，HTTP 402；无工具调用、无业务写入、无公开素材生成。成本仍 unavailable。
 
 ## 历史审计记录（以下内容不代表当前 Commit）
 

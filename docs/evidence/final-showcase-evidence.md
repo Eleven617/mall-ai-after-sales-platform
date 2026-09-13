@@ -1,5 +1,21 @@
 # 最终公开展示素材证据
 
+## 当前状态：NOT_COMPLETE
+
+当前被测 Runtime：`1b89500eae4c8f1c6195f7fed064745b300a3fbb`。本轮真实浏览器录制在第一步模型决策处收到 DeepSeek Provider HTTP 402（余额不足），没有使用 contract_mock 或旧素材顶替，因此三条最终 GIF 均为 `environment_blocked`，不能称为完成。无密钥探测报告：`tmp/showcase-provider-probe-20260913.json`，SHA-256 `3ab0b9eee428c630e39036ae363433408e62177a3b1f6c163d10bb5585fdccd8`。
+
+| scenarioId | 当前状态 | 真实模型/写入/回查 | 当前阻断 |
+| --- | --- | --- | --- |
+| `showcase-main-closed-loop` | `environment_blocked` | 未观察到模型决策、用户确认后的 Java 写入或状态回查 | DeepSeek HTTP 402 |
+| `showcase-pause-resume` | `environment_blocked` | 未生成同一任务的完整等待→保留→恢复素材 | 依赖真实 Agent 决策 |
+| `showcase-fact-change-replan` | `environment_blocked` | 未生成事实版本变化后的重新核验/人工交接素材 | 依赖真实 Agent 决策 |
+
+捕获入口：`scripts/Capture-PublicShowcase.ps1`。它只接受本地进程环境中的 Key，不输出 Key/密码/Token；失败即非零退出，不会把失败帧复制到公开目录。
+
+## 历史审计记录（以下内容不代表当前 Commit）
+
+以下内容是旧 Runtime/旧素材的审计记录，保留用于追溯，不能作为当前提交的展示完成证明。
+
 生成时间：2026-09-12 UTC；公开素材绑定运行时代码 `9c7c29045c28446b16a609768cd4b4c1202f8a51`。
 
 本组素材来自真实本地 Docker Compose、Vue/FastAPI/Java 页面、真实 DeepSeek 合成演示和脱敏合成 Fixture。截图不是图片生成或手工绘制；页面中的账号、订单、政策和案件均为合成数据。素材只展示安全 DTO、Artifact 摘要和待确认方案，不包含 Token、Key、完整订单号、原始 Prompt、原始 Trace 或业务数据库载荷。

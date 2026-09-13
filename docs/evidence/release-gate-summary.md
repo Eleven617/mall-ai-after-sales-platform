@@ -2,9 +2,9 @@
 
 ## 当前权威结论｜最终公开收口
 
-运行时代码 `9c7c29045c28446b16a609768cd4b4c1202f8a51`，分支 `main`。本地合成 Gate 已通过：FastAPI 365、DeepSeek main 72/72、supplemental 36/36、Grounding 15/15 和 57/57 checks、Java portal core 12/12 + compatibility 2/2、admin 6/6、Spring 1/1、Vue build、deterministic 478/478（代表性 8/8）、现场 122/122。补充集合不是独立盲测；deterministic 不是 E2E；所有现场数字仅适用于合成 Fixture 和本机 Docker 技术栈。
+运行时代码 `1b89500eae4c8f1c6195f7fed064745b300a3fbb`，分支 `main`。当前 Release Gate：**NOT_COMPLETE**。本提交确定性 FastAPI 回归为 366 passed，v3 manifest/preflight 为 478/478、8/8；DeepSeek 真实展示请求返回 HTTP 402（余额不足），三条新展示链路和对应最终素材均为 `environment_blocked`。旧 Runtime 的 72/72、36/36、122/122 报告已标为 stale，不与当前结果合并。
 
-最终证据提交 `78c5c3c` 已得到两个远程 success：[`mall-ci`](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34716325261) 与 [`quality-evaluation`](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34716325231)。运行时代码仍绑定 `9c7c290`，本次只是文档/事实回填。唯一事实源：[`current-release-facts.json`](current-release-facts.json)；展示证据：[`final-showcase-evidence.md`](final-showcase-evidence.md)。
+本提交对应的远程 `mall-ci` 与 `quality-evaluation` 尚待完成；历史 success 链接仅作审计记录，不能替代当前 SHA。唯一事实源：[`current-release-facts.json`](current-release-facts.json)；展示证据：[`final-showcase-evidence.md`](final-showcase-evidence.md)。
 
 公开提交 `e0c8b36` 的首次 `mall-ci` 只在 OSV 步骤失败：扫描容器对 Java 本地 `1.0-SNAPSHOT` reactor 做传递解析时无法从远程仓库找到内部模块，退出码 127；gitleaks、Python、Java、Web、Compose 和 public-release 均通过。修复为 OSV `--no-resolve` 后仍扫描所有显式 Python/npm lockfile 与 `mall2` POM 的直接依赖，未关闭扫描、未使用 `continue-on-error`，待新提交远程复核。
 
