@@ -104,8 +104,17 @@ class TaskRecordBundle(BaseModel):
         artifact_refs = {artifact.reference for artifact in self.artifacts}
         if any(reference not in artifact_refs for reference in self.task.artifact_refs):
             raise ValueError("任务引用了不存在的 Artifact")
+        # References are safe only when they are already bound to an artifact
+        # in this same task.  A generated opaque reference can legitimately
+        # contain a run of digits; without this binding, a persisted proposal
+        # could fail closed on read even though it never contained a raw order
+        # identifier.  Keep the long-number guard for every unbound value.
         for arguments in self.action_arguments.values():
-            assert_safe_action_arguments(arguments, allow_generated_idempotency_key=True)
+            assert_safe_action_arguments(
+                arguments,
+                allow_generated_idempotency_key=True,
+                allowed_opaque_references=artifact_refs,
+            )
         return self
 
     def latest_plan(self) -> TaskPlan | None:

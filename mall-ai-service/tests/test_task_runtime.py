@@ -7,6 +7,8 @@ there are no keyword fallbacks or no-op count-only cases here.
 """
 from __future__ import annotations
 
+import hashlib
+import json
 from types import SimpleNamespace
 from unittest.mock import patch
 
@@ -25,7 +27,15 @@ from app.runtime.providers import (
 from app.runtime.reference_vault import RuntimeReferenceVault
 from app.runtime.task_runtime import TaskRuntime, TaskRuntimeError
 from app.runtime.task_store import InMemoryTaskStore, assert_safe_action_arguments
-from app.schemas.agent_task import AgentTask, ExecutorDecision, SkillCall, TaskExecutionBudget, TaskPlan
+from app.schemas.agent_task import (
+    ActionProposal,
+    AgentTask,
+    ExecutorDecision,
+    SkillCall,
+    TaskArtifact,
+    TaskExecutionBudget,
+    TaskPlan,
+)
 from app.runtime.task_planner import build_initial_plan
 from app.runtime.task_store import TaskRecordBundle, owner_ref_for_member, session_ref_for_session
 from app.skills.catalog import get_skill
@@ -224,6 +234,58 @@ def test_server_generated_opaque_reference_with_numeric_run_is_allowed() -> None
         {"orderFactRef": "fact-order-1234567890"},
         allowed_opaque_references={"fact-order-1234567890"},
     )
+
+
+def test_persisted_proposal_accepts_numeric_opaque_artifact_reference() -> None:
+    """A bound opaque reference must remain readable after Mongo persistence."""
+
+    task = AgentTask(
+        task_id="task-" + "b" * 16,
+        task_ref="taskref-" + "b" * 16,
+        owner_ref=owner_ref_for_member(MEMBER_ID),
+        session_ref=session_ref_for_session(SESSION_ID),
+        goal_digest="c" * 64,
+        normalized_goal="核验合成订单并准备方案",
+        status="ready_to_commit",
+        plan_version=1,
+        pending_action_ref="proposal-abcdefgh",
+        artifact_refs=["fact-order-1234567890"],
+        execution_budget=TaskExecutionBudget(),
+        expires_at=9_999_999_999,
+    )
+    artifact = TaskArtifact(
+        task_id=task.task_id,
+        reference="fact-order-1234567890",
+        kind="order_fact",
+        source_skill="read_order",
+        summary="订单事实已核验",
+        source_version="v1",
+        factuality="verified",
+        artifact_id="artifact-abcdefgh",
+        expires_at=9_999_999_999,
+        hash="d" * 64,
+    )
+    arguments = {"orderFactRef": artifact.reference, "applicationType": "return_refund"}
+    proposal = ActionProposal(
+        task_id=task.task_id,
+        proposal_id="proposal-abcdefgh",
+        action_skill="commit_after_sales_action",
+        arguments_ref="args-abcdefgh",
+        expected_effect="创建本地售后申请",
+        user_explanation="确认后提交",
+        confirmation_status="awaiting_confirmation",
+        content_hash=hashlib.sha256(
+            json.dumps(arguments, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8")
+        ).hexdigest(),
+        expires_at=9_999_999_999,
+    )
+    bundle = TaskRecordBundle(
+        task=task,
+        artifacts=[artifact],
+        action_proposal=proposal,
+        action_arguments={"args-abcdefgh": arguments},
+    )
+    assert bundle.action_arguments["args-abcdefgh"]["orderFactRef"] == artifact.reference
 
 
 def test_runtime_does_not_burn_budget_on_duplicate_read_decision() -> None:
