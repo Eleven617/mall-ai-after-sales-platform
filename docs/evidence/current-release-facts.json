@@ -129,11 +129,11 @@
     "showcaseEvidence": "docs/evidence/final-showcase-evidence.md"
   },
   "ci": {
-    "status": "pending_remote_final_sha",
-    "verifiedCommit": "1b89500eae4c8f1c6195f7fed064745b300a3fbb",
-    "mallCi": "https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34716325261",
-    "qualityEvaluation": "https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34716325231",
-    "scope": "旧链接属于历史 docs-only evidenceCommit；1b89500 尚待其对应远程门禁完成。"
+    "status": "passed",
+    "verifiedCommit": "889136e09aa05b314b9fc6e1aa8cbeb8de051b26",
+    "mallCi": "https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34751649882",
+    "qualityEvaluation": "https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34751649884",
+    "scope": "889136e 的两个远程门禁已真实 success；该提交只同步公开事实/捕获入口，当前公开展示仍因 DeepSeek HTTP 402 为 NOT_COMPLETE。"
   },
   "currentVerification": {
     "commit": "1b89500eae4c8f1c6195f7fed064745b300a3fbb",

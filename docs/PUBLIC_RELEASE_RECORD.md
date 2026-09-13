@@ -14,7 +14,7 @@
 | Vue | **production build passed** | `npm run build` |
 | deterministic | **478/478；代表性 8/8** | contract_mock，不是 E2E |
 | 本地现场 | **stale / 未作为当前通过** | 旧报告绑定旧 Runtime；本轮没有伪造现场数字 |
-| 远程 CI | **待当前 SHA 完成** | 历史 success 不能替代 `1b89500` |
+| 远程 CI | **`889136e` 的 mall-ci 与 quality-evaluation success** | 运行时仍为 `1b89500`；当前展示 Gate 仍 NOT_COMPLETE |
 
 事实源：[`current-release-facts.json`](evidence/current-release-facts.json)。公开演示素材和阻断记录：[`final-showcase-evidence.md`](evidence/final-showcase-evidence.md)。成本、生产 SLA、真实用户泛化和外部履约均 unavailable/未接入。
 

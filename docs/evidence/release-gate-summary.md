@@ -4,7 +4,7 @@
 
 运行时代码 `1b89500eae4c8f1c6195f7fed064745b300a3fbb`，分支 `main`。当前 Release Gate：**NOT_COMPLETE**。本提交确定性 FastAPI 回归为 366 passed，v3 manifest/preflight 为 478/478、8/8；DeepSeek 真实展示请求返回 HTTP 402（余额不足），三条新展示链路和对应最终素材均为 `environment_blocked`。旧 Runtime 的 72/72、36/36、122/122 报告已标为 stale，不与当前结果合并。
 
-本提交对应的远程 `mall-ci` 与 `quality-evaluation` 尚待完成；历史 success 链接仅作审计记录，不能替代当前 SHA。唯一事实源：[`current-release-facts.json`](current-release-facts.json)；展示证据：[`final-showcase-evidence.md`](final-showcase-evidence.md)。
+已验证的证据提交 `889136e` 的远程门禁均为 success：[`mall-ci`](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34751649882) 与 [`quality-evaluation`](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34751649884)。本次后续只同步这两个真实链接；公开展示仍因 Provider HTTP 402 为 NOT_COMPLETE。唯一事实源：[`current-release-facts.json`](current-release-facts.json)；展示证据：[`final-showcase-evidence.md`](final-showcase-evidence.md)。
 
 公开提交 `e0c8b36` 的首次 `mall-ci` 只在 OSV 步骤失败：扫描容器对 Java 本地 `1.0-SNAPSHOT` reactor 做传递解析时无法从远程仓库找到内部模块，退出码 127；gitleaks、Python、Java、Web、Compose 和 public-release 均通过。修复为 OSV `--no-resolve` 后仍扫描所有显式 Python/npm lockfile 与 `mall2` POM 的直接依赖，未关闭扫描、未使用 `continue-on-error`，待新提交远程复核。
 

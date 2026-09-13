@@ -4,7 +4,7 @@
 
 运行时代码：`1b89500eae4c8f1c6195f7fed064745b300a3fbb`；分支：`main`。当前公开展示 Release Gate：**NOT_COMPLETE**。FastAPI 366；v3 deterministic 478/478、代表性 8/8；真实 DeepSeek 展示请求因 HTTP 402（余额不足）`environment_blocked`，三条最终 GIF 尚未生成。
 
-旧的 72/72、36/36、Grounding 和 field 报告绑定旧 Runtime，不能替代当前结果。当前对应远程 Actions 尚待完成；历史绿色 run 不替代当前 SHA。不能宣称生产 SLA、真实用户泛化、真实外部支付/仓储/物流/维修履约或模型成本。唯一事实源：[`current-release-facts.json`](../evidence/current-release-facts.json)。
+旧的 72/72、36/36、Grounding 和 field 报告绑定旧 Runtime，不能替代当前结果。证据提交 `889136e` 的 [`mall-ci`](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34751649882) 与 [`quality-evaluation`](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34751649884) 已真实 success。不能宣称生产 SLA、真实用户泛化、真实外部支付/仓储/物流/维修履约或模型成本。唯一事实源：[`current-release-facts.json`](../evidence/current-release-facts.json)。
 
 ## 历史审计记录（以下内容不代表当前 Commit）
 

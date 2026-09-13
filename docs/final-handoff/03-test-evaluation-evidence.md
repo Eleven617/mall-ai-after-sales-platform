@@ -6,7 +6,7 @@
 
 运行时代码：`1b89500eae4c8f1c6195f7fed064745b300a3fbb`。FastAPI **366 passed**；deterministic **478/478、8/8**；Compose 配置检查通过。真实 DeepSeek 展示探测因 HTTP 402（余额不足）`environment_blocked`，未产生当前提交的 live-model、三条 GIF 或 Java 写入回查证据。旧报告与当前 Runtime 不一致，统一标记 stale。
 
-原始报告路径、退出码和 hash 见 [`current-release-facts.json`](../evidence/current-release-facts.json)。当前提交对应的远程门禁尚待完成；历史 success 不替代当前 SHA。
+原始报告路径、退出码和 hash 见 [`current-release-facts.json`](../evidence/current-release-facts.json)。证据提交 `889136e` 的远程 `mall-ci` 与 `quality-evaluation` 均已 success；这不改变当前真实模型展示的 HTTP 402 阻断。
 
 ## 历史审计记录（以下内容不代表当前 Commit）
 
