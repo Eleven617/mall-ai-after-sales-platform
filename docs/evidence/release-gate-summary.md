@@ -4,7 +4,7 @@
 
 运行时代码 `0162c4059c35211852f409a4c3517a87997b4f56`，分支 `codex/v3.0.1-offline-acceptance`。当前 Release Gate：**NOT_COMPLETE**。本冻结提交 FastAPI 回归为 376 passed、12 个子断言，v3 manifest/preflight 为 478/478、8/8；浏览器现场 24/24、Java/MySQL 30/30、故障注入 36/36 通过。唯一 v3.0.1 DeepSeek 候选批次在真实展示链路返回脱敏 ShowcaseError 后停止，主集、补充集、Grounding 未执行，Durable live 32 条 environment_blocked。
 
-提交 `4d452d06f0f6e75d1b8d8d929dd40e5fa640b28a` 的远程 `mall-ci` 与 `quality-evaluation` 均实际 success：[`mall-ci`](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34821040162)、[`quality-evaluation`](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34821040035)。候选批次报告位于 `tmp/deepseek-v3.0.1-candidate.json`（SHA-256 `1a6e0016fdc5116ea68690e14167f5351391cd75bd827abe613953196f7cd9d2`，本地忽略，不提交原始载荷）。唯一事实源：[`current-release-facts.json`](current-release-facts.json)；本轮结果：[`v3.0.1-offline-and-live-acceptance.md`](v3.0.1-offline-and-live-acceptance.md)。
+提交 `5bfdc3c7c8eb88f76abecc6ea063eb2173880813` 的远程 `mall-ci` 与 `quality-evaluation` 均实际 success：[`mall-ci`](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34821813055)、[`quality-evaluation`](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34821813117)。候选批次报告位于 `tmp/deepseek-v3.0.1-candidate.json`（SHA-256 `1a6e0016fdc5116ea68690e14167f5351391cd75bd827abe613953196f7cd9d2`，本地忽略，不提交原始载荷）。唯一事实源：[`current-release-facts.json`](current-release-facts.json)；本轮结果：[`v3.0.1-offline-and-live-acceptance.md`](v3.0.1-offline-and-live-acceptance.md)。
 
 旧 releaseId `v3.0-deepseek-flash-final` 的锁保持不变；本轮新候选锁为 [`deepseek-release-lock-v3.0.1.json`](deepseek-release-lock-v3.0.1.json)，记录 `candidate-5f1d90208743` 失败和 0 provider requests，不允许无授权重跑。
 
