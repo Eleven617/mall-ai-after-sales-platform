@@ -77,18 +77,30 @@ def main() -> int:
     else:
         current = facts.get("currentVerification", {})
         require(current.get("commit") == facts["runtimeCommit"], "current verification must bind runtimeCommit")
-        require(current.get("fastapi", {}).get("passed") == 366, "current FastAPI facts mismatch")
+        require(current.get("fastapi", {}).get("passed") == 371, "current FastAPI facts mismatch")
         require(current.get("fastapi", {}).get("failed") == 0, "current FastAPI failure count mismatch")
         require(current.get("deterministic", {}).get("manifest") == "478/478", "current deterministic facts mismatch")
-        require(current.get("deepseek", {}).get("status") == "environment_blocked", "DeepSeek blocker must be explicit")
-        require(current.get("deepseek", {}).get("httpStatus") == 402, "DeepSeek HTTP 402 blocker missing")
-        require(current.get("showcase", {}).get("status") == "environment_blocked", "showcase blocker must be explicit")
-        require(all(item.get("status") == "environment_blocked" for item in current["showcase"].get("scenarios", [])), "showcase scenario status mismatch")
+        deepseek_status = current.get("deepseek", {}).get("status")
+        require(deepseek_status in {"environment_blocked", "passed"}, "DeepSeek status must be explicit")
+        if deepseek_status == "environment_blocked":
+            require(current.get("deepseek", {}).get("httpStatus") in {401, 402, 403}, "DeepSeek provider blocker status missing")
+        else:
+            require(current.get("deepseek", {}).get("model") == "deepseek-flash", "current DeepSeek model mismatch")
+            require(current.get("deepseek", {}).get("batchStatus") == "passed", "current DeepSeek batch status mismatch")
+        showcase_status = current.get("showcase", {}).get("status")
+        require(showcase_status in {"environment_blocked", "passed"}, "showcase status must be explicit")
+        require(
+            all(item.get("status") in {"environment_blocked", "passed"} for item in current["showcase"].get("scenarios", [])),
+            "showcase scenario status mismatch",
+        )
     require(tests["java"]["portalCore"] == "12/12", "Java portal core fact mismatch")
     require(tests["java"]["portalCompatibility"] == "2/2", "Java portal compatibility fact mismatch")
     require(tests["java"]["admin"] == "6/6", "Java admin fact mismatch")
     require(tests["java"]["springContext"] == "1/1", "Spring context fact mismatch")
-    require(field["total"] == "122/122" and field["failed"] == field["environmentBlocked"] == 0, "field facts mismatch")
+    # Preserve the historical suite shape for audit, while allowing a
+    # NOT_COMPLETE release to mark the old field report stale after a runtime
+    # change. The stale 122/122 is never treated as a current gate here.
+    require(field["total"] == "122/122", "field facts must preserve the historical suite shape")
 
     forbidden_phrases = (
         "## 评测发现与改进方向",
@@ -108,7 +120,7 @@ def main() -> int:
         "DeepSeek",
         "NOT_COMPLETE",
         "environment_blocked",
-        "366 passed",
+        "371 passed",
         "portal 核心 `12/12`",
         "admin `6/6`",
         "Spring context `1/1`",
@@ -184,8 +196,14 @@ def main() -> int:
             require("14/14" not in section and "holdout" not in section.lower(), f"stale wording remains in current document {path}")
             require("365" in section, f"FastAPI 365 is missing in current document {path}")
         else:
-            require("NOT_COMPLETE" in section and "environment_blocked" in section, f"current blocker missing in {path}")
-            require("366" in section, f"current FastAPI 366 is missing in {path}")
+            require("NOT_COMPLETE" in section, f"current release status missing in {path}")
+            require(
+                "environment_blocked" in section
+                or "Batch 2" in section
+                or "not_executed" in section,
+                f"current incomplete boundary missing in {path}",
+            )
+            require("371" in section, f"current FastAPI 371 is missing in {path}")
     require(ci["status"] in {"pending_remote_final_sha", "passed"}, "CI status must be explicit")
 
     print(

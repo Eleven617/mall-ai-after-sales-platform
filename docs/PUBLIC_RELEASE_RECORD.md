@@ -2,19 +2,20 @@
 
 ## 当前权威记录｜最终公开收口
 
-更新时间：2026-09-13 UTC；运行时代码 `1b89500eae4c8f1c6195f7fed064745b300a3fbb`；分支 `main`。本节是当前唯一结论，后续旧日期内容均为历史审计，不能与本节合并统计。当前发布状态：**NOT_COMPLETE**。
+更新时间：2026-09-14 UTC；运行时代码 `9b2fc5285794ecd7baac3f9e7984c216370436d3`；分支 `main`。本节是当前唯一结论，后续旧日期内容均为历史审计，不能与本节合并统计。当前发布状态：**NOT_COMPLETE**。
 
 | 门禁 | 当前结果 | 运行模式/边界 |
 | --- | --- | --- |
-| FastAPI | **366 passed**，0 failed | 本机 `.venv`，exit 0，1 warning、7 subtests |
-| DeepSeek 主评测 | **environment_blocked** | Provider HTTP 402（余额不足），未冒充通过 |
+| FastAPI | **371 passed**，0 failed | 本机 `.venv`，exit 0，1 warning、12 subtests |
+| DeepSeek Batch 1 | **3/3 passed** | `deepseek-flash`、thinking enabled、reasoning high；11 次请求；合成 Runtime，只读网关 |
+| DeepSeek Batch 2 主/补充/Grounding | **not_executed** | 版本冻结后待执行；不得沿用旧报告 |
 | 补充评测集 | **未重跑 / stale** | 旧报告绑定旧 Runtime，不并入当前结果 |
 | Grounding | **stale** | 旧报告绑定旧 Runtime |
 | Java | portal core **12/12**、compatibility **2/2**、admin **6/6**、Spring **1/1** | 显式 `-DskipTests=false`；Spring 使用临时本地配置 |
 | Vue | **production build passed** | `npm run build` |
 | deterministic | **478/478；代表性 8/8** | contract_mock，不是 E2E |
 | 本地现场 | **stale / 未作为当前通过** | 旧报告绑定旧 Runtime；本轮没有伪造现场数字 |
-| 远程 CI | **`889136e` 的 mall-ci 与 quality-evaluation success** | 运行时仍为 `1b89500`；当前展示 Gate 仍 NOT_COMPLETE |
+| 远程 CI | **pending_remote_final_sha** | 冻结提交尚未推送；历史 `889136e` success 不冒充当前 SHA |
 
 事实源：[`current-release-facts.json`](evidence/current-release-facts.json)。公开演示素材和阻断记录：[`final-showcase-evidence.md`](evidence/final-showcase-evidence.md)。成本、生产 SLA、真实用户泛化和外部履约均 unavailable/未接入。
 

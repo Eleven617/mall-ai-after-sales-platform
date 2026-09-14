@@ -1,6 +1,7 @@
 param(
     [string]$ReleaseId = '',
-    [string]$Report = ''
+    [string]$Report = '',
+    [string]$RuntimeCommit = ''
 )
 
 $ErrorActionPreference = 'Stop'
@@ -9,7 +10,10 @@ $python = Join-Path $root 'mall-ai-service\.venv\Scripts\python.exe'
 if (-not (Test-Path -LiteralPath $python)) {
     throw 'mall-ai-service/.venv is missing.'
 }
-$runtimeCommit = (& git -C $root rev-parse HEAD).Trim()
+if ([string]::IsNullOrWhiteSpace($RuntimeCommit)) {
+    $RuntimeCommit = (& git -C $root rev-parse HEAD).Trim()
+}
+$runtimeCommit = $RuntimeCommit.Trim()
 if ($LASTEXITCODE -ne 0 -or $runtimeCommit -notmatch '^[0-9a-f]{40}$') {
     throw 'Cannot resolve the runtime commit.'
 }

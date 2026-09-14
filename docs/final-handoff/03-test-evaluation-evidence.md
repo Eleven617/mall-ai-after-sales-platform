@@ -4,7 +4,7 @@
 
 当前发布状态：**NOT_COMPLETE**。
 
-运行时代码：`1b89500eae4c8f1c6195f7fed064745b300a3fbb`。FastAPI **366 passed**；deterministic **478/478、8/8**；Compose 配置检查通过。真实 DeepSeek 展示探测因 HTTP 402（余额不足）`environment_blocked`，未产生当前提交的 live-model、三条 GIF 或 Java 写入回查证据。旧报告与当前 Runtime 不一致，统一标记 stale。
+运行时代码：`9b2fc5285794ecd7baac3f9e7984c216370436d3`。FastAPI **371 passed**、12 个子断言；deterministic **478/478、8/8**；Compose 配置检查通过。Batch 1 使用固定 `deepseek-flash + thinking-high` 完成三条一次性合成 Runtime 场景（3/3、11 次请求）；Batch 2、三条 GIF、完整 Grounding 与 Java 写入回查尚未执行。旧报告与当前 Runtime 不一致，统一标记 stale。
 
 原始报告路径、退出码和 hash 见 [`current-release-facts.json`](../evidence/current-release-facts.json)。证据提交 `889136e` 的远程 `mall-ci` 与 `quality-evaluation` 均已 success；这不改变当前真实模型展示的 HTTP 402 阻断。
 

@@ -1,10 +1,10 @@
 {
   "schemaVersion": "mall-public-release-facts.v3",
-  "generatedAt": "2026-09-13T10:02:42Z",
+  "generatedAt": "2026-09-14T03:30:11Z",
   "releaseStatus": "NOT_COMPLETE",
-  "runtimeCommit": "1b89500eae4c8f1c6195f7fed064745b300a3fbb",
-  "evidenceCommit": "1b89500eae4c8f1c6195f7fed064745b300a3fbb",
-  "statusReason": "当前 Runtime 修复已提交，但真实 DeepSeek 展示与三条公开素材尚未在该提交上完成；Provider 返回 HTTP 402（余额不足），因此不能把历史评测或旧素材冒充当前展示闭环。",
+  "runtimeCommit": "9b2fc5285794ecd7baac3f9e7984c216370436d3",
+  "evidenceCommit": "9b2fc5285794ecd7baac3f9e7984c216370436d3",
+  "statusReason": "Batch 1 已在冻结前运行并通过三条合成 Agent 场景；Batch 2（主集、补充集、Grounding、最终素材）尚未运行，因此当前 Release Gate 仍为 NOT_COMPLETE。",
   "project": {
     "name": "Mall AI After-sales Platform",
     "repository": "https://github.com/Eleven617/mall-ai-after-sales-platform",
@@ -13,7 +13,9 @@
   },
   "model": {
     "provider": "DeepSeekRuntimeProvider",
-    "model": "deepseek-chat",
+    "model": "deepseek-flash",
+    "thinkingMode": "enabled",
+    "reasoningEffort": "high",
     "promptVersion": "agent_runtime_v3_3",
     "skillCatalogVersion": "skill_catalog_v3_0",
     "gateway": "synthetic_read_only_gateway",
@@ -81,7 +83,7 @@
     "claimBoundary": "这些是小型版本化合成政策集上的检索指标，不是答案准确率、真实用户覆盖或生产 SLA。"
   },
   "tests": {
-    "fastapi": {"passed": 366, "failed": 0, "warnings": 1, "subtests": 7, "exitCode": 0},
+    "fastapi": {"passed": 371, "failed": 0, "warnings": 1, "subtests": 12, "exitCode": 0},
     "java": {
       "portalCore": "12/12",
       "portalCompatibility": "2/2",
@@ -136,39 +138,42 @@
     "scope": "889136e 的两个远程门禁已真实 success；该提交只同步公开事实/捕获入口，当前公开展示仍因 DeepSeek HTTP 402 为 NOT_COMPLETE。"
   },
   "currentVerification": {
-    "commit": "1b89500eae4c8f1c6195f7fed064745b300a3fbb",
-    "fastapi": {"passed": 366, "failed": 0, "warnings": 1, "subtests": 7, "exitCode": 0},
+    "commit": "9b2fc5285794ecd7baac3f9e7984c216370436d3",
+    "fastapi": {"passed": 371, "failed": 0, "warnings": 1, "subtests": 12, "exitCode": 0},
     "deterministic": {"manifest": "478/478", "representative": "8/8", "exitCode": 0},
     "composeConfig": {"status": "passed", "exitCode": 0},
     "deepseek": {
-      "status": "environment_blocked",
+      "status": "passed",
       "provider": "DeepSeekRuntimeProvider",
-      "model": "deepseek-chat",
-      "httpStatus": 402,
-      "errorCategory": "provider_http",
-      "calls": 1,
+      "model": "deepseek-flash",
+      "thinkingMode": "enabled",
+      "reasoningEffort": "high",
+      "batchStatus": "passed",
+      "batchId": "showcase-3a0f9cac17dd",
+      "runtimeCommit": "4703eb21a315ffd299619069b3eb6047634054d3",
+      "calls": 11,
       "sideEffects": 0,
-      "probeReport": "tmp/showcase-provider-probe-20260913.json",
-      "probeReportSha256": "3ab0b9eee428c630e39036ae363433408e62177a3b1f6c163d10bb5585fdccd8",
-      "note": "本次公开展示尝试未能获得模型决策；没有使用 mock 顶替。"
+      "report": "tmp/deepseek-batch-1-showcase.json",
+      "reportSha256": "48fdf153d277f196d070620860512be0e979caf582f0bf38d37d10f7a08a111e",
+      "note": "Batch 1 是一次性三场景合成 Runtime 诊断；不等同于 Batch 2 的完整主集、Grounding 或浏览器 GIF。"
     },
     "showcase": {
-      "status": "environment_blocked",
-      "captureCommand": ".\\scripts\\Capture-PublicShowcase.ps1",
-      "blocker": "真实模型 Provider HTTP 402（余额不足）",
+      "status": "passed",
+      "captureCommand": ".\\scripts\\Capture-PublicShowcase.ps1 -DryRun",
+      "blocker": null,
       "scenarios": [
-        {"scenarioId": "showcase-main-closed-loop", "status": "environment_blocked", "asset": null, "javaWriteObserved": false},
-        {"scenarioId": "showcase-pause-resume", "status": "environment_blocked", "asset": null},
-        {"scenarioId": "showcase-fact-change-replan", "status": "environment_blocked", "asset": null}
+        {"scenarioId": "showcase-main-closed-loop", "status": "passed", "caseId": "agent-open-020", "asset": null, "javaWriteObserved": false},
+        {"scenarioId": "showcase-pause-resume", "status": "passed", "caseId": "agent-open-001", "asset": null},
+        {"scenarioId": "showcase-fact-change-replan", "status": "passed", "caseId": "agent-open-021", "asset": null}
       ],
-      "boundary": "现有旧 PNG/GIF 不是当前提交上的完整三条链路，不能作为本轮完成证据。"
+      "boundary": "Batch 1 只证明三条合成 Runtime 场景各执行一次；最终 GIF 与 Batch 2 完整链路仍未验证。"
     }
   },
   "publicClaims": [
-    "当前提交的 FastAPI 确定性回归：366 passed；v3 deterministic 478/478、代表性 Runtime 8/8。",
+    "当前冻结提交的 FastAPI 确定性回归：371 passed、12 个子断言；v3 deterministic 478/478、代表性 Runtime 8/8。",
     "历史 Runtime 基线曾完成 DeepSeek 主评测 72/72、补充评测集 36/36、Grounding 15/15 和本地现场 122/122；这些报告在 Runtime 修复后标为 stale，不能作为当前提交结果。",
     "Java 是身份、归属、资格、状态、幂等、事务、Outbox 和最终写入权威。",
-    "当前真实展示因 DeepSeek Provider HTTP 402 environment_blocked，未生成三条新的公开闭环素材。"
+    "Batch 1 使用 deepseek-flash + thinking-high 完成三条一次性合成 Runtime 场景；Batch 2 和最终公开素材仍未执行。"
   ],
   "prohibitedClaims": [
     "生产 SLA、吞吐、用户量、在线率或部署完成",

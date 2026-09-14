@@ -9,7 +9,7 @@
 
 ## 30 秒了解项目
 
-> 当前展示状态：`NOT_COMPLETE`。上一轮素材停在确认前，不能证明当前提交已经完成 Java 写入与状态回查；本轮尝试受真实 DeepSeek Provider HTTP 402（余额不足）阻断，未使用 mock 冒充。三条素材需在额度恢复后通过 [`scripts/Capture-PublicShowcase.ps1`](scripts/Capture-PublicShowcase.ps1) 重新录制并逐帧复核。
+> 当前展示状态：`NOT_COMPLETE`。代码冻结提交已完成 DeepSeek `deepseek-flash + thinking=enabled + reasoning_effort=high` 的 Batch 1：三条合成 Runtime 场景各执行一次、11 次 Provider 请求、0 副作用。Batch 2（主集、补充集、Grounding、完整 Java 写入回查和最终 GIF）尚未执行，不能把 Batch 1 当作最终公开闭环。
 
 ### 为什么不是普通聊天机器人
 
@@ -50,7 +50,7 @@ MCP 只读工具、人工售后工作台和 LangGraph 确定性节点是能力�
 2. 等待输入 → 暂停保留 → 政策岔开 → 同一任务恢复；
 3. 事实版本变化 → 旧结果失效 → 重新核验 → 新方案或人工交接。
 
-当前提交尚未重新生成这三条完整 GIF。旧 PNG/GIF 仅作为历史素材保留，不能在本 README 中被称为当前闭环证据。实际素材、阻断原因和逐帧验收记录见 [展示素材证据](docs/evidence/final-showcase-evidence.md)。
+Batch 1 已对三条合成 Runtime 场景各执行一次；这不是浏览器录制，也没有宣称 Java 真实写入。最终 GIF、完整主集/补充集和 Grounding 必须在 Batch 2 一次性完成后才可作为当前闭环证据。录制入口支持无模型 dry-run：[`scripts/Capture-PublicShowcase.ps1 -DryRun`](scripts/Capture-PublicShowcase.ps1)。
 
 ## 架构与代码入口
 
@@ -66,11 +66,11 @@ MCP 只读工具、人工售后工作台和 LangGraph 确定性节点是能力�
 
 结果按套件独立统计，不相加，也不外推为生产 SLA 或真实用户泛化：
 
-- 当前提交 FastAPI：`366 passed`；Java portal 核心 `12/12`、兼容性 `2/2`、admin `6/6`、Spring context `1/1`；
+- 当前冻结提交 FastAPI：`371 passed`、12 个子断言；Java portal 核心 `12/12`、兼容性 `2/2`、admin `6/6`、Spring context `1/1`；
 - 历史补充评测集（supplemental evaluation set）参与过开发期回归，不是独立盲测集；其旧 `36/36` 结果已因 Runtime 提交变化标为 stale；
 - RAG：Dense、Hybrid、Hybrid+Rerank 分别在 52 条版本化合成政策 Case 上评测；Dense 当前 MRR `0.948718`、nDCG@3 `0.962147`，作为默认方案；这些是检索指标，不是答案准确率；
 - deterministic 合同：`478/478`，代表性 Runtime `8/8`，不是 E2E；
-- Vue production build 通过；当前代码提交的 DeepSeek 现场展示为 `environment_blocked`（Provider HTTP 402），不能把旧提交的 `72/72`、`36/36`、`122/122` 当作当前结果。
+- Vue production build 通过；Batch 1 的 DeepSeek 场景为 `3/3`、`environment_blocked=0`，但不能把它扩大为主集 `72`、补充集 `36`、Grounding 或现场 `122` 的当前结果。
 
 历史失败、根因和修复过程见 [evaluation-evolution](docs/evidence/evaluation-evolution.md) 与 [failure matrix](docs/evidence/final-agent-failure-matrix.md)。当前数字的唯一事实源是 [`current-release-facts.json`](docs/evidence/current-release-facts.json)，并由 [`validate_public_release.py`](scripts/validate_public_release.py) 在 CI 中校验。
 
