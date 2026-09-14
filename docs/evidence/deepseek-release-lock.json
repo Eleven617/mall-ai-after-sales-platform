@@ -1,0 +1,13 @@
+{
+  "schemaVersion": "deepseek-release-lock.v1",
+  "releaseId": "v3.0-deepseek-flash-final",
+  "status": "NOT_COMPLETE",
+  "batchCount": 2,
+  "batchIds": [
+    "showcase-3a0f9cac17dd",
+    "final-2bc17c6257ac"
+  ],
+  "runtimeCommit": "9b2fc5285794ecd7baac3f9e7984c216370436d3",
+  "reason": "Batch 2 stopped after agent-open-001 clarification_mismatch; no third live-model batch is permitted.",
+  "lockedAt": "2026-09-14T04:05:30Z"
+}

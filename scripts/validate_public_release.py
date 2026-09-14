@@ -81,16 +81,19 @@ def main() -> int:
         require(current.get("fastapi", {}).get("failed") == 0, "current FastAPI failure count mismatch")
         require(current.get("deterministic", {}).get("manifest") == "478/478", "current deterministic facts mismatch")
         deepseek_status = current.get("deepseek", {}).get("status")
-        require(deepseek_status in {"environment_blocked", "passed"}, "DeepSeek status must be explicit")
+        require(deepseek_status in {"environment_blocked", "passed", "failed"}, "DeepSeek status must be explicit")
         if deepseek_status == "environment_blocked":
             require(current.get("deepseek", {}).get("httpStatus") in {401, 402, 403}, "DeepSeek provider blocker status missing")
-        else:
+        elif deepseek_status == "passed":
             require(current.get("deepseek", {}).get("model") == "deepseek-flash", "current DeepSeek model mismatch")
             require(current.get("deepseek", {}).get("batchStatus") == "passed", "current DeepSeek batch status mismatch")
+        else:
+            require(current.get("deepseek", {}).get("model") == "deepseek-flash", "current DeepSeek model mismatch")
+            require(current.get("deepseek", {}).get("batchStatus") == "failed", "current DeepSeek failure status mismatch")
         showcase_status = current.get("showcase", {}).get("status")
-        require(showcase_status in {"environment_blocked", "passed"}, "showcase status must be explicit")
+        require(showcase_status in {"environment_blocked", "passed", "failed"}, "showcase status must be explicit")
         require(
-            all(item.get("status") in {"environment_blocked", "passed"} for item in current["showcase"].get("scenarios", [])),
+            all(item.get("status") in {"environment_blocked", "passed", "failed"} for item in current["showcase"].get("scenarios", [])),
             "showcase scenario status mismatch",
         )
     require(tests["java"]["portalCore"] == "12/12", "Java portal core fact mismatch")

@@ -4,7 +4,7 @@
 
 当前发布状态：**NOT_COMPLETE**。
 
-运行时代码：`9b2fc5285794ecd7baac3f9e7984c216370436d3`；唯一事实源：[`current-release-facts.json`](current-release-facts.json)。当前可核验结果：FastAPI **371 passed**、12 个子断言、v3 deterministic **478/478**（代表性 8/8）、Compose 配置通过。Batch 1 的三条合成 Runtime 场景为 **3/3**、11 次 DeepSeek 请求、0 副作用；Batch 2 和完整现场素材仍未执行，旧的 72/72、36/36、Grounding 与 122/122 报告均绑定旧 Runtime，现标为 stale。
+运行时代码：`9b2fc5285794ecd7baac3f9e7984c216370436d3`；唯一事实源：[`current-release-facts.json`](current-release-facts.json)。当前可核验结果：FastAPI **371 passed**、12 个子断言、v3 deterministic **478/478**（代表性 8/8）、Compose 配置通过。Batch 1 三条场景通过；Batch 2 展示阶段 **2/3 passed、1/3 failed**（9 次请求、8 成功、1 失败）后停止，主集/补充集/Grounding/最终素材未执行，旧的 72/72、36/36、Grounding 与 122/122 报告均绑定旧 Runtime，现标为 stale。
 
 当前简历只能写受限 Agent Runtime、Java 权威事实与写入边界、版本化 RAG/grounding 设计和可审计合同门；不能把旧报告数字当作当前提交结果，也不能把合同数字写成生产准确率。基于 `macrozheng/mall` 二次开发，上游商城基础能力不归为原创。
 

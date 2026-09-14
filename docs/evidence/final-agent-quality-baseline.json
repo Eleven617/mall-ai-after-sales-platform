@@ -1,6 +1,6 @@
 {
   "schemaVersion": "final-agent-quality-baseline.v3",
-  "generatedAt": "2026-09-13T10:02:42Z",
+  "generatedAt": "2026-09-14T04:05:30Z",
   "releaseStatus": "NOT_COMPLETE",
   "project": {
     "name": "Mall AI After-sales Platform",
@@ -10,8 +10,8 @@
   },
   "revision": {
     "branch": "main",
-    "testedCodeCommit": "1b89500eae4c8f1c6195f7fed064745b300a3fbb",
-    "evidenceCommit": "1b89500eae4c8f1c6195f7fed064745b300a3fbb",
+    "testedCodeCommit": "9b2fc5285794ecd7baac3f9e7984c216370436d3",
+    "evidenceCommit": "9b2fc5285794ecd7baac3f9e7984c216370436d3",
     "workspaceBeforeEvidence": "clean_except_ignored_tmp",
     "remote": "https://github.com/Eleven617/mall-ai-after-sales-platform.git"
   },
@@ -28,15 +28,15 @@
   "agentCapabilities": {
     "openTask": ["goal understanding", "bounded Skill selection", "multi-step read investigation", "Context projection", "proposal/resume", "safe stop"],
     "safety": ["Schema validation", "allow-list", "owner scope", "budget", "no unconfirmed business write"],
-    "syntheticLive": {"main": null, "supplemental": null, "independentBlindSet": false, "environmentBlocked": 1, "forbiddenSideEffects": 0, "duplicateFinalBusinessWrites": 0, "blocker": "DeepSeek Provider HTTP 402"}
+    "syntheticLive": {"batch1": "3/3 passed", "batch2Showcase": "2/3 passed, 1/3 failed", "main": null, "supplemental": null, "independentBlindSet": false, "environmentBlocked": 0, "forbiddenSideEffects": 0, "duplicateFinalBusinessWrites": 0, "blocker": "agent-open-001 clarification_mismatch; batch stopped"}
   },
   "techStack": ["Java", "Spring Boot", "FastAPI", "LangGraph", "Vue 3", "Redis", "MySQL", "MongoDB", "RabbitMQ", "RAG", "MCP", "AgentOps", "Eval"],
   "tests": {
-    "fastapi": {"command": "mall-ai-service/.venv/Scripts/python.exe -m pytest -q", "passed": 366, "failed": 0, "warnings": 1, "subtests": 7, "exitCode": 0},
+    "fastapi": {"command": "mall-ai-service/.venv/Scripts/python.exe -m pytest -q", "passed": 371, "failed": 0, "warnings": 1, "subtests": 12, "exitCode": 0},
     "v3Deterministic": {"manifestPassed": 478, "manifestRegistered": 478, "representativePassed": 8, "exitCode": 0, "mode": "contract_mock"},
     "java": {"portalCore": "12/12", "portalCompatibility": "2/2", "admin": "6/6", "springContext": "1/1", "exitCode": 0},
     "web": {"command": "npm run build", "status": "passed", "exitCode": 0},
-    "grounding": {"status": "stale_after_runtime_change", "evaluatedRuntimeCommit": "9c7c29045c28446b16a609768cd4b4c1202f8a51", "cases": 15, "passed": 15, "failed": 0, "environmentBlocked": 0, "checks": "57/57", "exitCode": 0},
+    "grounding": {"status": "not_executed_after_batch2_stop", "evaluatedRuntimeCommit": "9b2fc5285794ecd7baac3f9e7984c216370436d3", "cases": null, "passed": null, "failed": null, "environmentBlocked": null, "checks": null, "exitCode": null},
     "fieldAcceptance": {
       "status": "stale_after_runtime_change",
       "report": "tmp/field-acceptance-final-9c7c290/field-20260912T190322Z-6095525f/field-acceptance.json",
@@ -61,7 +61,7 @@
     "groundingReportSha256": "b5e92ebf6df3b2002c7347a4fd32a779a6fb4450f9560dc38cac6ce2de5a73d2"
   },
   "reliability": {
-    "currentStatus": "environment_blocked_for_showcase",
+    "currentStatus": "batch2_failed_showcase",
     "noForbiddenSideEffects": true,
     "noDuplicateFinalBusinessWrites": true,
     "fieldFaultAndRecovery": "Historical 36/36 fault and 32/32 durable recovery; stale after current Runtime patch",
@@ -71,8 +71,8 @@
     "unconfirmedWrite": "blocked by proposal and confirmation boundary",
     "crossAccount": "covered by synthetic field and runtime checks",
     "secretPolicy": "no .env, key, password, token, raw order or customer data committed",
-    "remoteScan": "passed on final evidence commit 78c5c3c",
-    "remoteActions": {"status": "passed", "verifiedCommit": "78c5c3c980606438175548891fde2666e9a8ddf8", "mallCi": "https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34716325261", "qualityEvaluation": "https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34716325231"}
+    "remoteScan": "pending for current evidence commit",
+    "remoteActions": {"status": "pending_remote_final_sha", "verifiedCommit": null, "mallCi": null, "qualityEvaluation": null}
   },
   "personalContribution": ["runtime contract design and hardening", "after-sales safety boundary", "Context projection and read-loop guards", "tests/evals/field evidence", "README and evidence maintenance"],
   "upstreamBoundary": "macrozheng/mall remains upstream; Mall domain/order/admin foundations are not claimed as original",

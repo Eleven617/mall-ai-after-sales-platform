@@ -1,10 +1,10 @@
 {
   "schemaVersion": "mall-public-release-facts.v3",
-  "generatedAt": "2026-09-14T03:30:11Z",
+  "generatedAt": "2026-09-14T04:05:30Z",
   "releaseStatus": "NOT_COMPLETE",
   "runtimeCommit": "9b2fc5285794ecd7baac3f9e7984c216370436d3",
   "evidenceCommit": "9b2fc5285794ecd7baac3f9e7984c216370436d3",
-  "statusReason": "Batch 1 已在冻结前运行并通过三条合成 Agent 场景；Batch 2（主集、补充集、Grounding、最终素材）尚未运行，因此当前 Release Gate 仍为 NOT_COMPLETE。",
+  "statusReason": "Batch 1 三条合成 Runtime 场景通过；Batch 2 已按冻结提交运行一次但在暂停/恢复场景的模型结构化澄清失败后停止，主集、补充集、Grounding 和最终素材未执行，因此 Release Gate 为 NOT_COMPLETE。",
   "project": {
     "name": "Mall AI After-sales Platform",
     "repository": "https://github.com/Eleven617/mall-ai-after-sales-platform",
@@ -21,6 +21,50 @@
     "gateway": "synthetic_read_only_gateway",
     "pricingConfigured": false,
     "cost": "unavailable"
+  },
+  "deepseekBatches": [
+    {
+      "batchNumber": 1,
+      "batchId": "showcase-3a0f9cac17dd",
+      "phase": "showcase",
+      "runtimeCommit": "4703eb21a315ffd299619069b3eb6047634054d3",
+      "status": "passed",
+      "requests": 11,
+      "successfulRequests": 11,
+      "failedRequests": 0,
+      "environmentBlocked": 0,
+      "totalTokens": 31729,
+      "toolCalls": 4,
+      "report": "tmp/deepseek-batch-1-showcase.json",
+      "reportSha256": "48fdf153d277f196d070620860512be0e979caf582f0bf38d37d10f7a08a111e"
+    },
+    {
+      "batchNumber": 2,
+      "batchId": "final-2bc17c6257ac",
+      "phase": "final",
+      "runtimeCommit": "9b2fc5285794ecd7baac3f9e7984c216370436d3",
+      "status": "failed",
+      "requests": 9,
+      "successfulRequests": 8,
+      "failedRequests": 1,
+      "environmentBlocked": 0,
+      "promptTokens": 17090,
+      "completionTokens": 7268,
+      "totalTokens": 24358,
+      "toolCalls": 3,
+      "report": "tmp/deepseek-batch-2-final.json",
+      "reportSha256": "9ad2be9ae3c12b8f79e8ef35c757f8aa5b1eb7f5108285e5a98b53c438e491bf",
+      "failureCase": "agent-open-001",
+      "failureCategory": "clarification_mismatch",
+      "failureContract": "model_contract_schema_invalid"
+    }
+  ],
+  "releaseLock": {
+    "file": "docs/evidence/deepseek-release-lock.json",
+    "releaseId": "v3.0-deepseek-flash-final",
+    "batchCount": 2,
+    "status": "NOT_COMPLETE",
+    "locked": true
   },
   "mainEvaluation": {
     "status": "stale_after_runtime_change",
@@ -131,49 +175,57 @@
     "showcaseEvidence": "docs/evidence/final-showcase-evidence.md"
   },
   "ci": {
-    "status": "passed",
-    "verifiedCommit": "889136e09aa05b314b9fc6e1aa8cbeb8de051b26",
-    "mallCi": "https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34751649882",
-    "qualityEvaluation": "https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34751649884",
-    "scope": "889136e 的两个远程门禁已真实 success；该提交只同步公开事实/捕获入口，当前公开展示仍因 DeepSeek HTTP 402 为 NOT_COMPLETE。"
+    "status": "pending_remote_final_sha",
+    "verifiedCommit": null,
+    "mallCi": null,
+    "qualityEvaluation": null,
+    "scope": "Batch 2 后的证据提交尚未推送；历史 Actions success 不替代当前 SHA。推送后只记录 GitHub 实际返回的两个门禁结果。"
   },
-  "currentVerification": {
+    "currentVerification": {
     "commit": "9b2fc5285794ecd7baac3f9e7984c216370436d3",
     "fastapi": {"passed": 371, "failed": 0, "warnings": 1, "subtests": 12, "exitCode": 0},
     "deterministic": {"manifest": "478/478", "representative": "8/8", "exitCode": 0},
     "composeConfig": {"status": "passed", "exitCode": 0},
     "deepseek": {
-      "status": "passed",
+      "status": "failed",
       "provider": "DeepSeekRuntimeProvider",
       "model": "deepseek-flash",
       "thinkingMode": "enabled",
       "reasoningEffort": "high",
-      "batchStatus": "passed",
-      "batchId": "showcase-3a0f9cac17dd",
-      "runtimeCommit": "4703eb21a315ffd299619069b3eb6047634054d3",
-      "calls": 11,
+      "batchStatus": "failed",
+      "batchId": "final-2bc17c6257ac",
+      "runtimeCommit": "9b2fc5285794ecd7baac3f9e7984c216370436d3",
+      "calls": 9,
+      "successfulCalls": 8,
+      "failedCalls": 1,
+      "promptTokens": 17090,
+      "completionTokens": 7268,
+      "totalTokens": 24358,
+      "toolCalls": 3,
       "sideEffects": 0,
-      "report": "tmp/deepseek-batch-1-showcase.json",
-      "reportSha256": "48fdf153d277f196d070620860512be0e979caf582f0bf38d37d10f7a08a111e",
-      "note": "Batch 1 是一次性三场景合成 Runtime 诊断；不等同于 Batch 2 的完整主集、Grounding 或浏览器 GIF。"
+      "report": "tmp/deepseek-batch-2-final.json",
+      "reportSha256": "9ad2be9ae3c12b8f79e8ef35c757f8aa5b1eb7f5108285e5a98b53c438e491bf",
+      "failureCase": "agent-open-001",
+      "failureCategory": "clarification_mismatch",
+      "note": "Batch 2 在三条展示场景阶段停止：开放主闭环和事实变化场景通过，暂停/恢复场景结构化澄清契约失败；未执行主集、补充集、Grounding。Batch 1 的报告保留在 deepseekBatches 中。"
     },
     "showcase": {
-      "status": "passed",
-      "captureCommand": ".\\scripts\\Capture-PublicShowcase.ps1 -DryRun",
-      "blocker": null,
+      "status": "failed",
+      "captureCommand": ".\\scripts\\Run-Final-DeepSeek-Release.ps1 -ReleaseId v3.0-deepseek-flash-final -RuntimeCommit 9b2fc5285794ecd7baac3f9e7984c216370436d3",
+      "blocker": "Batch 2 showcase case agent-open-001 clarification_mismatch; no rerun permitted",
       "scenarios": [
-        {"scenarioId": "showcase-main-closed-loop", "status": "passed", "caseId": "agent-open-020", "asset": null, "javaWriteObserved": false},
-        {"scenarioId": "showcase-pause-resume", "status": "passed", "caseId": "agent-open-001", "asset": null},
-        {"scenarioId": "showcase-fact-change-replan", "status": "passed", "caseId": "agent-open-021", "asset": null}
+        {"scenarioId": "showcase-main-closed-loop", "status": "passed", "caseId": "agent-open-020", "asset": null, "javaWriteObserved": false, "batchId": "final-2bc17c6257ac"},
+        {"scenarioId": "showcase-pause-resume", "status": "failed", "caseId": "agent-open-001", "asset": null, "batchId": "final-2bc17c6257ac", "failureCategory": "clarification_mismatch"},
+        {"scenarioId": "showcase-fact-change-replan", "status": "passed", "caseId": "agent-open-021", "asset": null, "batchId": "final-2bc17c6257ac"}
       ],
-      "boundary": "Batch 1 只证明三条合成 Runtime 场景各执行一次；最终 GIF 与 Batch 2 完整链路仍未验证。"
+      "boundary": "Batch 2 三条合成 Runtime 展示场景执行到暂停/恢复失败后停止；没有生成最终 GIF，也没有把合成只读网关结果当作 Java 写入。"
     }
   },
   "publicClaims": [
     "当前冻结提交的 FastAPI 确定性回归：371 passed、12 个子断言；v3 deterministic 478/478、代表性 Runtime 8/8。",
     "历史 Runtime 基线曾完成 DeepSeek 主评测 72/72、补充评测集 36/36、Grounding 15/15 和本地现场 122/122；这些报告在 Runtime 修复后标为 stale，不能作为当前提交结果。",
     "Java 是身份、归属、资格、状态、幂等、事务、Outbox 和最终写入权威。",
-    "Batch 1 使用 deepseek-flash + thinking-high 完成三条一次性合成 Runtime 场景；Batch 2 和最终公开素材仍未执行。"
+    "Batch 1 使用 deepseek-flash + thinking-high 完成三条一次性合成 Runtime 场景；Batch 2 已运行一次，在暂停/恢复结构化澄清失败后停止，主集、补充集、Grounding 和最终公开素材未完成。"
   ],
   "prohibitedClaims": [
     "生产 SLA、吞吐、用户量、在线率或部署完成",

@@ -2,9 +2,9 @@
 
 ## 当前权威快照｜最终公开收口（2026-09-12 UTC）
 
-运行时代码：`1b89500eae4c8f1c6195f7fed064745b300a3fbb`；Provider：`DeepSeekRuntimeProvider/deepseek-chat`。当前提交 FastAPI **366 passed**，v3 deterministic **478/478**、代表性 Runtime **8/8**。真实 DeepSeek 展示请求返回 HTTP 402（余额不足），本轮没有产生新的 live-model 结果；旧主集/补充集报告均标为 `stale_after_runtime_change`，不能当作当前提交结果。
+运行时代码冻结：`9b2fc5285794ecd7baac3f9e7984c216370436d3`；Provider：`DeepSeekRuntimeProvider/deepseek-flash`，thinking enabled、reasoning high。当前提交 FastAPI **371 passed**、12 个子断言，v3 deterministic **478/478**、代表性 Runtime **8/8**。Batch 1 通过；Batch 2 展示阶段 2/3 通过、1/3 失败（`agent-open-001` clarification mismatch）后停止。旧主集/补充集报告均标为 `stale_after_runtime_change`，不能当作当前提交结果。
 
-当前真实模型调用：1 次探测，`environment_blocked`，`provider_http`，HTTP 402；无工具调用、无业务写入、无公开素材生成。成本仍 unavailable。
+当前真实模型调用：两个允许批次均已使用；Batch 2 9 次请求（8 成功、1 失败）、3 次只读工具调用、0 业务副作用。Batch 2 后禁止继续调用；成本仍 unavailable。
 
 ## 历史审计记录（以下内容不代表当前 Commit）
 

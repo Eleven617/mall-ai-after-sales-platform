@@ -4,9 +4,9 @@
 
 当前发布状态：**NOT_COMPLETE**。
 
-运行时代码：`9b2fc5285794ecd7baac3f9e7984c216370436d3`。FastAPI **371 passed**、12 个子断言；deterministic **478/478、8/8**；Compose 配置检查通过。Batch 1 使用固定 `deepseek-flash + thinking-high` 完成三条一次性合成 Runtime 场景（3/3、11 次请求）；Batch 2、三条 GIF、完整 Grounding 与 Java 写入回查尚未执行。旧报告与当前 Runtime 不一致，统一标记 stale。
+运行时代码：`9b2fc5285794ecd7baac3f9e7984c216370436d3`。FastAPI **371 passed**、12 个子断言；deterministic **478/478、8/8**；Compose 配置检查通过。Batch 1 通过；Batch 2 使用固定 `deepseek-flash + thinking-high` 执行三条展示场景，结果 **2/3 passed、1/3 failed**（9 次请求、8 成功、1 失败）后停止。主集、补充集、三条 GIF、完整 Grounding 与 Java 写入回查未执行。旧报告与当前 Runtime 不一致，统一标记 stale。
 
-原始报告路径、退出码和 hash 见 [`current-release-facts.json`](../evidence/current-release-facts.json)。证据提交 `889136e` 的远程 `mall-ci` 与 `quality-evaluation` 均已 success；这不改变当前真实模型展示的 HTTP 402 阻断。
+原始报告路径、退出码和 hash 见 [`current-release-facts.json`](../evidence/current-release-facts.json)。历史 `889136e` 的远程门禁不能替代当前 SHA；当前 Batch 2 的失败是 `agent-open-001` clarification mismatch，不是 HTTP 402，且同一 releaseId 已锁定不再重跑。
 
 ## 历史审计记录（以下内容不代表当前 Commit）
 

@@ -2,15 +2,17 @@
 
 ## 当前状态：NOT_COMPLETE
 
-当前被测 Runtime：`1b89500eae4c8f1c6195f7fed064745b300a3fbb`。本轮真实浏览器录制在第一步模型决策处收到 DeepSeek Provider HTTP 402（余额不足），没有使用 contract_mock 或旧素材顶替，因此三条最终 GIF 均为 `environment_blocked`，不能称为完成。无密钥探测报告：`tmp/showcase-provider-probe-20260913.json`，SHA-256 `3ab0b9eee428c630e39036ae363433408e62177a3b1f6c163d10bb5585fdccd8`。
+当前被测运行时代码冻结：`9b2fc5285794ecd7baac3f9e7984c216370436d3`。Batch 1 三条合成 Runtime 场景通过；Batch 2（`final-2bc17c6257ac`）执行展示阶段后得到 2/3 通过、1/3 失败，失败案例为 `agent-open-001` 的结构化澄清契约（`clarification_mismatch`）。按批次规则没有重跑，主集、补充集、Grounding 和浏览器 GIF 未执行。脱敏 Batch 2 报告保留在 `tmp/deepseek-batch-2-final.json`，SHA-256 `9ad2be9ae3c12b8f79e8ef35c757f8aa5b1eb7f5108285e5a98b53c438e491bf`。
 
 | scenarioId | 当前状态 | 真实模型/写入/回查 | 当前阻断 |
 | --- | --- | --- | --- |
-| `showcase-main-closed-loop` | `environment_blocked` | 未观察到模型决策、用户确认后的 Java 写入或状态回查 | DeepSeek HTTP 402 |
-| `showcase-pause-resume` | `environment_blocked` | 未生成同一任务的完整等待→保留→恢复素材 | 依赖真实 Agent 决策 |
-| `showcase-fact-change-replan` | `environment_blocked` | 未生成事实版本变化后的重新核验/人工交接素材 | 依赖真实 Agent 决策 |
+| `showcase-main-closed-loop` | `passed`（合成 Runtime） | 观察到模型决策与只读 Skill 结果；未执行用户确认后的 Java 写入 | Batch 2 合成网关禁止业务写入 |
+| `showcase-pause-resume` | `failed` | 没有形成可展示的完整等待→保留→恢复素材 | `agent-open-001` clarification mismatch；禁止重跑 |
+| `showcase-fact-change-replan` | `passed`（合成 Runtime） | 观察到事实变化后的 Proposal 失效检查；未执行真实 Java 写回 | Batch 2 合成网关与未录制边界 |
 
-捕获入口：`scripts/Capture-PublicShowcase.ps1`。它只接受本地进程环境中的 Key，不输出 Key/密码/Token；失败即非零退出，不会把失败帧复制到公开目录。
+捕获入口：`scripts/Capture-PublicShowcase.ps1`。它支持不调用模型的 dry-run；本轮没有在 Batch 2 后再次启动模型或录制真实页面，不会把旧帧复制为当前证据。
+
+当前 releaseId `v3.0-deepseek-flash-final` 已锁定在 [`deepseek-release-lock.json`](deepseek-release-lock.json)。Batch 2 失败后不允许第三批次；后续修复必须开启新的正式版本并重新建立事实包。
 
 ## 历史审计记录（以下内容不代表当前 Commit）
 

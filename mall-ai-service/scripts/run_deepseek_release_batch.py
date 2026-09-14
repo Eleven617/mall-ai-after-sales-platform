@@ -40,6 +40,7 @@ from app.skills.catalog import SKILL_CATALOG_VERSION  # noqa: E402
 
 
 REPOSITORY_ROOT = SERVICE_ROOT.parent
+RELEASE_LOCK_PATH = REPOSITORY_ROOT / "docs" / "evidence" / "deepseek-release-lock.json"
 HOLDOUT_SUITE_PATH = SERVICE_ROOT / "evals" / "live_model_agent_holdout_cases.v1.json"
 GROUNDING_SUITE_PATH = SERVICE_ROOT / "evals" / "rag2_golden_cases.v1.json"
 SHOWCASE_CASES = {
@@ -240,6 +241,25 @@ def main() -> int:
     parser.add_argument("--runtime-commit", required=True)
     parser.add_argument("--report", type=Path, required=True)
     args = parser.parse_args()
+
+    # Once a release has consumed its two paid batches, the release id is
+    # permanently closed.  This guard is intentionally checked before any
+    # provider configuration or model call so a later accidental rerun cannot
+    # spend credits or create a third batch.
+    if RELEASE_LOCK_PATH.is_file():
+        try:
+            lock = json.loads(RELEASE_LOCK_PATH.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            lock = {}
+        if isinstance(lock, dict) and lock.get("releaseId") == args.release_id:
+            print(
+                json.dumps(
+                    {"status": "release_locked", "releaseId": args.release_id},
+                    ensure_ascii=False,
+                ),
+                file=sys.stderr,
+            )
+            return 4
 
     if settings.deepseek_model != "deepseek-flash":
         print("deepseek release batch refused: reviewed model is not deepseek-flash", file=sys.stderr)

@@ -1,8 +1,8 @@
 # Final Agent Failure Matrix
 
-## 当前结论（Runtime `1b89500e`）
+## 当前结论（代码冻结 Runtime `9b2fc528`）
 
-失败不会被删除或通过放宽断言掩盖。当前提交的 FastAPI 回归为 **366 passed / 0 failed**；v3 deterministic 为 **478/478**、代表性 Runtime **8/8**。公开展示尝试在真实 DeepSeek Provider 返回 HTTP 402（余额不足）后安全停止，未调用业务写入，三条最终素材仍为 `environment_blocked`。旧 live/field 报告与当前 Runtime 不一致，统一标记 stale。
+失败不会被删除或通过放宽断言掩盖。当前提交的 FastAPI 回归为 **371 passed / 0 failed**、12 个子断言；v3 deterministic 为 **478/478**、代表性 Runtime **8/8**。Batch 1 通过；Batch 2 在暂停/恢复案例 `agent-open-001` 出现 `clarification_mismatch` 后停止，主集/补充集/Grounding 和素材未执行。旧 live/field 报告与当前 Runtime 不一致，统一标记 stale；没有第三批次。
 
 ## 历史审计记录（以下内容不代表当前 Commit）
 
@@ -17,6 +17,7 @@
 | Build 14A 退货状态 | 旧合成订单被 Java `return_refund` 资格拒绝 | 真实资格边界，不是脚本应绕过的错误 | 保留退出码 1，改用当前统一售后资格正/负路径验证 | 负向边界通过，不能伪造正向 |
 | 旧现场 Runner | 122 条 `environment_blocked` | Docker Desktop IPC/Fixture 环境故障 | Docker 恢复后绑定新合成 Fixture 重跑 | superseded；当前 122/122 |
 | 未确认写入 | 所有 live/field 场景 | 交易动作必须 Proposal + 确认 + Java | 比较器检查 `forbiddenSideEffects=0`、重复写为 0 | 当前通过 |
+| Batch 2 `agent-open-001` | 结构化澄清合同失败；`taskSuccess=true` 但 `clarificationCorrect=false` | Provider 输出未满足当前澄清 Schema | 保留失败、停止批次；下一版本修复后重新建立版本证据 | 当前 NOT_COMPLETE |
 
 ## 当前硬结论
 

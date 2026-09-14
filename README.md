@@ -9,7 +9,7 @@
 
 ## 30 秒了解项目
 
-> 当前展示状态：`NOT_COMPLETE`。代码冻结提交已完成 DeepSeek `deepseek-flash + thinking=enabled + reasoning_effort=high` 的 Batch 1：三条合成 Runtime 场景各执行一次、11 次 Provider 请求、0 副作用。Batch 2（主集、补充集、Grounding、完整 Java 写入回查和最终 GIF）尚未执行，不能把 Batch 1 当作最终公开闭环。
+> 当前展示状态：`NOT_COMPLETE`。代码冻结提交已完成 DeepSeek `deepseek-flash + thinking=enabled + reasoning_effort=high` 的两个允许批次：Batch 1 三条场景通过；Batch 2 在暂停/恢复场景的结构化澄清契约失败后停止（9 次请求、8 成功、1 失败），主集/补充集/Grounding 和最终 GIF 未执行。没有重跑或用 mock 冒充。
 
 ### 为什么不是普通聊天机器人
 
@@ -50,7 +50,7 @@ MCP 只读工具、人工售后工作台和 LangGraph 确定性节点是能力�
 2. 等待输入 → 暂停保留 → 政策岔开 → 同一任务恢复；
 3. 事实版本变化 → 旧结果失效 → 重新核验 → 新方案或人工交接。
 
-Batch 1 已对三条合成 Runtime 场景各执行一次；这不是浏览器录制，也没有宣称 Java 真实写入。最终 GIF、完整主集/补充集和 Grounding 必须在 Batch 2 一次性完成后才可作为当前闭环证据。录制入口支持无模型 dry-run：[`scripts/Capture-PublicShowcase.ps1 -DryRun`](scripts/Capture-PublicShowcase.ps1)。
+Batch 1/2 的三条合成 Runtime 场景结果为 2/3 通过、1/3 失败；Batch 2 的失败案例是 `agent-open-001` 的 clarification mismatch，按规则停止，未执行主集、补充集、Grounding，也没有生成最终 GIF。这不是浏览器录制，也没有宣称 Java 真实写入。录制入口仍支持无模型 dry-run：[`scripts/Capture-PublicShowcase.ps1 -DryRun`](scripts/Capture-PublicShowcase.ps1)。
 
 ## 架构与代码入口
 
@@ -70,7 +70,7 @@ Batch 1 已对三条合成 Runtime 场景各执行一次；这不是浏览器录
 - 历史补充评测集（supplemental evaluation set）参与过开发期回归，不是独立盲测集；其旧 `36/36` 结果已因 Runtime 提交变化标为 stale；
 - RAG：Dense、Hybrid、Hybrid+Rerank 分别在 52 条版本化合成政策 Case 上评测；Dense 当前 MRR `0.948718`、nDCG@3 `0.962147`，作为默认方案；这些是检索指标，不是答案准确率；
 - deterministic 合同：`478/478`，代表性 Runtime `8/8`，不是 E2E；
-- Vue production build 通过；Batch 1 的 DeepSeek 场景为 `3/3`、`environment_blocked=0`，但不能把它扩大为主集 `72`、补充集 `36`、Grounding 或现场 `122` 的当前结果。
+- Vue production build 通过；两个允许批次的最终展示场景为 `2/3 passed, 1/3 failed`，`environment_blocked=0`；不能把历史主集 `72`、补充集 `36`、Grounding 或现场 `122` 当作当前结果。
 
 历史失败、根因和修复过程见 [evaluation-evolution](docs/evidence/evaluation-evolution.md) 与 [failure matrix](docs/evidence/final-agent-failure-matrix.md)。当前数字的唯一事实源是 [`current-release-facts.json`](docs/evidence/current-release-facts.json)，并由 [`validate_public_release.py`](scripts/validate_public_release.py) 在 CI 中校验。
 

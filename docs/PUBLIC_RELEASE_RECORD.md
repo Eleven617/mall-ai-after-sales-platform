@@ -8,14 +8,16 @@
 | --- | --- | --- |
 | FastAPI | **371 passed**，0 failed | 本机 `.venv`，exit 0，1 warning、12 subtests |
 | DeepSeek Batch 1 | **3/3 passed** | `deepseek-flash`、thinking enabled、reasoning high；11 次请求；合成 Runtime，只读网关 |
-| DeepSeek Batch 2 主/补充/Grounding | **not_executed** | 版本冻结后待执行；不得沿用旧报告 |
+| DeepSeek Batch 2 展示阶段 | **2/3 passed，1/3 failed** | `final-2bc17c6257ac`；暂停/恢复 `agent-open-001` 的结构化澄清失败后停止；主集/补充/Grounding 未执行 |
+| DeepSeek Batch 2 主/补充/Grounding | **not_executed** | 按失败规则停止；不重跑、不把旧报告并入当前结果 |
+| Release lock | **locked / NOT_COMPLETE** | `docs/evidence/deepseek-release-lock.json`；同一 releaseId 再运行会在 Provider 前拒绝 |
 | 补充评测集 | **未重跑 / stale** | 旧报告绑定旧 Runtime，不并入当前结果 |
 | Grounding | **stale** | 旧报告绑定旧 Runtime |
 | Java | portal core **12/12**、compatibility **2/2**、admin **6/6**、Spring **1/1** | 显式 `-DskipTests=false`；Spring 使用临时本地配置 |
 | Vue | **production build passed** | `npm run build` |
 | deterministic | **478/478；代表性 8/8** | contract_mock，不是 E2E |
 | 本地现场 | **stale / 未作为当前通过** | 旧报告绑定旧 Runtime；本轮没有伪造现场数字 |
-| 远程 CI | **pending_remote_final_sha** | 冻结提交尚未推送；历史 `889136e` success 不冒充当前 SHA |
+| 远程 CI | **pending_remote_final_sha** | Batch 2 结束后尚未推送；历史 `889136e` success 不冒充当前 SHA |
 
 事实源：[`current-release-facts.json`](evidence/current-release-facts.json)。公开演示素材和阻断记录：[`final-showcase-evidence.md`](evidence/final-showcase-evidence.md)。成本、生产 SLA、真实用户泛化和外部履约均 unavailable/未接入。
 

@@ -2,11 +2,13 @@
 
 ## 当前权威结论｜最终公开收口
 
-运行时代码 `9b2fc5285794ecd7baac3f9e7984c216370436d3`，分支 `main`。当前 Release Gate：**NOT_COMPLETE**。本冻结提交 FastAPI 回归为 371 passed、12 个子断言，v3 manifest/preflight 为 478/478、8/8；Batch 1 已以 `deepseek-flash + thinking-high` 完成三条一次性合成 Runtime 场景（3/3、11 次请求、0 副作用）。Batch 2、完整 Grounding、Java 写入回查和最终 GIF 尚未运行，旧 Runtime 的 72/72、36/36、122/122 报告仍为 stale。
+运行时代码 `9b2fc5285794ecd7baac3f9e7984c216370436d3`，分支 `main`。当前 Release Gate：**NOT_COMPLETE**。本冻结提交 FastAPI 回归为 371 passed、12 个子断言，v3 manifest/preflight 为 478/478、8/8；Batch 1 三条场景通过，Batch 2 展示阶段为 2/3 通过、1/3 失败（暂停/恢复结构化澄清契约），因此按规则停止。主集、补充集、Grounding、Java 写入回查和最终 GIF 未运行，旧 Runtime 的 72/72、36/36、122/122 报告仍为 stale。
 
-最新远程 CI 仍以历史 `889136e` 两条 success 为参考；冻结提交尚未推送验证。Batch 1 脱敏报告位于 `tmp/deepseek-batch-1-showcase.json`（SHA-256 `48fdf153d277f196d070620860512be0e979caf582f0bf38d37d10f7a08a111e`，本地忽略，不提交原始报告）。唯一事实源：[`current-release-facts.json`](current-release-facts.json)；展示证据：[`final-showcase-evidence.md`](final-showcase-evidence.md)。
+最新远程 CI 仍以历史 `889136e` 两条 success 为参考；最终批次报告位于 `tmp/deepseek-batch-2-final.json`（SHA-256 `9ad2be9ae3c12b8f79e8ef35c757f8aa5b1eb7f5108285e5a98b53c438e491bf`，本地忽略，不提交原始报告）。Batch 1 报告 SHA-256 `48fdf153d277f196d070620860512be0e979caf582f0bf38d37d10f7a08a111e`。唯一事实源：[`current-release-facts.json`](current-release-facts.json)；展示证据：[`final-showcase-evidence.md`](final-showcase-evidence.md)。
 
-公开提交 `e0c8b36` 的首次 `mall-ci` 只在 OSV 步骤失败：扫描容器对 Java 本地 `1.0-SNAPSHOT` reactor 做传递解析时无法从远程仓库找到内部模块，退出码 127；gitleaks、Python、Java、Web、Compose 和 public-release 均通过。修复为 OSV `--no-resolve` 后仍扫描所有显式 Python/npm lockfile 与 `mall2` POM 的直接依赖，未关闭扫描、未使用 `continue-on-error`，待新提交远程复核。
+当前 releaseId `v3.0-deepseek-flash-final` 已写入 [`deepseek-release-lock.json`](deepseek-release-lock.json)。同一 releaseId 的再次运行在读取 Provider 配置前拒绝（本地锁测试退出码 `4`）；本版本不允许第三批次。
+
+历史 `e0c8b36` 的首次 `mall-ci` 曾因 OSV 容器无法解析 Java 本地 `1.0-SNAPSHOT` reactor 而失败（退出码 127）；后续工作流已改为 `--no-resolve` 并继续扫描显式 Python/npm lockfile 与 `mall2` POM 直接依赖。该过程属于历史 CI 审计，不代表当前 SHA 已远程通过；当前推送后必须以 GitHub 返回的最新结果为准。
 
 ## 历史审计记录（以下内容不代表当前 Commit）
 

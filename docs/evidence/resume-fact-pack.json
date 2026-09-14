@@ -1,6 +1,6 @@
 {
   "schemaVersion": "resume-fact-pack.v3",
-  "generatedAt": "2026-09-13T10:02:42Z",
+  "generatedAt": "2026-09-14T04:05:30Z",
   "releaseStatus": "NOT_COMPLETE",
   "project": {
     "name": "Mall AI After-sales Platform",
@@ -10,11 +10,11 @@
     "upstream": "macrozheng/mall 二次开发，Apache-2.0 归属见 UPSTREAM.md 和 NOTICE"
   },
   "revision": {
-    "testedCodeCommit": "1b89500eae4c8f1c6195f7fed064745b300a3fbb",
+    "testedCodeCommit": "9b2fc5285794ecd7baac3f9e7984c216370436d3",
     "branch": "main",
     "remote": "https://github.com/Eleven617/mall-ai-after-sales-platform.git",
     "workspaceAtEvidenceStart": "clean_except_ignored_tmp",
-    "remoteCi": {"status": "pending_remote_final_sha", "commit": "1b89500eae4c8f1c6195f7fed064745b300a3fbb", "note": "当前 Runtime 提交尚待远程门禁完成；历史 success 不替代当前 SHA"}
+    "remoteCi": {"status": "pending_remote_final_sha", "commit": "9b2fc5285794ecd7baac3f9e7984c216370436d3", "note": "Batch 2 后待推送当前证据提交并核对远程门禁；历史 success 不替代当前 SHA"}
   },
   "architecture": {
     "frontend": "mall-ai-web Vue 3/TypeScript public DTOs",
@@ -29,38 +29,46 @@
   },
   "agentCapabilities": {
     "openTask": ["goal understanding", "bounded Skill selection", "read-only multi-step investigation", "Context projection", "proposal/resume", "safe stop"],
-    "liveSynthetic": {"mainRuns": null, "supplementalRuns": null, "supplementalIndependentBlindSet": false, "environmentBlocked": 1, "forbiddenSideEffects": 0, "duplicateFinalBusinessWrites": 0, "blocker": "DeepSeek Provider HTTP 402"},
+    "liveSynthetic": {"batch1": "3/3 passed", "batch2Showcase": "2/3 passed, 1/3 failed", "mainRuns": null, "supplementalRuns": null, "supplementalIndependentBlindSet": false, "environmentBlocked": 0, "forbiddenSideEffects": 0, "duplicateFinalBusinessWrites": 0, "blocker": "Batch 2 agent-open-001 clarification_mismatch; no rerun"},
     "fieldAcceptance": {"status": "stale_after_runtime_change", "browser": null, "javaMysql": null, "fault": null, "durableRecovery": null, "total": null, "environmentBlocked": null}
   },
   "techStack": ["Java", "Spring Boot", "FastAPI", "LangGraph", "Vue 3", "Redis", "MySQL", "MongoDB", "RabbitMQ", "RAG", "MCP", "AgentOps", "Eval"],
   "tests": {
-    "fastapi": {"passed": 366, "failed": 0, "warnings": 1, "subtests": 7, "exitCode": 0},
+    "fastapi": {"passed": 371, "failed": 0, "warnings": 1, "subtests": 12, "exitCode": 0},
     "v3": {"deterministic": "478/478", "representative": "8/8", "exitCode": 0},
     "java": {"portalCore": "12/12", "portalCompatibility": "2/2", "admin": "6/6", "springContext": "1/1", "exitCode": 0},
     "web": "npm run build passed",
-    "grounding": {"status": "stale_after_runtime_change", "cases": "15/15", "checks": "57/57", "environmentBlocked": null},
+    "grounding": {"status": "not_executed_after_batch2_stop", "cases": null, "checks": null, "environmentBlocked": null},
     "field": {"status": "stale_after_runtime_change", "total": null, "environmentBlocked": null, "reportSha256": "6fcae42f1befeadd439957fe2bbecb114a77f787f29a8ec97fc29fdc6b016ff8", "fixtureSha256": "4dd3d407001aec74e4c9546639c78eb2544b34a0ac4f2b6698eba345c27e3fc3"}
   },
   "metrics": {
+    "batch1ReportSha256": "48fdf153d277f196d070620860512be0e979caf582f0bf38d37d10f7a08a111e",
+    "batch2ReportSha256": "9ad2be9ae3c12b8f79e8ef35c757f8aa5b1eb7f5108285e5a98b53c438e491bf",
+    "batch2Requests": 9,
+    "batch2SuccessfulRequests": 8,
+    "batch2FailedRequests": 1,
+    "batch2TotalTokens": 24358,
+    "batch2ToolCalls": 3,
     "mainLiveReportSha256": "40cb0e25d09c13171f581ddd69050a4d4a06fccc7427c3c205df65919f49f400",
     "mainRuntimeLatencyMs": {"p50": 7437, "p95": 13890, "max": 26188},
-    "mainTotalTokens": 562552,
+    "mainTotalTokens": null,
     "supplementalReportSha256": "dd155133a5273ac29175e44ed0d4fe2f42d92296a9856f3cd382b436ac471604",
     "supplementalRuntimeLatencyMs": {"p50": 7313, "p95": 11281, "max": 12500},
-    "supplementalTotalTokens": 285174,
+    "supplementalTotalTokens": null,
     "pricingConfigured": false,
     "cost": "unavailable"
   },
   "showcase": {
-    "status": "environment_blocked",
-    "provider": "DeepSeekRuntimeProvider/deepseek-chat",
-    "httpStatus": 402,
+    "status": "failed",
+    "provider": "DeepSeekRuntimeProvider/deepseek-flash",
+    "batchId": "final-2bc17c6257ac",
+    "reportSha256": "9ad2be9ae3c12b8f79e8ef35c757f8aa5b1eb7f5108285e5a98b53c438e491bf",
     "scenarios": [
-      {"scenarioId": "showcase-main-closed-loop", "status": "environment_blocked", "asset": null},
-      {"scenarioId": "showcase-pause-resume", "status": "environment_blocked", "asset": null},
-      {"scenarioId": "showcase-fact-change-replan", "status": "environment_blocked", "asset": null}
+      {"scenarioId": "showcase-main-closed-loop", "status": "passed", "asset": null},
+      {"scenarioId": "showcase-pause-resume", "status": "failed", "asset": null, "failureCategory": "clarification_mismatch"},
+      {"scenarioId": "showcase-fact-change-replan", "status": "passed", "asset": null}
     ],
-    "boundary": "不使用 mock 代替真实模型；旧素材不作为当前闭环证据。"
+    "boundary": "Batch 2 在展示阶段失败后停止；没有生成当前 GIF，旧素材不作为当前闭环证据。"
   },
   "reliability": {
     "fieldFaultAndRecovery": "passed on local isolated Compose",
@@ -85,7 +93,7 @@
     {"claim": "建立 FastAPI、Java、Vue、manifest 和质量评测门禁", "evidence": ".github/workflows/ci.yml; .github/workflows/quality-evaluation.yml; scripts/validate_public_release.py", "commit": "9c7c29045c28446b16a609768cd4b4c1202f8a51", "reportHash": "2f9d60f3903b3046236a71e1557d89fac87e916d9586d787a193c6deb4c71d2e", "boundary": "远程 CI 需按最终 SHA 确认", "confidence": "medium", "followUp": "区分合同、现场、CI", "doNotExpand": "不是生产质量保证"}
   ],
   "resumeReadyClaims": [
-    {"claim": "实现受限开放任务 Agent Runtime，使用 Skill 白名单、只读事实调查、Context/Proposal 安全边界", "evidence": "docs/architecture.md; mall-ai-service/app/runtime/task_store.py", "commit": "1b89500eae4c8f1c6195f7fed064745b300a3fbb", "reportHash": null, "boundary": "当前代码与确定性合同；真实模型展示因 Provider 402 阻断", "confidence": "medium", "followUp": "说明 opaque 引用绑定与安全停止", "doNotExpand": "不说当前提交已有 live-model 闭环"}
+    {"claim": "实现受限开放任务 Agent Runtime，使用 Skill 白名单、只读事实调查、Context/Proposal 安全边界", "evidence": "docs/architecture.md; mall-ai-service/app/runtime/task_store.py", "commit": "9b2fc5285794ecd7baac3f9e7984c216370436d3", "reportHash": "9ad2be9ae3c12b8f79e8ef35c757f8aa5b1eb7f5108285e5a98b53c438e491bf", "boundary": "Batch 2 合成展示 2/3 通过、1/3 失败；主集和现场素材未完成", "confidence": "medium", "followUp": "说明 opaque 引用绑定与安全停止，以及 clarification_mismatch", "doNotExpand": "不说当前提交已有完整 live-model 闭环"}
   ],
   "interviewOnlyClaims": ["历史失败归因与通用 Runtime 修复", "Prompt v3_3 与订单事实 repair", "现场 Runner 的隔离故障与恢复设计"],
   "notReadyClaims": ["生产 SLA/QPS", "真实用户泛化准确率", "真实支付/仓储/物流/维修", "模型成本优化", "将上游 Mall 基础能力写成原创"],

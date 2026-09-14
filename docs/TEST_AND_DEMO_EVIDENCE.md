@@ -2,18 +2,18 @@
 
 ## 当前权威快照｜最终公开收口
 
-运行时代码：`1b89500eae4c8f1c6195f7fed064745b300a3fbb`；分支：`main`。当前公开展示 Release Gate：**NOT_COMPLETE**。下方旧日期内容是历史审计，提交号或报告 hash 不一致时标记 stale，不与当前结果相加。
+运行时代码冻结：`9b2fc5285794ecd7baac3f9e7984c216370436d3`；分支：`main`。当前公开展示 Release Gate：**NOT_COMPLETE**。两个允许的 DeepSeek 批次已结束：Batch 2 展示阶段 2/3 通过、1/3 失败后停止；下方旧日期内容是历史审计，提交号或报告 hash 不一致时标记 stale，不与当前结果相加。
 
 | 范围 | passed | failed | environment_blocked | 模式 |
 | --- | ---: | ---: | ---: | --- |
-| FastAPI | **366** | 0 | 0 | 本机 Python，exit 0 |
-| DeepSeek main | — | — | **1 blocked probe** | Provider HTTP 402，未产生当前提交 live 结果 |
-| supplemental | — | — | **environment_blocked** | 依赖真实模型，未重跑旧套件 |
-| Grounding | — | — | **stale** | 旧报告绑定旧 Runtime |
-| Java | **12/12 + 2/2 + 6/6 + 1/1** | 0 | 0 | portal core/compat/admin/Spring |
+| FastAPI | **371** | 0 | 0 | 本机 Python，exit 0，12 个子断言 |
+| DeepSeek Batch 2 showcase | **2/3** | **1/3** | 0 | `final-2bc17c6257ac`；暂停/恢复结构化澄清失败后停止 |
+| main / supplemental | — | — | **not_executed** | Batch 2 在展示阶段失败，不能沿用旧报告 |
+| Grounding | — | — | **not_executed** | Batch 2 在展示阶段失败，不能沿用旧报告 |
+| Java | **12/12 + 2/2 + 6/6 + 1/1** | 0 | 0 | portal core/compat/admin/Spring；Spring 使用临时 Compose MySQL 配置 |
 | deterministic | **478/478；8/8** | 0 | 0 | contract_mock，无模型/无写入 |
 | Vue | **passed** | 0 | 0 | production build |
-| 本地现场 | — | — | **stale** | 旧报告绑定旧 Runtime；本轮未冒充当前通过 |
+| 本地现场 | — | — | **stale / not_executed** | 旧报告绑定旧 Runtime；本轮未冒充当前通过 |
 
 当前运行、阻断原因和历史报告边界见 [`current-release-facts.json`](evidence/current-release-facts.json)。报告存于本机忽略目录，不提交原始客户数据、Key、Token 或原始 Trace。
 
