@@ -57,6 +57,7 @@ def test_executor_prompt_handles_unspecified_after_sales_draft_without_guessing_
     assert "不要猜测四种申请类型" in EXECUTOR_SYSTEM_PROMPT
     assert "仅引用 orderFactRef" in EXECUTOR_SYSTEM_PROMPT
     assert "不得直接选择 commit_after_sales_action" in EXECUTOR_SYSTEM_PROMPT
+    assert "requiredInputKeys" in EXECUTOR_SYSTEM_PROMPT
 
 
 def _observation(
@@ -92,8 +93,20 @@ class RecordingGateway:
         return self.observations[skill_id]
 
 
-def _runtime(provider, gateway) -> TaskRuntime:
-    return TaskRuntime(store=InMemoryTaskStore(), provider=provider, gateway=gateway)
+def _runtime(provider, gateway, *, reference_hints=None) -> TaskRuntime:
+    # Existing scripted cases represent a server-provided candidate.  Tests
+    # that specifically exercise the missing-input preflight pass an empty
+    # mapping explicitly.
+    return TaskRuntime(
+        store=InMemoryTaskStore(),
+        provider=provider,
+        gateway=gateway,
+        reference_hints=(
+            {"orderRef": "ref-order-alpha", "skuRef": "ref-sku-alpha"}
+            if reference_hints is None
+            else reference_hints
+        ),
+    )
 
 
 def _decision(*, name: str, summary: str, calls=None, action_skill=None, action_arguments=None, question=None):
@@ -184,6 +197,69 @@ def test_explicit_identifier_message_becomes_turn_local_reference_hints() -> Non
         "orderRef": "ref-order-alpha",
         "skuRef": "ref-sku-alpha",
     }
+
+
+def test_missing_declared_order_input_waits_before_model_and_preserves_task() -> None:
+    class ExplodingProvider:
+        def decide(self, _context):
+            raise AssertionError("the model must not be called for missing declared input")
+
+        def curate(self, _context):
+            raise AssertionError("curator must not run")
+
+        def critique(self, _context):
+            raise AssertionError("critic must not run")
+
+    gateway = RecordingGateway({})
+    runtime = _runtime(ExplodingProvider(), gateway, reference_hints={})
+    result = runtime.create_task(
+        session_id=SESSION_ID,
+        goal="请核验一笔合成订单的物流，但现在没有订单标识。",
+        member_id=MEMBER_ID,
+        authorization=AUTHORIZATION,
+    )
+
+    assert result.view.status == "waiting_for_user"
+    assert result.view.open_question
+    assert result.view.execution_summary.startswith("模型调用 0 次")
+    assert gateway.invocations == []
+    assert gateway.commits == []
+    persisted = runtime._store._items[result.view.task_ref]  # noqa: SLF001 - persistence boundary check
+    assert persisted.task.task_id.startswith("task-")
+    assert persisted.task.status == "waiting_for_user"
+    assert persisted.task.plan_version == 1
+
+
+def test_missing_declared_order_input_resumes_same_task_after_reference() -> None:
+    provider = ScriptedRuntimeProvider(
+        decisions=[
+            _decision(
+                name="call_skill",
+                summary="读取当前账号可核验的订单事实。",
+                calls=[SkillCall(skill_id="read_order", arguments={"orderRef": "123456789012"})],
+            ),
+            _decision(name="finish", summary="已使用当前账号可核验的订单事实完成查询。"),
+        ]
+    )
+    gateway = RecordingGateway({"read_order": _observation()})
+    runtime = _runtime(provider, gateway, reference_hints={})
+    first = runtime.create_task(
+        session_id=SESSION_ID,
+        goal="请核验一笔合成订单的物流，但现在没有订单标识。",
+        member_id=MEMBER_ID,
+        authorization=AUTHORIZATION,
+    )
+    resumed = runtime.continue_task(
+        task_ref=first.view.task_ref,
+        message="订单号是 123456789012。",
+        member_id=MEMBER_ID,
+        authorization=AUTHORIZATION,
+    )
+
+    assert first.view.status == "waiting_for_user"
+    assert resumed.view.task_ref == first.view.task_ref
+    assert resumed.view.status == "completed"
+    assert provider.decision_calls == 2
 
 
 def test_provider_binds_echoed_turn_order_ref_to_unique_verified_artifact() -> None:
@@ -343,6 +419,33 @@ def test_logistics_only_read_is_rejected_when_order_reader_is_available() -> Non
 
     assert result.view.status == "blocked"
     assert "required_order_fact_before_logistics" in result.view.limitation_codes
+    assert gateway.invocations == []
+
+
+def test_model_cannot_invent_an_order_reference() -> None:
+    provider = ScriptedRuntimeProvider(
+        decisions=[
+            _decision(
+                name="call_skill",
+                summary="尝试读取一个模型自行构造的订单引用。",
+                calls=[SkillCall(skill_id="read_order", arguments={"orderRef": "ref-order-fake"})],
+            )
+        ]
+    )
+    gateway = RecordingGateway({"read_order": _observation()})
+    result = _runtime(
+        provider,
+        gateway,
+        reference_hints={"orderRef": "ref-order-alpha"},
+    ).create_task(
+        session_id=SESSION_ID,
+        goal="查询当前订单状态",
+        member_id=MEMBER_ID,
+        authorization=AUTHORIZATION,
+    )
+
+    assert result.view.status == "blocked"
+    assert "unapproved_reference" in result.view.limitation_codes
     assert gateway.invocations == []
 
 
@@ -853,6 +956,7 @@ def test_task_memory_survives_a_fresh_runtime_when_task_store_persists() -> None
             decisions=[_decision(name="finish", summary="已完成合成订单异常核验。")]
         ),
         gateway=RecordingGateway({}),
+        reference_hints={"orderRef": "ref-order-alpha"},
     )
     first.create_task(
         session_id=SESSION_ID,
@@ -875,6 +979,7 @@ def test_task_memory_survives_a_fresh_runtime_when_task_store_persists() -> None
             ]
         ),
         gateway=gateway,
+        reference_hints={"orderRef": "ref-order-alpha"},
     )
     result = restarted.create_task(
         session_id=SESSION_ID,

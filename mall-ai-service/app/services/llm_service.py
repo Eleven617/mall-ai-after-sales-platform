@@ -7,6 +7,7 @@ context in ``llm_observability``; prompts and model output are never recorded.
 import json
 import logging
 import time
+import hashlib
 from collections.abc import Callable
 from dataclasses import dataclass
 from typing import TypeVar
@@ -47,10 +48,12 @@ class LLMServiceError(RuntimeError):
         *,
         category: str = "unknown",
         attempts: int | None = None,
+        request_id_hash: str | None = None,
     ) -> None:
         super().__init__(message)
         self.category = category
         self.attempts = attempts
+        self.request_id_hash = request_id_hash
 
 
 @dataclass
@@ -174,7 +177,20 @@ def _request_json(
                 "Provider response JSON must be an object",
                 category="invalid_response",
             )
-        result = parser(data)
+        try:
+            result = parser(data)
+        except LLMServiceError as exc:
+            # Provider request identifiers are useful for support without
+            # exposing a raw response header or model payload.
+            request_id_hash = exc.request_id_hash or _response_request_id_hash(response)
+            if request_id_hash and not exc.request_id_hash:
+                raise LLMServiceError(
+                    str(exc),
+                    category=exc.category,
+                    attempts=exc.attempts,
+                    request_id_hash=request_id_hash,
+                ) from exc
+            raise
         usage = data.get("usage")
         usage_mapping = usage if isinstance(usage, dict) else {}
         record_llm_metric(
@@ -244,6 +260,7 @@ def _post_with_retry(
     retry_status_codes = {429, 500, 502, 503, 504}
     last_error: Exception | None = None
     error_category = "unknown"
+    last_request_id_hash: str | None = None
     policy = current_llm_call_policy()
     max_attempts = policy.max_attempts or 3
     timeout_seconds = settings.deepseek_timeout_seconds
@@ -258,6 +275,7 @@ def _post_with_retry(
                 json=payload,
                 timeout=timeout_seconds,
             )
+            last_request_id_hash = _response_request_id_hash(response)
             if response.status_code not in retry_status_codes:
                 response.raise_for_status()
                 return response, attempt
@@ -291,6 +309,7 @@ def _post_with_retry(
         "LLM provider request failed",
         category=error_category,
         attempts=attempt,
+        request_id_hash=last_request_id_hash,
     ) from last_error
 
 
@@ -407,6 +426,19 @@ def _usage_int(usage: dict, key: str) -> int | None:
 
 def _elapsed_ms(started_at: float) -> int:
     return max(0, round((time.monotonic() - started_at) * 1000))
+
+
+def _response_request_id_hash(response: object) -> str | None:
+    """Hash a provider request id for diagnostics, never return the raw id."""
+
+    headers = getattr(response, "headers", None)
+    if not headers:
+        return None
+    for key in ("x-request-id", "request-id", "x-deepseek-request-id"):
+        value = headers.get(key)
+        if isinstance(value, str) and value.strip():
+            return hashlib.sha256(value.strip().encode("utf-8")).hexdigest()[:24]
+    return None
 
 
 def _strip_markdown_json(text: str) -> str:

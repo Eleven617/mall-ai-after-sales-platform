@@ -254,7 +254,16 @@ def _runtime_case(
     gateway = SyntheticSkillGateway(observations={
         "read_order": SkillObservation(status="succeeded", artifact_kind="order_fact", summary="合成订单事实已核验。", reference="fact-abcdefgh", source_version="v1", factuality="verified"),
     })
-    runtime = TaskRuntime(store=InMemoryTaskStore(), provider=provider, gateway=gateway)
+    # Representative contract branches that exercise invalid decisions are
+    # given an explicit server-provided candidate.  Missing-input behavior is
+    # covered separately by the task-runtime preflight cases; this keeps these
+    # rows focused on the intended validator branch.
+    runtime = TaskRuntime(
+        store=InMemoryTaskStore(),
+        provider=provider,
+        gateway=gateway,
+        reference_hints={"orderRef": "synthetic-ref", "skuRef": "synthetic-sku"},
+    )
     try:
         outcome = runtime.create_task(
             session_id=f"release-{case_id}",

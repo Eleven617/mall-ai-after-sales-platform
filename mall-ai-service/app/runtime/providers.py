@@ -28,10 +28,18 @@ from app.services.structured_output_gateway import (
 
 
 class RuntimeModelError(RuntimeError):
-    def __init__(self, message: str, *, role: str, category: str = "unavailable") -> None:
+    def __init__(
+        self,
+        message: str,
+        *,
+        role: str,
+        category: str = "unavailable",
+        diagnostics: dict[str, Any] | None = None,
+    ) -> None:
         super().__init__(message)
         self.role = role
         self.category = category
+        self.diagnostics = dict(diagnostics or {})
 
 
 RUNTIME_PROMPT_VERSION = "agent_runtime_v3_3"
@@ -113,6 +121,8 @@ EXECUTOR_SYSTEM_PROMPT = """
 服务端已经在每轮模型调用前完成一次有界能力发现，并在上下文中提供 discovery_complete。
 当 discovery_complete=true 时不要再次返回 discover_skills；直接在白名单内选择下一步。
 重复发现能力不会产生新事实，也不能替代读取事实。
+上下文中的 available_skills.requiredInputKeys 是 Skill 的输入契约；如果服务端没有在本轮调用前
+生成 waiting_for_user，模型仍不得为缺失参数猜值或传空值。
 
 先理解目标和当前已核验 Artifact，再作一个最小、直接的下一步：
 - 目标需要商城事实而当前没有对应 Artifact 时，调用一个最直接相关的只读 Skill；不要先 finish，也不要并发调用无关 Skill。
@@ -291,10 +301,19 @@ class DeepSeekRuntimeProvider:
             if not category and isinstance(exc, StructuredOutputError) and exc.validation_codes:
                 category = "contract_" + "_".join(exc.validation_codes[:2])
             category = category or "invalid_response"
+            diagnostics = (
+                dict(getattr(exc, "diagnostics", {}) or {})
+                if isinstance(exc, StructuredOutputError)
+                else {
+                    "failure_stage": "http" if isinstance(exc, LLMServiceError) else "schema_validate",
+                    "correction_attempted": False,
+                }
+            )
             raise RuntimeModelError(
                 "任务模型暂时不可用，当前任务已安全暂停。",
                 role=role,
                 category=category,
+                diagnostics=diagnostics,
             ) from exc
 
 

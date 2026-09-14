@@ -64,7 +64,7 @@ from app.runtime.task_store import (
     owner_ref_for_member,
     session_ref_for_session,
 )
-from app.skills.catalog import SkillDefinition, discover_skills, get_skill
+from app.skills.catalog import SkillDefinition, discovery_score, discover_skills, get_skill
 from app.skills.commerce_gateway import (
     SafeCommerceSkillGateway,
     SkillGateway,
@@ -336,6 +336,29 @@ class TaskRuntime:
                 break
             plan = bundle.latest_plan()
             discovered = self._discover_for_turn(task, transient_input, bundle)
+            missing_question = self._preflight_required_input_question(
+                task,
+                discovered,
+                bundle,
+                transient_input=transient_input,
+                reference_hints=turn_reference_hints,
+            )
+            if missing_question is not None:
+                # This is a deterministic input-contract guard, not an intent
+                # classifier.  It prevents an avoidable model call and keeps
+                # the same task/plan/context available for the next message.
+                task.status = "waiting_for_user"
+                task.waiting_question = missing_question
+                self._append_event(bundle, "waiting_for_user", missing_question)
+                self._save(bundle)
+                record_trace(
+                    "task_runtime",
+                    "waiting_for_required_input",
+                    task.task_ref,
+                    result_kind="pending",
+                    contract_violation="required_input_missing",
+                )
+                break
             context = build_model_context(
                 task,
                 plan,
@@ -366,7 +389,15 @@ class TaskRuntime:
             except RuntimeModelError as exc:
                 task.model_calls += 1
                 self._block(bundle, f"model_{exc.category}", "任务模型暂时不可用，任务已安全暂停；未调用业务 Skill。")
-                record_trace("task_runtime", "model_unavailable", task.task_ref, role=exc.role, result_kind="blocked", error_category=exc.category)
+                record_trace(
+                    "task_runtime",
+                    "model_unavailable",
+                    task.task_ref,
+                    role=exc.role,
+                    result_kind="blocked",
+                    error_category=exc.category,
+                    **exc.diagnostics,
+                )
                 break
             except (ValidationError, TypeError, ValueError) as exc:
                 task.invalid_decisions += 1
@@ -486,6 +517,62 @@ class TaskRuntime:
             profile_version="v3_0",
         )
         return TaskRuntimeResult(self._public_view(bundle), list(bundle.events))
+
+    def _preflight_required_input_question(
+        self,
+        task: AgentTask,
+        discovered: list[SkillDefinition],
+        bundle: TaskRecordBundle,
+        *,
+        transient_input: str,
+        reference_hints: Mapping[str, str],
+    ) -> str | None:
+        """Check declared Skill inputs before invoking the model.
+
+        Capability discovery remains metadata-driven.  Only Skills that match
+        the current goal/turn through their catalog metadata participate; the
+        method never maps a keyword to a business action.  A required input is
+        considered satisfied by a server-provided turn hint or a still-valid
+        verified artifact from the Skill/prerequisite declared by the catalog.
+        """
+
+        # Relevance comes from the persisted, safe task goal.  The transient
+        # instruction is deliberately excluded: it contains generic words
+        # such as “事实/继续” used to guide the model and must not make an
+        # unrelated Skill's input contract appear applicable.
+        query = task.normalized_goal
+        relevant = [
+            skill
+            for skill in discovered
+            if skill.required_input_keys and discovery_score(skill, query) > 0
+        ]
+        if not relevant:
+            return None
+
+        now = self._now()
+        verified_sources = {
+            artifact.source_skill
+            for artifact in bundle.artifacts
+            if artifact.factuality == "verified" and artifact.expires_at > now
+        }
+        missing: list[str] = []
+        for skill in relevant:
+            allowed_sources = {skill.skill_id, *skill.prerequisite_skill_ids}
+            for key in skill.required_input_keys:
+                if key in reference_hints:
+                    continue
+                if verified_sources.intersection(allowed_sources):
+                    continue
+                if key not in missing:
+                    missing.append(key)
+        if not missing:
+            return None
+
+        questions = {
+            "orderRef": "请提供订单标识，或从已展示的订单候选中选择一笔；确认后我再核验订单或物流事实。",
+            "skuRef": "请提供商品候选或 SKU 标识；确认后我再核验库存事实。",
+        }
+        return " ".join(questions[key] for key in missing if key in questions) or "请补充当前受控能力所需的信息后继续。"
 
     def _require_owner(
         self,

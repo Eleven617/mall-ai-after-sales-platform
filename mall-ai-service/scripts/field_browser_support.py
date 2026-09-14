@@ -89,6 +89,12 @@ class BrowserSession:
         self._customer_logged = False
         self._operations_logged = False
         self._service_logged = False
+        # A field run may create a disposable customer account in the same
+        # process.  Keep seeded demo identities as defaults, but let the
+        # runner bind the browser to its own process-only fixture.
+        self.customer_username = os.getenv("MALL_FIELD_BROWSER_CUSTOMER_USER", "localDemoCustomerA")
+        self.operations_username = os.getenv("MALL_FIELD_BROWSER_OPERATIONS_USER", "localDemoOperations")
+        self.service_username = os.getenv("MALL_FIELD_BROWSER_SERVICE_USER", "afterSalesProcessor")
 
     def __enter__(self) -> "BrowserSession":
         chrome = Path(r"C:\Program Files\Google\Chrome\Application\chrome.exe")
@@ -169,10 +175,10 @@ class BrowserSession:
         if kind == "customer" and not self._customer_logged:
             self._login_customer()
         elif kind == "operations" and not self._operations_logged:
-            self._login_employee("localDemoOperations", "运营登录")
+            self._login_employee(self.operations_username, "运营登录")
             self._operations_logged = True
         elif kind == "service_operations" and not self._service_logged:
-            self._login_employee("afterSalesProcessor", "处理人员登录")
+            self._login_employee(self.service_username, "处理人员登录")
             self._service_logged = True
 
     def assert_ready(self) -> None:
@@ -213,15 +219,16 @@ class BrowserSession:
     def _login_customer(self) -> None:
         if self.page is None:
             raise RuntimeError("browser_page_unavailable")
-        if self.page.evaluate("document.body.innerText.includes('已登录：localDemoCustomerA')"):
+        logged_in_expression = "document.body.innerText.includes(" + json.dumps("已登录：" + self.customer_username) + ")"
+        if self.page.evaluate(logged_in_expression):
             self._customer_logged = True
             return
         self._click_text("登录")
         self.page.wait_for("!!document.querySelector('input[type=\\\"text\\\"], input:not([type])')")
-        self._set_input("input[type='text'], input:not([type])", "localDemoCustomerA")
+        self._set_input("input[type='text'], input:not([type])", self.customer_username)
         self._set_input("input[type='password']", self.password)
         self._click_text("登录")
-        self.page.wait_for("document.body.innerText.includes('已登录：localDemoCustomerA')", timeout=45)
+        self.page.wait_for(logged_in_expression, timeout=45)
         self._customer_logged = True
 
     def _login_employee(self, username: str, button: str) -> None:

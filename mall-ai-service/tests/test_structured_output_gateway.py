@@ -218,6 +218,30 @@ class StructuredOutputGatewayTests(unittest.TestCase):
         self.assertEqual(1, calls)
         self.assertFalse(raised.exception.correction_attempted)
         self.assertEqual(("network",), raised.exception.validation_codes)
+        self.assertIn("failure_stage", raised.exception.diagnostics)
+        self.assertEqual("http", raised.exception.diagnostics["failure_stage"])
+
+    def test_gateway_exposes_only_safe_schema_failure_diagnostics(self) -> None:
+        def malformed(**_kwargs):
+            return {
+                "intent": "query_logistics",
+                "need_tool": "wrong-type",
+                "tool": {"name": "logistics_service", "order_sn": "hidden"},
+            }
+
+        with self.assertRaises(StructuredOutputError) as raised:
+            generate_structured_output(
+                message="private customer message",
+                system_prompt="识别意图",
+                response_model=_DecisionContract,
+                json_generator=malformed,
+            )
+
+        diagnostics = raised.exception.diagnostics
+        self.assertEqual("schema_validate", diagnostics["failure_stage"])
+        self.assertFalse(diagnostics["correction_attempted"])
+        self.assertNotIn("private customer message", str(diagnostics))
+        self.assertNotIn("hidden", str(diagnostics))
 
     def test_json_object_mode_adds_provider_request_flag(self) -> None:
         captured: dict = {}

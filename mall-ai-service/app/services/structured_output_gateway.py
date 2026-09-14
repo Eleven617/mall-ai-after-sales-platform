@@ -62,6 +62,7 @@ class StructuredOutputError(RuntimeError):
         *,
         validation_codes: Sequence[str] = (),
         correction_attempted: bool = False,
+        diagnostics: Mapping[str, Any] | None = None,
     ) -> None:
         super().__init__(message)
         self.validation_codes = tuple(
@@ -70,6 +71,11 @@ class StructuredOutputError(RuntimeError):
             if isinstance(code, str) and _SAFE_VALIDATION_CODE.fullmatch(code)
         )
         self.correction_attempted = correction_attempted
+        self.diagnostics = _safe_diagnostics(
+            diagnostics,
+            correction_attempted=correction_attempted,
+            validation_codes=self.validation_codes,
+        )
 
 
 @dataclass(frozen=True)
@@ -140,6 +146,13 @@ def generate_structured_output_with_correction(
     _ensure_response_model(response_model)
     contract_prompt = _append_schema_contract(system_prompt, response_model)
     first_codes: tuple[str, ...] = ()
+    first_diagnostics: dict[str, Any] = {
+        "failure_stage": "unknown",
+        "has_content": None,
+        "has_tool_calls": None,
+        "finish_reason": None,
+        "provider_request_id_hash": None,
+    }
     safe_context: dict[str, Any] | None = None
     try:
         value = _generate_and_validate_once(
@@ -153,6 +166,8 @@ def generate_structured_output_with_correction(
         first_codes = _normalise_validation_codes(
             validate_result(value) if validate_result is not None else ()
         )
+        if first_codes:
+            first_diagnostics["failure_stage"] = "semantic_validate"
         if not first_codes:
             return StructuredOutputResult(value=value, mode=mode)
         if correction_context_builder is not None:
@@ -160,16 +175,34 @@ def generate_structured_output_with_correction(
     except LLMServiceError as exc:
         # The transport layer already has bounded retries and a circuit breaker.
         # Only malformed provider output is eligible for this correction.
+        first_diagnostics.update(
+            {
+                "failure_stage": "provider_envelope" if exc.category == "invalid_response" else "http",
+                "provider_request_id_hash": getattr(exc, "request_id_hash", None),
+            }
+        )
         if exc.category != "invalid_response":
             safe_code = exc.category if _SAFE_VALIDATION_CODE.fullmatch(exc.category) else "provider_unavailable"
             raise StructuredOutputError(
                 "模型服务暂时不可用，未执行结构化校正",
                 validation_codes=(safe_code,),
+                diagnostics=first_diagnostics,
             ) from exc
         first_codes = ("schema_invalid",)
-    except (ValidationError, TypeError, ValueError) as exc:
+    except ValidationError as exc:
+        first_diagnostics.update(
+            {
+                "failure_stage": "schema_validate",
+                "pydantic_error_types": _pydantic_error_types(exc),
+            }
+        )
         first_codes = _normalise_validation_codes(
             getattr(exc, "validation_codes", ()) or ("schema_invalid",)
+        )
+    except (TypeError, ValueError):
+        first_diagnostics["failure_stage"] = "json_parse"
+        first_codes = _normalise_validation_codes(
+            ("schema_invalid",)
         )
 
     codes = _normalise_validation_codes(correction_codes) or first_codes or ("schema_invalid",)
@@ -182,6 +215,7 @@ def generate_structured_output_with_correction(
         raise StructuredOutputError(
             "模型输出未通过契约，且不存在可安全发送的校正上下文",
             validation_codes=codes,
+            diagnostics={**first_diagnostics, "correction_result": "not_attempted"},
         )
     repair_envelope = {
         "validationErrors": list(codes),
@@ -215,6 +249,10 @@ def generate_structured_output_with_correction(
                 "模型输出二次校正仍未通过契约",
                 validation_codes=second_codes,
                 correction_attempted=True,
+                diagnostics={
+                    "failure_stage": "semantic_validate",
+                    "correction_result": "failed",
+                },
             )
         return StructuredOutputResult(value=repaired, mode=mode)
     except StructuredOutputError:
@@ -224,12 +262,31 @@ def generate_structured_output_with_correction(
             "模型输出二次校正不可用",
             validation_codes=("correction_provider_unavailable",),
             correction_attempted=True,
+            diagnostics={
+                "failure_stage": "http",
+                "correction_result": "failed",
+            },
         ) from exc
-    except (ValidationError, TypeError, ValueError) as exc:
+    except ValidationError as exc:
         raise StructuredOutputError(
             "模型输出二次校正仍未通过契约",
             validation_codes=("correction_schema_invalid",),
             correction_attempted=True,
+            diagnostics={
+                "failure_stage": "schema_validate",
+                "correction_result": "failed",
+                "pydantic_error_types": _pydantic_error_types(exc),
+            },
+        ) from exc
+    except (TypeError, ValueError) as exc:
+        raise StructuredOutputError(
+            "模型输出二次校正仍未通过契约",
+            validation_codes=("correction_schema_invalid",),
+            correction_attempted=True,
+            diagnostics={
+                "failure_stage": "json_parse",
+                "correction_result": "failed",
+            },
         ) from exc
 
 
@@ -266,6 +323,59 @@ def _normalise_validation_codes(codes: Sequence[str] | None) -> tuple[str, ...]:
             if isinstance(code, str) and _SAFE_VALIDATION_CODE.fullmatch(code.strip())
         )
     )
+
+
+def _pydantic_error_types(error: ValidationError) -> list[str]:
+    """Return only bounded Pydantic error types, never values or raw input."""
+
+    result: list[str] = []
+    for item in error.errors()[:8]:
+        error_type = item.get("type")
+        if isinstance(error_type, str) and _SAFE_VALIDATION_CODE.fullmatch(error_type):
+            result.append(error_type)
+    return list(dict.fromkeys(result))
+
+
+def _safe_diagnostics(
+    diagnostics: Mapping[str, Any] | None,
+    *,
+    correction_attempted: bool,
+    validation_codes: Sequence[str],
+) -> dict[str, Any]:
+    """Keep structured failure diagnostics metadata-only and allow-listed."""
+
+    allowed = {
+        "failure_stage",
+        "pydantic_error_types",
+        "has_content",
+        "has_tool_calls",
+        "finish_reason",
+        "provider_request_id_hash",
+        "correction_result",
+    }
+    source = diagnostics if isinstance(diagnostics, Mapping) else {}
+    output: dict[str, Any] = {
+        "correction_attempted": bool(correction_attempted),
+        "validation_codes": list(validation_codes)[:4],
+    }
+    for key in allowed:
+        value = source.get(key)
+        if key in {"failure_stage", "finish_reason", "correction_result"}:
+            if value is None or (isinstance(value, str) and _SAFE_VALIDATION_CODE.fullmatch(value)):
+                output[key] = value
+        elif key in {"has_content", "has_tool_calls"}:
+            if value is None or isinstance(value, bool):
+                output[key] = value
+        elif key == "provider_request_id_hash":
+            if value is None or (isinstance(value, str) and re.fullmatch(r"[a-f0-9]{16,64}", value)):
+                output[key] = value
+        elif key == "pydantic_error_types":
+            if isinstance(value, (list, tuple)):
+                output[key] = [
+                    item for item in value[:8]
+                    if isinstance(item, str) and _SAFE_VALIDATION_CODE.fullmatch(item)
+                ]
+    return output
 
 
 def _safe_json(value: object) -> str:

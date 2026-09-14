@@ -90,6 +90,15 @@ _SAFE_DETAIL_KEYS = {
     "task_kind",
     "confirmation_intent",
     "rationale_code",
+    "failure_stage",
+    "pydantic_error_types",
+    "has_content",
+    "has_tool_calls",
+    "finish_reason",
+    "provider_request_id_hash",
+    "correction_attempted",
+    "correction_result",
+    "validation_codes",
 }
 _SAFE_TOOL_NAMES = {
     "order_service",
@@ -433,4 +442,22 @@ def _sanitize_details(details: dict[str, Any]) -> dict[str, Any]:
         elif key == "rationale_code":
             if value in _SAFE_RATIONALE_CODES:
                 safe_details[key] = value
+        elif key in {"failure_stage", "finish_reason", "correction_result"}:
+            if value is None or (isinstance(value, str) and _SAFE_ERROR_CATEGORY_PATTERN.fullmatch(value)):
+                safe_details[key] = value
+        elif key in {"has_content", "has_tool_calls", "correction_attempted"}:
+            if value is None or isinstance(value, bool):
+                safe_details[key] = value
+        elif key == "provider_request_id_hash":
+            if value is None or (isinstance(value, str) and _SAFE_REFERENCE_PATTERN.fullmatch(value)):
+                safe_details[key] = value
+        elif key in {"pydantic_error_types", "validation_codes"}:
+            if isinstance(value, (list, tuple)) and len(value) <= 8:
+                items = [
+                    item
+                    for item in value
+                    if isinstance(item, str) and _SAFE_ERROR_CATEGORY_PATTERN.fullmatch(item)
+                ]
+                if len(items) == len(value):
+                    safe_details[key] = items
     return safe_details

@@ -142,6 +142,29 @@ class TraceServiceTests(unittest.TestCase):
             tool_name="order_service",
         )
 
+    def test_structured_failure_diagnostics_are_metadata_only(self) -> None:
+        record_trace(
+            "task_runtime",
+            "model_unavailable",
+            "session-a",
+            failure_stage="schema_validate",
+            pydantic_error_types=["extra_forbidden", "string_type"],
+            has_content=False,
+            has_tool_calls=False,
+            finish_reason=None,
+            provider_request_id_hash="a" * 24,
+            correction_attempted=True,
+            correction_result="failed",
+            validation_codes=["schema_invalid"],
+            raw_response="must be dropped",
+        )
+
+        event = self.sink.events[0]
+        self.assertEqual("schema_validate", event.details["failure_stage"])
+        self.assertEqual(["extra_forbidden", "string_type"], event.details["pydantic_error_types"])
+        self.assertEqual("a" * 24, event.details["provider_request_id_hash"])
+        self.assertNotIn("must be dropped", str(event.details))
+
 
 if __name__ == "__main__":
     unittest.main()

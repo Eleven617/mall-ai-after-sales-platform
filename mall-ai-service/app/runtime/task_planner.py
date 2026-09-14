@@ -125,6 +125,7 @@ def build_model_context(
                 "description": skill.description,
                 "actionMode": skill.action_mode,
                 "estimatedLatencyMs": skill.estimated_latency_ms,
+                "requiredInputKeys": list(skill.required_input_keys),
             }
             for skill in skills[:8]
         ],

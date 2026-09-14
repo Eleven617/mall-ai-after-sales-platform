@@ -40,6 +40,10 @@ class SkillDefinition(BaseModel):
     examples: list[str] = Field(default_factory=list, max_length=4)
     discovery_terms: list[str] = Field(default_factory=list, max_length=8)
     prerequisite_skill_ids: tuple[str, ...] = ()
+    # The runtime uses this declaration for a deterministic, pre-model
+    # input-contract check.  It is deliberately about syntax/availability,
+    # never about choosing a business intent or outcome.
+    required_input_keys: tuple[str, ...] = ()
     allowed_roles: tuple[Literal["customer", "quality_evaluation"] , ...] = ("customer",)
     requires_confirmation: bool = False
     max_calls_per_task: int = Field(default=2, ge=1, le=8)
@@ -103,6 +107,7 @@ _CATALOG: tuple[SkillDefinition, ...] = (
         artifact_kinds=["order_fact"],
         examples=["核对一笔订单的当前状态"],
         discovery_terms=["订单", "订单状态", "履约"],
+        required_input_keys=("orderRef",),
     ),
     SkillDefinition(
         skill_id="read_logistics",
@@ -117,6 +122,8 @@ _CATALOG: tuple[SkillDefinition, ...] = (
         artifact_kinds=["logistics_fact"],
         examples=["订单已发货但三天没有物流更新"],
         discovery_terms=["物流", "发货", "配送", "延误"],
+        prerequisite_skill_ids=("read_order",),
+        required_input_keys=("orderRef",),
     ),
     SkillDefinition(
         skill_id="read_inventory",
@@ -131,6 +138,7 @@ _CATALOG: tuple[SkillDefinition, ...] = (
         artifact_kinds=["inventory_fact"],
         examples=["检查替代 SKU 是否有现货"],
         discovery_terms=["库存", "现货", "补发", "替代"],
+        required_input_keys=("skuRef",),
     ),
     SkillDefinition(
         skill_id="retrieve_policy",
@@ -308,29 +316,35 @@ def get_skill(skill_id: str, *, role: str = "customer") -> SkillDefinition | Non
     return next((skill for skill in list_skills(role=role) if skill.skill_id == skill_id), None)
 
 
+def discovery_score(skill: SkillDefinition, query: str) -> int:
+    """Return the catalog metadata match score for one query.
+
+    This is the same bounded capability-discovery signal used by
+    :func:`discover_skills`.  It does not choose a business intent or outcome;
+    the runtime uses it only to decide whether a declared input contract is
+    relevant enough for a deterministic pre-model check.
+    """
+
+    normalized = " ".join((query or "").lower().split())
+    tokens = set(normalized.replace("，", " ").replace("。", " ").split())
+    for phrase in re.findall(r"[\u4e00-\u9fff]{2,}", normalized):
+        tokens.add(phrase)
+        tokens.update(phrase[index : index + 2] for index in range(len(phrase) - 1))
+    haystack = " ".join([skill.skill_id, skill.domain, skill.description, *skill.examples]).lower()
+    score = sum(1 for token in tokens if token and token in haystack)
+    score += sum(4 for term in skill.discovery_terms if term.lower() in normalized)
+    if skill.domain in normalized:
+        score += 1
+    return score
+
+
 def discover_skills(query: str, *, role: str = "customer", limit: int = 8) -> list[SkillDefinition]:
     """Deterministic lexical discovery over metadata, not a business router."""
 
     normalized = " ".join((query or "").lower().split())
-    tokens = set(normalized.replace("，", " ").replace("。", " ").split())
-    # Chinese goals usually have no whitespace.  Add short CJK phrases strictly
-    # for matching the versioned catalog descriptions/examples; this exposes a
-    # bounded capability set, it does not classify a business intent or select
-    # a business outcome.
-    for phrase in re.findall(r"[\u4e00-\u9fff]{2,}", normalized):
-        tokens.add(phrase)
-        tokens.update(phrase[index : index + 2] for index in range(len(phrase) - 1))
     scored: list[tuple[int, SkillDefinition]] = []
     for skill in list_skills(role=role):
-        haystack = " ".join([skill.skill_id, skill.domain, skill.description, *skill.examples]).lower()
-        score = sum(1 for token in tokens if token and token in haystack)
-        # Explicit discovery terms are catalog metadata reviewed with the Skill,
-        # not a route table.  They make CJK discovery resilient without allowing
-        # the server to choose a business action for the model.
-        score += sum(4 for term in skill.discovery_terms if term.lower() in normalized)
-        if skill.domain in normalized:
-            score += 1
-        scored.append((score, skill))
+        scored.append((discovery_score(skill, normalized), skill))
     scored.sort(
         key=lambda pair: (
             -pair[0],
