@@ -22,6 +22,11 @@ from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.graph import END, START, StateGraph
 from langgraph.types import Command, interrupt
 
+from app.services.llm_service import (
+    DEEPSEEK_REASONING_EFFORT,
+    DEEPSEEK_THINKING_MODE,
+)
+
 
 MAX_AGENT_DECISIONS = 5
 ActionName = Literal[
@@ -81,16 +86,17 @@ class DeepSeekJsonDecisionProvider:
 
     def __init__(self, api_key: str, *, base_url: str, model: str) -> None:
         self._api_key = api_key
-        self._base_url = base_url.rstrip("/")
+        self._base_url = base_url.rstrip("/").removesuffix("/v1")
         self._model = model
 
     def decide(self, state: dict[str, Any]) -> dict[str, Any]:
         response = httpx.post(
-            f"{self._base_url}/chat/completions",
+            f"{self._base_url}/v1/chat/completions",
             headers={"Authorization": f"Bearer {self._api_key}"},
             json={
                 "model": self._model,
-                "temperature": 0,
+                "thinking": {"type": DEEPSEEK_THINKING_MODE},
+                "reasoning_effort": DEEPSEEK_REASONING_EFFORT,
                 "response_format": {"type": "json_object"},
                 "messages": [
                     {
@@ -332,7 +338,7 @@ def run_live_demo() -> None:
     provider = DeepSeekJsonDecisionProvider(
         api_key,
         base_url=os.getenv("DEEPSEEK_BASE_URL", "https://api.deepseek.com"),
-        model=os.getenv("DEEPSEEK_MODEL", "deepseek-chat"),
+        model=os.getenv("DEEPSEEK_MODEL", "deepseek-flash"),
     )
     app = build_agent_graph(provider)
     config = {"configurable": {"thread_id": "agent-live-delay-001"}}

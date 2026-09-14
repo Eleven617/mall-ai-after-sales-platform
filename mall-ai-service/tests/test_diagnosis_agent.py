@@ -24,7 +24,16 @@ class DiagnosisAgentTests(unittest.TestCase):
         call_tool,
     ) -> None:
         generate_with_tools.side_effect = [
-            LLMResponse(tool_calls=[{"name": "order_service", "arguments": {"order_sn": "202607240001"}}]),
+            LLMResponse(
+                reasoning_content="synthetic diagnosis reasoning",
+                tool_calls=[
+                    {
+                        "id": "call_diagnosis_001",
+                        "name": "order_service",
+                        "arguments": {"order_sn": "202607240001"},
+                    }
+                ],
+            ),
             LLMResponse(tool_calls=[{"name": "logistics_service", "arguments": {"order_sn": "202607240001"}}]),
             LLMResponse(tool_calls=[{"name": "rag_search", "arguments": {"query": "物流运输中未收到货怎么办"}}]),
             LLMResponse(content="订单已签收，物流公司是顺丰。"),
@@ -45,6 +54,24 @@ class DiagnosisAgentTests(unittest.TestCase):
         self.assertIn("运输中", result.answer)
         self.assertNotIn("顺丰", result.answer)
         self.assertEqual(3, call_tool.call_count)
+        second_turn_messages = generate_with_tools.call_args_list[1].args[0]
+        assistant_message = next(
+            item for item in second_turn_messages if item["role"] == "assistant"
+        )
+        tool_message = next(
+            item for item in second_turn_messages if item["role"] == "tool"
+        )
+        self.assertEqual(
+            "synthetic diagnosis reasoning",
+            assistant_message["reasoning_content"],
+        )
+        self.assertEqual("call_diagnosis_001", assistant_message["tool_calls"][0]["id"])
+        self.assertEqual("call_diagnosis_001", tool_message["tool_call_id"])
+        self.assertNotIn("synthetic diagnosis reasoning", result.model_dump_json())
+        self.assertNotIn(
+            "synthetic diagnosis reasoning",
+            " ".join(str(event.details) for event in self.trace_sink.events),
+        )
         self.assertIn("diagnosis_completed", [event.event for event in self.trace_sink.events])
 
     @patch("app.services.agent_service.generate_with_tools")

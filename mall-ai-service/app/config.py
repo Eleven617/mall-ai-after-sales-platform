@@ -11,7 +11,7 @@ load_dotenv()
 class Settings:
     # DeepSeek — 聊天/LLM（国内直连，不用 VPN）
     deepseek_api_key: str | None = os.getenv("DEEPSEEK_API_KEY")
-    deepseek_model: str = os.getenv("DEEPSEEK_MODEL", "deepseek-chat")
+    deepseek_model: str = os.getenv("DEEPSEEK_MODEL", "deepseek-flash")
     deepseek_base_url: str = os.getenv(
         "DEEPSEEK_BASE_URL", "https://api.deepseek.com"
     )
@@ -155,9 +155,9 @@ class Settings:
     )
     agent_task_ttl_seconds: int = int(os.getenv("AGENT_TASK_TTL_SECONDS", "86400"))
     agent_task_event_limit: int = int(os.getenv("AGENT_TASK_EVENT_LIMIT", "64"))
-    executor_model: str = os.getenv("EXECUTOR_MODEL", os.getenv("DEEPSEEK_MODEL", "deepseek-chat"))
-    context_model: str = os.getenv("CONTEXT_MODEL", os.getenv("DEEPSEEK_MODEL", "deepseek-chat"))
-    critic_model: str = os.getenv("CRITIC_MODEL", os.getenv("DEEPSEEK_MODEL", "deepseek-chat"))
+    executor_model: str = os.getenv("EXECUTOR_MODEL", os.getenv("DEEPSEEK_MODEL", "deepseek-flash"))
+    context_model: str = os.getenv("CONTEXT_MODEL", os.getenv("DEEPSEEK_MODEL", "deepseek-flash"))
+    critic_model: str = os.getenv("CRITIC_MODEL", os.getenv("DEEPSEEK_MODEL", "deepseek-flash"))
     executor_timeout_seconds: float = float(os.getenv("EXECUTOR_TIMEOUT_SECONDS", "45"))
     context_timeout_seconds: float = float(os.getenv("CONTEXT_TIMEOUT_SECONDS", "20"))
     critic_timeout_seconds: float = float(os.getenv("CRITIC_TIMEOUT_SECONDS", "20"))

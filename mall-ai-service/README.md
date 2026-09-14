@@ -49,6 +49,12 @@ ID、价格、是否可退，或绕过确认直接提交。
 
 复制 <code>.env.example</code> 为 <code>.env</code>，填入模型密钥。不要提交 <code>.env</code>。
 
+当前统一模型接入为 DeepSeek OpenAI 格式 Chat Completions：Base URL
+`https://api.deepseek.com`、模型 `deepseek-flash`、Thinking `enabled`、
+Reasoning Effort `high`。这是普通生成、结构化输出、工具调用和 Runtime
+评测共用的固定配置；历史报告中记录的旧模型仍只代表当时结果，切换模型后必须
+重新运行 Live 评测，不能直接继承旧指标。
+
 <code>MALL_API_BASE_URL</code> 默认指向本地 <code>mall-portal</code> 的 <code>http://127.0.0.1:8085</code>。
 
 ## Run

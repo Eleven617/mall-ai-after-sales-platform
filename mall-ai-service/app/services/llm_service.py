@@ -26,20 +26,38 @@ from app.services.reliability_service import (
 
 _LOGGER = logging.getLogger("mall_ai.llm")
 ResponseT = TypeVar("ResponseT")
+DEEPSEEK_THINKING_MODE = "enabled"
+DEEPSEEK_REASONING_EFFORT = "high"
+
+
+def _agent_reasoning_control() -> dict[str, object]:
+    """Use the single reviewed reasoning profile for every DeepSeek call."""
+    return {
+        "thinking": {"type": DEEPSEEK_THINKING_MODE},
+        "reasoning_effort": DEEPSEEK_REASONING_EFFORT,
+    }
 
 
 class LLMServiceError(RuntimeError):
     """A provider or model-contract failure with a safe machine category."""
 
-    def __init__(self, message: str, *, category: str = "unknown") -> None:
+    def __init__(
+        self,
+        message: str,
+        *,
+        category: str = "unknown",
+        attempts: int | None = None,
+    ) -> None:
         super().__init__(message)
         self.category = category
+        self.attempts = attempts
 
 
 @dataclass
 class LLMResponse:
     content: str | None = None
     tool_calls: list[dict] | None = None
+    reasoning_content: str | None = None
 
 
 def generate_text(
@@ -61,7 +79,7 @@ def generate_text(
     payload = {
         "model": settings.deepseek_model,
         "messages": messages,
-        "temperature": temperature,
+        **_agent_reasoning_control(),
     }
     return _request_json("text", url, _headers(), payload, _extract_text)
 
@@ -71,12 +89,10 @@ def generate_with_tools(
     tools: list[dict],
     temperature: float = 0,
 ) -> LLMResponse:
-    """Request a bounded tool plan with deterministic sampling by default.
+    """Request a bounded tool plan with the reviewed high-thinking profile.
 
-    Tool selection controls which read-only fact source is queried next.  It
-    is therefore a planning contract rather than a creative response, so the
-    safe default is zero temperature.  Callers that have an explicitly
-    evaluated reason to vary sampling must opt in by passing a value here.
+    ``temperature`` remains in the public signature for caller compatibility,
+    but DeepSeek ignores it in thinking mode and it is therefore not sent.
     """
     if not settings.deepseek_api_key:
         raise LLMServiceError(
@@ -89,14 +105,13 @@ def generate_with_tools(
         "model": settings.deepseek_model,
         "messages": messages,
         "tools": tools,
-        "tool_choice": "auto",
-        "temperature": temperature,
+        **_agent_reasoning_control(),
     }
     result = _request_json("tools", url, _headers(), payload, _extract_response)
     _LOGGER.debug(
-        "llm_tool_response has_content=%s tool_names=%s",
+        "llm_tool_response has_content=%s tool_count=%s",
         bool(result.content),
-        [tool_call.get("name") for tool_call in result.tool_calls or []],
+        len(result.tool_calls or []),
     )
     return result
 
@@ -125,7 +140,7 @@ def generate_json(
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": message},
         ],
-        "temperature": temperature,
+        **_agent_reasoning_control(),
     }
     if output_mode == "json_object":
         payload["response_format"] = {"type": "json_object"}
@@ -189,6 +204,8 @@ def _request_json(
         )
         raise error from exc
     except LLMServiceError as exc:
+        if isinstance(exc.attempts, int) and exc.attempts > 0:
+            attempts = exc.attempts
         record_llm_metric(
             operation=operation,
             outcome="failed",
@@ -273,6 +290,7 @@ def _post_with_retry(
     raise LLMServiceError(
         "LLM provider request failed",
         category=error_category,
+        attempts=attempt,
     ) from last_error
 
 
@@ -302,15 +320,38 @@ def _extract_response(data: dict) -> LLMResponse:
 
     message = choices[0].get("message", {})
     content = (message.get("content") or "").strip() or None
+    raw_reasoning_content = message.get("reasoning_content")
+    reasoning_content = (
+        raw_reasoning_content
+        if isinstance(raw_reasoning_content, str) and raw_reasoning_content
+        else None
+    )
     raw_tool_calls = message.get("tool_calls") or None
     tool_calls = None
     if raw_tool_calls:
+        if not isinstance(raw_tool_calls, list):
+            raise LLMServiceError(
+                "Provider tool_calls must be an array",
+                category="invalid_response",
+            )
         tool_calls = []
         try:
             for tool_call in raw_tool_calls:
+                call_id = tool_call.get("id")
+                if not isinstance(call_id, str) or not call_id.strip():
+                    raise LLMServiceError(
+                        "Provider tool call is missing its id",
+                        category="invalid_response",
+                    )
                 function = tool_call.get("function", {})
+                if not isinstance(function, dict):
+                    raise LLMServiceError(
+                        "Provider tool call function is invalid",
+                        category="invalid_response",
+                    )
                 tool_calls.append(
                     {
+                        "id": call_id,
                         "name": function.get("name", ""),
                         "arguments": json.loads(function.get("arguments", "{}")),
                     }
@@ -326,7 +367,11 @@ def _extract_response(data: dict) -> LLMResponse:
             "Provider returned an empty answer",
             category="invalid_response",
         )
-    return LLMResponse(content=content, tool_calls=tool_calls)
+    return LLMResponse(
+        content=content,
+        tool_calls=tool_calls,
+        reasoning_content=reasoning_content,
+    )
 
 
 def _extract_json_object(data: dict) -> dict:

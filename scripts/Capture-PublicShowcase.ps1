@@ -1,3 +1,6 @@
+param(
+    [switch]$DryRun
+)
 $ErrorActionPreference = 'Stop'
 
 # Public capture entry point.  It deliberately refuses to fabricate a showcase
@@ -13,6 +16,25 @@ if (-not (Test-Path -LiteralPath $runner)) {
 if (-not (Test-Path -LiteralPath $python)) {
     throw 'mall-ai-service/.venv is missing; prepare the local demo environment first.'
 }
+
+if ($DryRun) {
+    # Dry-run is deliberately side-effect free: it validates the local
+    # capture entry point and required output contract without starting
+    # Docker, opening a browser, bootstrapping an account, or calling a model.
+    $required = @(
+        'tmp\run_fresh_capture.ps1',
+        'tmp\capture_demo_screenshots.py',
+        'docs\assets\showcase-final'
+    )
+    foreach ($path in $required) {
+        if (-not (Test-Path -LiteralPath (Join-Path $root $path))) {
+            throw "showcase dry-run missing required path: $path"
+        }
+    }
+    Write-Output 'Public showcase dry-run passed; no Docker, browser, account, or model call was made.'
+    exit 0
+}
+
 if ([string]::IsNullOrWhiteSpace($env:DEEPSEEK_API_KEY)) {
     throw 'DEEPSEEK_API_KEY is required in the local process environment; it is never read from the repository or printed.'
 }

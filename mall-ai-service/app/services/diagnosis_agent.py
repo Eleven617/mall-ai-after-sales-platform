@@ -78,6 +78,11 @@ class DiagnosisState(TypedDict, total=False):
     started_at: float
     requires_order_facts: bool
     model_answer: str | None
+    # These two fields are request-memory only.  They are copied into the
+    # immediate provider follow-up message and cleared after tool execution;
+    # they are never part of AgentRunResult, a checkpoint, a trace or a DTO.
+    model_content: str | None
+    model_reasoning_content: str | None
     pending_tool_call: ToolCall | None
     terminal_kind: str | None
     next_node: str
@@ -253,6 +258,8 @@ def build_diagnosis_graph(
                         "arguments": {"order_sn": order_resolution.value},
                     }
                 ],
+                "model_content": response.content,
+                "model_reasoning_content": response.reasoning_content,
                 "call_counts": {
                     **state.get("call_counts", {}),
                     f"order_service:{json.dumps({'order_sn': order_resolution.value}, ensure_ascii=False, sort_keys=True)}": 1,
@@ -332,7 +339,11 @@ def build_diagnosis_graph(
                         "next_node": "handoff",
                     }
                 valid_calls.append(
-                    {"name": tool_call.name, "arguments": tool_call.arguments}
+                    {
+                        "id": proposed.get("id"),
+                        "name": tool_call.name,
+                        "arguments": tool_call.arguments,
+                    }
                 )
 
             if not valid_calls:
@@ -344,6 +355,8 @@ def build_diagnosis_graph(
             return {
                 "step": step,
                 "tool_calls": valid_calls,
+                "model_content": response.content,
+                "model_reasoning_content": response.reasoning_content,
                 "call_counts": call_counts,
                 "next_node": "execute_tools",
             }
@@ -461,7 +474,12 @@ def build_diagnosis_graph(
             )
 
             results.append((tool_name, result))
-            call_id = f"diagnosis_{step}_{index}"
+            provider_call_id = raw_call.get("id")
+            call_id = (
+                provider_call_id
+                if isinstance(provider_call_id, str) and provider_call_id
+                else f"diagnosis_{step}_{index}"
+            )
             assistant_calls.append(
                 {
                     "id": call_id,
@@ -483,7 +501,8 @@ def build_diagnosis_graph(
         messages.append(
             {
                 "role": "assistant",
-                "content": None,
+                "content": state.get("model_content"),
+                "reasoning_content": state.get("model_reasoning_content"),
                 "tool_calls": assistant_calls,
             }
         )
@@ -492,6 +511,8 @@ def build_diagnosis_graph(
         return {
             "messages": messages,
             "tool_calls": [],
+            "model_content": None,
+            "model_reasoning_content": None,
             "tool_results": results,
             "terminal_kind": terminal_kind,
             "next_node": "handoff" if terminal_kind else "agent_decide",

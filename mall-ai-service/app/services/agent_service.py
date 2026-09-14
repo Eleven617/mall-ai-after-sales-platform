@@ -126,7 +126,7 @@ def run_agent_result(
             )
 
         if response.tool_calls:
-            tool_results: list[tuple[str, dict, str]] = []
+            tool_results: list[tuple[str, dict, str, str]] = []
 
             # Selecting the right tool is not enough: a required identifier
             # must be present before any call in this batch can run.
@@ -235,30 +235,37 @@ def run_agent_result(
 
                 all_tool_results.append((tool_name, result))
                 observation = json.dumps(result, ensure_ascii=False)
-                tool_results.append((tool_name, tool_args, observation))
+                provider_call_id = tool_call.get("id")
+                call_id = (
+                    provider_call_id
+                    if isinstance(provider_call_id, str) and provider_call_id
+                    else f"call_{step}_{index}"
+                )
+                tool_results.append((tool_name, tool_args, observation, call_id))
 
             messages.append(
                 {
                     "role": "assistant",
                     "content": response.content,
+                    "reasoning_content": response.reasoning_content,
                     "tool_calls": [
                         {
-                            "id": f"call_{step}_{index}",
+                            "id": call_id,
                             "type": "function",
                             "function": {
                                 "name": tool_name,
                                 "arguments": json.dumps(tool_args, ensure_ascii=False),
                             },
                         }
-                        for index, (tool_name, tool_args, _) in enumerate(tool_results)
+                        for tool_name, tool_args, _, call_id in tool_results
                     ],
                 }
             )
-            for index, (_, _, observation) in enumerate(tool_results):
+            for _, _, observation, call_id in tool_results:
                 messages.append(
                     {
                         "role": "tool",
-                        "tool_call_id": f"call_{step}_{index}",
+                        "tool_call_id": call_id,
                         "content": observation,
                     }
                 )

@@ -15,6 +15,7 @@ from __future__ import annotations
 import hashlib
 import json
 import re
+import subprocess
 import time
 from dataclasses import dataclass
 from pathlib import Path
@@ -25,6 +26,7 @@ from app.runtime.providers import DeepSeekRuntimeProvider, RuntimeModelError, RU
 from app.runtime.task_runtime import TaskRuntime, TaskRuntimeError
 from app.runtime.task_store import InMemoryTaskStore
 from app.schemas.agent_task import TaskExecutionBudget
+from app.services.llm_service import DEEPSEEK_REASONING_EFFORT, DEEPSEEK_THINKING_MODE
 from app.services.llm_observability import TokenPricing, capture_llm_metrics, summarize_llm_metrics
 from app.skills.catalog import SKILL_CATALOG_VERSION
 from app.skills.commerce_gateway import SkillObservation
@@ -210,10 +212,23 @@ def run_live_model_agent_evaluation(
     pricing: TokenPricing | None = None,
     provider_factory: Callable[[Mapping[str, Any]], Any] | None = None,
     case_ids: set[str] | None = None,
+    required_runs: int = 3,
+    stop_on_environment_blocked: bool = False,
 ) -> dict[str, Any]:
-    """Run every selected fixture three times through the bounded Runtime."""
+    """Run selected fixtures through the bounded Runtime.
 
-    if max_total_seconds <= 0 or timeout_seconds <= 0 or max_attempts < 1:
+    The normal reviewed suite keeps three independent runs per case.  The
+    release canary uses one run per showcase case and stops the *whole batch*
+    on an authentication/payment/provider block, so a failed provider cannot
+    accidentally turn into dozens of paid retries.
+    """
+
+    if (
+        max_total_seconds <= 0
+        or timeout_seconds <= 0
+        or max_attempts < 1
+        or required_runs < 1
+    ):
         raise ValueError("evaluation budgets must be positive")
     suite = load_live_agent_suite(suite_path)
     cases = [case for case in suite["cases"] if case_ids is None or case["caseId"] in case_ids]
@@ -221,7 +236,7 @@ def run_live_model_agent_evaluation(
         raise LiveAgentEvaluationError("没有匹配的 live agent case。")
     started = time.monotonic()
     results: list[CaseRunResult] = []
-    required_runs = 3
+    stopped_early = False
     with capture_llm_metrics(timeout_seconds=timeout_seconds, max_attempts=max_attempts) as metric_sink:
         for case in cases:
             for run_index in range(1, required_runs + 1):
@@ -264,8 +279,22 @@ def run_live_model_agent_evaluation(
                 # retaining aggregate usage for the evidence document.
                 del metric_start
                 results.append(result)
+                if stop_on_environment_blocked and result.status == "environment_blocked":
+                    stopped_early = True
+                    break
+            if stopped_early:
+                break
 
-    return _build_report(suite, cases, results, metric_sink.events, pricing, started)
+    return _build_report(
+        suite,
+        cases,
+        results,
+        metric_sink.events,
+        pricing,
+        started,
+        required_runs=required_runs,
+        stopped_early=stopped_early,
+    )
 
 
 def _run_case(
@@ -629,6 +658,9 @@ def _build_report(
     metrics: list[Any],
     pricing: TokenPricing | None,
     started: float,
+    *,
+    required_runs: int,
+    stopped_early: bool,
 ) -> dict[str, Any]:
     elapsed_values = [item.elapsed_ms for item in results]
     ordered = sorted(elapsed_values)
@@ -675,8 +707,9 @@ def _build_report(
         "suiteSha256": suite_hash,
         "mode": "live_model_agent_synthetic",
         "uniqueCases": len(cases),
-        "requiredRunsPerCase": 3,
+        "requiredRunsPerCase": required_runs,
         "executedRuns": len(results),
+        "stoppedEarly": stopped_early,
         "passed": passed,
         "failed": failed,
         "environmentBlocked": blocked,
@@ -694,8 +727,11 @@ def _build_report(
         "model": {
             "provider": "DeepSeekRuntimeProvider",
             "model": settings.deepseek_model,
+            "thinkingMode": DEEPSEEK_THINKING_MODE,
+            "reasoningEffort": DEEPSEEK_REASONING_EFFORT,
             "promptVersion": RUNTIME_PROMPT_VERSION,
             "skillCatalogVersion": SKILL_CATALOG_VERSION,
+            "runtimeCommit": _runtime_commit(),
             "executionBoundary": "synthetic_read_only_gateway",
         },
         "llm": summarize_llm_metrics(metrics, pricing),
@@ -784,6 +820,29 @@ def _percentile(values: list[int], fraction: float) -> int:
         return 0
     index = max(0, int((len(values) * fraction + 0.999999)) - 1)
     return values[index]
+
+
+def _runtime_commit() -> str:
+    """Return the source revision without leaking repository contents.
+
+    A live report must be tied to the exact runtime that produced it.  When
+    the evaluator is run from an exported source tree (without Git), the
+    explicit environment marker keeps the report honest instead of guessing.
+    """
+
+    try:
+        completed = subprocess.run(
+            ["git", "rev-parse", "HEAD"],
+            cwd=PROJECT_ROOT,
+            check=True,
+            capture_output=True,
+            text=True,
+            timeout=5,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return "unavailable"
+    value = completed.stdout.strip()
+    return value if re.fullmatch(r"[0-9a-f]{40}", value) else "unavailable"
 
 
 __all__ = [

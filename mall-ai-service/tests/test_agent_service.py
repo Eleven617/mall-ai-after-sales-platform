@@ -42,8 +42,10 @@ class AgentServiceTests(unittest.TestCase):
     def test_records_read_only_tool_execution(self, generate_with_tools, call_tool) -> None:
         generate_with_tools.side_effect = [
             LLMResponse(
+                reasoning_content="synthetic transient reasoning",
                 tool_calls=[
                     {
+                        "id": "call_provider_001",
                         "name": "logistics_service",
                         "arguments": {"order_sn": "202607240001"},
                     }
@@ -59,11 +61,30 @@ class AgentServiceTests(unittest.TestCase):
             "product_names": ["测试耳机"],
         }
 
-        answer = run_agent("帮我分析物流", session_id="session-a")
+        result = run_agent_result("帮我分析物流", session_id="session-a")
+        answer = result.answer
 
         self.assertIn("测试物流", answer)
         self.assertIn("运输中", answer)
         self.assertEqual(1, call_tool.call_count)
+        second_turn_messages = generate_with_tools.call_args_list[1].kwargs["messages"]
+        assistant_message = next(
+            item for item in second_turn_messages if item["role"] == "assistant"
+        )
+        tool_message = next(
+            item for item in second_turn_messages if item["role"] == "tool"
+        )
+        self.assertEqual(
+            "synthetic transient reasoning",
+            assistant_message["reasoning_content"],
+        )
+        self.assertEqual("call_provider_001", assistant_message["tool_calls"][0]["id"])
+        self.assertEqual("call_provider_001", tool_message["tool_call_id"])
+        self.assertNotIn("synthetic transient reasoning", result.model_dump_json())
+        self.assertNotIn(
+            "synthetic transient reasoning",
+            " ".join(str(event.details) for event in self.trace_sink.events),
+        )
         self.assertIn(
             "tool_completed",
             [event.event for event in self.trace_sink.events],

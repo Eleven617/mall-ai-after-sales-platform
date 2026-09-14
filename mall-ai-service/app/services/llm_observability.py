@@ -173,6 +173,8 @@ def summarize_llm_metrics(
 
     result: dict[str, object] = {
         "total_calls": len(metrics),
+        "total_attempts": sum(metric.attempts for metric in metrics),
+        "network_retries": sum(max(0, metric.attempts - 1) for metric in metrics),
         "succeeded_calls": len(succeeded),
         "failed_calls": len(failed),
         "usage_available_calls": usage_available_calls,

@@ -57,3 +57,7 @@ def test_runner_can_replay_a_contract_case_without_calling_a_provider() -> None:
     assert report["passed"] == 3
     assert report["environmentBlocked"] == 0
     assert report["llm"]["total_calls"] == 0
+    assert report["model"]["model"] == "deepseek-flash"
+    assert report["model"]["thinkingMode"] == "enabled"
+    assert report["model"]["reasoningEffort"] == "high"
+    assert len(report["model"]["runtimeCommit"]) == 40
