@@ -1,0 +1,87 @@
+{
+  "schemaVersion": "mall-v3.0.1.acceptance.v1",
+  "project": "Mall AI After-sales Platform",
+  "releaseId": "v3.0.1-final-0162c4059c35",
+  "branch": "codex/v3.0.1-offline-acceptance",
+  "runtimeCommit": "0162c4059c35211852f409a4c3517a87997b4f56",
+  "executionHead": "0162c4059c35211852f409a4c3517a87997b4f56",
+  "evidenceCommit": null,
+  "historyBoundary": {
+    "oldReleaseId": "v3.0-deepseek-flash-final",
+    "oldLock": "docs/evidence/deepseek-release-lock.json",
+    "oldLockSha256": "f902ea96d1a923286b82deb6d0ec1f1cb207126bbdabd65a408a19f9552b8b9c",
+    "oldLockModified": false
+  },
+  "offlineGates": {
+    "fastapi": {"status": "passed", "passed": 376, "failed": 0, "warnings": 1, "subtests": 12, "command": "mall-ai-service/.venv/Scripts/python.exe -m pytest -q"},
+    "v3Manifest": {"status": "passed", "registered": 478, "passed": 478, "failed": 0, "command": "python mall-ai-service/scripts/validate_v3_release_manifest.py"},
+    "v3Preflight": {"status": "passed", "registered": 478, "passed": 478, "representativeRegistered": 8, "representativePassed": 8, "manifestSha256": "2f9d60f3903b3046236a71e1557d89fac87e916d9586d787a193c6deb4c71d2e", "caseSetSha256": "18a3ad20485417bbebd8bad875490cf80b171ed28760b1dc2dfbd203d1938ccd"},
+    "qualityAgent": {"status": "passed", "registered": 17, "passed": 17, "failed": 0, "command": "python mall-ai-service/scripts/run_quality_agent_evaluation.py"},
+    "chunkMetadata": {"status": "passed", "registered": 8, "passed": 8, "failed": 0, "command": "python mall-ai-service/scripts/evaluate_chunk_metadata.py"},
+    "javaTargeted": {"status": "passed", "portalTests": 12, "adminTests": 6, "failed": 0, "skipTestsFalse": true},
+    "springMysqlContext": {"status": "passed", "tests": 1, "failed": 0, "note": "local Java 11.0.24 process with Compose MySQL/Redis test properties; not a Java 8 claim"},
+    "vueBuild": {"status": "passed", "command": "mall-ai-web/npm run build"},
+    "compose": {"status": "passed", "servicesHealthy": 8, "dockerServer": "29.7.2"},
+    "durableRecoveryField": {"status": "environment_blocked", "registered": 32, "passed": 0, "failed": 0, "blocked": 32, "reason": "the only live durable runner sends model-dependent turns; running it before the single formal batch would violate the no-provider-call gate. Deterministic durable contract is covered by v3 preflight 32/32."}
+  },
+  "fieldAcceptance": {
+    "browser_e2e": {"status": "passed", "total": 24, "passed": 24, "failed": 0, "blocked": 0, "report": "tmp/v301-field-browser/latest.json", "sha256": "49956c149d372bed9240f32f0a7438ab3ee9e53757c34bee02225ba58e0df76d"},
+    "java_mysql_integration": {"status": "passed", "total": 30, "passed": 30, "failed": 0, "blocked": 0, "report": "tmp/v301-field-java/latest.json", "sha256": "a22fcc48b83d17eb42b5740ef482b8c5fee94c55abbb514ef82f3178b8e28835"},
+    "fault_injection": {"status": "passed", "total": 36, "passed": 36, "failed": 0, "blocked": 0, "report": "tmp/v301-field-fault/latest.json", "sha256": "ac6957629cab80ba384682e2dde0434415cdabbfe8450b333633bba9f304a197"},
+    "durable_async_recovery": {"status": "environment_blocked", "total": 32, "passed": 0, "failed": 0, "blocked": 32, "liveReport": null, "deterministicReference": "v3Preflight.durable_async_recovery=32/32"}
+  },
+  "deepseekBatch": {
+    "status": "failed_before_quality_suites",
+    "batchId": "candidate-5f1d90208743",
+    "command": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/Run-V3_0_1-DeepSeek-Release.ps1 -RuntimeCommit 0162c4059c35211852f409a4c3517a87997b4f56",
+    "report": "tmp/deepseek-v3.0.1-candidate.json",
+    "reportSha256": "1a6e0016fdc5116ea68690e14167f5351391cd75bd827abe613953196f7cd9d2",
+    "requests": 0,
+    "successfulRequests": 0,
+    "failedRequests": 1,
+    "environmentBlocked": 0,
+    "promptTokens": 0,
+    "completionTokens": 0,
+    "totalTokens": 0,
+    "protocolCorrections": 0,
+    "realLocalShowcase": {"status": "failed", "chainsCompleted": 0, "frames": 0, "safeFailureClass": "ShowcaseError", "detail": "The runner intentionally stores only a redacted failure class; exact provider/application detail is unavailable in the report."},
+    "main": {"status": "not_executed", "cases": 24, "runsPerCase": 3},
+    "supplemental": {"status": "not_executed", "cases": 12, "runsPerCase": 3},
+    "grounding": {"status": "not_executed", "cases": 52},
+    "lock": "docs/evidence/deepseek-release-lock-v3.0.1.json",
+    "lockSha256": "47bea6280a3200e35e8fd90c165b5c80a94e21d4dedaa1af563243e24535281c"
+  },
+  "rag": {
+    "dataset": "mall-ai-service/evals/rag2_golden_cases.v1.json",
+    "datasetSha256": "632f36c30a21c0b76a5ae18cc2f4b74ff887f70b37c42235f4b776aad8a4fcc1",
+    "dense": {"cases": 52, "recallAt3": 1.0, "mrr": 0.948718, "ndcgAt3": 0.962147, "avgLatencyMs": 24.16, "p95LatencyMs": 14.69, "externalCalls": 0},
+    "hybrid": {"cases": 52, "recallAt3": 1.0, "mrr": 0.935897, "ndcgAt3": 0.952683, "avgLatencyMs": 13.15, "p95LatencyMs": 17.53, "externalCalls": 0, "status": "comparison_only"},
+    "rerank": {"status": "environment_blocked", "reason": "local reranker evaluation did not finish in the offline environment; Dense remains the default"},
+    "grounding": {"status": "environment_blocked", "reason": "live grounding was not reached because the single DeepSeek batch stopped at the local showcase"}
+  },
+  "safetyAndReliability": {
+    "unconfirmedWrites": 0,
+    "crossAccountLeakage": 0,
+    "duplicateFinalWrites": 0,
+    "sensitiveProjectionLeaks": 0,
+    "staleProposalSubmissions": 0,
+    "rbacMcpContracts": "deterministic and targeted tests passed",
+    "outboxConsumerIdempotency": "covered by Java targeted tests and deterministic contract; no production claim",
+    "providerFailure": "formal local showcase stopped before quality suites; no second batch attempted"
+  },
+  "assets": {
+    "newFormalBatchFrames": [],
+    "note": "No new frames were produced because the real local showcase stopped before browser capture. Existing older assets are not re-bound to this candidate."
+  },
+  "status": {
+    "testRunComplete": false,
+    "releaseQualified": false,
+    "reason": "The candidate did not execute all planned sections and the 32 live durable cases remain environment_blocked."
+  },
+  "limitations": [
+    "The candidate DeepSeek batch is a failed attempt with zero provider requests, not a model quality result.",
+    "No real-model task success, clarification, grounding, latency, token, or cost claim is valid from this run.",
+    "Durable live field results from older commits are stale and are not merged into this package.",
+    "This is local synthetic-data evidence, not production SLA, user accuracy, throughput, or external fulfillment evidence."
+  ]
+}
