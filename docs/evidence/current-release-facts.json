@@ -1,10 +1,10 @@
 {
   "schemaVersion": "mall-public-release-facts.v3",
-  "generatedAt": "2026-09-14T04:05:30Z",
+  "generatedAt": "2026-09-14T08:00:00Z",
   "releaseStatus": "NOT_COMPLETE",
-  "runtimeCommit": "9b2fc5285794ecd7baac3f9e7984c216370436d3",
-  "evidenceCommit": "9b2fc5285794ecd7baac3f9e7984c216370436d3",
-  "statusReason": "Batch 1 三条合成 Runtime 场景通过；Batch 2 已按冻结提交运行一次但在暂停/恢复场景的模型结构化澄清失败后停止，主集、补充集、Grounding 和最终素材未执行，因此 Release Gate 为 NOT_COMPLETE。",
+  "runtimeCommit": "0162c4059c35211852f409a4c3517a87997b4f56",
+  "evidenceCommit": "933d057a76a709cd2cb7255f6494de3382a9f469",
+  "statusReason": "v3.0.1 唯一候选批次在真实本地展示链路阶段返回脱敏 ShowcaseError 后停止，DeepSeek 账本记录 0 请求/0 Token；主集、补充集、Grounding 和新素材未执行，因此 Release Gate 为 NOT_COMPLETE。",
   "project": {
     "name": "Mall AI After-sales Platform",
     "repository": "https://github.com/Eleven617/mall-ai-after-sales-platform",
@@ -127,7 +127,7 @@
     "claimBoundary": "这些是小型版本化合成政策集上的检索指标，不是答案准确率、真实用户覆盖或生产 SLA。"
   },
   "tests": {
-    "fastapi": {"passed": 371, "failed": 0, "warnings": 1, "subtests": 12, "exitCode": 0},
+    "fastapi": {"passed": 376, "failed": 0, "warnings": 1, "subtests": 12, "exitCode": 0},
     "java": {
       "portalCore": "12/12",
       "portalCompatibility": "2/2",
@@ -140,7 +140,7 @@
     "vue": {"command": "npm run build", "status": "passed", "exitCode": 0},
     "deterministicContract": {"manifest": "478/478", "representative": "8/8", "mode": "contract_mock", "exitCode": 0},
     "fieldAcceptance": {
-      "status": "stale_after_runtime_change",
+      "status": "partially_current_live_and_durable_blocked",
       "testedCodeCommit": "9c7c29045c28446b16a609768cd4b4c1202f8a51",
       "browser": "24/24",
       "javaMysql": "30/30",
@@ -153,6 +153,11 @@
       "report": "tmp/field-acceptance-final-9c7c290/field-20260912T190322Z-6095525f/field-acceptance.json",
       "reportSha256": "6fcae42f1befeadd439957fe2bbecb114a77f787f29a8ec97fc29fdc6b016ff8",
       "fixtureSha256": "4dd3d407001aec74e4c9546639c78eb2544b34a0ac4f2b6698eba345c27e3fc3"
+      ,"currentFrozenCommit": "0162c4059c35211852f409a4c3517a87997b4f56"
+      ,"currentBrowser": "24/24"
+      ,"currentJavaMysql": "30/30"
+      ,"currentFaultInjection": "36/36"
+      ,"currentDurableRecovery": "32 environment_blocked"
     }
   },
   "latencyAndTokens": {
@@ -175,15 +180,15 @@
     "showcaseEvidence": "docs/evidence/final-showcase-evidence.md"
   },
   "ci": {
-    "status": "pending_remote_final_sha",
+    "status": "failed_current_sha",
     "verifiedCommit": null,
     "mallCi": null,
     "qualityEvaluation": null,
     "scope": "Batch 2 后的证据提交尚未推送；历史 Actions success 不替代当前 SHA。推送后只记录 GitHub 实际返回的两个门禁结果。"
   },
-    "currentVerification": {
-    "commit": "9b2fc5285794ecd7baac3f9e7984c216370436d3",
-    "fastapi": {"passed": 371, "failed": 0, "warnings": 1, "subtests": 12, "exitCode": 0},
+  "currentVerification": {
+    "commit": "0162c4059c35211852f409a4c3517a87997b4f56",
+    "fastapi": {"passed": 376, "failed": 0, "warnings": 1, "subtests": 12, "exitCode": 0},
     "deterministic": {"manifest": "478/478", "representative": "8/8", "exitCode": 0},
     "composeConfig": {"status": "passed", "exitCode": 0},
     "deepseek": {
@@ -193,36 +198,35 @@
       "thinkingMode": "enabled",
       "reasoningEffort": "high",
       "batchStatus": "failed",
-      "batchId": "final-2bc17c6257ac",
-      "runtimeCommit": "9b2fc5285794ecd7baac3f9e7984c216370436d3",
-      "calls": 9,
-      "successfulCalls": 8,
+      "batchId": "candidate-5f1d90208743",
+      "runtimeCommit": "0162c4059c35211852f409a4c3517a87997b4f56",
+      "calls": 0,
+      "successfulCalls": 0,
       "failedCalls": 1,
-      "promptTokens": 17090,
-      "completionTokens": 7268,
-      "totalTokens": 24358,
-      "toolCalls": 3,
+      "promptTokens": 0,
+      "completionTokens": 0,
+      "totalTokens": 0,
+      "toolCalls": 0,
       "sideEffects": 0,
-      "report": "tmp/deepseek-batch-2-final.json",
-      "reportSha256": "9ad2be9ae3c12b8f79e8ef35c757f8aa5b1eb7f5108285e5a98b53c438e491bf",
-      "failureCase": "agent-open-001",
-      "failureCategory": "clarification_mismatch",
-      "note": "Batch 2 在三条展示场景阶段停止：开放主闭环和事实变化场景通过，暂停/恢复场景结构化澄清契约失败；未执行主集、补充集、Grounding。Batch 1 的报告保留在 deepseekBatches 中。"
+      "report": "tmp/deepseek-v3.0.1-candidate.json",
+      "reportSha256": "1a6e0016fdc5116ea68690e14167f5351391cd75bd827abe613953196f7cd9d2",
+      "failureCategory": "redacted_showcase_error",
+      "note": "唯一候选批次在真实本地展示链路阶段停止；主集、补充集、Grounding 未执行。"
     },
     "showcase": {
       "status": "failed",
-      "captureCommand": ".\\scripts\\Run-Final-DeepSeek-Release.ps1 -ReleaseId v3.0-deepseek-flash-final -RuntimeCommit 9b2fc5285794ecd7baac3f9e7984c216370436d3",
-      "blocker": "Batch 2 showcase case agent-open-001 clarification_mismatch; no rerun permitted",
+      "captureCommand": "scripts/Run-V3_0_1-DeepSeek-Release.ps1 -RuntimeCommit 0162c4059c35211852f409a4c3517a87997b4f56",
+      "blocker": "candidate-5f1d90208743 returned a redacted ShowcaseError before chain completion",
       "scenarios": [
-        {"scenarioId": "showcase-main-closed-loop", "status": "passed", "caseId": "agent-open-020", "asset": null, "javaWriteObserved": false, "batchId": "final-2bc17c6257ac"},
-        {"scenarioId": "showcase-pause-resume", "status": "failed", "caseId": "agent-open-001", "asset": null, "batchId": "final-2bc17c6257ac", "failureCategory": "clarification_mismatch"},
-        {"scenarioId": "showcase-fact-change-replan", "status": "passed", "caseId": "agent-open-021", "asset": null, "batchId": "final-2bc17c6257ac"}
+        {"scenarioId": "showcase-main-closed-loop", "status": "not_executed", "asset": null, "javaWriteObserved": false, "batchId": "candidate-5f1d90208743"},
+        {"scenarioId": "showcase-pause-resume", "status": "not_executed", "asset": null, "batchId": "candidate-5f1d90208743"},
+        {"scenarioId": "showcase-fact-change-replan", "status": "not_executed", "asset": null, "batchId": "candidate-5f1d90208743"}
       ],
-      "boundary": "Batch 2 三条合成 Runtime 展示场景执行到暂停/恢复失败后停止；没有生成最终 GIF，也没有把合成只读网关结果当作 Java 写入。"
+      "boundary": "本候选没有把确定性合同或旧素材当作真实模型展示。"
     }
   },
   "publicClaims": [
-    "当前冻结提交的 FastAPI 确定性回归：371 passed、12 个子断言；v3 deterministic 478/478、代表性 Runtime 8/8。",
+    "当前冻结提交的 FastAPI 确定性回归：376 passed、12 个子断言；v3 deterministic 478/478、代表性 Runtime 8/8。",
     "历史 Runtime 基线曾完成 DeepSeek 主评测 72/72、补充评测集 36/36、Grounding 15/15 和本地现场 122/122；这些报告在 Runtime 修复后标为 stale，不能作为当前提交结果。",
     "Java 是身份、归属、资格、状态、幂等、事务、Outbox 和最终写入权威。",
     "Batch 1 使用 deepseek-flash + thinking-high 完成三条一次性合成 Runtime 场景；Batch 2 已运行一次，在暂停/恢复结构化澄清失败后停止，主集、补充集、Grounding 和最终公开素材未完成。"

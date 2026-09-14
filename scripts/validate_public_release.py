@@ -77,7 +77,7 @@ def main() -> int:
     else:
         current = facts.get("currentVerification", {})
         require(current.get("commit") == facts["runtimeCommit"], "current verification must bind runtimeCommit")
-        require(current.get("fastapi", {}).get("passed") == 371, "current FastAPI facts mismatch")
+        require(current.get("fastapi", {}).get("passed") == 376, "current FastAPI facts mismatch")
         require(current.get("fastapi", {}).get("failed") == 0, "current FastAPI failure count mismatch")
         require(current.get("deterministic", {}).get("manifest") == "478/478", "current deterministic facts mismatch")
         deepseek_status = current.get("deepseek", {}).get("status")
@@ -93,7 +93,7 @@ def main() -> int:
         showcase_status = current.get("showcase", {}).get("status")
         require(showcase_status in {"environment_blocked", "passed", "failed"}, "showcase status must be explicit")
         require(
-            all(item.get("status") in {"environment_blocked", "passed", "failed"} for item in current["showcase"].get("scenarios", [])),
+            all(item.get("status") in {"environment_blocked", "passed", "failed", "not_executed"} for item in current["showcase"].get("scenarios", [])),
             "showcase scenario status mismatch",
         )
     require(tests["java"]["portalCore"] == "12/12", "Java portal core fact mismatch")
@@ -123,7 +123,7 @@ def main() -> int:
         "DeepSeek",
         "NOT_COMPLETE",
         "environment_blocked",
-        "371 passed",
+        "376 passed",
         "portal 核心 `12/12`",
         "admin `6/6`",
         "Spring context `1/1`",
@@ -206,8 +206,8 @@ def main() -> int:
                 or "not_executed" in section,
                 f"current incomplete boundary missing in {path}",
             )
-            require("371" in section, f"current FastAPI 371 is missing in {path}")
-    require(ci["status"] in {"pending_remote_final_sha", "passed"}, "CI status must be explicit")
+            require("376" in section, f"current FastAPI 376 is missing in {path}")
+    require(ci["status"] in {"pending_remote_final_sha", "passed", "failed_current_sha"}, "CI status must be explicit")
 
     print(
         "public_release_validation PASSED "

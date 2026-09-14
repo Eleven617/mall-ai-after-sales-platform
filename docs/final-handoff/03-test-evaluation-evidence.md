@@ -1,12 +1,12 @@
 # 测试、评测与现场证据
 
-## 当前权威快照｜最终公开收口（2026-09-12 UTC）
+## 当前权威快照｜v3.0.1 候选验收（2026-09-14 UTC）
 
 当前发布状态：**NOT_COMPLETE**。
 
-运行时代码：`9b2fc5285794ecd7baac3f9e7984c216370436d3`。FastAPI **371 passed**、12 个子断言；deterministic **478/478、8/8**；Compose 配置检查通过。Batch 1 通过；Batch 2 使用固定 `deepseek-flash + thinking-high` 执行三条展示场景，结果 **2/3 passed、1/3 failed**（9 次请求、8 成功、1 失败）后停止。主集、补充集、三条 GIF、完整 Grounding 与 Java 写入回查未执行。旧报告与当前 Runtime 不一致，统一标记 stale。
+运行时代码：`0162c4059c35211852f409a4c3517a87997b4f56`。FastAPI **376 passed**、12 个子断言；deterministic **478/478、8/8**；Compose 配置检查通过；Browser 24/24、Java/MySQL 30/30、Fault 36/36。唯一候选批次 `candidate-5f1d90208743` 在真实展示阶段返回脱敏 ShowcaseError（0 请求、0 Token）后停止。主集、补充集、三条 GIF、完整 Grounding、Durable live 32 条与 Java 写入回查为 `not_executed`。旧报告与当前 Runtime 不一致，统一标记 stale。
 
-原始报告路径、退出码和 hash 见 [`current-release-facts.json`](../evidence/current-release-facts.json)。历史 `889136e` 的远程门禁不能替代当前 SHA；当前 Batch 2 的失败是 `agent-open-001` clarification mismatch，不是 HTTP 402，且同一 releaseId 已锁定不再重跑。
+原始报告路径、退出码和 hash 见 [`current-release-facts.json`](../evidence/current-release-facts.json) 与 [`v3.0.1-offline-and-live-acceptance.md`](../evidence/v3.0.1-offline-and-live-acceptance.md)。当前分支 `quality-evaluation` 成功，`mall-ci` 的 `public-release` 因旧公共事实绑定失败；不能把它写成全绿。新候选锁已写入 `deepseek-release-lock-v3.0.1.json`，不再重跑。
 
 ## 历史审计记录（以下内容不代表当前 Commit）
 

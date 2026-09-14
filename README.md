@@ -9,7 +9,7 @@
 
 ## 30 秒了解项目
 
-> 当前展示状态：`NOT_COMPLETE`。代码冻结提交已完成 DeepSeek `deepseek-flash + thinking=enabled + reasoning_effort=high` 的两个允许批次：Batch 1 三条场景通过；Batch 2 在暂停/恢复场景的结构化澄清契约失败后停止（9 次请求、8 成功、1 失败），主集/补充集/Grounding 和最终 GIF 未执行。没有重跑或用 mock 冒充。
+> 当前展示状态：`NOT_COMPLETE`。历史 `v3.0-deepseek-flash-final` 两批次和失败锁保持不变；本候选 `v3.0.1` 在真实本地展示阶段返回脱敏 `ShowcaseError` 后停止（0 provider requests、0 tokens），主集/补充集/Grounding 和新素材未执行。没有用 mock 冒充真实模型结果。
 
 ### 为什么不是普通聊天机器人
 
@@ -66,7 +66,7 @@ Batch 1/2 的三条合成 Runtime 场景结果为 2/3 通过、1/3 失败；Batc
 
 结果按套件独立统计，不相加，也不外推为生产 SLA 或真实用户泛化：
 
-- 当前冻结提交 FastAPI：`371 passed`、12 个子断言；Java portal 核心 `12/12`、兼容性 `2/2`、admin `6/6`、Spring context `1/1`；
+- 当前冻结提交 FastAPI：`376 passed`、12 个子断言；Java portal 核心 `12/12`、兼容性 `2/2`、admin `6/6`、Spring context `1/1`；现场 Browser `24/24`、Java/MySQL `30/30`、Fault `36/36`；
 - 历史补充评测集（supplemental evaluation set）参与过开发期回归，不是独立盲测集；其旧 `36/36` 结果已因 Runtime 提交变化标为 stale；
 - RAG：Dense、Hybrid、Hybrid+Rerank 分别在 52 条版本化合成政策 Case 上评测；Dense 当前 MRR `0.948718`、nDCG@3 `0.962147`，作为默认方案；这些是检索指标，不是答案准确率；
 - deterministic 合同：`478/478`，代表性 Runtime `8/8`，不是 E2E；

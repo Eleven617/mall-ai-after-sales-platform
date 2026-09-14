@@ -2,11 +2,11 @@
 
 ## 当前权威结论｜最终公开收口
 
-运行时代码 `9b2fc5285794ecd7baac3f9e7984c216370436d3`，分支 `main`。当前 Release Gate：**NOT_COMPLETE**。本冻结提交 FastAPI 回归为 371 passed、12 个子断言，v3 manifest/preflight 为 478/478、8/8；Batch 1 三条场景通过，Batch 2 展示阶段为 2/3 通过、1/3 失败（暂停/恢复结构化澄清契约），因此按规则停止。主集、补充集、Grounding、Java 写入回查和最终 GIF 未运行，旧 Runtime 的 72/72、36/36、122/122 报告仍为 stale。
+运行时代码 `0162c4059c35211852f409a4c3517a87997b4f56`，分支 `codex/v3.0.1-offline-acceptance`。当前 Release Gate：**NOT_COMPLETE**。本冻结提交 FastAPI 回归为 376 passed、12 个子断言，v3 manifest/preflight 为 478/478、8/8；浏览器现场 24/24、Java/MySQL 30/30、故障注入 36/36 通过。唯一 v3.0.1 DeepSeek 候选批次在真实展示链路返回脱敏 ShowcaseError 后停止，主集、补充集、Grounding 未执行，Durable live 32 条 environment_blocked。
 
-最新远程 CI 仍以历史 `889136e` 两条 success 为参考；最终批次报告位于 `tmp/deepseek-batch-2-final.json`（SHA-256 `9ad2be9ae3c12b8f79e8ef35c757f8aa5b1eb7f5108285e5a98b53c438e491bf`，本地忽略，不提交原始报告）。Batch 1 报告 SHA-256 `48fdf153d277f196d070620860512be0e979caf582f0bf38d37d10f7a08a111e`。唯一事实源：[`current-release-facts.json`](current-release-facts.json)；展示证据：[`final-showcase-evidence.md`](final-showcase-evidence.md)。
+本分支远程 `quality-evaluation` 已成功，`mall-ci` 的 `public-release` 因旧公共事实文件尚未绑定本冻结 SHA 而失败；其余 CI jobs 成功。候选批次报告位于 `tmp/deepseek-v3.0.1-candidate.json`（SHA-256 `1a6e0016fdc5116ea68690e14167f5351391cd75bd827abe613953196f7cd9d2`，本地忽略，不提交原始载荷）。唯一事实源：[`current-release-facts.json`](current-release-facts.json)；本轮结果：[`v3.0.1-offline-and-live-acceptance.md`](v3.0.1-offline-and-live-acceptance.md)。
 
-当前 releaseId `v3.0-deepseek-flash-final` 已写入 [`deepseek-release-lock.json`](deepseek-release-lock.json)。同一 releaseId 的再次运行在读取 Provider 配置前拒绝（本地锁测试退出码 `4`）；本版本不允许第三批次。
+旧 releaseId `v3.0-deepseek-flash-final` 的锁保持不变；本轮新候选锁为 [`deepseek-release-lock-v3.0.1.json`](deepseek-release-lock-v3.0.1.json)，记录 `candidate-5f1d90208743` 失败和 0 provider requests，不允许无授权重跑。
 
 历史 `e0c8b36` 的首次 `mall-ci` 曾因 OSV 容器无法解析 Java 本地 `1.0-SNAPSHOT` reactor 而失败（退出码 127）；后续工作流已改为 `--no-resolve` 并继续扫描显式 Python/npm lockfile 与 `mall2` POM 直接依赖。该过程属于历史 CI 审计，不代表当前 SHA 已远程通过；当前推送后必须以 GitHub 返回的最新结果为准。
 
