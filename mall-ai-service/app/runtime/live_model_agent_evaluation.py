@@ -706,6 +706,7 @@ def _build_report(
         "suiteVersion": suite["suiteVersion"],
         "suiteSha256": suite_hash,
         "mode": "live_model_agent_synthetic",
+        "status": "environment_blocked" if blocked else "failed" if failed else "passed",
         "uniqueCases": len(cases),
         "requiredRunsPerCase": required_runs,
         "executedRuns": len(results),

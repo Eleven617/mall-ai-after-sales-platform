@@ -179,6 +179,7 @@ def evaluate_grounded_answer_suite(
     max_attempts: int | None = None,
     max_cases: int | None = None,
     case_ids: set[str] | None = None,
+    stop_on_environment_blocked: bool = False,
 ) -> dict[str, Any]:
     """Explicit live-safe grounding/abstention evaluator for a chosen mode.
 
@@ -224,6 +225,8 @@ def evaluate_grounded_answer_suite(
                         "violations": [],
                     }
                 )
+                if stop_on_environment_blocked:
+                    break
                 continue
 
             violations = _answer_contract_violations(expected, answer, observed_outcome)

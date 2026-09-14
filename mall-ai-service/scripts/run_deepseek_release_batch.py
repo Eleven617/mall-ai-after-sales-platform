@@ -28,6 +28,10 @@ from app.runtime.live_model_agent_evaluation import (  # noqa: E402
     run_live_model_agent_evaluation,
 )
 from app.runtime.providers import RUNTIME_PROMPT_VERSION  # noqa: E402
+from app.services.rag2_evaluation import (  # noqa: E402
+    evaluate_grounded_answer_suite,
+    load_rag2_golden_suite,
+)
 from app.services.llm_service import (  # noqa: E402
     DEEPSEEK_REASONING_EFFORT,
     DEEPSEEK_THINKING_MODE,
@@ -37,6 +41,7 @@ from app.skills.catalog import SKILL_CATALOG_VERSION  # noqa: E402
 
 REPOSITORY_ROOT = SERVICE_ROOT.parent
 HOLDOUT_SUITE_PATH = SERVICE_ROOT / "evals" / "live_model_agent_holdout_cases.v1.json"
+GROUNDING_SUITE_PATH = SERVICE_ROOT / "evals" / "rag2_golden_cases.v1.json"
 SHOWCASE_CASES = {
     "main_open_task_closed_loop": "agent-open-020",
     "clarify_pause_resume": "agent-open-001",
@@ -102,6 +107,38 @@ def _finish_ledger(ledger: dict[str, object], report: dict[str, object]) -> None
     )
 
 
+def _merge_ledger_metrics(ledger: dict[str, object], reports: list[dict[str, object]]) -> None:
+    """Aggregate only numeric provider metadata from one unified batch."""
+
+    totals = {
+        "requests": 0,
+        "successfulRequests": 0,
+        "failedRequests": 0,
+        "environmentBlocked": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "totalTokens": 0,
+        "toolCalls": 0,
+        "networkRetries": 0,
+    }
+    for report in reports:
+        metric = report.get("llm") or report.get("provider_metrics")
+        if isinstance(metric, dict):
+            totals["requests"] += int(metric.get("total_calls", 0) or 0)
+            totals["successfulRequests"] += int(metric.get("succeeded_calls", 0) or 0)
+            totals["failedRequests"] += int(metric.get("failed_calls", 0) or 0)
+            totals["promptTokens"] += int(metric.get("prompt_tokens", 0) or 0)
+            totals["completionTokens"] += int(metric.get("completion_tokens", 0) or 0)
+            totals["totalTokens"] += int(metric.get("total_tokens", 0) or 0)
+            totals["networkRetries"] += int(metric.get("network_retries", 0) or 0)
+        totals["toolCalls"] += int(report.get("toolCalls", 0) or 0)
+        totals["environmentBlocked"] += int(
+            report.get("environmentBlocked", report.get("environment_blocked_cases", 0)) or 0
+        )
+    ledger.update(totals)
+    ledger["endedAt"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+
+
 def _run_showcase(ledger: dict[str, object]) -> dict[str, object]:
     report = run_live_model_agent_evaluation(
         suite_path=DEFAULT_SUITE_PATH,
@@ -131,6 +168,16 @@ def _run_showcase(ledger: dict[str, object]) -> dict[str, object]:
 
 
 def _run_final(ledger: dict[str, object]) -> dict[str, object]:
+    showcase = _run_showcase(ledger)
+    reports: dict[str, object] = {"showcase": showcase}
+    if showcase.get("environmentBlocked") or showcase.get("failed"):
+        _merge_ledger_metrics(ledger, [showcase])
+        ledger["status"] = "environment_blocked" if showcase.get("environmentBlocked") else "failed"
+        return {
+            "status": "environment_blocked" if showcase.get("environmentBlocked") else "failed",
+            **reports,
+        }
+
     main = run_live_model_agent_evaluation(
         suite_path=DEFAULT_SUITE_PATH,
         required_runs=3,
@@ -139,10 +186,11 @@ def _run_final(ledger: dict[str, object]) -> dict[str, object]:
         timeout_seconds=25.0,
         max_attempts=1,
     )
-    reports: dict[str, object] = {"main": main}
-    if main.get("environmentBlocked") or main.get("failed"):
-        _finish_ledger(ledger, main)
-        return {"status": "environment_blocked" if main.get("environmentBlocked") else "failed", **reports}
+    reports["main"] = main
+    if main.get("environmentBlocked"):
+        _merge_ledger_metrics(ledger, [value for value in reports.values() if isinstance(value, dict)])
+        ledger["status"] = "environment_blocked"
+        return {"status": "environment_blocked", **reports}
 
     holdout = run_live_model_agent_evaluation(
         suite_path=HOLDOUT_SUITE_PATH,
@@ -153,16 +201,36 @@ def _run_final(ledger: dict[str, object]) -> dict[str, object]:
         max_attempts=1,
     )
     reports["supplemental"] = holdout
-    _finish_ledger(ledger, holdout)
-    if holdout.get("environmentBlocked") or holdout.get("failed"):
-        return {"status": "environment_blocked" if holdout.get("environmentBlocked") else "failed", **reports}
+    if holdout.get("environmentBlocked"):
+        _merge_ledger_metrics(ledger, [value for value in reports.values() if isinstance(value, dict)])
+        ledger["status"] = "environment_blocked"
+        return {"status": "environment_blocked", **reports}
 
-    # Grounding is deliberately left to the dedicated, versioned runner.  It
-    # is only entered after both runtime suites have completed successfully,
-    # so provider blocks cannot fan out into a second hidden batch.
-    reports["grounding"] = {"status": "not_executed", "reason": "dedicated grounding runner required"}
-    ledger["status"] = "passed"
-    return {"status": "passed", **reports}
+    grounding_suite = load_rag2_golden_suite(GROUNDING_SUITE_PATH)
+    grounding = evaluate_grounded_answer_suite(
+        grounding_suite,
+        mode="dense",
+        timeout_seconds=20.0,
+        max_attempts=1,
+        stop_on_environment_blocked=True,
+    )
+    grounding["model"] = {
+        "provider": "DeepSeek",
+        "model": settings.deepseek_model,
+        "thinkingMode": DEEPSEEK_THINKING_MODE,
+        "reasoningEffort": DEEPSEEK_REASONING_EFFORT,
+        "promptVersion": "rag2_grounding_v1",
+        "skillCatalogVersion": SKILL_CATALOG_VERSION,
+        "runtimeCommit": ledger["runtimeCommit"],
+        "executionBoundary": "synthetic_policy_corpus",
+    }
+    reports["grounding"] = grounding
+    report_list = [value for value in reports.values() if isinstance(value, dict)]
+    _merge_ledger_metrics(ledger, report_list)
+    statuses = {str(value.get("status")) for value in report_list}
+    overall = "environment_blocked" if "environment_blocked" in statuses else "failed" if "failed" in statuses or "quality_failed" in statuses else "passed"
+    ledger["status"] = overall
+    return {"status": overall, **reports}
 
 
 def main() -> int:
@@ -188,6 +256,7 @@ def main() -> int:
     ledger["suiteHashes"] = {
         "main": _sha256(DEFAULT_SUITE_PATH),
         "supplemental": _sha256(HOLDOUT_SUITE_PATH),
+        "grounding": _sha256(GROUNDING_SUITE_PATH),
     }
     if not settings.deepseek_api_key:
         ledger["status"] = "environment_blocked"
