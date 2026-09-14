@@ -5,7 +5,7 @@
   "branch": "codex/v3.0.1-offline-acceptance",
   "runtimeCommit": "0162c4059c35211852f409a4c3517a87997b4f56",
   "executionHead": "0162c4059c35211852f409a4c3517a87997b4f56",
-  "evidenceCommit": null,
+  "evidenceCommit": "7f8b87746c23f78eef660a8a6a99424151d6b898",
   "historyBoundary": {
     "oldReleaseId": "v3.0-deepseek-flash-final",
     "oldLock": "docs/evidence/deepseek-release-lock.json",
