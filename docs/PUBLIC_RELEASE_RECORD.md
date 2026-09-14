@@ -17,7 +17,7 @@
 | Vue | **production build passed** | `npm run build` |
 | deterministic | **478/478；代表性 8/8** | contract_mock，不是 E2E |
 | Durable live | **32 environment_blocked** | 运行它会在唯一正式批次外产生模型请求；确定性 durable contract 32/32 |
-| 远程 CI | **mall-ci public-release failed；quality-evaluation success** | 其余 mall-ci jobs success；public-release 尚未绑定当前公共事实文件 |
+| 远程 CI | **mall-ci success；quality-evaluation success** | 提交 `4d452d0` 的 GitHub Actions 实际运行；不等于生产部署 |
 
 事实源：[`current-release-facts.json`](evidence/current-release-facts.json)。公开演示素材和阻断记录：[`final-showcase-evidence.md`](evidence/final-showcase-evidence.md)。成本、生产 SLA、真实用户泛化和外部履约均 unavailable/未接入。
 

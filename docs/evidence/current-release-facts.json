@@ -3,7 +3,7 @@
   "generatedAt": "2026-09-14T08:00:00Z",
   "releaseStatus": "NOT_COMPLETE",
   "runtimeCommit": "0162c4059c35211852f409a4c3517a87997b4f56",
-  "evidenceCommit": "933d057a76a709cd2cb7255f6494de3382a9f469",
+  "evidenceCommit": "4d452d06f0f6e75d1b8d8d929dd40e5fa640b28a",
   "statusReason": "v3.0.1 唯一候选批次在真实本地展示链路阶段返回脱敏 ShowcaseError 后停止，DeepSeek 账本记录 0 请求/0 Token；主集、补充集、Grounding 和新素材未执行，因此 Release Gate 为 NOT_COMPLETE。",
   "project": {
     "name": "Mall AI After-sales Platform",
@@ -180,11 +180,11 @@
     "showcaseEvidence": "docs/evidence/final-showcase-evidence.md"
   },
   "ci": {
-    "status": "failed_current_sha",
-    "verifiedCommit": null,
-    "mallCi": null,
-    "qualityEvaluation": null,
-    "scope": "Batch 2 后的证据提交尚未推送；历史 Actions success 不替代当前 SHA。推送后只记录 GitHub 实际返回的两个门禁结果。"
+    "status": "passed",
+    "verifiedCommit": "4d452d06f0f6e75d1b8d8d929dd40e5fa640b28a",
+    "mallCi": "https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34821040162",
+    "qualityEvaluation": "https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34821040035",
+    "scope": "GitHub Actions 在提交 4d452d0 上实际完成；mall-ci 与 quality-evaluation 均 success。后续仅有证据指针更新，不改变被测运行时代码。"
   },
   "currentVerification": {
     "commit": "0162c4059c35211852f409a4c3517a87997b4f56",
