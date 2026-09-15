@@ -32,6 +32,18 @@ $env:MALL_IMAGE_REVISION = $RuntimeCommit
 $env:MALL_PROMPT_VERSION = "agent_runtime_v3_3"
 $env:MALL_SCHEMA_VERSION = "task_runtime_v3_0"
 
+# The official candidate must use the same disposable password for the
+# employee/customer identities that the live showcase exercises.  Bootstrap
+# those local-only identities before entering Python; the helper keeps the
+# password in this process and never writes it to the repository or report.
+$initializeScript = Join-Path $root "scripts\Initialize-LocalDemoAccess.ps1"
+$secureTemporaryPassword = ConvertTo-SecureString $temporaryPassword -AsPlainText -Force
+& $initializeScript -DemoPassword $secureTemporaryPassword -PrepareCustomerFixtures | Out-Null
+if ($LASTEXITCODE -ne 0) {
+    throw "Local synthetic demo identity bootstrap failed before the official candidate batch."
+}
+$secureTemporaryPassword = $null
+
 $reportPath = Join-Path $root $Report
 $lockPath = Join-Path $root $Lock
 Push-Location (Join-Path $root "mall-ai-service")
