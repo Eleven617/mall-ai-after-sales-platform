@@ -81,8 +81,10 @@ if ($image -and $image.Config.Labels) { $imageLabels = $image.Config.Labels }
 $keyEntry = @($containerEnv | Where-Object { $_ -like 'DEEPSEEK_API_KEY=*' } | Select-Object -First 1)
 $keyConfigured = $keyEntry.Count -eq 1 -and $keyEntry[0].Length -gt 'DEEPSEEK_API_KEY='.Length
 Set-Check 'deepseek_key_configured' $keyConfigured '容器没有配置 DeepSeek Key；未打印或读取 Key 内容。'
-Set-Check 'container_label_revision' ($containerLabels['org.opencontainers.image.revision'] -eq $FreezeCommit) '容器 label revision 与冻结 Commit 不一致。'
-Set-Check 'image_label_revision' ($imageLabels['org.opencontainers.image.revision'] -eq $FreezeCommit) '镜像 label revision 与冻结 Commit 不一致。'
+$containerRevision = if ($containerLabels.PSObject.Properties['org.opencontainers.image.revision']) { $containerLabels.PSObject.Properties['org.opencontainers.image.revision'].Value } else { $null }
+$imageRevision = if ($imageLabels.PSObject.Properties['org.opencontainers.image.revision']) { $imageLabels.PSObject.Properties['org.opencontainers.image.revision'].Value } else { $null }
+Set-Check 'container_label_revision' ($containerRevision -eq $FreezeCommit) '容器 label revision 与冻结 Commit 不一致。'
+Set-Check 'image_label_revision' ($imageRevision -eq $FreezeCommit) '镜像 label revision 与冻结 Commit 不一致。'
 Set-Check 'container_runtime_commit' (@($containerEnv | Where-Object { $_ -eq "MALL_RUNTIME_COMMIT=$FreezeCommit" }).Count -eq 1) '容器运行时 Commit 不一致。'
 Set-Check 'container_provider_mode_live' (@($containerEnv | Where-Object { $_ -eq 'MALL_RUNTIME_PROVIDER_MODE=live' }).Count -eq 1) '容器 Provider mode 不是 live。'
 
@@ -103,8 +105,8 @@ if ($container) {
 }
 Set-Check 'ledger_host_container_mapping' $ledgerMountOk '主机 tmp/release-ledger 未映射到容器 /app/release-ledger。'
 
-$deterministic = JsonFile (Join-Path $root 'tmp\offline-field\showcase-deterministic.json')
-$replay = JsonFile (Join-Path $root 'tmp\offline-field\showcase-replay.json')
+$deterministic = JsonFile (Join-Path $root 'tmp\offline-field\deterministic\showcase.json')
+$replay = JsonFile (Join-Path $root 'tmp\offline-field\replay\showcase.json')
 function ShowcaseReady($Report) {
     if ($null -eq $Report -or $Report.status -ne 'passed' -or $Report.browserFrameCount -lt 12) { return $false }
     $groups = @($Report.frameGroups.PSObject.Properties)
@@ -125,8 +127,8 @@ $field = if ($fieldPath) { JsonFile $fieldPath.FullName } else { $null }
 $fieldReady = $null -ne $field -and $field.releaseGate.passed -eq $true -and $field.caseCount -eq 122 -and (@($field.categories.PSObject.Properties) | Where-Object { $_.Value.passed -ne $_.Value.expected -or $_.Value.failed -ne 0 -or $_.Value.environmentBlocked -ne 0 }).Count -eq 0 -and $field.testedCodeCommit -eq $FreezeCommit
 Set-Check 'field_acceptance_122_current' $fieldReady '现场 122 条报告不存在、未全通过或不是冻结 Commit。'
 
-$manifestExit = RunQuiet $python @('scripts\validate_v3_release_manifest.py')
-$preflightExit = RunQuiet $python @('scripts\run_v3_release_preflight.py')
+$manifestExit = RunQuiet $python @('mall-ai-service\scripts\validate_v3_release_manifest.py')
+$preflightExit = RunQuiet $python @('mall-ai-service\scripts\run_v3_release_preflight.py')
 Set-Check 'manifest_validation' ($manifestExit -eq 0) 'v3 release manifest validation 失败。'
 Set-Check 'deterministic_preflight' ($preflightExit -eq 0) 'v3 deterministic preflight 失败。'
 $manifestHash = Sha256 (Join-Path $root 'evals\v3\release-manifest.json')
