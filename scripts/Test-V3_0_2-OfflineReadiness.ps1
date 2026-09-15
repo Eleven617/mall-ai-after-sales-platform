@@ -33,13 +33,23 @@ function RunQuiet([string]$File, [string[]]$Arguments) {
     & $File @Arguments *> $null
     return $LASTEXITCODE
 }
+function RunPythonQuiet([string[]]$Arguments) {
+    Push-Location (Join-Path $root 'mall-ai-service')
+    try {
+        & $python @Arguments *> $null
+        return $LASTEXITCODE
+    } finally {
+        Pop-Location
+    }
+}
 
 $beforeStatus = @(& git -C $root status --porcelain)
 Set-Check 'git_worktree_clean_before_report' ($beforeStatus.Count -eq 0) '预检前工作区不是 clean。'
 Set-Check 'branch_correct' ((& git -C $root branch --show-current).Trim() -eq 'codex/v3.0.2-offline-candidate') '当前分支不是 v3.0.2 独立候选分支。'
 $currentHead = (& git -C $root rev-parse HEAD).Trim()
-$freezeAncestor = & git -C $root merge-base --is-ancestor $FreezeCommit $currentHead 2>$null
-Set-Check 'freeze_commit_is_ancestor' ($freezeAncestor -eq 0) '冻结 Commit 不是当前证据提交的祖先。'
+$null = & git -C $root merge-base --is-ancestor $FreezeCommit $currentHead 2>$null
+$freezeAncestorOk = $LASTEXITCODE -eq 0
+Set-Check 'freeze_commit_is_ancestor' $freezeAncestorOk '冻结 Commit 不是当前证据提交的祖先。'
 $postFreezePaths = @(& git -C $root diff --name-only "$FreezeCommit..$currentHead")
 $runtimePrefixes = @('mall-ai-service/app/', 'mall2/', 'mall-ai-web/src/', 'evals/', 'mall2/document/sql/migrations/', 'docker-compose.yml', 'mall-ai-web/nginx.conf')
 $runtimeChangedAfterFreeze = @($postFreezePaths | Where-Object { $path = $_; $runtimePrefixes | Where-Object { $path.StartsWith($_, [StringComparison]::OrdinalIgnoreCase) } })
@@ -118,12 +128,14 @@ $providerEvents = @($events | Where-Object { $_.eventType -eq 'provider_request'
 $slowBatch = if ($slow) { [string]$slow.batchId } else { '' }
 $slowEvents = @($events | Where-Object { $_.batchId -eq $slowBatch })
 $slowLedger = if ($slow -and $slow.ledger) { $slow.ledger } else { $null }
-$ledgerOk = $null -ne $slowLedger -and $slowLedger.providerRequests -eq $providerEvents.Count -and $slowLedger.providerTokens -eq (($providerEvents | Measure-Object -Property totalTokens -Sum).Sum) -and $slowLedger.events -eq $slowEvents.Count -and $providerEvents.Count -eq 0
+$providerTokenSum = (@($providerEvents | Measure-Object -Property totalTokens -Sum).Sum)
+if ($null -eq $providerTokenSum) { $providerTokenSum = 0 }
+$ledgerOk = $null -ne $slowLedger -and $slowLedger.providerRequests -eq $providerEvents.Count -and $slowLedger.providerTokens -eq $providerTokenSum -and $slowLedger.events -eq $slowEvents.Count -and $providerEvents.Count -eq 0
 Set-Check 'ledger_reconciliation_passed' $ledgerOk 'v3.0.2 报告、锁/原始 ledger 对账不一致或存在 Provider 事件。'
 Set-Check 'external_provider_requests_zero' ($providerEvents.Count -eq 0) '离线候选阶段观察到外部 Provider 请求。'
 
-$manifestExit = RunQuiet $python @('scripts\validate_v3_release_manifest.py')
-$preflightExit = RunQuiet $python @('scripts\run_v3_release_preflight.py')
+$manifestExit = RunPythonQuiet @('scripts\validate_v3_release_manifest.py')
+$preflightExit = RunPythonQuiet @('scripts\run_v3_release_preflight.py')
 Set-Check 'manifest_and_preflight' ($manifestExit -eq 0 -and $preflightExit -eq 0) 'manifest/preflight 未通过。'
 
 $field = $null
@@ -148,7 +160,7 @@ $fastapiReport = Join-Path $root 'tmp\v3.0.2\fastapi-report.json'
 $fastapiJunit = Join-Path $root 'tmp\v3.0.2\fastapi-junit.xml'
 $env:MALL_FASTAPI_REPORT = $fastapiReport
 $env:MALL_FASTAPI_JUNIT = $fastapiJunit
-$validatorExit = RunQuiet 'python' @('scripts\validate_public_release.py')
+$validatorExit = RunQuiet $python @((Join-Path $root 'scripts\validate_public_release.py'))
 Set-Check 'ci_validator_dynamic' ($validatorExit -eq 0) '公共校验器未读取当前机器报告或动态事实校验失败。'
 
 $ready = ($reasons.Count -eq 0) -and (@($checks.Values | Where-Object { -not $_ }).Count -eq 0)
