@@ -1,5 +1,23 @@
 # 公开发布记录
 
+## 2026-09-15｜v3.0.1 当前 SHA 在线验收（最新权威）
+
+运行时代码冻结 `06ef600e51e7b0dc362d43a98e274c28144738d8`，分支 `codex/v3.0.1-offline-acceptance`。离线 readiness 24/24 通过；当前 SHA 的本机合成现场 122/122 通过；唯一正式 DeepSeek candidate 失败并永久锁定，因此当前发布状态 **NOT_COMPLETE**。
+
+| 门禁 | 当前结果 | 说明 |
+| --- | --- | --- |
+| FastAPI | **382 passed** | 本机 `.venv`，exit `0`，12 subtests |
+| Java | **portal 14/14、Spring 1/1** | 显式 `-DskipTests=false`，Compose MySQL |
+| Vue / Compose | **build passed；8/8 healthy** | `npm run build`、`docker compose config --quiet` |
+| deterministic | **478/478；8/8** | contract_mock，无模型/业务写入 |
+| 现场 Runner | **122/122 passed** | browser 24、Java/MySQL 30、fault 36、durable 32；合成数据 |
+| DeepSeek candidate | **FAILED** | `candidate-226cdd440e85`，第一展示链失败；后续质量套件未执行 |
+| GitHub Actions | **待当前 SHA 验证** | 本轮 GitHub 443 推送超时，旧 Actions 不并入 |
+
+候选报告：`tmp/deepseek-v3.0.1-final-06ef600e51e7b0dc362d43a98e274c28144738d8.json`，SHA-256 `6615d069122cb66ee8f3467f98ae79457ef287afd6f19c5e56035c45fb0b65c8`；Release lock：`docs/evidence/deepseek-release-lock-v3.0.1-final-06ef600e51e7b0dc362d43a98e274c28144738d8.json`，状态 `FAILED`。共享账本只记录 9 次 Provider 元数据请求（9 成功、0 失败、27,329 tokens），这不是任务准确率或成本；报告/锁的 0 计数缺口已如实保留。
+
+现场报告：`tmp/offline-field-acceptance/field-20260915T064300Z-99f3dc2f/field-acceptance.json`，SHA-256 `ec337708baa422fcd11bf2ac2334372e88f3592f4dde454ab0f674413704122b`。不生成 live GIF、不更新 README 为真实模型通过。不能宣称生产部署、生产 SLA、真实用户自然语言泛化、真实支付/仓储/物流/维修履约或模型成本。
+
 ## 2026-09-15｜冻结 SHA 验收记录（当前权威）
 
 运行时代码冻结：`54de463b4990229b591e1fd0a278f754bf240678`；分支：`codex/v3.0.1-offline-acceptance`。本轮不调用 DeepSeek、不创建新付费模型批次；本地现场使用 deterministic/replay provider，并通过真实 Docker/Chrome/Vue/FastAPI/Java/MySQL/Redis/RabbitMQ 路径。

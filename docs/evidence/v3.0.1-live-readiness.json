@@ -1,0 +1,58 @@
+{
+  "schemaVersion": "mall-v3.0.1-live-readiness.v1",
+  "generatedAt": "2026-09-15T06:48:04.8783562Z",
+  "freezeCommit": "06ef600e51e7b0dc362d43a98e274c28144738d8",
+  "branch": "codex/v3.0.1-offline-acceptance",
+  "offlineAcceptanceComplete": true,
+  "liveRunReady": true,
+  "providerRequestsBeforeLive": 0,
+  "releaseId": "v3.0.1-final-06ef600e51e7b0dc362d43a98e274c28144738d8",
+  "releaseLock": "docs/evidence/deepseek-release-lock-v3.0.1-final-06ef600e51e7b0dc362d43a98e274c28144738d8.json",
+  "checks": {
+    "git_worktree_clean_before_report": true,
+    "branch_correct": true,
+    "head_is_freeze_commit": true,
+    "no_source_change_after_freeze": true,
+    "python_runtime_exists": true,
+    "live_image_build": true,
+    "live_container_recreated": true,
+    "docker_stack_ai_healthy": true,
+    "deepseek_key_configured": true,
+    "container_label_revision": true,
+    "image_label_revision": true,
+    "container_runtime_commit": true,
+    "container_provider_mode_live": true,
+    "runtime_identity_endpoint": true,
+    "ledger_host_container_mapping": true,
+    "deterministic_showcase_frames": true,
+    "replay_showcase_frames": true,
+    "field_acceptance_122_current": true,
+    "manifest_validation": true,
+    "deterministic_preflight": true,
+    "evaluation_hashes_present": true,
+    "new_release_id_unused": true,
+    "provider_requests_before_live_zero": true
+  },
+  "reasons": [],
+  "runtimeIdentity": {
+    "runtimeCommit": "06ef600e51e7b0dc362d43a98e274c28144738d8",
+    "imageRevision": "06ef600e51e7b0dc362d43a98e274c28144738d8",
+    "providerMode": "live",
+    "model": "deepseek-flash",
+    "thinkingMode": "enabled",
+    "reasoningEffort": "high",
+    "promptVersion": "agent_runtime_v3_3",
+    "skillCatalogVersion": "skill_catalog_v3_0"
+  },
+  "datasetHashes": {
+    "manifest": "d9fc72be81e2f67330710052c03287d49677bf7eb6f54eed51b87c01db2ac1ad",
+    "main": "22ef063c38d661ede40f4746cbb775ef3056ac6584040622ea48dc47553ee7d6",
+    "supplemental": "e59fb1bcb4fc6471a1607290dad5db14804b9d38f81936f49a8448d22b69cc19",
+    "grounding": "632f36c30a21c0b76a5ae18cc2f4b74ff887f70b37c42235f4b776aad8a4fcc1"
+  },
+  "oldLockSha256": {
+    "docs/evidence/deepseek-release-lock.json": "f902ea96d1a923286b82deb6d0ec1f1cb207126bbdabd65a408a19f9552b8b9c",
+    "docs/evidence/deepseek-release-lock-v3.0.1.json": "47bea6280a3200e35e8fd90c165b5c80a94e21d4dedaa1af563243e24535281c"
+  },
+  "fieldReport": "tmp/offline-field-acceptance/field-20260915T064300Z-99f3dc2f/field-acceptance.json"
+}

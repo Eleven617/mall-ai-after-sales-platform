@@ -1,5 +1,13 @@
 # Mall v3.0 最终交付状态
 
+## 当前权威快照｜v3.0.1 在线验收（2026-09-15）
+
+运行时代码 `06ef600e51e7b0dc362d43a98e274c28144738d8`，分支 `codex/v3.0.1-offline-acceptance`。离线 readiness 24/24 通过；FastAPI 382 passed、v3 deterministic 478/478、Vue build、Java portal 14/14 + Spring 1/1、当前本机合成现场 122/122 通过。唯一正式 DeepSeek candidate 在第一条展示链失败，锁状态 `FAILED`，因此 **Release Gate：NOT_COMPLETE**。
+
+正式批次报告 `tmp/deepseek-v3.0.1-final-06ef600e51e7b0dc362d43a98e274c28144738d8.json`（SHA-256 `6615d069122cb66ee8f3467f98ae79457ef287afd6f19c5e56035c45fb0b65c8`）；共享账本观察 9 次 Provider 请求、9 成功、0 失败、27,329 tokens。main/supplemental/Grounding 未执行；该计数不等于任务准确率。现场报告 `tmp/offline-field-acceptance/field-20260915T064300Z-99f3dc2f/field-acceptance.json`（SHA-256 `ec337708baa422fcd11bf2ac2334372e88f3592f4dde454ab0f674413704122b`）。
+
+本轮不生成 live GIF、不宣称真实模型泛化、生产 SLA、真实支付/仓储/物流/维修或远程 CI 成功；GitHub push 在 443 超时，待网络恢复后只推送证据提交并等待对应 Actions。
+
 ## 当前权威快照｜v3.0.1 候选验收（2026-09-14 UTC）
 
 运行时代码：`54de463b4990229b591e1fd0a278f754bf240678`；分支：`codex/v3.0.1-offline-acceptance`。当前公开展示 Release Gate：**NOT_COMPLETE**。FastAPI **381**、12 个子断言；v3 deterministic 478/478、代表性 8/8；浏览器 24/24、Java/MySQL 30/30、故障注入 36/36、Durable 32/32，`environment_blocked=0`。本轮 DeepSeek `not_run_by_design`；deterministic/replay 展示链通过，但不等于真实模型泛化。

@@ -1,131 +1,83 @@
 {
-  "schemaVersion": "v3.0-current-head-evidence.v4",
-  "generatedAt": "2026-09-15T12:45:00+08:00",
+  "schemaVersion": "v3.0-current-head-evidence.v5",
+  "generatedAt": "2026-09-15T07:05:00Z",
   "repository": {
     "remote": "https://github.com/Eleven617/mall-ai-after-sales-platform.git",
     "branch": "codex/v3.0.1-offline-acceptance",
-    "testedCodeCommit": "54de463b4990229b591e1fd0a278f754bf240678",
-    "evidenceCommit": "ccbe1aefece8669c5dd14b6aa6cf62ed14313efd",
-    "workspaceAtTestStart": "clean_except_ignored_tmp",
-    "newDeepSeekBatch": false
+    "testedCodeCommit": "06ef600e51e7b0dc362d43a98e274c28144738d8",
+    "workspaceAtReadiness": "clean_except_ignored_tmp",
+    "releaseStatus": "NOT_COMPLETE"
   },
-  "scope": {
-    "data": "versioned synthetic fixtures and local demo data only",
-    "businessAuthority": "mall2 Java owns identity, ownership, qualification, state machine, idempotency, transaction and final write",
-    "runtimeMode": "deterministic/replay for this round",
-    "productionClaims": false,
-    "externalFulfillment": "payment, warehouse, logistics and repair systems are not connected",
-    "defaultRagMode": "dense",
-    "hybridAndRerank": "reproducible local experiments only"
-  },
-  "fixtureHashes": {
-    "evals/v3/release-manifest.json": "d9fc72be81e2f67330710052c03287d49677bf7eb6f54eed51b87c01db2ac1ad",
-    "evals/v3/caseSetSha256": "18a3ad20485417bbebd8bad875490cf80b171ed28760b1dc2dfbd203d1938ccd",
-    "mall-ai-service/evals/rag2_golden_cases.v1.json": "632f36c30a21c0b76a5ae18cc2f4b74ff887f70b37c42235f4b776aad8a4fcc1",
-    "mall-ai-service/evals/quality_agent_cases.v2.json": "ef3cbcb70b92b82a7e115886b6d771c358cd459da9633bd4201dd766b6d878a7",
-    "mall-ai-service/evals/task_orchestration_cases.v1.json": "c8489ec40ff99a23fb146aca752a19f072bf042d9d0ec04313041cf184eab3b8",
-    "mall-ai-service/evals/rag_grounding_cases.json": "72d36be4dfec0888fcac57eb211fb85413018c8254db7d52f1914d6703966f11",
-    "fieldFixture": "11b98fb4e03eedb4fedd7d89eeb538890308a61891975072e69c236f958c640e"
+  "readiness": {
+    "status": "passed",
+    "report": "docs/evidence/v3.0.1-live-readiness.json",
+    "reportSha256": "e559244e6c9a14689d15b44d4203070f4a6ed8fc9660ed2cbaaa24ab7b380614",
+    "checksPassed": 24,
+    "checksFailed": 0,
+    "providerRequestsBeforeLive": 0
   },
   "deterministicGates": {
-    "fastapi": {"command": "mall-ai-service/.venv/Scripts/python.exe -m pytest -q", "passed": 381, "failed": 0, "warnings": 1, "subtestsPassed": 12, "exitCode": 0},
-    "compileall": {"command": "python -m compileall -q app scripts tests", "exitCode": 0},
-    "v3Manifest": {"deterministicRegistered": 478, "liveRegistered": 36, "performanceProfiles": 12, "manifestSha256Normalized": "2f9d60f3903b3046236a71e1557d89fac87e916d9586d787a193c6deb4c71d2e", "caseSetSha256": "18a3ad20485417bbebd8bad875490cf80b171ed28760b1dc2dfbd203d1938ccd", "exitCode": 0},
-    "v3Preflight": {"deterministicPassed": 478, "deterministicRegistered": 478, "representativePassed": 8, "representativeRegistered": 8, "failed": 0, "exitCode": 0},
-    "qualityAgent": {"suite": "quality-agent.v2", "total": 17, "passed": 17, "failed": 0, "exitCode": 0},
-    "taskOrchestration": {"suite": "task-orchestration.v1", "mode": "contract_mock", "total": 11, "passed": 11, "failed": 0, "environmentBlocked": 0, "exitCode": 0},
-    "chunkMetadata": {"suite": "rag-chunk-metadata.v1", "total": 8, "passed": 8, "failed": 0, "externalModelCalls": 0, "exitCode": 0},
-    "ragContracts": {"tests": 21, "passed": 21, "failed": 0, "exitCode": 0},
-    "java": {"compileCommandExitCode": 0, "portalTargetedTests": {"passed": 14, "failed": 0, "skipped": 0}, "adminTargetedTests": {"passed": 6, "failed": 0, "skipped": 0}},
-    "web": {"command": "mall-ai-web/npm run build", "status": "passed", "exitCode": 0},
+    "fastapi": {"command": "mall-ai-service/.venv/Scripts/python.exe -m pytest -q", "passed": 382, "failed": 0, "warnings": 1, "subtestsPassed": 12, "exitCode": 0},
+    "v3Manifest": {"registered": 478, "passed": 478, "manifestSha256": "2f9d60f3903b3046236a71e1557d89fac87e916d9586d787a193c6deb4c71d2e", "exitCode": 0},
+    "v3Preflight": {"passed": 478, "registered": 478, "representativePassed": 8, "representativeRegistered": 8, "exitCode": 0},
+    "qualityAgent": {"total": 17, "passed": 17, "failed": 0},
+    "taskOrchestration": {"total": 11, "passed": 11, "failed": 0},
+    "chunkMetadata": {"total": 8, "passed": 8, "failed": 0},
+    "ragContracts": {"total": 21, "passed": 21, "failed": 0},
+    "java": {"portal": "14/14", "admin": "6/6", "springContext": "1/1", "exitCode": 0},
+    "web": {"status": "passed", "exitCode": 0},
     "compose": {"configExitCode": 0, "servicesHealthy": "8/8"}
   },
-  "showcase": {
-    "entryPoint": "/agent-tasks",
-    "deterministic": {"report": "tmp/offline-field/showcase-deterministic.json", "reportSha256": "6f62d4ff4a372cb54f809a2f53209277619e7bbd4ad5f030a56a222d243c5293", "status": "passed", "chains": "3/3", "browserFrames": 3, "providerRequests": 0, "providerFailures": 0, "scenarioFailures": 0, "testFailures": 0},
-    "replay": {"report": "tmp/offline-field/showcase-replay.json", "reportSha256": "f6b886fabd0aba6d5d6ff9ffc4bce032674c303ca5ddf4ff896ffdeed154b62d", "status": "passed", "chains": "3/3", "browserFrames": 3, "providerRequests": 0, "providerFailures": 0, "scenarioFailures": 0, "testFailures": 0},
-    "chainAssertions": ["Java eligibility and final write/readback", "duplicate confirmation creates 0 additional writes", "cross-account leakage 0", "pause/restart preserves opaque task hash", "fact-change recheck blocks stale proposal", "no raw response or internal identifiers in public projection"]
-  },
   "fieldAcceptance": {
-    "report": "tmp/offline-field-acceptance/field-20260915T042914Z-8c8d67db/field-acceptance.json",
-    "reportSha256": "c1e893c648ea6be102aef3f5c391a5dca28a220a4b2df80574e8bee4fd8b1223",
-    "testedCodeCommit": "54de463b4990229b591e1fd0a278f754bf240678",
-    "fixtureSha256": "11b98fb4e03eedb4fedd7d89eeb538890308a61891975072e69c236f958c640e",
-    "releaseGate": "passed",
+    "report": "tmp/offline-field-acceptance/field-20260915T064300Z-99f3dc2f/field-acceptance.json",
+    "reportSha256": "ec337708baa422fcd11bf2ac2334372e88f3592f4dde454ab0f674413704122b",
+    "testedCodeCommit": "06ef600e51e7b0dc362d43a98e274c28144738d8",
+    "releaseGate": "passed_local_synthetic",
     "total": 122,
     "passed": 122,
     "failed": 0,
     "environmentBlocked": 0,
     "categories": {"browser_e2e": "24/24", "java_mysql_integration": "30/30", "fault_injection": "36/36", "durable_async_recovery": "32/32"},
     "executionModes": ["live_browser", "live_java_mysql", "isolated_compose_fault", "isolated_compose_plus_runtime_contract", "live_durable_recovery_deterministic_or_replay"],
-    "limitation": "Ten fault cases use the local safe-stop/runtime contract plus isolated restart; this is not an external provider outage test. All model decisions in this run were deterministic/replay."
+    "limitation": "本机合成现场；fault 中安全停止/重启合同不是外部供应商宕机证明。"
   },
-  "durableRecovery": {
-    "report": "tmp/offline-field-acceptance/field-20260915T042914Z-8c8d67db/durable-recovery-local.json",
-    "reportSha256": "b1ce5a2c3d1e95eb4dfa2cb3b4eb9dfeff08c53683111c6733926f3e62237579",
-    "providerMode": "deterministic",
-    "cases": 32,
-    "passed": 32,
-    "failed": 0,
-    "environmentBlocked": 0
+  "showcase": {
+    "entryPoint": "/agent-tasks",
+    "deterministic": {"status": "passed", "chains": "3/3", "browserFrames": 12, "providerRequests": 0, "report": "tmp/offline-field/deterministic/showcase.json", "reportSha256": "66cfcdc93b04d487526b6e937c92dae6d01634899b0125196d6ca849332f1001"},
+    "replay": {"status": "passed", "chains": "3/3", "browserFrames": 12, "providerRequests": 0, "report": "tmp/offline-field/replay/showcase.json", "reportSha256": "abec712d31df1264f1be7b6e2f911b231aadf004b26b8fc0c2f0cdad76458357"},
+    "officialLive": {"status": "failed", "completedChains": "0/3", "report": "tmp/deepseek-v3.0.1-final-06ef600e51e7b0dc362d43a98e274c28144738d8.json", "reportSha256": "6615d069122cb66ee8f3467f98ae79457ef287afd6f19c5e56035c45fb0b65c8"}
+  },
+  "liveModelCandidate": {
+    "releaseId": "v3.0.1-final-06ef600e51e7b0dc362d43a98e274c28144738d8",
+    "batchId": "candidate-226cdd440e85",
+    "status": "failed",
+    "failureStage": "main_open_task_closed_loop",
+    "main": "not_executed",
+    "supplemental": "not_executed",
+    "grounding": "not_executed",
+    "runnerRecordedRequests": 0,
+    "ledgerObservedProviderRequests": 9,
+    "ledgerObservedSuccessfulRequests": 9,
+    "ledgerObservedFailedRequests": 0,
+    "ledgerObservedTotalTokens": 27329,
+    "ledgerOperations": {"json": 8, "text": 1},
+    "lock": "docs/evidence/deepseek-release-lock-v3.0.1-final-06ef600e51e7b0dc362d43a98e274c28144738d8.json",
+    "lockSha256": "f6efe1612697bec6ba55505d83acdd320c1db044dc89f4e276891e32517b2a36",
+    "lockStatus": "FAILED",
+    "accountingBoundary": "runner/lock omitted the shared ledger because MALL_RELEASE_LEDGER_PATH was not set in the host process; both observations are retained and do not form a quality result"
   },
   "rag": {
-    "report": "docs/evidence/rag2-retrieval-freeze-54de463.json",
-    "reportSha256": "736fda9c96692ef82b5c8e4abd60807c8064054a6aeae634346d7d636b71d74b",
     "datasetCases": 52,
     "denseDefault": true,
     "denseRecallAt3": 1.0,
     "denseMrr": 0.948718,
     "denseNdcgAt3": 0.962147,
-    "hybridRecallAt3": 1.0,
     "hybridMrr": 0.935897,
-    "hybridNdcgAt3": 0.952683,
-    "rerankRecallAt3": 1.0,
     "rerankMrr": 0.935897,
-    "rerankNdcgAt3": 0.952683,
-    "latencyEvidence": "cold/hot mean, p50, p95 and max are in the linked JSON; rerank is materially slower on this local CPU/index",
-    "groundingLiveModel": "not_run_by_design",
-    "offlineGroundingContractTests": "21/21"
+    "grounding": "not_executed_after_candidate_failure",
+    "limitation": "检索指标来自小型版本化合成政策集，不是答案准确率或生产 SLA。"
   },
-  "releaseLedger": {
-    "path": "tmp/release-ledger/ledger.jsonl",
-    "batches": {
-      "offline-deterministic-freeze": {"providerRequests": 0, "providerFailures": 0, "scenarioFailures": 0, "testFailures": 0, "totalTokens": 0, "events": 3},
-      "offline-replay-freeze": {"providerRequests": 0, "providerFailures": 0, "scenarioFailures": 0, "testFailures": 0, "totalTokens": 0, "events": 3}
-    },
-    "ledgerSha256": "d2742ec476f6462798bfdb09764b8461efb26b349b753165ea64e57f0c3bef32",
-    "fakeProviderContract": "3 successes + 1 failure; 4 provider request events; no prompt/messages/reasoning fields"
-  },
-  "liveModel": {
-    "newBatch": false,
-    "providerRequests": 0,
-    "status": "not_run_by_design",
-    "reason": "This round specifically disallowed DeepSeek/provider calls; prior live-model reports are historical and are not merged into current totals."
-  },
-  "remoteCi": {
-    "status": "passed",
-    "testedCommit": "bd3a5cf787f87e2819c73021fc9a356c6c65da85",
-    "mallCi": "https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34931831197",
-    "qualityEvaluation": "https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34931831222"
-  },
-  "securityAndReliability": {
-    "publicProjection": "safe DTO only; no prompt, raw tool result, RAG text, token, internal task/proposal ID or full business identifier",
-    "writeBoundary": "confirmation -> Java eligibility/ownership/state/idempotency/transaction -> Outbox/status readback",
-    "scans": {"remoteWorkflowConfigured": true, "localGitleaks": "not_available_in_shell", "localOsv": "passed; ghcr.io/google/osv-scanner-action:v2.5.1 with CI-equivalent --no-resolve command", "remoteResult": "must be checked on this evidence commit"}
-  },
-  "claims": {
-    "testRunComplete": true,
-    "releaseQualified": false,
-    "releaseStatus": "NOT_COMPLETE",
-    "whyNotReleaseQualified": ["No new live DeepSeek batch was run by design", "live grounding generation was not run", "local deterministic/replay evidence does not establish real-model natural-language generalization or production SLA"],
-    "productionAccuracy": false,
-    "productionSla": false,
-    "realUserGeneralization": false,
-    "realPaymentWarehouseLogisticsRepair": false
-  },
-  "historicalBoundary": {
-    "oldReports": "Any report bound to a different commit is stale/superseded and is not merged with this evidence.",
-    "oldReleaseLocks": "unchanged",
-    "readme": "not rewritten in this round"
-  }
+  "ci": {"status": "pending_remote_final_sha", "testedCommit": "06ef600e51e7b0dc362d43a98e274c28144738d8", "pushStatus": "github_443_timeout", "previousRunsStale": true},
+  "security": {"sideEffectsObserved": 0, "publicProjection": "safe DTO only", "secretsCommitted": false, "rawProviderPayloadsCommitted": false},
+  "claims": {"testRunComplete": true, "releaseQualified": false, "productionAccuracy": false, "productionSla": false, "realUserGeneralization": false, "externalFulfillment": false}
 }

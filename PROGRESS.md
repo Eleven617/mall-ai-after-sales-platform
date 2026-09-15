@@ -1,5 +1,43 @@
 # 当前工作进度记录
 
+## 2026-09-15｜v3.0.1 最终在线验收（最新）
+
+### 已完成
+
+- 最终运行时代码冻结为 `06ef600e51e7b0dc362d43a98e274c28144738d8`，分支 `codex/v3.0.1-offline-acceptance`；代码改动已提交。本轮没有执行 `docker compose down`、删卷、删 VHDX、清库或 reset/revert。
+- 以最终 SHA 重建 Docker AI 镜像并启动主 Compose；8 个常驻服务均 healthy，`/health/version` 的 runtime/image revision、live/deterministic 模式切换和版本标识均核对通过。
+- `mall-ai-service/.venv/Scripts/python.exe -m pytest -q`：**382 passed，0 failed，12 subtests，1 warning，exit 0**。
+- `npm run build`：通过；Java `MallPortalApplicationTests`：**1/1**；Maven 显式 `-DskipTests=false`；`docker compose config --quiet`：通过。
+- v3 manifest/preflight：**478/478、代表性 8/8**；Quality 17/17、Task 11/11、Chunk 8/8、RAG 合同 21/21。
+- 当前 SHA 重新执行本机合成现场 Runner：browser 24/24、Java/MySQL 30/30、fault 36/36、durable 32/32，合计 **122/122 passed，0 failed，0 environment_blocked**。报告：`tmp/offline-field-acceptance/field-20260915T064300Z-99f3dc2f/field-acceptance.json`，SHA-256 `ec337708baa422fcd11bf2ac2334372e88f3592f4dde454ab0f674413704122b`。
+- deterministic/replay showcase 均 **3/3**，每批真实 Chrome 12 帧；报告 hash 已同步事实包。两批 Provider 请求均为 0。
+- 就绪脚本 `scripts/Test-V3_0_1-LiveReadiness.ps1`：`OFFLINE_ACCEPTANCE_COMPLETE=true`、`LIVE_RUN_READY=true`、`PROVIDER_REQUESTS_BEFORE_LIVE=0`，24 项检查通过；报告 SHA-256 `e559244e6c9a14689d15b44d4203070f4a6ed8fc9660ed2cbaaa24ab7b380614`。
+- 已按授权启动**唯一一次**正式 DeepSeek candidate：`candidate-226cdd440e85`。它在第一条展示链 `main_open_task_closed_loop` 失败后停止；没有运行 main/supplemental/Grounding，也没有生成 live GIF。Release lock 已写入并保持 `FAILED`，不再重试。
+- 共享 metadata-only ledger 观察到该 candidate **9 次 Provider 请求、9 成功、0 失败、27,329 tokens（8 JSON + 1 text）**。候选报告/锁自身记为 0，是正式 PowerShell 入口未向主机 Python 传入 `MALL_RELEASE_LEDGER_PATH` 的记录缺口；两者差异已原样记录，未后处理为通过。
+- 已更新 `docs/evidence/current-release-facts.json`、`v3.0-current-head-evidence.md`、`release-gate-summary.md`、`resume-fact-pack.md`、`TEST_AND_DEMO_EVIDENCE.md`、`PUBLIC_RELEASE_RECORD.md`、`docs/final-handoff/00-final-status.md`、`03-test-evaluation-evidence.md`，全部明确 **NOT_COMPLETE**、失败批次和不能扩大的边界。
+
+### 当前问题
+
+- 本轮首次 `git push origin codex/v3.0.1-offline-acceptance` 在 GitHub `443` 连接处超时；当前代码和证据仍在本地，远程 Actions 尚未对 `06ef600…` 验证。网络恢复后只需推送证据提交并等待该 SHA 的两个 workflow，不能把旧 run 当作新结果。
+- 候选 Runner 的 host ledger 路径缺失导致报告/锁中的请求计数与共享 ledger 不一致；该问题属于本次候选失败证据，按需求不再修改代码或重跑 Provider。
+
+### 尚未完成 / 不能宣称
+
+- Release Gate **NOT_COMPLETE**；不能宣称 DeepSeek main 72/72、supplemental 36/36、Grounding 15/15，也不能宣称真实模型泛化率、真实用户准确率、生产 SLA、吞吐、成本、真实支付/仓储/物流/维修履约或远程 CI 成功。
+- 当前 122/122 只覆盖本机 Docker/Chrome/Java/MySQL/Redis/RabbitMQ 和版本化合成 Fixture；478/478 只属于 deterministic contract。
+- 没有从失败 candidate 生成 live GIF；deterministic/replay 资产不能冒充 live 模型演示。
+
+### 下一步
+
+1. 网络恢复后检查 `git status --short --branch`，提交上述证据与 lock/readiness 文件（不提交 `tmp/` 原始报告），推送当前分支。
+2. 等待并核对新 SHA 对应的 `mall-ci` 与 `quality-evaluation`；只记录真实状态。
+3. 不重跑 DeepSeek、不复用同一 releaseId、不修改已锁定批次；若要修复 ledger 入口，另开新授权批次/新 releaseId。
+
+### 不得重复或删除
+
+- 不得删除失败报告、Release lock、共享 ledger 或旧历史证据；不得将 0 计数改成 9 或反向合并为“通过”。
+- 不得提交 `.env`、密码、Key、Token、完整订单号、客户原话、原始 Prompt/响应、Trace 或模型推理过程；`tmp/` 报告保持忽略。
+
 ## 2026-09-12｜最终公开收口当前状态
 
 - 运行时代码基线：`9c7c29045c28446b16a609768cd4b4c1202f8a51`，分支 `main`；本轮不再扩展业务功能。

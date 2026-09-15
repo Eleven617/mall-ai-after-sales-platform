@@ -1,5 +1,23 @@
 # 测试与演示证据
 
+## 2026-09-15｜v3.0.1 当前 SHA 在线验收（最新权威）
+
+运行时代码 `06ef600e51e7b0dc362d43a98e274c28144738d8`，分支 `codex/v3.0.1-offline-acceptance`。当前本机合成现场通过，但正式模型发布门禁未通过：唯一 DeepSeek candidate 在第一条展示链失败后停止，不能将旧报告或 deterministic 数字扩大为真实模型效果。
+
+| 项目 | 结果 | 证据/统计口径 |
+| --- | --- | --- |
+| FastAPI | **382 passed，0 failed，12 subtests** | `.venv/Scripts/python.exe -m pytest -q`，exit `0` |
+| Java | portal **14/14**；Spring **1/1** | Maven 显式 `-DskipTests=false`，exit `0` |
+| Vue | **passed** | `npm run build`，exit `0` |
+| manifest/preflight | **478/478；8/8** | deterministic contract，无模型/业务写入 |
+| 现场 Runner | **122/122 passed** | browser 24、Java/MySQL 30、fault 36、durable 32；合成 Docker/Chrome/Java/MySQL/Redis/RabbitMQ |
+| deterministic/replay showcase | **3/3 + 3/3；每批 12 帧** | `/agent-tasks`，providerRequests=0 |
+| DeepSeek candidate | **failed** | `candidate-226cdd440e85`；main/supplemental/grounding 未执行 |
+
+现场报告 `tmp/offline-field-acceptance/field-20260915T064300Z-99f3dc2f/field-acceptance.json` SHA-256 `ec337708baa422fcd11bf2ac2334372e88f3592f4dde454ab0f674413704122b`；就绪报告 `docs/evidence/v3.0.1-live-readiness.json` SHA-256 `e559244e6c9a14689d15b44d4203070f4a6ed8fc9660ed2cbaaa24ab7b380614`。候选报告 SHA-256 `6615d069122cb66ee8f3467f98ae79457ef287afd6f19c5e56035c45fb0b65c8`；共享账本观察到 9 次 Provider 元数据请求、9 成功、0 失败、27,329 tokens。报告/锁记录为 0 是入口未设置主机 ledger 路径的失败证据，不修正为通过。
+
+当前状态：`TEST_RUN_COMPLETE=true`、`RELEASE_QUALIFIED=false / NOT_COMPLETE`。没有从失败候选生成 live GIF；deterministic/replay GIF 不能作为真实模型素材。GitHub 本轮 push 因 443 超时，当前 SHA 的远程 Actions 尚未验证。不能宣称生产 SLA、真实用户泛化、真实支付/仓储/物流/维修或模型成本。
+
 ## 2026-09-15｜冻结 SHA 离线/现场验收（当前权威）
 
 当前被测代码为 `54de463b4990229b591e1fd0a278f754bf240678`，分支 `codex/v3.0.1-offline-acceptance`。本轮不调用 DeepSeek；真实现场使用 deterministic/replay provider，仍经过真实 Vue/Chrome、FastAPI、Java/MySQL、Redis、RabbitMQ 和合成数据。

@@ -1,5 +1,15 @@
 # Mall AI 售后平台｜简历事实包
 
+## 当前事实快照｜v3.0.1 最终验收结果（2026-09-15）
+
+当前发布状态：**NOT_COMPLETE**；运行时代码 `06ef600e51e7b0dc362d43a98e274c28144738d8`，分支 `codex/v3.0.1-offline-acceptance`。
+
+可以如实写入简历/面试材料的当前事实：FastAPI **382 passed**、v3 deterministic **478/478**（代表性 8/8）、Vue production build、Java portal 14/14 + Spring context 1/1、当前本机合成现场 browser 24/24 + Java/MySQL 30/30 + fault 36/36 + durable 32/32（合计 122/122）。这些数字分别代表确定性合同、定向集成和本机合成现场，不代表生产 SLA 或真实用户准确率。
+
+唯一正式 DeepSeek candidate `candidate-226cdd440e85` 已失败并锁定；共享 metadata-only ledger 观察到 9 次 Provider 请求、9 成功、0 失败、27,329 tokens，但 main 24×3、supplemental 12×3 和 Grounding 均未执行，不能写成模型任务完成率、泛化率或成本。候选报告与锁 hash 见 [`current-release-facts.json`](current-release-facts.json)。
+
+当前不能写：真实模型自然语言准确率、生产部署/SLA/QPS、真实支付/仓储/物流/维修履约、模型成本、真实客户数据或把 `macrozheng/mall` 上游能力说成原创。远程推送本轮因 GitHub 443 超时未完成，旧 Actions 结果不替代当前 SHA。
+
 ## 当前事实快照｜最终公开收口
 
 当前发布状态：**NOT_COMPLETE**。
