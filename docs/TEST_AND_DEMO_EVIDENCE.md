@@ -16,7 +16,7 @@
 
 现场报告 `tmp/offline-field-acceptance/field-20260915T064300Z-99f3dc2f/field-acceptance.json` SHA-256 `ec337708baa422fcd11bf2ac2334372e88f3592f4dde454ab0f674413704122b`；就绪报告 `docs/evidence/v3.0.1-live-readiness.json` SHA-256 `e559244e6c9a14689d15b44d4203070f4a6ed8fc9660ed2cbaaa24ab7b380614`。候选报告 SHA-256 `6615d069122cb66ee8f3467f98ae79457ef287afd6f19c5e56035c45fb0b65c8`；共享账本观察到 9 次 Provider 元数据请求、9 成功、0 失败、27,329 tokens。报告/锁记录为 0 是入口未设置主机 ledger 路径的失败证据，不修正为通过。
 
-当前状态：`TEST_RUN_COMPLETE=true`、`RELEASE_QUALIFIED=false / NOT_COMPLETE`。没有从失败候选生成 live GIF；deterministic/replay GIF 不能作为真实模型素材。GitHub 本轮 push 因 443 超时，当前 SHA 的远程 Actions 尚未验证。不能宣称生产 SLA、真实用户泛化、真实支付/仓储/物流/维修或模型成本。
+当前状态：`TEST_RUN_COMPLETE=true`、`RELEASE_QUALIFIED=false / NOT_COMPLETE`。没有从失败候选生成 live GIF；deterministic/replay GIF 不能作为真实模型素材。提交 `3138535d51c79b74eb3e0e615691f7ee980f595c` 已推送；[`quality-evaluation`](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34940437192) 成功， [`mall-ci`](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34940437166) 失败于 `public-release` 的历史 FastAPI `381` 断言。不能宣称生产 SLA、真实用户泛化、真实支付/仓储/物流/维修或模型成本。
 
 ## 2026-09-15｜冻结 SHA 离线/现场验收（当前权威）
 

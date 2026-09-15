@@ -4,7 +4,7 @@
 
 代码冻结 `06ef600e51e7b0dc362d43a98e274c28144738d8`。FastAPI **382 passed**、deterministic **478/478、8/8**、Vue build、Java portal **14/14** + Spring context **1/1**、当前本机合成现场 **122/122** 通过。唯一正式 DeepSeek candidate `candidate-226cdd440e85` 在 `main_open_task_closed_loop` 展示链失败后锁定，main/supplemental/Grounding 未执行，当前 Release Gate **NOT_COMPLETE**。
 
-候选报告 SHA-256 `6615d069122cb66ee8f3467f98ae79457ef287afd6f19c5e56035c45fb0b65c8`；共享 ledger 观察 9 次 Provider 请求、9 成功、0 失败、27,329 tokens，但这不代表模型任务准确率。现场报告 SHA-256 `ec337708baa422fcd11bf2ac2334372e88f3592f4dde454ab0f674413704122b`。GitHub 本轮推送因 443 超时，当前 SHA 的 Actions 待网络恢复后验证；旧运行不能替代。
+候选报告 SHA-256 `6615d069122cb66ee8f3467f98ae79457ef287afd6f19c5e56035c45fb0b65c8`；共享 ledger 观察 9 次 Provider 请求、9 成功、0 失败、27,329 tokens，但这不代表模型任务准确率。现场报告 SHA-256 `ec337708baa422fcd11bf2ac2334372e88f3592f4dde454ab0f674413704122b`。提交 `3138535` 已推送；quality-evaluation 成功，mall-ci 在 `public-release` 因历史 FastAPI 381 断言失败，旧运行不能替代。
 
 ## 当前权威快照｜v3.0.1 候选验收（2026-09-14 UTC）
 
