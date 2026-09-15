@@ -105,7 +105,7 @@
   "securityAndReliability": {
     "publicProjection": "safe DTO only; no prompt, raw tool result, RAG text, token, internal task/proposal ID or full business identifier",
     "writeBoundary": "confirmation -> Java eligibility/ownership/state/idempotency/transaction -> Outbox/status readback",
-    "scans": {"remoteWorkflowConfigured": true, "localGitleaks": "not_available_in_shell", "localOsv": "not_run_in_this_round", "remoteResult": "must be checked on this evidence commit"}
+    "scans": {"remoteWorkflowConfigured": true, "localGitleaks": "not_available_in_shell", "localOsv": "passed; ghcr.io/google/osv-scanner-action:v2.5.1 with CI-equivalent --no-resolve command", "remoteResult": "must be checked on this evidence commit"}
   },
   "claims": {
     "testRunComplete": true,
