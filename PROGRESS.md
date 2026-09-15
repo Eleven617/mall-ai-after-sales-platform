@@ -15,7 +15,8 @@
 
 ### 当前状态
 
-- `V3_0_2_LIVE_READY` 的离线检查待在证据提交后执行；在线 DeepSeek 不在本轮范围。远程 `mall-ci` 和 `quality-evaluation` 需推送独立分支后等待真实结果，不能用历史 run 替代。
+- `scripts/Test-V3_0_2-OfflineReadiness.ps1` 已真实通过：`OFFLINE_ACCEPTANCE_COMPLETE=true`、`SLOW_GATEWAY_TEST_PASSED=true`、`LEDGER_RECONCILIATION_PASSED=true`、`CI_VALIDATOR_DYNAMIC=true`、`EXTERNAL_PROVIDER_REQUESTS=0`、`V3_0_2_LIVE_READY=true`。报告 `docs/evidence/v3.0.2-live-readiness.json`，SHA-256 `0da05eefa8b4d036bc7cab2f2449eeed02d63e641d42d607e45287cf2577a29d`，18/18 检查通过。
+- 在线 DeepSeek 不在本轮范围。远程 `mall-ci` 和 `quality-evaluation` 需推送独立分支后等待真实结果，不能用历史 run 替代。
 - v3.0.1 精确根因：`gateway_timeout_before_agent_completion`（Nginx 60 秒先于服务端最终形成 ready_to_commit 返回 504；不是 Provider 请求失败）。
 
 ### 尚未完成 / 不能宣称
@@ -26,8 +27,8 @@
 
 ### 下一步
 
-1. 提交当前证据改动（先保持工作区 clean），运行 `scripts/Test-V3_0_2-OfflineReadiness.ps1 -FreezeCommit 061d60bb13004dc7df57a161b01e378335f8938c -FieldReport tmp/offline-field-acceptance/field-20260915T133506Z-6b5f7e64/field-acceptance.json`。
-2. 检查 readiness JSON 的六个布尔/计数键，提交 readiness 报告；然后推送分支并等待两个 Actions。
+1. 提交 readiness JSON 与事实包更新；先运行 `git diff --check` 和动态公共校验器。
+2. 推送分支并等待两个 Actions；只记录当前 SHA 的真实状态。
 3. 远程 CI 成功且工作区/远程 HEAD 一致后，停在 `V3_0_2_LIVE_READY`，等待在线批次授权。
 
 ## 2026-09-15｜v3.0.1 最终在线验收（最新）

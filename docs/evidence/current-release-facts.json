@@ -24,22 +24,27 @@
   },
   "readiness": {
     "status": "passed",
-    "report": "docs/evidence/v3.0.1-live-readiness.json",
-    "reportSha256": "e559244e6c9a14689d15b44d4203070f4a6ed8fc9660ed2cbaaa24ab7b380614",
+    "report": "docs/evidence/v3.0.2-live-readiness.json",
+    "reportSha256": "0da05eefa8b4d036bc7cab2f2449eeed02d63e641d42d607e45287cf2577a29d",
     "providerRequestsBeforeLive": 0,
-    "checksPassed": 24,
+    "checksPassed": 18,
     "checksFailed": 0,
-    "fieldAcceptanceReport": "tmp/offline-field-acceptance/field-20260915T064300Z-99f3dc2f/field-acceptance.json",
-    "fieldAcceptanceReportSha256": "ec337708baa422fcd11bf2ac2334372e88f3592f4dde454ab0f674413704122b"
+    "fieldAcceptanceReport": "tmp/offline-field-acceptance/field-20260915T133506Z-6b5f7e64/field-acceptance.json",
+    "fieldAcceptanceReportSha256": "fbf3e333ea09cc6010e6d1b67fdb82cb762cdb707a9561fb6478655291d00d84"
   },
   "v3_0_2OfflineReadiness": {
-    "status": "pending_report_generation",
+    "status": "passed",
     "freezeCommit": "061d60bb13004dc7df57a161b01e378335f8938c",
     "slowGateway": "tmp/v3.0.2-slow-gateway.json",
     "slowGatewaySha256": "7415253e3ee4b82c41ec2e00f7296d58f9f1e5160243b1d0ae59321e674e7652",
     "fieldAcceptance": "tmp/offline-field-acceptance/field-20260915T133506Z-6b5f7e64/field-acceptance.json",
     "fieldAcceptanceSha256": "fbf3e333ea09cc6010e6d1b67fdb82cb762cdb707a9561fb6478655291d00d84",
-    "externalProviderRequests": 0
+    "externalProviderRequests": 0,
+    "readinessReport": "docs/evidence/v3.0.2-live-readiness.json",
+    "readinessReportSha256": "0da05eefa8b4d036bc7cab2f2449eeed02d63e641d42d607e45287cf2577a29d",
+    "checksPassed": 18,
+    "checksFailed": 0,
+    "V3_0_2_LIVE_READY": true
   },
   "deepseekBatches": [
     {

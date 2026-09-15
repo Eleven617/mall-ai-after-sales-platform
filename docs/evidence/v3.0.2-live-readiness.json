@@ -1,0 +1,53 @@
+{
+  "schemaVersion": "mall-v3.0.2-live-readiness.v1",
+  "generatedAt": "2026-09-15T13:57:29.4307695Z",
+  "freezeCommit": "061d60bb13004dc7df57a161b01e378335f8938c",
+  "branch": "codex/v3.0.2-offline-candidate",
+  "OFFLINE_ACCEPTANCE_COMPLETE": true,
+  "SLOW_GATEWAY_TEST_PASSED": true,
+  "LEDGER_RECONCILIATION_PASSED": true,
+  "CI_VALIDATOR_DYNAMIC": true,
+  "EXTERNAL_PROVIDER_REQUESTS": 0,
+  "V3_0_2_LIVE_READY": true,
+  "checks": {
+    "git_worktree_clean_before_report": true,
+    "branch_correct": true,
+    "freeze_commit_is_ancestor": true,
+    "no_runtime_change_after_freeze": true,
+    "python_runtime_exists": true,
+    "live_image_build": true,
+    "live_container_recreated": true,
+    "docker_stack_ai_web_healthy": true,
+    "deepseek_key_configured": true,
+    "container_image_identity": true,
+    "runtime_identity_live": true,
+    "ledger_host_container_mapping": true,
+    "slow_gateway_test_passed": true,
+    "ledger_reconciliation_passed": true,
+    "external_provider_requests_zero": true,
+    "manifest_and_preflight": true,
+    "field_acceptance_122_current": true,
+    "ci_validator_dynamic": true
+  },
+  "reasons": [],
+  "runtimeIdentity": {
+    "runtimeCommit": "061d60bb13004dc7df57a161b01e378335f8938c",
+    "imageRevision": "061d60bb13004dc7df57a161b01e378335f8938c",
+    "providerMode": "live",
+    "model": "deepseek-flash",
+    "thinkingMode": "enabled",
+    "reasoningEffort": "high",
+    "promptVersion": "agent_runtime_v3_3",
+    "skillCatalogVersion": "skill_catalog_v3_0"
+  },
+  "slowReport": "tmp/v3.0.2-slow-gateway.json",
+  "slowReportSha256": "7415253e3ee4b82c41ec2e00f7296d58f9f1e5160243b1d0ae59321e674e7652",
+  "ledgerPath": "tmp/release-ledger-v3.0.2/ledger.jsonl",
+  "ledgerSha256": "ce801099cd16a998bf39dae544425acb1fd5c6a6c353a1ce18035a1cb8a92323",
+  "fieldReport": "tmp/offline-field-acceptance/field-20260915T133506Z-6b5f7e64/field-acceptance.json",
+  "oldLockSha256": {
+    "docs/evidence/deepseek-release-lock.json": "f902ea96d1a923286b82deb6d0ec1f1cb207126bbdabd65a408a19f9552b8b9c",
+    "docs/evidence/deepseek-release-lock-v3.0.1.json": "47bea6280a3200e35e8fd90c165b5c80a94e21d4dedaa1af563243e24535281c",
+    "docs/evidence/deepseek-release-lock-v3.0.1-final-06ef600e51e7b0dc362d43a98e274c28144738d8.json": "f6efe1612697bec6ba55505d83acdd320c1db044dc89f4e276891e32517b2a36"
+  }
+}

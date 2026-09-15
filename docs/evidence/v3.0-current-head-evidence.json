@@ -10,21 +10,26 @@
   },
   "readiness": {
     "status": "passed",
-    "report": "docs/evidence/v3.0.1-live-readiness.json",
-    "reportSha256": "e559244e6c9a14689d15b44d4203070f4a6ed8fc9660ed2cbaaa24ab7b380614",
-    "checksPassed": 24,
+    "report": "docs/evidence/v3.0.2-live-readiness.json",
+    "reportSha256": "0da05eefa8b4d036bc7cab2f2449eeed02d63e641d42d607e45287cf2577a29d",
+    "checksPassed": 18,
     "checksFailed": 0,
     "providerRequestsBeforeLive": 0
   },
   "v3_0_2OfflineReadiness": {
-    "status": "pending_report_generation",
+    "status": "passed",
     "freezeCommit": "061d60bb13004dc7df57a161b01e378335f8938c",
     "slowGatewayReport": "tmp/v3.0.2-slow-gateway.json",
     "slowGatewayReportSha256": "7415253e3ee4b82c41ec2e00f7296d58f9f1e5160243b1d0ae59321e674e7652",
     "slowGatewayElapsedSeconds": 76.125,
     "fieldReport": "tmp/offline-field-acceptance/field-20260915T133506Z-6b5f7e64/field-acceptance.json",
     "fieldReportSha256": "fbf3e333ea09cc6010e6d1b67fdb82cb762cdb707a9561fb6478655291d00d84",
-    "externalProviderRequests": 0
+    "externalProviderRequests": 0,
+    "readinessReport": "docs/evidence/v3.0.2-live-readiness.json",
+    "readinessReportSha256": "0da05eefa8b4d036bc7cab2f2449eeed02d63e641d42d607e45287cf2577a29d",
+    "checksPassed": 18,
+    "checksFailed": 0,
+    "V3_0_2_LIVE_READY": true
   },
   "deterministicGates": {
     "fastapi": {"command": "mall-ai-service/.venv/Scripts/python.exe scripts/run_fastapi_ci_report.py --junitxml=tmp/v3.0.2/fastapi-junit.xml --report=tmp/v3.0.2/fastapi-report.json", "passed": 399, "failed": 0, "skipped": 0, "warnings": 1, "subtestsPassed": 12, "exitCode": 0, "semanticReportSha256": "137fe53108adff7ceb3f7e14fa67b242da21aa5f193257d576b98ffdb207504d", "junitSha256": "1e10cb60156c7c8cb0ff74f6648b81dd98200323d0401c8ec6b07c22e13b9034"},
