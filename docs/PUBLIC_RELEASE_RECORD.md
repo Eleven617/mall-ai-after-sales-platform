@@ -12,7 +12,7 @@
 | deterministic | **478/478；8/8** | contract_mock，无模型/业务写入 |
 | 现场 Runner | **122/122 passed** | browser 24、Java/MySQL 30、fault 36、durable 32；合成数据 |
 | DeepSeek candidate | **FAILED** | `candidate-226cdd440e85`，第一展示链失败；后续质量套件未执行 |
-| GitHub Actions | **quality-evaluation success；mall-ci failed** | 提交 `3138535`；mall-ci 仅在 `public-release` 因历史 381 断言失败，旧 Actions 不并入 |
+| GitHub Actions | **quality-evaluation success；mall-ci failed** | 提交 `5629f7b`；[`quality-evaluation`](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34941472352) 成功；[`mall-ci`](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34941472321) 仅在 `public-release` 因历史 381 断言失败，旧 Actions 不并入 |
 
 候选报告：`tmp/deepseek-v3.0.1-final-06ef600e51e7b0dc362d43a98e274c28144738d8.json`，SHA-256 `6615d069122cb66ee8f3467f98ae79457ef287afd6f19c5e56035c45fb0b65c8`；Release lock：`docs/evidence/deepseek-release-lock-v3.0.1-final-06ef600e51e7b0dc362d43a98e274c28144738d8.json`，状态 `FAILED`。共享账本只记录 9 次 Provider 元数据请求（9 成功、0 失败、27,329 tokens），这不是任务准确率或成本；报告/锁的 0 计数缺口已如实保留。
 

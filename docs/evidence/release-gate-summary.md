@@ -2,7 +2,7 @@
 
 ## 当前权威结论｜v3.0.1 在线验收（2026-09-15）
 
-代码冻结 `06ef600e51e7b0dc362d43a98e274c28144738d8`；离线 readiness 24/24 通过；FastAPI 382、deterministic 478/478、Java 14/14 + Spring 1/1、Vue build、当前本机合成现场 122/122 通过。唯一 DeepSeek candidate 在第一展示链失败，锁定 `FAILED`，Release Gate **NOT_COMPLETE**。共享 ledger 观察 9 次 Provider 请求、9 成功、0 失败、27,329 tokens；main/supplemental/Grounding 未执行。提交 `3138535d51c79b74eb3e0e615691f7ee980f595c` 的 quality-evaluation 成功，mall-ci 失败于 `public-release` 的旧 381 断言。
+代码冻结 `06ef600e51e7b0dc362d43a98e274c28144738d8`；离线 readiness 24/24 通过；FastAPI 382、deterministic 478/478、Java 14/14 + Spring 1/1、Vue build、当前本机合成现场 122/122 通过。唯一 DeepSeek candidate 在第一展示链失败，锁定 `FAILED`，Release Gate **NOT_COMPLETE**。共享 ledger 观察 9 次 Provider 请求、9 成功、0 失败、27,329 tokens；main/supplemental/Grounding 未执行。提交 `5629f7b3529ef03b6833b329b580f212c96b38bb` 的 quality-evaluation [run 34941472352](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34941472352) 成功，mall-ci [run 34941472321](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34941472321) 失败于 `public-release` 的旧 381 断言。
 
 正式候选报告 SHA-256 `6615d069122cb66ee8f3467f98ae79457ef287afd6f19c5e56035c45fb0b65c8`；现场报告 SHA-256 `ec337708baa422fcd11bf2ac2334372e88f3592f4dde454ab0f674413704122b`。本轮 GitHub push 因 443 超时，当前 SHA 的 Actions 尚未验证；旧 run 不替代。
 

@@ -18,7 +18,7 @@
 
 ### 当前问题
 
-- 首次 `git push` 曾在 GitHub `443` 连接处超时，随后提交 `3138535d51c79b74eb3e0e615691f7ee980f595c` 已成功推送。该 SHA 的 `quality-evaluation` 成功，`mall-ci` 失败于 `public-release`：公开验证器仍硬编码历史 FastAPI `381`，而当前实测为 `382`。不能把旧 run 当作新结果。
+- 首次 `git push` 曾在 GitHub `443` 连接处超时，随后提交 `5629f7b3529ef03b6833b329b580f212c96b38bb` 已成功推送。该 SHA 的 `quality-evaluation` [run 34941472352](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34941472352) 成功，`mall-ci` [run 34941472321](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34941472321) 失败于 `public-release`：公开验证器仍硬编码历史 FastAPI `381`，而当前实测为 `382`。不能把旧 run 当作新结果。
 - 候选 Runner 的 host ledger 路径缺失导致报告/锁中的请求计数与共享 ledger 不一致；该问题属于本次候选失败证据，按需求不再修改代码或重跑 Provider。
 
 ### 尚未完成 / 不能宣称
