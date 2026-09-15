@@ -3,7 +3,7 @@
   "generatedAt": "2026-09-15T13:44:36Z",
   "releaseStatus": "NOT_COMPLETE",
   "runtimeCommit": "061d60bb13004dc7df57a161b01e378335f8938c",
-  "evidenceCommit": "061d60bb13004dc7df57a161b01e378335f8938c",
+  "evidenceCommit": "6a0bc59375238eb9f7fb78459e89e5374e059ec8",
   "statusReason": "v3.0.2 离线候选已完成慢网关、ledger 对账、全量现场与确定性门禁；在线 DeepSeek 批次未获本轮授权，保持未运行。",
   "project": {
     "name": "Mall AI After-sales Platform",
