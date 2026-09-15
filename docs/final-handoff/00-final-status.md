@@ -6,6 +6,8 @@
 
 旧的 72/72、36/36、Grounding 和 122/122 Durable 报告绑定旧 Runtime，不能替代当前结果。提交 `5bfdc3c` 的 `mall-ci` 与 `quality-evaluation` 已实际 success；这证明 GitHub runner 门禁通过，不代表生产 SLA、真实用户泛化、真实外部支付/仓储/物流/维修履约或模型成本。唯一事实源：[`current-release-facts.json`](../evidence/current-release-facts.json)。
 
+本轮包含代码与证据的提交 `bd3a5cf` 远程门禁也已通过：[`mall-ci`](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34931831197)、[`quality-evaluation`](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34931831222)。
+
 ## 历史审计记录（以下内容不代表当前 Commit）
 
 ## 2026-09-12｜当前代码最终快照

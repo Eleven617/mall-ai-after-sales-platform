@@ -298,3 +298,8 @@
 - `TEST_RUN_COMPLETE=true`，但 `RELEASE_QUALIFIED=false / NOT_COMPLETE`：deterministic/replay 不能证明真实自然语言泛化、生产准确率、生产 SLA 或真实支付/仓储/物流/维修成功。
 - fault 36 条中 10 条执行模式为本地安全停止运行时合同 + 隔离 Compose 重启，不是外部供应商宕机证明。
 - 未执行 `docker compose down`、卷/VHDX 删除或数据库清空；临时密码、Token、完整订单号和原始响应均未提交。
+
+### 远程 CI
+
+- 包含本轮代码与证据的提交 `bd3a5cf787f87e2819c73021fc9a356c6c65da85` 已推送。
+- GitHub Actions `mall-ci` [34931831197](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34931831197) 与 `quality-evaluation` [34931831222](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34931831222) 均为实际 `success`。

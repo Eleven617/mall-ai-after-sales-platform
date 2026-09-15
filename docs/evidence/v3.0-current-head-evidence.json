@@ -102,6 +102,12 @@
     "status": "not_run_by_design",
     "reason": "This round specifically disallowed DeepSeek/provider calls; prior live-model reports are historical and are not merged into current totals."
   },
+  "remoteCi": {
+    "status": "passed",
+    "testedCommit": "bd3a5cf787f87e2819c73021fc9a356c6c65da85",
+    "mallCi": "https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34931831197",
+    "qualityEvaluation": "https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34931831222"
+  },
   "securityAndReliability": {
     "publicProjection": "safe DTO only; no prompt, raw tool result, RAG text, token, internal task/proposal ID or full business identifier",
     "writeBoundary": "confirmation -> Java eligibility/ownership/state/idempotency/transaction -> Outbox/status readback",

@@ -16,6 +16,8 @@
 
 现场报告：`tmp/offline-field-acceptance/field-20260915T042914Z-8c8d67db/field-acceptance.json`（SHA-256 `c1e893c648ea6be102aef3f5c391a5dca28a220a4b2df80574e8bee4fd8b1223`），合成 Fixture SHA-256 `11b98fb4e03eedb4fedd7d89eeb538890308a61891975072e69c236f958c640e`。确定性/replay 两批均由跨进程账本确认 `providerRequests=0`，不能解释成真实模型效果。
 
+远程 CI（提交 `bd3a5cf787f87e2819c73021fc9a356c6c65da85`）实际通过：[`mall-ci`](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34931831197)、[`quality-evaluation`](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34931831222)。
+
 RAG 52 条黄金集当前报告为 [`rag2-retrieval-freeze-54de463.json`](evidence/rag2-retrieval-freeze-54de463.json)，Dense 仍为默认；Hybrid/Rerank 仅实验。实时 Grounding 和新的 DeepSeek 批次本轮**未运行**。因此当前状态是：`TEST_RUN_COMPLETE`，但 `RELEASE_QUALIFIED=false / NOT_COMPLETE`。生产 SLA、真实用户泛化、真实支付/仓储/物流/维修仍不可宣称。
 
 ## 当前权威快照｜最终公开收口

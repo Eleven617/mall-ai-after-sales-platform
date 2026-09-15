@@ -180,11 +180,11 @@
     "showcaseEvidence": "docs/evidence/final-showcase-evidence.md"
   },
   "ci": {
-    "status": "pending_remote_final_sha",
-    "verifiedCommit": "54de463b4990229b591e1fd0a278f754bf240678",
-    "mallCi": null,
-    "qualityEvaluation": null,
-    "scope": "冻结 SHA 推送后的 GitHub Actions 尚待本轮证据提交完成；未把旧 SHA 的 success 迁移到当前结果。"
+    "status": "passed",
+    "verifiedCommit": "bd3a5cf787f87e2819c73021fc9a356c6c65da85",
+    "mallCi": "https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34931831197",
+    "qualityEvaluation": "https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34931831222",
+    "scope": "GitHub Actions 在包含本轮代码与证据的提交 bd3a5cf 上实际完成；mall-ci 与 quality-evaluation 均 success。"
   },
   "currentVerification": {
     "commit": "54de463b4990229b591e1fd0a278f754bf240678",

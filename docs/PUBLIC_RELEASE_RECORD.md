@@ -17,6 +17,8 @@
 
 现场报告：`tmp/offline-field-acceptance/field-20260915T042914Z-8c8d67db/field-acceptance.json`，SHA-256 `c1e893c648ea6be102aef3f5c391a5dca28a220a4b2df80574e8bee4fd8b1223`；RAG 报告：[`rag2-retrieval-freeze-54de463.json`](evidence/rag2-retrieval-freeze-54de463.json)。本轮四类现场均 `environment_blocked=0`。任何绑定其他 Commit 的旧报告均为 stale/superseded，不与本次统计合并。故障组中 10 条为本地安全停止合同 + 隔离 Compose 重启，不是外部供应商中断证明。
 
+本轮包含代码与证据的提交 `bd3a5cf787f87e2819c73021fc9a356c6c65da85` 的远程门禁：[`mall-ci`](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34931831197)、[`quality-evaluation`](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34931831222)，均为 success。
+
 成本、生产 SLA、真实用户自然语言泛化、真实支付/仓储/物流/维修履约仍 unavailable/未接入；README 本轮不重写。
 
 ## 当前权威记录｜最终公开收口

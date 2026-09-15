@@ -8,6 +8,8 @@
 
 原始报告路径、退出码和 hash 见 [`current-release-facts.json`](../evidence/current-release-facts.json) 与 [`v3.0.1-offline-and-live-acceptance.md`](../evidence/v3.0.1-offline-and-live-acceptance.md)。提交 `5bfdc3c` 的 `mall-ci` 与 `quality-evaluation` 已实际 success；新候选锁已写入 `deepseek-release-lock-v3.0.1.json`，不再重跑。
 
+本轮提交 `bd3a5cf` 的远程 `mall-ci` 与 `quality-evaluation` 均为 success：[`mall-ci`](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34931831197)、[`quality-evaluation`](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34931831222)。
+
 ## 历史审计记录（以下内容不代表当前 Commit）
 
 ## 2026-09-12 当前代码补测
