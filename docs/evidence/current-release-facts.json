@@ -1,10 +1,10 @@
 {
   "schemaVersion": "mall-public-release-facts.v3",
-  "generatedAt": "2026-09-14T08:00:00Z",
+  "generatedAt": "2026-09-15T04:45:00Z",
   "releaseStatus": "NOT_COMPLETE",
-  "runtimeCommit": "0162c4059c35211852f409a4c3517a87997b4f56",
-  "evidenceCommit": "5bfdc3c7c8eb88f76abecc6ea063eb2173880813",
-  "statusReason": "v3.0.1 唯一候选批次在真实本地展示链路阶段返回脱敏 ShowcaseError 后停止，DeepSeek 账本记录 0 请求/0 Token；主集、补充集、Grounding 和新素材未执行，因此 Release Gate 为 NOT_COMPLETE。",
+  "runtimeCommit": "54de463b4990229b591e1fd0a278f754bf240678",
+  "evidenceCommit": "pending_remote_final_sha",
+  "statusReason": "本轮按要求不调用 DeepSeek；deterministic/replay 真实本地现场与离线门禁完成，但不能把它们扩大为真实模型泛化或生产发布，因此 Release Gate 为 NOT_COMPLETE。",
   "project": {
     "name": "Mall AI After-sales Platform",
     "repository": "https://github.com/Eleven617/mall-ai-after-sales-platform",
@@ -121,13 +121,13 @@
   "ragRetrieval": {
     "dataset": "52 versioned synthetic policy cases",
     "default": "Dense",
-    "dense": {"recallAt3": 1.0, "mrr": 0.948718, "ndcgAt3": 0.962147, "p95Ms": 13.72},
-    "hybrid": {"mrr": 0.935897, "ndcgAt3": 0.952683, "p95Ms": 26.9},
-    "hybridRerank": {"mrr": 0.935897, "ndcgAt3": 0.952683, "p95Ms": 2348.99},
+    "dense": {"recallAt3": 1.0, "mrr": 0.948718, "ndcgAt3": 0.962147, "p50Ms": 12.1, "p95Ms": 17.93, "maxMs": 1144.32},
+    "hybrid": {"recallAt3": 1.0, "mrr": 0.935897, "ndcgAt3": 0.952683, "p50Ms": 12.91, "p95Ms": 18.01, "maxMs": 26.03},
+    "hybridRerank": {"recallAt3": 1.0, "mrr": 0.935897, "ndcgAt3": 0.952683, "p50Ms": 1943.52, "p95Ms": 2558.35, "maxMs": 5930.41},
     "claimBoundary": "这些是小型版本化合成政策集上的检索指标，不是答案准确率、真实用户覆盖或生产 SLA。"
   },
   "tests": {
-    "fastapi": {"passed": 376, "failed": 0, "warnings": 1, "subtests": 12, "exitCode": 0},
+    "fastapi": {"passed": 381, "failed": 0, "warnings": 1, "subtests": 12, "exitCode": 0},
     "java": {
       "portalCore": "12/12",
       "portalCompatibility": "2/2",
@@ -141,7 +141,7 @@
     "deterministicContract": {"manifest": "478/478", "representative": "8/8", "mode": "contract_mock", "exitCode": 0},
     "fieldAcceptance": {
       "status": "partially_current_live_and_durable_blocked",
-      "testedCodeCommit": "9c7c29045c28446b16a609768cd4b4c1202f8a51",
+      "testedCodeCommit": "54de463b4990229b591e1fd0a278f754bf240678",
       "browser": "24/24",
       "javaMysql": "30/30",
       "faultInjection": "36/36",
@@ -150,14 +150,14 @@
       "failed": 0,
       "environmentBlocked": 0,
       "mode": "local Docker/Chrome/Java/MySQL/Redis/RabbitMQ with synthetic fixture",
-      "report": "tmp/field-acceptance-final-9c7c290/field-20260912T190322Z-6095525f/field-acceptance.json",
-      "reportSha256": "6fcae42f1befeadd439957fe2bbecb114a77f787f29a8ec97fc29fdc6b016ff8",
-      "fixtureSha256": "4dd3d407001aec74e4c9546639c78eb2544b34a0ac4f2b6698eba345c27e3fc3"
-      ,"currentFrozenCommit": "0162c4059c35211852f409a4c3517a87997b4f56"
-      ,"currentBrowser": "24/24"
-      ,"currentJavaMysql": "30/30"
-      ,"currentFaultInjection": "36/36"
-      ,"currentDurableRecovery": "32 environment_blocked"
+      "report": "tmp/offline-field-acceptance/field-20260915T042914Z-8c8d67db/field-acceptance.json",
+      "reportSha256": "c1e893c648ea6be102aef3f5c391a5dca28a220a4b2df80574e8bee4fd8b1223",
+      "fixtureSha256": "11b98fb4e03eedb4fedd7d89eeb538890308a61891975072e69c236f958c640e",
+      "currentFrozenCommit": "54de463b4990229b591e1fd0a278f754bf240678",
+      "currentBrowser": "24/24",
+      "currentJavaMysql": "30/30",
+      "currentFaultInjection": "36/36",
+      "currentDurableRecovery": "32/32"
     }
   },
   "latencyAndTokens": {
@@ -180,49 +180,49 @@
     "showcaseEvidence": "docs/evidence/final-showcase-evidence.md"
   },
   "ci": {
-    "status": "passed",
-    "verifiedCommit": "5bfdc3c7c8eb88f76abecc6ea063eb2173880813",
-    "mallCi": "https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34821813055",
-    "qualityEvaluation": "https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34821813117",
-    "scope": "GitHub Actions 在提交 5bfdc3c 上实际完成；mall-ci 与 quality-evaluation 均 success。后续仅有证据指针更新，不改变被测运行时代码。"
+    "status": "pending_remote_final_sha",
+    "verifiedCommit": "54de463b4990229b591e1fd0a278f754bf240678",
+    "mallCi": null,
+    "qualityEvaluation": null,
+    "scope": "冻结 SHA 推送后的 GitHub Actions 尚待本轮证据提交完成；未把旧 SHA 的 success 迁移到当前结果。"
   },
   "currentVerification": {
-    "commit": "0162c4059c35211852f409a4c3517a87997b4f56",
-    "fastapi": {"passed": 376, "failed": 0, "warnings": 1, "subtests": 12, "exitCode": 0},
+    "commit": "54de463b4990229b591e1fd0a278f754bf240678",
+    "fastapi": {"passed": 381, "failed": 0, "warnings": 1, "subtests": 12, "exitCode": 0},
     "deterministic": {"manifest": "478/478", "representative": "8/8", "exitCode": 0},
     "composeConfig": {"status": "passed", "exitCode": 0},
     "deepseek": {
-      "status": "failed",
+      "status": "not_run_by_design",
       "provider": "DeepSeekRuntimeProvider",
-      "model": "deepseek-flash",
-      "thinkingMode": "enabled",
-      "reasoningEffort": "high",
-      "batchStatus": "failed",
-      "batchId": "candidate-5f1d90208743",
-      "runtimeCommit": "0162c4059c35211852f409a4c3517a87997b4f56",
+      "model": "not_called",
+      "thinkingMode": "not_run",
+      "reasoningEffort": "not_run",
+      "batchStatus": "not_run",
+      "batchId": null,
+      "runtimeCommit": "54de463b4990229b591e1fd0a278f754bf240678",
       "calls": 0,
       "successfulCalls": 0,
-      "failedCalls": 1,
+      "failedCalls": 0,
       "promptTokens": 0,
       "completionTokens": 0,
       "totalTokens": 0,
       "toolCalls": 0,
       "sideEffects": 0,
-      "report": "tmp/deepseek-v3.0.1-candidate.json",
-      "reportSha256": "1a6e0016fdc5116ea68690e14167f5351391cd75bd827abe613953196f7cd9d2",
-      "failureCategory": "redacted_showcase_error",
-      "note": "唯一候选批次在真实本地展示链路阶段停止；主集、补充集、Grounding 未执行。"
+      "report": null,
+      "reportSha256": null,
+      "failureCategory": null,
+      "note": "本轮明确不调用 DeepSeek；历史候选失败报告保留在历史审计中，不并入当前统计。"
     },
     "showcase": {
-      "status": "failed",
-      "captureCommand": "scripts/Run-V3_0_1-DeepSeek-Release.ps1 -RuntimeCommit 0162c4059c35211852f409a4c3517a87997b4f56",
-      "blocker": "candidate-5f1d90208743 returned a redacted ShowcaseError before chain completion",
+      "status": "passed",
+      "captureCommand": "tmp/run_offline_showcase.ps1 deterministic/replay",
+      "blocker": null,
       "scenarios": [
-        {"scenarioId": "showcase-main-closed-loop", "status": "not_executed", "asset": null, "javaWriteObserved": false, "batchId": "candidate-5f1d90208743"},
-        {"scenarioId": "showcase-pause-resume", "status": "not_executed", "asset": null, "batchId": "candidate-5f1d90208743"},
-        {"scenarioId": "showcase-fact-change-replan", "status": "not_executed", "asset": null, "batchId": "candidate-5f1d90208743"}
+        {"scenarioId": "showcase-main-closed-loop", "status": "passed", "asset": "tmp/offline-field/showcase-deterministic.json", "javaWriteObserved": true, "batchId": "offline-deterministic-freeze"},
+        {"scenarioId": "showcase-pause-resume", "status": "passed", "asset": "tmp/offline-field/showcase-deterministic.json", "javaWriteObserved": false, "batchId": "offline-deterministic-freeze"},
+        {"scenarioId": "showcase-fact-change-replan", "status": "passed", "asset": "tmp/offline-field/showcase-deterministic.json", "javaWriteObserved": false, "batchId": "offline-deterministic-freeze"}
       ],
-      "boundary": "本候选没有把确定性合同或旧素材当作真实模型展示。"
+      "boundary": "deterministic/replay 现场不等于真实模型自然语言泛化。"
     }
   },
   "publicClaims": [

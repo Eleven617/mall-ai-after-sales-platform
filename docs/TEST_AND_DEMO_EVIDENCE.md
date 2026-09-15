@@ -1,5 +1,23 @@
 # 测试与演示证据
 
+## 2026-09-15｜冻结 SHA 离线/现场验收（当前权威）
+
+当前被测代码为 `54de463b4990229b591e1fd0a278f754bf240678`，分支 `codex/v3.0.1-offline-acceptance`。本轮不调用 DeepSeek；真实现场使用 deterministic/replay provider，仍经过真实 Vue/Chrome、FastAPI、Java/MySQL、Redis、RabbitMQ 和合成数据。
+
+| 门禁 | 结果 | 说明 |
+| --- | --- | --- |
+| FastAPI | **381 passed**，0 failed | `.venv`，exit `0`，1 条第三方弃用警告、12 个子断言 |
+| v3 manifest / preflight | **478/478；代表性 8/8** | 无模型、无业务写入 |
+| Quality / Task / Chunk | **17/17；11/11；8/8** | 确定性合同 |
+| Java | portal **14/14**、admin **6/6**、编译成功 | 显式 `-DskipTests=false` |
+| Vue | **passed** | `npm run build` |
+| 现场 Runner | **122/122** | browser 24、Java/MySQL 30、fault 36、durable 32 |
+| Agent 展示链 | **3/3 deterministic + 3/3 replay** | `/agent-tasks`，每批 3 个真实浏览器帧 |
+
+现场报告：`tmp/offline-field-acceptance/field-20260915T042914Z-8c8d67db/field-acceptance.json`（SHA-256 `c1e893c648ea6be102aef3f5c391a5dca28a220a4b2df80574e8bee4fd8b1223`），合成 Fixture SHA-256 `11b98fb4e03eedb4fedd7d89eeb538890308a61891975072e69c236f958c640e`。确定性/replay 两批均由跨进程账本确认 `providerRequests=0`，不能解释成真实模型效果。
+
+RAG 52 条黄金集当前报告为 [`rag2-retrieval-freeze-54de463.json`](evidence/rag2-retrieval-freeze-54de463.json)，Dense 仍为默认；Hybrid/Rerank 仅实验。实时 Grounding 和新的 DeepSeek 批次本轮**未运行**。因此当前状态是：`TEST_RUN_COMPLETE`，但 `RELEASE_QUALIFIED=false / NOT_COMPLETE`。生产 SLA、真实用户泛化、真实支付/仓储/物流/维修仍不可宣称。
+
 ## 当前权威快照｜最终公开收口
 
 运行时代码冻结：`9b2fc5285794ecd7baac3f9e7984c216370436d3`；分支：`main`。当前公开展示 Release Gate：**NOT_COMPLETE**。两个允许的 DeepSeek 批次已结束：Batch 2 展示阶段 2/3 通过、1/3 失败后停止；下方旧日期内容是历史审计，提交号或报告 hash 不一致时标记 stale，不与当前结果相加。

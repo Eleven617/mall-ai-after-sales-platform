@@ -2,7 +2,7 @@
 
 ## 当前权威快照｜v3.0.1 候选验收（2026-09-14 UTC）
 
-运行时代码：`0162c4059c35211852f409a4c3517a87997b4f56`；分支：`codex/v3.0.1-offline-acceptance`。当前公开展示 Release Gate：**NOT_COMPLETE**。FastAPI 376、12 个子断言；v3 deterministic 478/478、代表性 8/8；浏览器 24/24、Java/MySQL 30/30、故障注入 36/36。唯一 DeepSeek 候选批次在真实展示阶段返回脱敏 ShowcaseError 后停止，主集、补充集、Grounding、新素材和 Durable live 32 条为 `not_executed`/`environment_blocked`。
+运行时代码：`54de463b4990229b591e1fd0a278f754bf240678`；分支：`codex/v3.0.1-offline-acceptance`。当前公开展示 Release Gate：**NOT_COMPLETE**。FastAPI **381**、12 个子断言；v3 deterministic 478/478、代表性 8/8；浏览器 24/24、Java/MySQL 30/30、故障注入 36/36、Durable 32/32，`environment_blocked=0`。本轮 DeepSeek `not_run_by_design`；deterministic/replay 展示链通过，但不等于真实模型泛化。
 
 旧的 72/72、36/36、Grounding 和 122/122 Durable 报告绑定旧 Runtime，不能替代当前结果。提交 `5bfdc3c` 的 `mall-ci` 与 `quality-evaluation` 已实际 success；这证明 GitHub runner 门禁通过，不代表生产 SLA、真实用户泛化、真实外部支付/仓储/物流/维修履约或模型成本。唯一事实源：[`current-release-facts.json`](../evidence/current-release-facts.json)。
 

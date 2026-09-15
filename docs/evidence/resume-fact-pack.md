@@ -4,7 +4,7 @@
 
 当前发布状态：**NOT_COMPLETE**。
 
-运行时代码：`0162c4059c35211852f409a4c3517a87997b4f56`；唯一事实源：[`current-release-facts.json`](current-release-facts.json)。当前可核验结果：FastAPI **376 passed**、12 个子断言、v3 deterministic **478/478**（代表性 8/8）、Compose 配置通过；浏览器现场 24/24、Java/MySQL 30/30、故障注入 36/36。唯一 v3.0.1 DeepSeek 候选批次在真实展示阶段返回脱敏 ShowcaseError 后停止（0 请求/0 Token），主集/补充集/Grounding/新素材未执行，Durable live 32 条 environment_blocked。
+运行时代码：`54de463b4990229b591e1fd0a278f754bf240678`；唯一事实源：[`current-release-facts.json`](current-release-facts.json)。当前可核验结果：FastAPI **381 passed**、12 个子断言、v3 deterministic **478/478**（代表性 8/8）、Compose 配置通过；浏览器现场 24/24、Java/MySQL 30/30、故障注入 36/36、Durable 32/32（`environment_blocked=0`）。本轮 DeepSeek 为 `not_run_by_design`，deterministic/replay 展示链通过但不证明真实模型泛化。
 
 当前简历只能写受限 Agent Runtime、Java 权威事实与写入边界、版本化 RAG/grounding 设计和可审计合同门；不能把旧报告数字当作当前提交结果，也不能把合同数字写成生产准确率。基于 `macrozheng/mall` 二次开发，上游商城基础能力不归为原创。
 

@@ -271,3 +271,30 @@
 - 122/122 是当前机器、本地 Docker/Chrome 和合成 Fixture 的现场证据，不是生产 SLA 或真实用户泛化。
 - 没有真实支付、仓储、物流、维修系统；不能宣称外部履约成功。
 - 上游 `macrozheng/mall` 的商城基础能力不归为个人原创。
+
+## 2026-09-15｜零 DeepSeek 调用的离线集中修复与冻结验收（最新）
+
+### 已完成
+
+- 代码冻结提交：`54de463b4990229b591e1fd0a278f754bf240678`，分支 `codex/v3.0.1-offline-acceptance`，已推送；未调用 DeepSeek、未创建新的付费模型批次。
+- 新增跨进程 metadata-only release ledger：主机 Runner 通过批次头与 FastAPI 容器共享 JSONL，区分 provider/scenario/test 失败；本地 fake provider 合同为 3 成功 + 1 失败。
+- 统一现场主链只走公开 `/agent-tasks`：deterministic 3/3、replay 3/3；每批 3 张真实浏览器帧；Java 资格/写入/读回、重复确认 0 新写入、跨账号 0 泄露、暂停重启任务 hash 一致、事实变化后旧 Proposal 未提交。
+- 修复 Java 结果 unknown 时清空 pending action 引用导致重复确认 500 的持久化缺陷，并补回归测试。
+- 真实现场 Runner 重新绑定冻结 SHA：browser 24/24、Java/MySQL 30/30、fault 36/36、durable recovery 32/32，合计 122/122，0 failed，0 environment_blocked。
+- 冻结 SHA 离线门禁：FastAPI 381 passed、v3 478/478 + 8/8、Quality 17/17、Task 11/11、Chunk 8/8、RAG 合同 21/21、Java portal 14/14/admin 6/6、Vue build、Compose config 均通过。
+- RAG Dense/Hybrid/Rerank 以 52 条黄金集重跑冷/热指标；Dense 继续默认，报告为 `docs/evidence/rag2-retrieval-freeze-54de463.json`。
+
+### 证据路径
+
+- `docs/evidence/v3.0-current-head-evidence.md/.json`
+- `docs/evidence/rag2-retrieval-freeze-54de463.json`
+- `docs/TEST_AND_DEMO_EVIDENCE.md`
+- `docs/PUBLIC_RELEASE_RECORD.md`
+- 现场报告（Git 忽略）：`tmp/offline-field-acceptance/field-20260915T042914Z-8c8d67db/field-acceptance.json`
+
+### 仍未完成/不能宣称
+
+- 本轮没有新的 live DeepSeek batch，也没有 live-model Grounding；旧模型报告不与当前统计合并。
+- `TEST_RUN_COMPLETE=true`，但 `RELEASE_QUALIFIED=false / NOT_COMPLETE`：deterministic/replay 不能证明真实自然语言泛化、生产准确率、生产 SLA 或真实支付/仓储/物流/维修成功。
+- fault 36 条中 10 条执行模式为本地安全停止运行时合同 + 隔离 Compose 重启，不是外部供应商宕机证明。
+- 未执行 `docker compose down`、卷/VHDX 删除或数据库清空；临时密码、Token、完整订单号和原始响应均未提交。

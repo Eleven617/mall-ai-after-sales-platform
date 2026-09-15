@@ -1,0 +1,92 @@
+{
+  "schemaVersion": "rag2-retrieval-evidence.v1",
+  "generatedAt": "2026-09-15T12:38:00+08:00",
+  "testedCodeCommit": "54de463b4990229b591e1fd0a278f754bf240678",
+  "command": "Push-Location .\\mall-ai-service; .\\.venv\\Scripts\\python.exe scripts\\evaluate_rag2.py --modes dense hybrid hybrid_rerank dense hybrid hybrid_rerank --top-k 3 --summary; Pop-Location",
+  "exitCode": 0,
+  "dataset": {
+    "path": "mall-ai-service/evals/rag2_golden_cases.v1.json",
+    "sha256": "632f36c30a21c0b76a5ae18cc2f4b74ff887f70b37c42235f4b776aad8a4fcc1",
+    "casesPerRun": 52,
+    "topK": 3,
+    "externalModelCalls": 0
+  },
+  "runs": [
+    {
+      "temperature": "cold",
+      "mode": "dense",
+      "totalCases": 52,
+      "status": "passed",
+      "recallAtK": 1.0,
+      "mrr": 0.948718,
+      "ndcgAtK": 0.962147,
+      "abstentionCases": 13,
+      "latencyMs": {"mean": 37.32, "p50": 14.30, "p95": 25.22, "max": 1144.32}
+    },
+    {
+      "temperature": "cold",
+      "mode": "hybrid",
+      "totalCases": 52,
+      "status": "passed",
+      "recallAtK": 1.0,
+      "mrr": 0.935897,
+      "ndcgAtK": 0.952683,
+      "abstentionCases": 13,
+      "latencyMs": {"mean": 16.97, "p50": 16.06, "p95": 24.11, "max": 26.03}
+    },
+    {
+      "temperature": "cold",
+      "mode": "hybrid_rerank",
+      "totalCases": 52,
+      "status": "passed",
+      "recallAtK": 1.0,
+      "mrr": 0.935897,
+      "ndcgAtK": 0.952683,
+      "abstentionCases": 13,
+      "latencyMs": {"mean": 1993.07, "p50": 1913.88, "p95": 2408.92, "max": 5930.41}
+    },
+    {
+      "temperature": "hot",
+      "mode": "dense",
+      "totalCases": 52,
+      "status": "passed",
+      "recallAtK": 1.0,
+      "mrr": 0.948718,
+      "ndcgAtK": 0.962147,
+      "abstentionCases": 13,
+      "latencyMs": {"mean": 12.88, "p50": 12.10, "p95": 17.93, "max": 25.40}
+    },
+    {
+      "temperature": "hot",
+      "mode": "hybrid",
+      "totalCases": 52,
+      "status": "passed",
+      "recallAtK": 1.0,
+      "mrr": 0.935897,
+      "ndcgAtK": 0.952683,
+      "abstentionCases": 13,
+      "latencyMs": {"mean": 13.68, "p50": 12.91, "p95": 18.01, "max": 22.67}
+    },
+    {
+      "temperature": "hot",
+      "mode": "hybrid_rerank",
+      "totalCases": 52,
+      "status": "passed",
+      "recallAtK": 1.0,
+      "mrr": 0.935897,
+      "ndcgAtK": 0.952683,
+      "abstentionCases": 13,
+      "latencyMs": {"mean": 1936.38, "p50": 1943.52, "p95": 2558.35, "max": 2851.75}
+    }
+  ],
+  "decision": {
+    "defaultMode": "dense",
+    "reason": "All three modes reached the same Recall@3 on this 52-case local synthetic set; rerank latency was materially higher. Hybrid and rerank remain reproducible experiments, not a production default.",
+    "groundingLiveModel": "not_run_by_design"
+  },
+  "limitations": [
+    "These are local synthetic policy retrieval measurements, not production traffic or user accuracy.",
+    "Cold/hot timing is machine-specific and includes local model/index startup effects.",
+    "No DeepSeek or other hosted model was called in this run."
+  ]
+}

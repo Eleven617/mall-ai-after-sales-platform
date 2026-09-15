@@ -1,5 +1,24 @@
 # 公开发布记录
 
+## 2026-09-15｜冻结 SHA 验收记录（当前权威）
+
+运行时代码冻结：`54de463b4990229b591e1fd0a278f754bf240678`；分支：`codex/v3.0.1-offline-acceptance`。本轮不调用 DeepSeek、不创建新付费模型批次；本地现场使用 deterministic/replay provider，并通过真实 Docker/Chrome/Vue/FastAPI/Java/MySQL/Redis/RabbitMQ 路径。
+
+| 门禁 | 当前结果 | 范围 |
+| --- | --- | --- |
+| FastAPI | **381 passed** | 本机 `.venv`，exit `0` |
+| Java | **portal 14/14、admin 6/6，编译成功** | 显式 `-DskipTests=false` |
+| Vue | **production build passed** | TypeScript + Vite |
+| deterministic manifest | **478/478；代表性 8/8** | contract only |
+| 现场 Runner | **122/122 passed** | browser 24、Java/MySQL 30、fault 36、durable 32 |
+| Agent showcase | **3/3 + 3/3** | `/agent-tasks` deterministic/replay，各 3 浏览器帧 |
+| 新 DeepSeek / live grounding | **未运行** | 本轮明确禁止付费模型调用 |
+| 当前发布资格 | **NOT_COMPLETE** | deterministic/replay 不等于真实模型泛化或生产发布 |
+
+现场报告：`tmp/offline-field-acceptance/field-20260915T042914Z-8c8d67db/field-acceptance.json`，SHA-256 `c1e893c648ea6be102aef3f5c391a5dca28a220a4b2df80574e8bee4fd8b1223`；RAG 报告：[`rag2-retrieval-freeze-54de463.json`](evidence/rag2-retrieval-freeze-54de463.json)。本轮四类现场均 `environment_blocked=0`。任何绑定其他 Commit 的旧报告均为 stale/superseded，不与本次统计合并。故障组中 10 条为本地安全停止合同 + 隔离 Compose 重启，不是外部供应商中断证明。
+
+成本、生产 SLA、真实用户自然语言泛化、真实支付/仓储/物流/维修履约仍 unavailable/未接入；README 本轮不重写。
+
 ## 当前权威记录｜最终公开收口
 
 更新时间：2026-09-14 UTC；运行时代码 `0162c4059c35211852f409a4c3517a87997b4f56`；分支 `codex/v3.0.1-offline-acceptance`。本节是当前唯一结论，后续旧日期内容均为历史审计，不能与本节合并统计。当前发布状态：**NOT_COMPLETE**。

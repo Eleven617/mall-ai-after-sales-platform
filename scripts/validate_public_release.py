@@ -77,12 +77,15 @@ def main() -> int:
     else:
         current = facts.get("currentVerification", {})
         require(current.get("commit") == facts["runtimeCommit"], "current verification must bind runtimeCommit")
-        require(current.get("fastapi", {}).get("passed") == 376, "current FastAPI facts mismatch")
+        require(current.get("fastapi", {}).get("passed") == 381, "current FastAPI facts mismatch")
         require(current.get("fastapi", {}).get("failed") == 0, "current FastAPI failure count mismatch")
         require(current.get("deterministic", {}).get("manifest") == "478/478", "current deterministic facts mismatch")
         deepseek_status = current.get("deepseek", {}).get("status")
-        require(deepseek_status in {"environment_blocked", "passed", "failed"}, "DeepSeek status must be explicit")
-        if deepseek_status == "environment_blocked":
+        require(deepseek_status in {"environment_blocked", "passed", "failed", "not_run_by_design"}, "DeepSeek status must be explicit")
+        if deepseek_status == "not_run_by_design":
+            require(current.get("deepseek", {}).get("batchStatus") == "not_run", "DeepSeek not-run status mismatch")
+            require(current.get("deepseek", {}).get("calls") == 0, "DeepSeek not-run calls mismatch")
+        elif deepseek_status == "environment_blocked":
             require(current.get("deepseek", {}).get("httpStatus") in {401, 402, 403}, "DeepSeek provider blocker status missing")
         elif deepseek_status == "passed":
             require(current.get("deepseek", {}).get("model") == "deepseek-flash", "current DeepSeek model mismatch")
@@ -206,7 +209,7 @@ def main() -> int:
                 or "not_executed" in section,
                 f"current incomplete boundary missing in {path}",
             )
-            require("376" in section, f"current FastAPI 376 is missing in {path}")
+            require("381" in section, f"current FastAPI 381 is missing in {path}")
     require(ci["status"] in {"pending_remote_final_sha", "passed", "failed_current_sha"}, "CI status must be explicit")
 
     print(
