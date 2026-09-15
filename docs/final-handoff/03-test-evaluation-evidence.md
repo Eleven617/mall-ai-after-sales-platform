@@ -1,5 +1,13 @@
 # 测试、评测与现场证据
 
+## 当前权威快照｜v3.0.2 离线候选（2026-09-15）
+
+当前状态：**NOT_COMPLETE（离线条件已满足，远程 CI/在线批次待单独确认）**。冻结 SHA `061d60bb13004dc7df57a161b01e378335f8938c`；FastAPI **399/399**（0 failed、0 skipped，机器报告）；Java portal/admin/Spring **14/14、6/6、1/1**；Vue build passed；manifest/preflight **478/478、8/8**；RAG 合同 **21/21**。
+
+冻结 SHA 的 122 条本机现场 Runner 全部通过：browser 24/24、Java/MySQL 30/30、fault 36/36、durable 32/32，`environment_blocked=0`，Fixture SHA `ba77efdd1b2112d2a2dc50561cb3d7fcd041a48d07a00e7bf7611fac103cab6d`。公共 Nginx 慢调用为 76.125 秒、HTTP 201、`ready_to_commit`，无 Provider 请求和 Java 写入。deterministic/replay 展示链各 3/3、各 12 帧。
+
+本轮不调用 DeepSeek 或其他外部模型；真实模型泛化、生产 SLA、真实支付/仓储/物流/维修履约仍未验证。v3.0.1 历史失败锁定为 `gateway_timeout_before_agent_completion`，不与本轮离线结果合并。
+
 ## 当前权威快照｜v3.0.1 最终在线验收（2026-09-15）
 
 代码冻结 `06ef600e51e7b0dc362d43a98e274c28144738d8`。FastAPI **382 passed**、deterministic **478/478、8/8**、Vue build、Java portal **14/14** + Spring context **1/1**、当前本机合成现场 **122/122** 通过。唯一正式 DeepSeek candidate `candidate-226cdd440e85` 在 `main_open_task_closed_loop` 展示链失败后锁定，main/supplemental/Grounding 未执行，当前 Release Gate **NOT_COMPLETE**。

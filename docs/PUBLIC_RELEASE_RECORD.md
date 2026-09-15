@@ -1,5 +1,19 @@
 # 公开发布记录
 
+## 当前权威记录｜v3.0.2 离线候选（2026-09-15）
+
+冻结 SHA `061d60bb13004dc7df57a161b01e378335f8938c`，分支 `codex/v3.0.2-offline-candidate`。当前发布状态 **NOT_COMPLETE**：离线条件已完成，等待该分支远程 `mall-ci`/`quality-evaluation` 和单独在线批次授权；本轮 DeepSeek/外部模型调用为 0。
+
+| 门禁 | 结果 | 证据 |
+| --- | --- | --- |
+| FastAPI | **399/399，0 failed，0 skipped** | 机器可读 JUnit/sidecar，动态校验器 |
+| Java / Web | **14/14、6/6、1/1；build passed** | portal/admin/Spring、Vue |
+| deterministic | **478/478；8/8** | manifest/preflight，contract_mock |
+| 现场 Runner | **122/122** | browser 24、Java/MySQL 30、fault 36、durable 32 |
+| 慢网关 | **76.125 秒，201/ready_to_commit** | 公共 Nginx，Provider 0、Java 写入 0 |
+
+现场 Fixture SHA `ba77efdd1b2112d2a2dc50561cb3d7fcd041a48d07a00e7bf7611fac103cab6d`；现场报告 SHA `fbf3e333ea09cc6010e6d1b67fdb82cb762cdb707a9561fb6478655291d00d84`；ledger SHA `ce801099cd16a998bf39dae544425acb1fd5c6a6c353a1ce18035a1cb8a92323`。这些数据不代表生产 SLA、真实用户准确率或真实履约系统成功；v3.0.1 旧失败报告/锁未修改。
+
 ## 2026-09-15｜v3.0.1 当前 SHA 在线验收（最新权威）
 
 运行时代码冻结 `06ef600e51e7b0dc362d43a98e274c28144738d8`，分支 `codex/v3.0.1-offline-acceptance`。离线 readiness 24/24 通过；当前 SHA 的本机合成现场 122/122 通过；唯一正式 DeepSeek candidate 失败并永久锁定，因此当前发布状态 **NOT_COMPLETE**。

@@ -1,5 +1,11 @@
 # 测试与演示证据
 
+## 当前权威快照｜v3.0.2 离线候选（2026-09-15）
+
+运行时代码冻结 `061d60bb13004dc7df57a161b01e378335f8938c`，分支 `codex/v3.0.2-offline-candidate`；发布状态 **NOT_COMPLETE**（远程 CI 与在线模型批次尚待授权）。FastAPI **399 passed、0 failed、0 skipped**；Java portal/admin/Spring **14/14、6/6、1/1**；Vue build 通过；manifest/preflight **478/478、8/8**；RAG 合同 **21/21**。
+
+本机合成现场 Runner **122/122**：browser 24、Java/MySQL 30、fault 36、durable 32，`environment_blocked=0`。慢调用经公共 Nginx 运行 **76.125 秒**并返回 `201/ready_to_commit`，Provider 请求 0、Java 写入 0；deterministic/replay 展示链各 3/3、各 12 帧。以上不是生产 SLA、真实用户泛化或真实模型效果；本轮 DeepSeek 调用为 0。v3.0.1 的 `gateway_timeout_before_agent_completion` 失败报告和锁保持不变。
+
 ## 2026-09-15｜v3.0.1 当前 SHA 在线验收（最新权威）
 
 运行时代码 `06ef600e51e7b0dc362d43a98e274c28144738d8`，分支 `codex/v3.0.1-offline-acceptance`。当前本机合成现场通过，但正式模型发布门禁未通过：唯一 DeepSeek candidate 在第一条展示链失败后停止，不能将旧报告或 deterministic 数字扩大为真实模型效果。

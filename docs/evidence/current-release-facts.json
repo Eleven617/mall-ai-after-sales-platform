@@ -1,14 +1,14 @@
 {
   "schemaVersion": "mall-public-release-facts.v4",
-  "generatedAt": "2026-09-15T07:05:00Z",
+  "generatedAt": "2026-09-15T13:44:36Z",
   "releaseStatus": "NOT_COMPLETE",
-  "runtimeCommit": "06ef600e51e7b0dc362d43a98e274c28144738d8",
-  "evidenceCommit": "06ef600e51e7b0dc362d43a98e274c28144738d8",
-  "statusReason": "离线就绪闸门通过，但唯一正式 DeepSeek 候选批次在第一条展示链未完成，Release lock 已永久标记 FAILED；不得重试或把未完成批次写成通过。",
+  "runtimeCommit": "061d60bb13004dc7df57a161b01e378335f8938c",
+  "evidenceCommit": "061d60bb13004dc7df57a161b01e378335f8938c",
+  "statusReason": "v3.0.2 离线候选已完成慢网关、ledger 对账、全量现场与确定性门禁；在线 DeepSeek 批次未获本轮授权，保持未运行。",
   "project": {
     "name": "Mall AI After-sales Platform",
     "repository": "https://github.com/Eleven617/mall-ai-after-sales-platform",
-    "branch": "codex/v3.0.1-offline-acceptance",
+    "branch": "codex/v3.0.2-offline-candidate",
     "problem": "可信电商订单、物流、政策与售后协同",
     "roles": ["customer", "operations", "quality_developer", "after_sales_processor"]
   },
@@ -31,6 +31,15 @@
     "checksFailed": 0,
     "fieldAcceptanceReport": "tmp/offline-field-acceptance/field-20260915T064300Z-99f3dc2f/field-acceptance.json",
     "fieldAcceptanceReportSha256": "ec337708baa422fcd11bf2ac2334372e88f3592f4dde454ab0f674413704122b"
+  },
+  "v3_0_2OfflineReadiness": {
+    "status": "pending_report_generation",
+    "freezeCommit": "061d60bb13004dc7df57a161b01e378335f8938c",
+    "slowGateway": "tmp/v3.0.2-slow-gateway.json",
+    "slowGatewaySha256": "7415253e3ee4b82c41ec2e00f7296d58f9f1e5160243b1d0ae59321e674e7652",
+    "fieldAcceptance": "tmp/offline-field-acceptance/field-20260915T133506Z-6b5f7e64/field-acceptance.json",
+    "fieldAcceptanceSha256": "fbf3e333ea09cc6010e6d1b67fdb82cb762cdb707a9561fb6478655291d00d84",
+    "externalProviderRequests": 0
   },
   "deepseekBatches": [
     {
@@ -59,7 +68,7 @@
     }
   ],
   "tests": {
-    "fastapi": {"passed": 382, "failed": 0, "warnings": 1, "subtests": 12, "exitCode": 0, "command": "mall-ai-service/.venv/Scripts/python.exe -m pytest -q"},
+    "fastapi": {"passed": 399, "failed": 0, "skipped": 0, "warnings": 1, "subtests": 12, "exitCode": 0, "command": "mall-ai-service/.venv/Scripts/python.exe scripts/run_fastapi_ci_report.py --junitxml=tmp/v3.0.2/fastapi-junit.xml --report=tmp/v3.0.2/fastapi-report.json", "semanticReportSha256": "137fe53108adff7ceb3f7e14fa67b242da21aa5f193257d576b98ffdb207504d", "junitSha256": "1e10cb60156c7c8cb0ff74f6648b81dd98200323d0401c8ec6b07c22e13b9034"},
     "java": {"portalCore": "12/12", "portalCompatibility": "2/2", "portalFull": "14/14", "admin": "6/6", "springContext": "1/1", "exitCode": 0},
     "vue": {"command": "npm run build", "status": "passed", "exitCode": 0},
     "compose": {"configExitCode": 0, "servicesHealthy": "8/8"},
@@ -70,7 +79,7 @@
     "ragContracts": {"total": 21, "passed": 21, "failed": 0},
     "fieldAcceptance": {
       "status": "passed_local_synthetic",
-      "testedCodeCommit": "06ef600e51e7b0dc362d43a98e274c28144738d8",
+      "testedCodeCommit": "061d60bb13004dc7df57a161b01e378335f8938c",
       "total": "122/122",
       "failed": 0,
       "environmentBlocked": 0,
@@ -79,14 +88,15 @@
       "faultInjection": "36/36",
       "durableRecovery": "32/32",
       "mode": "local Docker/Chrome/Java/MySQL/Redis/RabbitMQ with synthetic fixture",
-      "report": "tmp/offline-field-acceptance/field-20260915T064300Z-99f3dc2f/field-acceptance.json",
-      "reportSha256": "ec337708baa422fcd11bf2ac2334372e88f3592f4dde454ab0f674413704122b"
+      "report": "tmp/offline-field-acceptance/field-20260915T133506Z-6b5f7e64/field-acceptance.json",
+      "reportSha256": "fbf3e333ea09cc6010e6d1b67fdb82cb762cdb707a9561fb6478655291d00d84",
+      "fixtureSha256": "ba77efdd1b2112d2a2dc50561cb3d7fcd041a48d07a00e7bf7611fac103cab6d"
     }
   },
   "showcase": {
     "entryPoint": "/agent-tasks",
-    "deterministic": {"report": "tmp/offline-field/deterministic/showcase.json", "reportSha256": "66cfcdc93b04d487526b6e937c92dae6d01634899b0125196d6ca849332f1001", "status": "passed", "chains": "3/3", "browserFrames": 12, "providerRequests": 0},
-    "replay": {"report": "tmp/offline-field/replay/showcase.json", "reportSha256": "abec712d31df1264f1be7b6e2f911b231aadf004b26b8fc0c2f0cdad76458357", "status": "passed", "chains": "3/3", "browserFrames": 12, "providerRequests": 0},
+    "deterministic": {"report": "tmp/offline-field/deterministic/showcase.json", "reportSha256": "0586ca0e43d441a4bc570f7d185533c17dc4ca926d9e8eeef2a5a2a394cbf5e7", "status": "passed", "chains": "3/3", "browserFrames": 12, "providerRequests": 0, "commit": "061d60bb13004dc7df57a161b01e378335f8938c"},
+    "replay": {"report": "tmp/offline-field/replay/showcase.json", "reportSha256": "047d578d5bc3f6f78bc5f5353149de59da52b3ad3ff2e39cdbf8f6d2c09dd35a", "status": "passed", "chains": "3/3", "browserFrames": 12, "providerRequests": 0, "commit": "061d60bb13004dc7df57a161b01e378335f8938c"},
     "officialLive": {"status": "failed", "chains": "0/3 completed", "browserFrames": 0, "report": "tmp/deepseek-v3.0.1-final-06ef600e51e7b0dc362d43a98e274c28144738d8.json"},
     "gifBoundary": "No final GIF was produced from the failed live candidate; deterministic/replay GIFs are not live-model evidence."
   },
@@ -102,16 +112,16 @@
   "supplementalEvaluation": {"status": "not_executed_after_candidate_failure", "independentBlindSet": false, "executed": 0, "passed": 0, "failed": 0, "environmentBlocked": 0},
   "grounding": {"status": "not_executed_after_candidate_failure", "executed": 0, "passed": 0, "failed": 0, "environmentBlocked": 0},
   "currentVerification": {
-    "commit": "06ef600e51e7b0dc362d43a98e274c28144738d8",
-    "fastapi": {"passed": 382, "failed": 0, "warnings": 1, "subtests": 12, "exitCode": 0},
+    "commit": "061d60bb13004dc7df57a161b01e378335f8938c",
+    "fastapi": {"passed": 399, "failed": 0, "warnings": 1, "subtests": 12, "exitCode": 0},
     "deterministic": {"manifest": "478/478", "representative": "8/8", "exitCode": 0},
-    "fieldAcceptance": {"total": "122/122", "failed": 0, "environmentBlocked": 0, "reportSha256": "ec337708baa422fcd11bf2ac2334372e88f3592f4dde454ab0f674413704122b"},
-    "deepseek": {"status": "failed", "model": "deepseek-flash", "thinkingMode": "enabled", "reasoningEffort": "high", "batchStatus": "failed", "batchId": "candidate-226cdd440e85", "runnerRecordedCalls": 0, "ledgerObservedCalls": 9, "successfulProviderCalls": 9, "failedProviderCalls": 0, "totalTokens": 27329, "sideEffects": 0, "reportSha256": "6615d069122cb66ee8f3467f98ae79457ef287afd6f19c5e56035c45fb0b65c8", "failureCategory": "showcase_failed_before_quality_suites"},
-    "showcase": {"status": "failed", "scenarios": [{"scenarioId": "main_open_task_closed_loop", "status": "failed"}, {"scenarioId": "clarify_pause_resume", "status": "not_executed"}, {"scenarioId": "fact_change_replan", "status": "not_executed"}]}
+    "fieldAcceptance": {"total": "122/122", "failed": 0, "environmentBlocked": 0, "reportSha256": "fbf3e333ea09cc6010e6d1b67fdb82cb762cdb707a9561fb6478655291d00d84", "fixtureSha256": "ba77efdd1b2112d2a2dc50561cb3d7fcd041a48d07a00e7bf7611fac103cab6d"},
+    "deepseek": {"status": "not_run_by_design", "model": "deepseek-flash", "thinkingMode": "enabled", "reasoningEffort": "high", "batchStatus": "not_run", "calls": 0, "sideEffects": 0, "reason": "本轮离线候选禁止调用外部模型；v3.0.1 失败候选仍保留在 deepseekBatches 与历史报告中。"},
+    "showcase": {"status": "passed", "scenarios": [{"scenarioId": "deterministic", "status": "passed"}, {"scenarioId": "replay", "status": "passed"}]}
   },
-  "releaseLedger": {"path": "tmp/release-ledger/ledger.jsonl", "observedCandidateProviderRequests": 9, "observedCandidateSuccessfulRequests": 9, "observedCandidateFailedRequests": 0, "observedCandidateTotalTokens": 27329, "sha256": "1b14eabde3f6a52e8f7cb6d28ec2dc3967cdcc52fbd6fc5b73c7b524f77d4f9a"},
-  "ci": {"status": "failed_current_sha", "testedCommit": "5629f7b3529ef03b6833b329b580f212c96b38bb", "mallCi": "https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34941472321", "qualityEvaluation": "https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34941472352", "mallCiConclusion": "failure_public_release_validator", "qualityEvaluationConclusion": "success", "previousRemoteRunsStale": true},
-  "publicValidator": {"command": "python scripts/validate_public_release.py", "exitCode": 1, "status": "stale_validator_expectation", "reason": "validator still requires historical currentVerification.fastapi=381; measured current SHA is 382. No validator code was changed after the locked live candidate."},
+  "releaseLedger": {"path": "tmp/release-ledger-v3.0.2/ledger.jsonl", "observedCandidateProviderRequests": 9, "observedCandidateSuccessfulRequests": 9, "observedCandidateFailedRequests": 0, "observedCandidateTotalTokens": 27329, "v3_0_2ProviderRequests": 0, "v3_0_2ProviderTokens": 0, "sha256": "ce801099cd16a998bf39dae544425acb1fd5c6a6c353a1ce18035a1cb8a92323"},
+  "ci": {"status": "pending_remote_final_sha", "testedCommit": "061d60bb13004dc7df57a161b01e378335f8938c", "mallCi": null, "qualityEvaluation": null, "mallCiConclusion": "pending_push", "qualityEvaluationConclusion": "pending_push", "previousRemoteRunsStale": true},
+  "publicValidator": {"command": "python scripts/validate_public_release.py", "exitCode": 0, "status": "dynamic_report", "reason": "读取当前 FastAPI JUnit/sidecar，不再硬编码历史测试数量。"},
   "claims": {
     "testRunComplete": true,
     "releaseQualified": false,
@@ -122,9 +132,9 @@
     "liveModelTaskAccuracy": "unavailable; official candidate stopped before quality suites"
   },
   "publicClaims": [
-    "当前冻结 SHA 的 FastAPI 回归为 382 passed、12 个子断言；v3 deterministic 为 478/478、代表性 Runtime 为 8/8。",
-    "当前 SHA 的本机合成 Docker/Chrome/Java/MySQL/Redis/RabbitMQ 现场 Runner 为 122/122，但这不是生产 SLA。",
-    "唯一正式 DeepSeek 候选批次已失败并永久锁定；共享账本观察到 9 次 Provider 元数据事件，但主集、补充集和 Grounding 未执行。",
+    "v3.0.2 冻结 SHA 的 FastAPI 机器报告为 399 passed、0 failed、0 skipped、12 个子断言；v3 deterministic 为 478/478、代表性 Runtime 为 8/8。",
+    "v3.0.2 当前 SHA 的本机合成 Docker/Chrome/Java/MySQL/Redis/RabbitMQ 现场 Runner 为 122/122（24/24、30/30、36/36、32/32），但这不是生产 SLA。",
+    "v3.0.2 慢网关现场经公共 Nginx 运行 76.125 秒并返回 201/ready_to_commit，Provider 请求 0、Java 写入 0；v3.0.1 的唯一正式 DeepSeek 候选仍失败并永久锁定。",
     "Java mall2 仍是身份、归属、资格、状态、幂等、事务、Outbox 和最终写入权威。"
   ],
   "prohibitedClaims": [

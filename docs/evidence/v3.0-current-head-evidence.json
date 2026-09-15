@@ -1,10 +1,10 @@
 {
   "schemaVersion": "v3.0-current-head-evidence.v5",
-  "generatedAt": "2026-09-15T07:05:00Z",
+  "generatedAt": "2026-09-15T13:44:36Z",
   "repository": {
     "remote": "https://github.com/Eleven617/mall-ai-after-sales-platform.git",
-    "branch": "codex/v3.0.1-offline-acceptance",
-    "testedCodeCommit": "06ef600e51e7b0dc362d43a98e274c28144738d8",
+    "branch": "codex/v3.0.2-offline-candidate",
+    "testedCodeCommit": "061d60bb13004dc7df57a161b01e378335f8938c",
     "workspaceAtReadiness": "clean_except_ignored_tmp",
     "releaseStatus": "NOT_COMPLETE"
   },
@@ -16,8 +16,18 @@
     "checksFailed": 0,
     "providerRequestsBeforeLive": 0
   },
+  "v3_0_2OfflineReadiness": {
+    "status": "pending_report_generation",
+    "freezeCommit": "061d60bb13004dc7df57a161b01e378335f8938c",
+    "slowGatewayReport": "tmp/v3.0.2-slow-gateway.json",
+    "slowGatewayReportSha256": "7415253e3ee4b82c41ec2e00f7296d58f9f1e5160243b1d0ae59321e674e7652",
+    "slowGatewayElapsedSeconds": 76.125,
+    "fieldReport": "tmp/offline-field-acceptance/field-20260915T133506Z-6b5f7e64/field-acceptance.json",
+    "fieldReportSha256": "fbf3e333ea09cc6010e6d1b67fdb82cb762cdb707a9561fb6478655291d00d84",
+    "externalProviderRequests": 0
+  },
   "deterministicGates": {
-    "fastapi": {"command": "mall-ai-service/.venv/Scripts/python.exe -m pytest -q", "passed": 382, "failed": 0, "warnings": 1, "subtestsPassed": 12, "exitCode": 0},
+    "fastapi": {"command": "mall-ai-service/.venv/Scripts/python.exe scripts/run_fastapi_ci_report.py --junitxml=tmp/v3.0.2/fastapi-junit.xml --report=tmp/v3.0.2/fastapi-report.json", "passed": 399, "failed": 0, "skipped": 0, "warnings": 1, "subtestsPassed": 12, "exitCode": 0, "semanticReportSha256": "137fe53108adff7ceb3f7e14fa67b242da21aa5f193257d576b98ffdb207504d", "junitSha256": "1e10cb60156c7c8cb0ff74f6648b81dd98200323d0401c8ec6b07c22e13b9034"},
     "v3Manifest": {"registered": 478, "passed": 478, "manifestSha256": "2f9d60f3903b3046236a71e1557d89fac87e916d9586d787a193c6deb4c71d2e", "exitCode": 0},
     "v3Preflight": {"passed": 478, "registered": 478, "representativePassed": 8, "representativeRegistered": 8, "exitCode": 0},
     "qualityAgent": {"total": 17, "passed": 17, "failed": 0},
@@ -28,10 +38,10 @@
     "web": {"status": "passed", "exitCode": 0},
     "compose": {"configExitCode": 0, "servicesHealthy": "8/8"}
   },
-  "fieldAcceptance": {
-    "report": "tmp/offline-field-acceptance/field-20260915T064300Z-99f3dc2f/field-acceptance.json",
-    "reportSha256": "ec337708baa422fcd11bf2ac2334372e88f3592f4dde454ab0f674413704122b",
-    "testedCodeCommit": "06ef600e51e7b0dc362d43a98e274c28144738d8",
+    "fieldAcceptance": {
+    "report": "tmp/offline-field-acceptance/field-20260915T133506Z-6b5f7e64/field-acceptance.json",
+    "reportSha256": "fbf3e333ea09cc6010e6d1b67fdb82cb762cdb707a9561fb6478655291d00d84",
+    "testedCodeCommit": "061d60bb13004dc7df57a161b01e378335f8938c",
     "releaseGate": "passed_local_synthetic",
     "total": 122,
     "passed": 122,
@@ -43,8 +53,8 @@
   },
   "showcase": {
     "entryPoint": "/agent-tasks",
-    "deterministic": {"status": "passed", "chains": "3/3", "browserFrames": 12, "providerRequests": 0, "report": "tmp/offline-field/deterministic/showcase.json", "reportSha256": "66cfcdc93b04d487526b6e937c92dae6d01634899b0125196d6ca849332f1001"},
-    "replay": {"status": "passed", "chains": "3/3", "browserFrames": 12, "providerRequests": 0, "report": "tmp/offline-field/replay/showcase.json", "reportSha256": "abec712d31df1264f1be7b6e2f911b231aadf004b26b8fc0c2f0cdad76458357"},
+    "deterministic": {"status": "passed", "chains": "3/3", "browserFrames": 12, "providerRequests": 0, "report": "tmp/offline-field/deterministic/showcase.json", "reportSha256": "0586ca0e43d441a4bc570f7d185533c17dc4ca926d9e8eeef2a5a2a394cbf5e7", "commit": "061d60bb13004dc7df57a161b01e378335f8938c"},
+    "replay": {"status": "passed", "chains": "3/3", "browserFrames": 12, "providerRequests": 0, "report": "tmp/offline-field/replay/showcase.json", "reportSha256": "047d578d5bc3f6f78bc5f5353149de59da52b3ad3ff2e39cdbf8f6d2c09dd35a", "commit": "061d60bb13004dc7df57a161b01e378335f8938c"},
     "officialLive": {"status": "failed", "completedChains": "0/3", "report": "tmp/deepseek-v3.0.1-final-06ef600e51e7b0dc362d43a98e274c28144738d8.json", "reportSha256": "6615d069122cb66ee8f3467f98ae79457ef287afd6f19c5e56035c45fb0b65c8"}
   },
   "liveModelCandidate": {
@@ -77,7 +87,7 @@
     "grounding": "not_executed_after_candidate_failure",
     "limitation": "检索指标来自小型版本化合成政策集，不是答案准确率或生产 SLA。"
   },
-  "ci": {"status": "pending_remote_final_sha", "testedCommit": "06ef600e51e7b0dc362d43a98e274c28144738d8", "pushStatus": "github_443_timeout", "previousRunsStale": true},
+  "ci": {"status": "pending_remote_final_sha", "testedCommit": "061d60bb13004dc7df57a161b01e378335f8938c", "pushStatus": "pending_push", "previousRunsStale": true},
   "security": {"sideEffectsObserved": 0, "publicProjection": "safe DTO only", "secretsCommitted": false, "rawProviderPayloadsCommitted": false},
   "claims": {"testRunComplete": true, "releaseQualified": false, "productionAccuracy": false, "productionSla": false, "realUserGeneralization": false, "externalFulfillment": false}
 }

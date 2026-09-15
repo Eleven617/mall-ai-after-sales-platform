@@ -1,5 +1,13 @@
 # Mall AI 售后平台｜简历事实包
 
+## 当前事实快照｜v3.0.2 离线候选（2026-09-15）
+
+当前发布状态：**NOT_COMPLETE（等待远程 CI 与单独在线授权）**；冻结运行时代码 `061d60bb13004dc7df57a161b01e378335f8938c`，分支 `codex/v3.0.2-offline-candidate`。
+
+本轮可核验事实：FastAPI **399 passed / 0 failed / 0 skipped**；v3 deterministic **478/478**、代表性 Runtime **8/8**；Java portal **14/14**、admin **6/6**、Spring context **1/1**；Vue build 通过；本机合成现场 Runner **122/122**（browser 24、Java/MySQL 30、fault 36、durable 32）；公共 Nginx 慢调用 **76.125 秒、HTTP 201、ready_to_commit、Provider 0、Java 写入 0**；deterministic/replay 展示链各 **3/3**、各 12 帧。
+
+这些结果分别属于机器可读合同、本地 Docker/Chrome/Java/MySQL/Redis/RabbitMQ 现场和零模型 deterministic/replay，不是生产 SLA、真实用户准确率或真实模型泛化率。在线 DeepSeek 本轮 `not_run_by_design`；v3.0.1 `gateway_timeout_before_agent_completion` 失败候选、9 次 Provider 观察与旧锁继续保留，未被改写。
+
 ## 当前事实快照｜v3.0.1 最终验收结果（2026-09-15）
 
 当前发布状态：**NOT_COMPLETE**；运行时代码 `06ef600e51e7b0dc362d43a98e274c28144738d8`，分支 `codex/v3.0.1-offline-acceptance`。

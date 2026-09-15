@@ -1,5 +1,17 @@
 # Mall v3.0 最终交付状态
 
+## 当前权威快照｜v3.0.2 离线候选（2026-09-15）
+
+冻结 SHA `061d60bb13004dc7df57a161b01e378335f8938c`，分支 `codex/v3.0.2-offline-candidate`。`V3_0_2_LIVE_READY` 仅在离线条件下成立；发布状态仍 **NOT_COMPLETE**，等待本分支远程 Actions 和单独在线批次授权。
+
+- FastAPI：399 passed、0 failed、0 skipped；Java portal/admin/Spring：14/14、6/6、1/1；Vue build passed。
+- deterministic manifest/preflight：478/478、代表性 8/8；RAG 合同：21/21。
+- 冻结 SHA 本机合成现场：browser 24/24、Java/MySQL 30/30、fault 36/36、durable 32/32，合计 122/122，0 failed、0 environment_blocked。
+- 公共 Nginx 慢调用：76.125 秒、HTTP 201、`ready_to_commit`；Provider 请求 0、Java 最终写入 0，Runtime 在 240 秒上限内。
+- 本轮 DeepSeek 调用 0。v3.0.1 的失败根因固定为 `gateway_timeout_before_agent_completion`，旧报告/ledger/lock 未修改。
+
+上述证据均为本地合成/确定性范围，不能扩大为生产 SLA、真实用户泛化或外部履约成功。
+
 ## 当前权威快照｜v3.0.1 在线验收（2026-09-15）
 
 运行时代码 `06ef600e51e7b0dc362d43a98e274c28144738d8`，分支 `codex/v3.0.1-offline-acceptance`。离线 readiness 24/24 通过；FastAPI 382 passed、v3 deterministic 478/478、Vue build、Java portal 14/14 + Spring 1/1、当前本机合成现场 122/122 通过。唯一正式 DeepSeek candidate 在第一条展示链失败，锁状态 `FAILED`，因此 **Release Gate：NOT_COMPLETE**。

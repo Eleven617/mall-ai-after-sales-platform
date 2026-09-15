@@ -1,5 +1,35 @@
 # 当前工作进度记录
 
+## 2026-09-15｜v3.0.2 离线候选（当前）
+
+### 已完成
+
+- 冻结运行时代码为 `061d60bb13004dc7df57a161b01e378335f8938c`，独立分支 `codex/v3.0.2-offline-candidate`；本轮不调用 DeepSeek 或任何外部模型，不修改 README，不创建新的 DeepSeek Release Lock。
+- 修复长任务超时契约：Runtime 上限 240 秒，Nginx `/api/` 读写 300 秒，Runner read timeout 330 秒，并关闭 SSE/请求代理缓冲；新增安全失败分类和 timeout-order 合同测试。
+- 修复 release ledger 入口与对账：v3.0.2 使用 `tmp/release-ledger-v3.0.2/ledger.jsonl`，慢调用报告、原始 ledger 与 runtimeCommit 绑定；当前离线 Provider 请求为 0。
+- FastAPI 机器报告：399 passed、0 failed、0 skipped、12 subtests，exit 0；Java portal/admin/Spring 14/14、6/6、1/1；Vue build；manifest/preflight 478/478、8/8；RAG 合同 21/21。
+- 当前冻结 SHA 的现场 Runner：browser 24/24、Java/MySQL 30/30、fault 36/36、durable 32/32，合计 122/122，0 failed、0 environment_blocked。报告 `tmp/offline-field-acceptance/field-20260915T133506Z-6b5f7e64/field-acceptance.json`，SHA-256 `fbf3e333ea09cc6010e6d1b67fdb82cb762cdb707a9561fb6478655291d00d84`，Fixture SHA-256 `ba77efdd1b2112d2a2dc50561cb3d7fcd041a48d07a00e7bf7611fac103cab6d`。
+- 公共 Nginx 零模型慢调用现场：76.125 秒，HTTP 201，状态 `ready_to_commit`，Proposal 已形成，Java 写入 0，Provider 请求 0，Runtime 小于 240 秒；报告 SHA-256 `7415253e3ee4b82c41ec2e00f7296d58f9f1e5160243b1d0ae59321e674e7652`。
+- deterministic/replay 展示链各 3/3、各 12 帧，当前冻结 SHA 绑定；报告 SHA 分别为 `0586ca0e43d441a4bc570f7d185533c17dc4ca926d9e8eeef2a5a2a394cbf5e7`、`047d578d5bc3f6f78bc5f5353149de59da52b3ad3ff2e39cdbf8f6d2c09dd35a`。
+- 已更新当前事实包、HEAD 证据、Release Gate、公开发布记录、测试证据和最终交接文档；v3.0.1 旧报告、ledger、锁的 SHA 未改变。
+
+### 当前状态
+
+- `V3_0_2_LIVE_READY` 的离线检查待在证据提交后执行；在线 DeepSeek 不在本轮范围。远程 `mall-ci` 和 `quality-evaluation` 需推送独立分支后等待真实结果，不能用历史 run 替代。
+- v3.0.1 精确根因：`gateway_timeout_before_agent_completion`（Nginx 60 秒先于服务端最终形成 ready_to_commit 返回 504；不是 Provider 请求失败）。
+
+### 尚未完成 / 不能宣称
+
+- 尚未完成当前分支 GitHub Actions 远程运行；不能称 CI 已绿。
+- 不能把 deterministic、合成现场或零模型慢调用写成真实模型自然语言泛化、生产 SLA、用户准确率、吞吐、成本或真实支付/仓储/物流/维修成功。
+- 在线批次必须由用户单独授权；本轮 DeepSeek 调用次数为 0。
+
+### 下一步
+
+1. 提交当前证据改动（先保持工作区 clean），运行 `scripts/Test-V3_0_2-OfflineReadiness.ps1 -FreezeCommit 061d60bb13004dc7df57a161b01e378335f8938c -FieldReport tmp/offline-field-acceptance/field-20260915T133506Z-6b5f7e64/field-acceptance.json`。
+2. 检查 readiness JSON 的六个布尔/计数键，提交 readiness 报告；然后推送分支并等待两个 Actions。
+3. 远程 CI 成功且工作区/远程 HEAD 一致后，停在 `V3_0_2_LIVE_READY`，等待在线批次授权。
+
 ## 2026-09-15｜v3.0.1 最终在线验收（最新）
 
 ### 已完成

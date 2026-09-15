@@ -1,5 +1,23 @@
 # Mall v3.0 Release Gate 复核
 
+## 当前权威结论｜v3.0.2 离线候选（2026-09-15）
+
+冻结运行时代码 `061d60bb13004dc7df57a161b01e378335f8938c`，分支 `codex/v3.0.2-offline-candidate`。离线候选门禁 **NOT_COMPLETE（等待远程 CI 与单独在线授权）**，但本机离线验收条件已满足：`OFFLINE_ACCEPTANCE_COMPLETE=true`、慢网关、ledger 对账、动态公共校验均通过，外部 Provider 请求为 `0`。
+
+| 门禁 | 结果 | 证据/口径 |
+| --- | --- | --- |
+| FastAPI | **399 passed / 0 failed / 0 skipped** | `run_fastapi_ci_report.py`，JUnit/sidecar 动态报告，exit `0` |
+| Java / Web | portal **14/14**、admin **6/6**、Spring **1/1**；Vue build passed | Maven 显式 `-DskipTests=false`；`npm run build` |
+| Manifest / RAG | **478/478；代表性 8/8**；RAG 合同 **21/21** | deterministic/contract_mock，无外部模型 |
+| 现场 Runner | **122/122** | browser 24、Java/MySQL 30、fault 36、durable 32；当前冻结 SHA、合成 Fixture |
+| 慢网关现场 | **76.125 秒，HTTP 201，ready_to_commit** | 公共 Nginx `/api/agent-tasks`；Provider 0；Java 写入 0；Runtime < 240 秒 |
+| 展示链 | deterministic **3/3**；replay **3/3**，各 12 帧 | Provider 0；不等于真实模型泛化 |
+| 在线 DeepSeek | **not_run_by_design** | 本轮明确禁止外部模型；v3.0.1 失败批次原样保留 |
+
+现场报告：`tmp/offline-field-acceptance/field-20260915T133506Z-6b5f7e64/field-acceptance.json`，SHA-256 `fbf3e333ea09cc6010e6d1b67fdb82cb762cdb707a9561fb6478655291d00d84`，Fixture SHA-256 `ba77efdd1b2112d2a2dc50561cb3d7fcd041a48d07a00e7bf7611fac103cab6d`。慢调用报告 SHA-256 `7415253e3ee4b82c41ec2e00f7296d58f9f1e5160243b1d0ae59321e674e7652`；ledger SHA-256 `ce801099cd16a998bf39dae544425acb1fd5c6a6c353a1ce18035a1cb8a92323`。v3.0.1 的失败锁与报告未修改。
+
+当前不能宣称生产 SLA、真实用户泛化、真实支付/仓储/物流/维修履约或在线模型效果；远程 `mall-ci` 与 `quality-evaluation` 必须等本分支推送后以实际运行结果为准。 `environment_blocked=0` 仅适用于本次本机现场 Runner，不代表外部依赖在所有环境可用。
+
 ## 当前权威结论｜v3.0.1 在线验收（2026-09-15）
 
 代码冻结 `06ef600e51e7b0dc362d43a98e274c28144738d8`；离线 readiness 24/24 通过；FastAPI 382、deterministic 478/478、Java 14/14 + Spring 1/1、Vue build、当前本机合成现场 122/122 通过。唯一 DeepSeek candidate 在第一展示链失败，锁定 `FAILED`，Release Gate **NOT_COMPLETE**。共享 ledger 观察 9 次 Provider 请求、9 成功、0 失败、27,329 tokens；main/supplemental/Grounding 未执行。提交 `5629f7b3529ef03b6833b329b580f212c96b38bb` 的 quality-evaluation [run 34941472352](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34941472352) 成功，mall-ci [run 34941472321](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34941472321) 失败于 `public-release` 的旧 381 断言。
