@@ -5,7 +5,7 @@
     "remote": "https://github.com/Eleven617/mall-ai-after-sales-platform.git",
     "branch": "codex/v3.0.1-offline-acceptance",
     "testedCodeCommit": "54de463b4990229b591e1fd0a278f754bf240678",
-    "evidenceCommit": "created_after_tested_code_commit",
+    "evidenceCommit": "ccbe1aefece8669c5dd14b6aa6cf62ed14313efd",
     "workspaceAtTestStart": "clean_except_ignored_tmp",
     "newDeepSeekBatch": false
   },
@@ -71,7 +71,7 @@
   },
   "rag": {
     "report": "docs/evidence/rag2-retrieval-freeze-54de463.json",
-    "reportSha256": "computed_after_evidence_commit",
+    "reportSha256": "736fda9c96692ef82b5c8e4abd60807c8064054a6aeae634346d7d636b71d74b",
     "datasetCases": 52,
     "denseDefault": true,
     "denseRecallAt3": 1.0,

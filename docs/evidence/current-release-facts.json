@@ -3,7 +3,7 @@
   "generatedAt": "2026-09-15T04:45:00Z",
   "releaseStatus": "NOT_COMPLETE",
   "runtimeCommit": "54de463b4990229b591e1fd0a278f754bf240678",
-  "evidenceCommit": "pending_remote_final_sha",
+  "evidenceCommit": "ccbe1aefece8669c5dd14b6aa6cf62ed14313efd",
   "statusReason": "本轮按要求不调用 DeepSeek；deterministic/replay 真实本地现场与离线门禁完成，但不能把它们扩大为真实模型泛化或生产发布，因此 Release Gate 为 NOT_COMPLETE。",
   "project": {
     "name": "Mall AI After-sales Platform",
