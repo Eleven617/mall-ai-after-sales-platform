@@ -161,6 +161,7 @@ def _request_json(
     """Make one logical request and emit only opted-in operational metrics."""
     started_at = time.monotonic()
     attempts = 1
+    provider_request_id_hash: str | None = None
     try:
         reliability_governor.ensure_dependency_available("llm")
         raw_response = _post_with_retry(url, headers, payload)
@@ -171,6 +172,7 @@ def _request_json(
             response, attempts = raw_response
         else:
             response, attempts = raw_response, 1
+        provider_request_id_hash = _response_request_id_hash(response)
         data = response.json()
         if not isinstance(data, dict):
             raise LLMServiceError(
@@ -201,6 +203,7 @@ def _request_json(
             prompt_tokens=_usage_int(usage_mapping, "prompt_tokens"),
             completion_tokens=_usage_int(usage_mapping, "completion_tokens"),
             total_tokens=_usage_int(usage_mapping, "total_tokens"),
+            provider_request_id_hash=provider_request_id_hash,
         )
         reliability_governor.record_dependency_success(
             "llm", duration_ms=_elapsed_ms(started_at)
@@ -217,6 +220,7 @@ def _request_json(
             elapsed_ms=_elapsed_ms(started_at),
             attempts=attempts,
             failure_class=error.category,
+            provider_request_id_hash=provider_request_id_hash,
         )
         raise error from exc
     except LLMServiceError as exc:
@@ -228,6 +232,7 @@ def _request_json(
             elapsed_ms=_elapsed_ms(started_at),
             attempts=attempts,
             failure_class=exc.category,
+            provider_request_id_hash=exc.request_id_hash or provider_request_id_hash,
         )
         if exc.category != "circuit_open":
             reliability_governor.record_dependency_failure(
@@ -245,6 +250,7 @@ def _request_json(
             elapsed_ms=_elapsed_ms(started_at),
             attempts=attempts,
             failure_class=error.category,
+            provider_request_id_hash=provider_request_id_hash,
         )
         reliability_governor.record_dependency_failure(
             "llm", duration_ms=_elapsed_ms(started_at)
@@ -274,6 +280,7 @@ def _post_with_retry(
                 headers=headers,
                 json=payload,
                 timeout=timeout_seconds,
+                trust_env=False,
             )
             last_request_id_hash = _response_request_id_hash(response)
             if response.status_code not in retry_status_codes:

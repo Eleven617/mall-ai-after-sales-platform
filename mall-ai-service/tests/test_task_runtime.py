@@ -643,6 +643,69 @@ def test_commit_requires_current_verified_order_fact_and_explicit_confirmation()
     assert len(arguments["idempotencyKey"]) == 32
 
 
+def test_unknown_commit_result_keeps_binding_and_rejects_duplicate_confirmation() -> None:
+    """An unavailable Java result must not corrupt the durable action gate."""
+
+    order_reference = "fact-order-unknown-result"
+    provider = ScriptedRuntimeProvider(
+        decisions=[
+            _decision(
+                name="call_skill",
+                summary="先核验订单事实。",
+                calls=[SkillCall(skill_id="read_order", arguments={"orderRef": "ref-order-alpha"})],
+            ),
+            _decision(
+                name="propose_action",
+                summary="已形成待确认行动。",
+                action_skill="commit_after_sales_action",
+                action_arguments={
+                    "orderFactRef": order_reference,
+                    "applicationType": "cancel_refund",
+                },
+            ),
+        ]
+    )
+    gateway = RecordingGateway(
+        {
+            "read_order": _observation(reference=order_reference),
+            "commit_after_sales_action": _observation(
+                kind="action_result",
+                reference="action-unknown-result",
+                status="unavailable",
+                factuality="unavailable",
+                summary="Java 返回结果暂时无法确认。",
+            ),
+        }
+    )
+    runtime = _runtime(provider, gateway)
+    proposal = runtime.create_task(
+        session_id=SESSION_ID,
+        goal="核验订单后准备售后处理方案",
+        member_id=MEMBER_ID,
+        authorization=AUTHORIZATION,
+    )
+
+    blocked = runtime.confirm_action(
+        task_ref=proposal.view.task_ref,
+        confirmation="confirm",
+        member_id=MEMBER_ID,
+        authorization=AUTHORIZATION,
+    )
+    assert blocked.view.status == "blocked"
+    assert blocked.view.action is not None
+    assert blocked.view.action.confirmation_status == "unknown"
+    with pytest.raises(TaskRuntimeError) as duplicate:
+        runtime.confirm_action(
+            task_ref=proposal.view.task_ref,
+            confirmation="confirm",
+            member_id=MEMBER_ID,
+            authorization=AUTHORIZATION,
+        )
+    assert duplicate.value.code == "action_gate_missing"
+    assert len(gateway.commits) == 1
+    assert gateway.commits[0][0] == "commit_after_sales_action"
+
+
 def test_commit_proposal_cannot_reference_another_task_or_unverified_fact() -> None:
     provider = ScriptedRuntimeProvider(
         decisions=[

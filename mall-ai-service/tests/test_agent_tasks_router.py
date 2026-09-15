@@ -8,12 +8,12 @@ from fastapi.testclient import TestClient
 
 from app.main import app
 from app.routers import agent_tasks
-from app.runtime.providers import ScriptedRuntimeProvider
+from app.runtime.providers import DeterministicRuntimeProvider, ScriptedRuntimeProvider
 from app.runtime.task_runtime import TaskRuntime, set_task_runtime_for_tests
 from app.runtime.task_store import InMemoryTaskStore
 from app.schemas.agent_task import ExecutorDecision
 from app.schemas.authentication import MemberProfile
-from app.skills.commerce_gateway import SyntheticSkillGateway
+from app.skills.commerce_gateway import SkillObservation, SyntheticSkillGateway
 
 
 AUTHORIZATION = "Bearer synthetic-router-credential"
@@ -118,3 +118,55 @@ def test_event_stream_is_safe_snapshot_without_internal_payload(monkeypatch) -> 
     assert "task_created" in response.text
     assert "owner_ref" not in response.text
     assert "arguments_ref" not in response.text
+
+
+def test_single_agent_task_entry_waits_then_resumes_same_task_without_first_model_call(monkeypatch) -> None:
+    monkeypatch.setattr(
+        agent_tasks,
+        "get_current_member",
+        lambda _authorization: MemberProfile(member_id=71, username="synthetic-customer"),
+    )
+    observation = SkillObservation(
+        status="succeeded",
+        artifact_kind="order_fact",
+        summary="Java 已核验当前账号订单事实；状态：已支付；商品项：1。",
+        reference="fact-12345678",
+        source_version="v1",
+        factuality="verified",
+    )
+    set_task_runtime_for_tests(
+        TaskRuntime(
+            store=InMemoryTaskStore(),
+            provider=DeterministicRuntimeProvider(),
+            gateway=SyntheticSkillGateway(
+                observations={
+                    "read_order": observation,
+                    "read_logistics": observation.model_copy(update={"artifact_kind": "logistics_fact"}),
+                }
+            ),
+        )
+    )
+    client = TestClient(app)
+    created = client.post(
+        "/agent-tasks",
+        headers={"Authorization": AUTHORIZATION},
+        json={"session_id": "router-session", "goal": "查询订单物流"},
+    )
+    assert created.status_code == 201
+    first = created.json()
+    assert first["status"] == "waiting_for_user"
+    assert first["open_question"]
+    assert "模型调用 0 次" in first["execution_summary"]
+    task_ref = first["task_ref"]
+
+    resumed = client.post(
+        f"/agent-tasks/{task_ref}/messages",
+        headers={"Authorization": AUTHORIZATION},
+        json={"message": "订单号是 123456789012"},
+    )
+    assert resumed.status_code == 200
+    second = resumed.json()
+    assert second["task_ref"] == task_ref
+    assert second["status"] == "completed"
+    events = client.get(f"/agent-tasks/{task_ref}/events", headers={"Authorization": AUTHORIZATION}).json()
+    assert any(item["event_type"] == "waiting_for_user" for item in events)

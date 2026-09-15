@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import re
 import time
 from concurrent.futures import ThreadPoolExecutor
@@ -37,6 +38,7 @@ from app.schemas.agent_task import (
 )
 from app.runtime.context_curator import ContextCurator
 from app.runtime.providers import (
+    DeterministicRuntimeProvider,
     DeepSeekRuntimeProvider,
     RuntimeModelError,
     RuntimeModelProvider,
@@ -104,7 +106,11 @@ class TaskRuntime:
     ) -> None:
         self._store = store or get_task_store()
         if provider is None:
-            provider = DeepSeekRuntimeProvider() if settings.deepseek_api_key else UnavailableRuntimeProvider()
+            provider_mode = str(os.getenv("MALL_RUNTIME_PROVIDER_MODE", "live")).strip().lower()
+            if provider_mode in {"deterministic", "replay"}:
+                provider = DeterministicRuntimeProvider(mode=provider_mode)
+            else:
+                provider = DeepSeekRuntimeProvider() if settings.deepseek_api_key else UnavailableRuntimeProvider()
         self._provider = provider
         self._gateway = gateway or SafeCommerceSkillGateway()
         self._memory = memory or TaskMemory()
@@ -290,7 +296,12 @@ class TaskRuntime:
         else:
             proposal.confirmation_status = "unknown"
             bundle.task.status = "blocked"
-            bundle.task.pending_action_ref = None
+            # Keep the proposal reference bound while the Java result is
+            # unknown.  Clearing it would make the persisted bundle invalid
+            # (the proposal is still publicly represented as ``unknown``) and
+            # a repeated confirmation could surface a 500 instead of a safe
+            # idempotent gate rejection.
+            bundle.task.pending_action_ref = proposal.proposal_id
             bundle.task.limitation_codes.append("commit_result_unknown")
             self._append_event(bundle, "task_blocked", "提交结果无法确认，已停止重试；请稍后查询业务状态。")
         self._save(bundle)

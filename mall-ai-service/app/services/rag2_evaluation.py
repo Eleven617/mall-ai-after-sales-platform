@@ -404,6 +404,9 @@ def _latency_summary(values: list[float]) -> dict[str, float]:
         "average_ms": round(sum(sorted_values) / len(sorted_values), 2)
         if sorted_values
         else 0.0,
+        "p50_ms": sorted_values[max(0, ceil(len(sorted_values) * 0.50) - 1)]
+        if sorted_values
+        else 0.0,
         "p95_ms": sorted_values[max(0, ceil(len(sorted_values) * 0.95) - 1)]
         if sorted_values
         else 0.0,

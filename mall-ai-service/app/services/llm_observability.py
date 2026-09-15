@@ -11,8 +11,11 @@ from collections.abc import Iterator
 from contextlib import contextmanager
 from contextvars import ContextVar
 from dataclasses import dataclass
+from datetime import datetime, timezone
 from math import ceil
 from typing import Protocol
+
+from app.services.release_ledger import append_release_event
 
 
 _ALLOWED_OPERATIONS = {"text", "tools", "json"}
@@ -47,6 +50,10 @@ class LLMCallMetric:
     completion_tokens: int | None = None
     total_tokens: int | None = None
     failure_class: str | None = None
+    started_at: str | None = None
+    ended_at: str | None = None
+    provider_request_id_hash: str | None = None
+    protocol_correction: bool = False
 
 
 @dataclass(frozen=True)
@@ -124,6 +131,10 @@ def record_llm_metric(
     completion_tokens: int | None = None,
     total_tokens: int | None = None,
     failure_class: str | None = None,
+    started_at: str | None = None,
+    ended_at: str | None = None,
+    provider_request_id_hash: str | None = None,
+    protocol_correction: bool = False,
 ) -> None:
     """Emit a validated number-only event to the checkpoint-local sink."""
     metric = LLMCallMetric(
@@ -141,8 +152,28 @@ def record_llm_metric(
             if outcome != "succeeded"
             else None
         ),
+        started_at=started_at or _now_iso(),
+        ended_at=ended_at or _now_iso(),
+        provider_request_id_hash=provider_request_id_hash,
+        protocol_correction=bool(protocol_correction),
     )
     _sink_var.get().emit(metric)
+    append_release_event(
+        event_type="provider_request",
+        operation=metric.operation,
+        outcome=metric.outcome,
+        failure_class=metric.failure_class,
+        started_at=metric.started_at,
+        ended_at=metric.ended_at,
+        attempts=metric.attempts,
+        prompt_tokens=metric.prompt_tokens or 0,
+        completion_tokens=metric.completion_tokens or 0,
+        total_tokens=metric.total_tokens or 0,
+        latency_ms=metric.elapsed_ms,
+        protocol_correction=metric.protocol_correction,
+        network_retry=max(0, metric.attempts - 1),
+        provider_request_id_hash=metric.provider_request_id_hash,
+    )
 
 
 def summarize_llm_metrics(
@@ -222,3 +253,7 @@ def _percentile(values: list[int], fraction: float) -> int:
         return 0
     index = max(0, ceil(len(values) * fraction) - 1)
     return values[index]
+
+
+def _now_iso() -> str:
+    return datetime.now(timezone.utc).isoformat(timespec="milliseconds")

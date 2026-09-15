@@ -2,9 +2,10 @@
 
 This runner is intentionally separate from the synthetic contract evaluator.
 It uses disposable Java-created accounts/orders, the Vue proxy, FastAPI, the
-real local Compose dependencies and the configured DeepSeek provider through
-the customer API.  The report is a safe projection: identifiers, credentials,
-raw messages and response bodies remain process-local and are never written.
+real local Compose dependencies through the public Agent Task Runtime API.
+The external model can be selected explicitly as ``deterministic``, ``replay``
+or ``live``.  The report is a safe projection: identifiers, credentials, raw
+messages and response bodies remain process-local and are never written.
 """
 from __future__ import annotations
 
@@ -15,6 +16,7 @@ import subprocess
 import sys
 import time
 import uuid
+import argparse
 from pathlib import Path
 from typing import Any
 
@@ -22,10 +24,17 @@ import httpx
 
 SERVICE_ROOT = Path(__file__).resolve().parents[1]
 ROOT = SERVICE_ROOT.parent
+if str(SERVICE_ROOT) not in sys.path:
+    sys.path.insert(0, str(SERVICE_ROOT))
 if str(SERVICE_ROOT / "scripts") not in sys.path:
     sys.path.insert(0, str(SERVICE_ROOT / "scripts"))
 
 from bootstrap_live_demo import DemoAccount, _prepare_account_order  # noqa: E402
+from app.services.release_ledger import (
+    append_release_event,
+    read_release_events,
+    release_ledger_context,
+)
 
 
 FORBIDDEN_PUBLIC_FIELDS = {
@@ -44,51 +53,468 @@ FORBIDDEN_PUBLIC_FIELDS = {
 }
 
 
+SAFE_FAILURE_CODES = {
+    "fixture_prepare_failed",
+    "login_failed",
+    "conversation_create_failed",
+    "public_answer_missing",
+    "closed_loop_proposal_missing",
+    "closed_loop_java_submission_missing",
+    "status_readback_missing",
+    "pause_waiting_task_missing",
+    "pause_resume_task_changed",
+    "fact_change_proposal_missing",
+    "stale_proposal_was_submitted",
+    "browser_capture_failed",
+    "agent_task_create_failed",
+    "agent_task_waiting_missing",
+    "agent_task_resume_failed",
+    "java_fact_transition_failed",
+    "duplicate_confirmation_not_idempotent",
+    "cross_account_scope_failed",
+    "public_projection_leak",
+    "ai_service_restart_failed",
+    "ai_service_readiness_after_restart_failed",
+    "unknown_failure",
+}
+
+
 class ShowcaseError(RuntimeError):
-    pass
+    """Safe, enumerable showcase failure; never stores an HTTP body."""
+
+    def __init__(
+        self,
+        code: str,
+        *,
+        scenario: str = "unknown",
+        stage: str = "unknown",
+        completed_steps: int = 0,
+        model_called: bool = False,
+        proposal_formed: bool = False,
+        java_eligibility: bool = False,
+        java_commit: bool = False,
+        status_readback: bool = False,
+        http_status_class: str = "none",
+    ) -> None:
+        self.failure_code = code if code in SAFE_FAILURE_CODES else "unknown_failure"
+        self.scenario = scenario
+        self.stage = stage
+        self.completed_steps = max(0, int(completed_steps))
+        self.model_called = bool(model_called)
+        self.proposal_formed = bool(proposal_formed)
+        self.java_eligibility = bool(java_eligibility)
+        self.java_commit = bool(java_commit)
+        self.status_readback = bool(status_readback)
+        self.http_status_class = http_status_class if http_status_class in {"2xx", "4xx", "5xx", "none"} else "none"
+        super().__init__(self.failure_code)
+
+    def for_scenario(self, scenario: str) -> "ShowcaseError":
+        if self.scenario != "unknown":
+            return self
+        self.scenario = scenario
+        return self
+
+    def to_public(self) -> dict[str, Any]:
+        return {
+            "scenario": self.scenario,
+            "stage": self.stage,
+            "failureCode": self.failure_code,
+            "httpStatusClass": self.http_status_class,
+            "completedStepCount": self.completed_steps,
+            "modelCalled": self.model_called,
+            "proposalFormed": self.proposal_formed,
+            "javaEligibility": self.java_eligibility,
+            "javaCommit": self.java_commit,
+            "statusReadback": self.status_readback,
+        }
 
 
-def run_real_local_showcase(*, report_dir: Path, batch_id: str) -> dict[str, Any]:
-    """Run all three local chains and return only safe evidence metadata."""
+def run_real_local_showcase(
+    *,
+    report_dir: Path,
+    batch_id: str,
+    provider_mode: str | None = None,
+) -> dict[str, Any]:
+    """Run all three chains through the single public Agent Task Runtime."""
 
     password = os.getenv("MALL_LIVE_DEMO_PASSWORD")
     if not password:
         return {"status": "environment_blocked", "reason": "missing_process_fixture_password"}
+    provider_mode = (provider_mode or os.getenv("MALL_RUNTIME_PROVIDER_MODE", "live")).strip().lower()
+    if provider_mode not in {"deterministic", "replay", "live"}:
+        return {"status": "environment_blocked", "reason": "invalid_provider_mode"}
     report_dir.mkdir(parents=True, exist_ok=True)
     started = time.monotonic()
-    account_a, account_b, order_a = _prepare_fixture(password)
-    web_base = os.getenv("MALL_DEMO_WEB_BASE_URL", "http://127.0.0.1:5173").rstrip("/")
-    api_base = web_base + "/api"
-    java_base = os.getenv("MALL_JAVA_BASE_URL", "http://127.0.0.1:8085").rstrip("/")
+    ledger_path = os.getenv("MALL_RELEASE_LEDGER_PATH")
     chain_results: list[dict[str, Any]] = []
     frame_paths: list[str] = []
-    try:
-        with httpx.Client(timeout=60, trust_env=False) as client:
-            auth_a = _login(client, api_base, account_a.username, password)
-            auth_b = _login(client, api_base, account_b.username, password)
-            chain_results.append(_closed_loop(client, api_base, auth_a, auth_b, order_a.order_sn))
-            chain_results.append(_pause_resume(client, api_base, auth_a, order_a.order_sn))
-            chain_results.append(_fact_change_replan(client, api_base, java_base, auth_a, order_a.order_id, order_a.order_sn, password))
-        frame_paths = _capture_browser_frames(password, account_a.username, report_dir / "browser")
-    except (httpx.HTTPError, ShowcaseError, OSError, ValueError) as exc:
-        return {
-            "status": "failed",
-            "batchId": batch_id,
-            "durationMs": round((time.monotonic() - started) * 1000),
-            "chains": chain_results,
-            "frames": frame_paths,
-            "failure": type(exc).__name__,
-        }
-    status = "passed" if all(item.get("status") == "passed" for item in chain_results) and len(frame_paths) >= 1 else "failed"
+    with release_ledger_context(batch_id=batch_id, path=ledger_path, source="showcase-host"):
+        try:
+            account_a, account_b, order_a = _prepare_fixture(password)
+        except (httpx.HTTPError, OSError, ValueError, RuntimeError):
+            failure = ShowcaseError("fixture_prepare_failed", scenario="fixture", stage="fixture_prepare")
+            append_release_event(
+                event_type="scenario", operation="showcase.fixture", outcome="failed",
+                failure_class="scenario_failure", scenario="fixture", stage="fixture_prepare",
+                failure_code=failure.failure_code,
+            )
+            return _showcase_failure(batch_id, started, chain_results, frame_paths, failure)
+        web_base = os.getenv("MALL_DEMO_WEB_BASE_URL", "http://127.0.0.1:5173").rstrip("/")
+        api_base = web_base + "/api"
+        java_base = os.getenv("MALL_JAVA_BASE_URL", "http://127.0.0.1:8085").rstrip("/")
+        admin_base = os.getenv("MALL_ADMIN_BASE_URL", "http://127.0.0.1:8080").rstrip("/")
+        try:
+            with httpx.Client(
+                timeout=60,
+                trust_env=False,
+                headers={"X-Mall-Release-Batch-Id": batch_id},
+            ) as client:
+                auth_a = _login(client, api_base, account_a.username, password)
+                auth_b = _login(client, api_base, account_b.username, password)
+                for scenario, callback in (
+                    ("main_open_task_closed_loop", lambda: _agent_closed_loop(client, api_base, auth_a, auth_b, order_a.order_sn)),
+                    ("clarify_pause_resume", lambda: _agent_pause_resume(client, api_base, auth_a, order_a.order_sn)),
+                    ("fact_change_replan", lambda: _agent_fact_change_replan(client, api_base, admin_base, auth_a, order_a.order_id, order_a.order_sn, password)),
+                ):
+                    try:
+                        result = callback()
+                    except ShowcaseError as exc:
+                        failure = exc.for_scenario(scenario)
+                        chain_results.append(failure.to_public())
+                        append_release_event(
+                            event_type="scenario", operation=f"showcase.{scenario}", outcome="failed",
+                            failure_class="scenario_failure", scenario=scenario, stage=failure.stage,
+                            failure_code=failure.failure_code, completed_step_count=failure.completed_steps,
+                            model_called=failure.model_called, proposal_formed=failure.proposal_formed,
+                            java_eligibility=failure.java_eligibility, java_commit=failure.java_commit,
+                            status_readback=failure.status_readback,
+                        )
+                        return _showcase_failure(batch_id, started, chain_results, frame_paths, failure)
+                    chain_results.append(result)
+                    append_release_event(
+                        event_type="scenario", operation=f"showcase.{scenario}", outcome="succeeded",
+                        scenario=scenario, stage="complete", completed_step_count=int(result.get("completedStepCount", 0)),
+                        model_called=provider_mode == "live", proposal_formed=bool(result.get("proposalFormed", False)),
+                        java_eligibility=bool(result.get("javaRechecked", False)), java_commit=bool(result.get("confirmedWrite", False)),
+                        status_readback=bool(result.get("statusReadback", False)),
+                    )
+            frame_paths = _capture_browser_frames(password, account_a.username, report_dir / "browser")
+            if len(frame_paths) < 3:
+                failure = ShowcaseError("browser_capture_failed", scenario="browser", stage="capture")
+                append_release_event(
+                    event_type="scenario", operation="showcase.browser", outcome="failed",
+                    failure_class="scenario_failure", scenario="browser", stage="capture", failure_code=failure.failure_code,
+                )
+                return _showcase_failure(batch_id, started, chain_results, frame_paths, failure)
+        except ShowcaseError as exc:
+            failure = exc.for_scenario(exc.scenario if exc.scenario != "unknown" else "runtime")
+            append_release_event(
+                event_type="scenario", operation="showcase.runtime", outcome="failed",
+                failure_class="scenario_failure", scenario=failure.scenario, stage=failure.stage,
+                failure_code=failure.failure_code,
+            )
+            return _showcase_failure(batch_id, started, chain_results, frame_paths, failure)
+        except (httpx.HTTPError, OSError, ValueError):
+            failure = ShowcaseError("unknown_failure", scenario="runtime", stage="http")
+            append_release_event(
+                event_type="scenario", operation="showcase.runtime", outcome="failed",
+                failure_class="scenario_failure", scenario="runtime", stage="http", failure_code=failure.failure_code,
+            )
+            return _showcase_failure(batch_id, started, chain_results, frame_paths, failure)
+        except Exception:
+            # Keep unexpected implementation errors inside the same safe
+            # public failure contract; never print a provider body, token, or
+            # traceback from a showcase report.
+            failure = ShowcaseError("unknown_failure", scenario="runtime", stage="unexpected")
+            append_release_event(
+                event_type="scenario", operation="showcase.runtime", outcome="failed",
+                failure_class="scenario_failure", scenario="runtime", stage="unexpected", failure_code=failure.failure_code,
+            )
+            return _showcase_failure(batch_id, started, chain_results, frame_paths, failure)
+    status = "passed" if all(item.get("status") == "passed" for item in chain_results) and len(frame_paths) >= 3 else "failed"
     return {
         "status": status,
         "batchId": batch_id,
+        "providerMode": provider_mode,
         "durationMs": round((time.monotonic() - started) * 1000),
         "chains": chain_results,
         "frames": frame_paths,
         "browserFrameCount": len(frame_paths),
         "fixture": {"kind": "local_demo_synthetic", "containsRawValuesInReport": False},
     }
+
+
+def _showcase_failure(
+    batch_id: str,
+    started: float,
+    chains: list[dict[str, Any]],
+    frames: list[str],
+    failure: ShowcaseError,
+) -> dict[str, Any]:
+    return {
+        "status": "failed",
+        "batchId": batch_id,
+        "durationMs": round((time.monotonic() - started) * 1000),
+        "chains": chains,
+        "frames": frames,
+        "failure": failure.to_public(),
+    }
+
+
+def _agent_closed_loop(
+    client: httpx.Client,
+    api_base: str,
+    auth_a: str,
+    auth_b: str,
+    order_sn: str,
+) -> dict[str, Any]:
+    """Open-task Agent -> proposal -> confirmation -> Java status readback."""
+
+    session_id = str(uuid.uuid4())
+    before = _list_applications(client, api_base, auth_a)
+    created = _create_agent_task(
+        client,
+        api_base,
+        auth_a,
+        session_id,
+        f"订单号：{order_sn}，申请取消退款，完成售后闭环",
+    )
+    if created.get("status") != "ready_to_commit" or not isinstance(created.get("action"), dict):
+        raise ShowcaseError("closed_loop_proposal_missing", stage="proposal", completed_steps=1)
+    task_ref = created.get("task_ref")
+    if not isinstance(task_ref, str):
+        raise ShowcaseError("closed_loop_proposal_missing", stage="proposal", completed_steps=1)
+    committed = _confirm_agent_task(client, api_base, auth_a, task_ref, "confirm")
+    action = committed.get("action") or {}
+    # A committed proposal is intentionally omitted from the public action
+    # card.  The task status plus the Java-backed list read establish the
+    # commit without leaking the internal proposal state.
+    if committed.get("status") not in {"executing", "completed"}:
+        raise ShowcaseError(
+            "closed_loop_java_submission_missing",
+            stage="java_commit",
+            completed_steps=3,
+            proposal_formed=True,
+            java_eligibility=True,
+        )
+    after = _list_applications(client, api_base, auth_a)
+    if len(after) != len(before) + 1:
+        raise ShowcaseError(
+            "status_readback_missing",
+            stage="status_readback",
+            completed_steps=4,
+            proposal_formed=True,
+            java_eligibility=True,
+            java_commit=True,
+        )
+    # A second confirmation must fail closed because the proposal was already
+    # consumed; it must not create a second Java application.
+    duplicate = _confirm_agent_task_raw(client, api_base, auth_a, task_ref, "confirm")
+    duplicate_after = _list_applications(client, api_base, auth_a)
+    if duplicate.status_code not in {404, 409} or len(duplicate_after) != len(after):
+        raise ShowcaseError(
+            "duplicate_confirmation_not_idempotent",
+            stage="idempotency",
+            completed_steps=5,
+            proposal_formed=True,
+            java_eligibility=True,
+            java_commit=True,
+            status_readback=True,
+        )
+    foreign = _list_applications(client, api_base, auth_b)
+    if foreign:
+        raise ShowcaseError(
+            "cross_account_scope_failed",
+            stage="scope_check",
+            completed_steps=6,
+            proposal_formed=True,
+            java_eligibility=True,
+            java_commit=True,
+            status_readback=True,
+        )
+    return {
+        "scenario": "main_open_task_closed_loop",
+        "status": "passed",
+        "completedStepCount": 7,
+        "taskContinuity": True,
+        "skillSequence": ["read_order", "java_eligibility", "action_proposal", "java_commit", "status_read"],
+        "javaRechecked": True,
+        "confirmedWrite": True,
+        "proposalFormed": True,
+        "statusReadback": True,
+        "duplicateConfirmationWrites": 0,
+        "crossAccountLeakage": 0,
+    }
+
+
+def _agent_pause_resume(
+    client: httpx.Client,
+    api_base: str,
+    auth: str,
+    order_sn: str,
+) -> dict[str, Any]:
+    """Persist a waiting task, restart FastAPI, and resume the same task."""
+
+    session_id = str(uuid.uuid4())
+    waiting = _create_agent_task(client, api_base, auth, session_id, "查询订单物流")
+    task_ref = waiting.get("task_ref")
+    if waiting.get("status") != "waiting_for_user" or not waiting.get("open_question") or not isinstance(task_ref, str):
+        raise ShowcaseError("agent_task_waiting_missing", stage="waiting_for_input", completed_steps=1)
+    events = _list_agent_events(client, api_base, auth, task_ref)
+    if not any(item.get("event_type") == "waiting_for_user" for item in events):
+        raise ShowcaseError("agent_task_waiting_missing", stage="waiting_trace", completed_steps=1)
+    first_hash = _hash(task_ref)
+    # A second message without the required reference must remain a safe wait;
+    # it does not consume a model call or replace the task.
+    detour = _continue_agent_task(client, api_base, auth, task_ref, "先保留这个任务，稍后补订单号")
+    if detour.get("task_ref") != task_ref or detour.get("status") != "waiting_for_user":
+        raise ShowcaseError("agent_task_resume_failed", stage="safe_detour", completed_steps=2)
+    _restart_ai_service()
+    resumed = _continue_agent_task(client, api_base, auth, task_ref, f"订单号：{order_sn}")
+    facts = resumed.get("artifacts")
+    if not isinstance(facts, list) or not facts or resumed.get("task_ref") != task_ref:
+        raise ShowcaseError("agent_task_resume_failed", stage="resume_after_restart", completed_steps=3)
+    if _hash(str(resumed.get("task_ref"))) != first_hash:
+        raise ShowcaseError("pause_resume_task_changed", stage="resume_after_restart", completed_steps=3)
+    return {
+        "scenario": "clarify_pause_resume",
+        "status": "passed",
+        "completedStepCount": 4,
+        "taskContinuity": True,
+        "waitingForInput": True,
+        "serviceRestarted": True,
+        "sameTaskHash": True,
+        "javaFactsAfterResume": True,
+        "businessWrites": 0,
+        "statusReadback": True,
+    }
+
+
+def _agent_fact_change_replan(
+    client: httpx.Client,
+    api_base: str,
+    admin_base: str,
+    auth: str,
+    order_id: int,
+    order_sn: str,
+    password: str,
+) -> dict[str, Any]:
+    """Invalidate a proposal through a real Java fact transition."""
+
+    session_id = str(uuid.uuid4())
+    before = _list_applications(client, api_base, auth)
+    created = _create_agent_task(
+        client,
+        api_base,
+        auth,
+        session_id,
+        f"订单号：{order_sn}，申请取消退款，完成售后闭环",
+    )
+    task_ref = created.get("task_ref")
+    if created.get("status") != "ready_to_commit" or not isinstance(created.get("action"), dict) or not isinstance(task_ref, str):
+        raise ShowcaseError("fact_change_proposal_missing", stage="proposal", completed_steps=1)
+    try:
+        from verify_build14_eligibility_live import _deliver, _operations_login
+
+        operations_auth = _operations_login(client, api_base, "localDemoOperations", password)
+        _deliver(client, admin_base, operations_auth, order_id)
+    except Exception as exc:
+        del exc
+        raise ShowcaseError("java_fact_transition_failed", stage="java_fact_transition", completed_steps=2, proposal_formed=True)
+    confirmed = _confirm_agent_task(client, api_base, auth, task_ref, "confirm")
+    confirmed_action = confirmed.get("action") or {}
+    if confirmed_action.get("confirmation_status") not in {"blocked", "unknown", None}:
+        raise ShowcaseError(
+            "stale_proposal_was_submitted",
+            stage="java_recheck",
+            completed_steps=3,
+            proposal_formed=True,
+            java_eligibility=True,
+            java_commit=True,
+        )
+    after = _list_applications(client, api_base, auth)
+    if len(after) != len(before):
+        raise ShowcaseError(
+            "stale_proposal_was_submitted",
+            stage="status_readback",
+            completed_steps=4,
+            proposal_formed=True,
+            java_eligibility=True,
+            status_readback=True,
+        )
+    return {
+        "scenario": "fact_change_replan",
+        "status": "passed",
+        "completedStepCount": 5,
+        "initialProposal": True,
+        "proposalFormed": True,
+        "javaFactTransition": True,
+        "oldProposalSubmitted": False,
+        "recheckOrHandoffObserved": True,
+        "businessWritesForStaleProposal": 0,
+        "statusReadback": True,
+    }
+
+
+def _create_agent_task(client: httpx.Client, api_base: str, auth: str, session_id: str, goal: str) -> dict[str, Any]:
+    response = client.post(
+        f"{api_base}/agent-tasks",
+        headers={"Authorization": auth},
+        json={"session_id": session_id, "goal": goal, "success_criteria": ["事实已核验"]},
+    )
+    payload = _json_object(response)
+    if response.status_code != 201:
+        raise ShowcaseError("agent_task_create_failed", stage="agent_task_create", http_status_class=_status_class(response.status_code))
+    _assert_task_public(payload)
+    return payload
+
+
+def _continue_agent_task(client: httpx.Client, api_base: str, auth: str, task_ref: str, message: str) -> dict[str, Any]:
+    response = client.post(
+        f"{api_base}/agent-tasks/{task_ref}/messages",
+        headers={"Authorization": auth},
+        json={"message": message},
+    )
+    payload = _json_object(response)
+    if response.status_code != 200:
+        raise ShowcaseError("agent_task_resume_failed", stage="agent_task_continue", http_status_class=_status_class(response.status_code))
+    _assert_task_public(payload)
+    return payload
+
+
+def _confirm_agent_task(client: httpx.Client, api_base: str, auth: str, task_ref: str, confirmation: str) -> dict[str, Any]:
+    response = _confirm_agent_task_raw(client, api_base, auth, task_ref, confirmation)
+    payload = _json_object(response)
+    if response.status_code != 200:
+        raise ShowcaseError("closed_loop_java_submission_missing", stage="java_commit", http_status_class=_status_class(response.status_code))
+    _assert_task_public(payload)
+    return payload
+
+
+def _confirm_agent_task_raw(client: httpx.Client, api_base: str, auth: str, task_ref: str, confirmation: str) -> httpx.Response:
+    return client.post(
+        f"{api_base}/agent-tasks/{task_ref}/action",
+        headers={"Authorization": auth},
+        json={"confirmation": confirmation},
+    )
+
+
+def _list_agent_events(client: httpx.Client, api_base: str, auth: str, task_ref: str) -> list[dict[str, Any]]:
+    response = client.get(f"{api_base}/agent-tasks/{task_ref}/events", headers={"Authorization": auth})
+    payload = response.json()
+    if response.status_code != 200 or not isinstance(payload, list):
+        raise ShowcaseError("agent_task_waiting_missing", stage="waiting_trace", http_status_class=_status_class(response.status_code))
+    return [item for item in payload if isinstance(item, dict)]
+
+
+def _assert_task_public(payload: dict[str, Any]) -> None:
+    if not isinstance(payload.get("task_ref"), str) or not isinstance(payload.get("status"), str):
+        raise ShowcaseError("public_answer_missing", stage="public_projection")
+    _assert_no_forbidden(payload)
+
+
+def _status_class(status_code: int) -> str:
+    return f"{status_code // 100}xx" if status_code >= 100 else "none"
 
 
 def _prepare_fixture(password: str):
@@ -103,118 +529,6 @@ def _prepare_fixture(password: str):
         order_a = _prepare_account_order(client, java_base, accounts[0], int(os.getenv("MALL_LIVE_DEMO_PRODUCT_ID", "26")), required_stock=2)
         _prepare_account_order(client, java_base, accounts[1], int(os.getenv("MALL_LIVE_DEMO_PRODUCT_ID", "26")), required_stock=1)
     return accounts[0], accounts[1], order_a
-
-
-def _closed_loop(client: httpx.Client, api_base: str, auth_a: str, auth_b: str, order_sn: str) -> dict[str, Any]:
-    session_id = _create_conversation(client, api_base, auth_a)
-    before = _list_applications(client, api_base, auth_a)
-    for message in (
-        "商品质量问题退货，运费由谁承担？",
-        f"订单号：{order_sn}，我要取消订单退款，原因是不想要了。",
-        "我选择第一个商品，原因是不想要了，申请取消订单退款。",
-    ):
-        response = _message(client, api_base, auth_a, session_id, message)
-        _assert_public(response)
-        proposal = response.get("after_sales_proposal")
-        if isinstance(proposal, dict):
-            break
-    else:
-        raise ShowcaseError("closed_loop_proposal_missing")
-    submitted = _message(client, api_base, auth_a, session_id, "我确认申请取消订单退款")
-    _assert_public(submitted)
-    application = submitted.get("submitted_after_sales_application")
-    if not isinstance(application, dict):
-        raise ShowcaseError("closed_loop_java_submission_missing")
-    application_id = application.get("application_id")
-    if not isinstance(application_id, int):
-        raise ShowcaseError("closed_loop_public_status_missing")
-    after = _list_applications(client, api_base, auth_a)
-    foreign = _list_applications(client, api_base, auth_b)
-    duplicate = _message(client, api_base, auth_a, session_id, "确认")
-    _assert_public(duplicate)
-    duplicate_count = sum(1 for item in _list_applications(client, api_base, auth_a) if item.get("application_id") == application_id)
-    if len(after) != len(before) + 1 or duplicate_count != 1 or any(item.get("application_id") == application_id for item in foreign):
-        raise ShowcaseError("closed_loop_scope_or_idempotency_failed")
-    return {
-        "scenario": "main_open_task_closed_loop",
-        "status": "passed",
-        "taskContinuity": True,
-        "skillSequence": ["policy_read", "java_eligibility", "action_proposal", "java_commit", "status_read"],
-        "javaRechecked": True,
-        "confirmedWrite": True,
-        "proposalHash": _digest(proposal),
-        "applicationHash": _hash(str(application_id)),
-        "javaHttpStatuses": [200, 200],
-        "duplicateConfirmationWrites": 0,
-        "crossAccountLeakage": 0,
-        "publicStatusReturned": True,
-    }
-
-
-def _pause_resume(client: httpx.Client, api_base: str, auth: str, order_sn: str) -> dict[str, Any]:
-    session_id = _create_conversation(client, api_base, auth)
-    waiting = _message(client, api_base, auth, session_id, "我想查订单物流，但现在没有订单号，请先告诉我需要什么")
-    _assert_public(waiting)
-    task = waiting.get("task")
-    task_ref_hash = _hash(task.get("task_ref")) if isinstance(task, dict) and isinstance(task.get("task_ref"), str) else None
-    if not isinstance(task, dict) or task.get("task_status") not in {"active", "paused"}:
-        raise ShowcaseError("pause_waiting_task_missing")
-    _message(client, api_base, auth, session_id, "顺便问一下退货运费谁承担？")
-    _restart_ai_service()
-    resumed = _message(client, api_base, auth, session_id, f"订单号：{order_sn}")
-    _assert_public(resumed)
-    facts = resumed.get("verified_facts")
-    if not isinstance(facts, list) or not facts:
-        raise ShowcaseError("pause_resume_fact_missing")
-    resumed_task = resumed.get("task")
-    resumed_hash = _hash(resumed_task.get("task_ref")) if isinstance(resumed_task, dict) and isinstance(resumed_task.get("task_ref"), str) else None
-    if task_ref_hash and resumed_hash and task_ref_hash != resumed_hash:
-        raise ShowcaseError("pause_resume_task_changed")
-    return {
-        "scenario": "clarify_pause_resume",
-        "status": "passed",
-        "taskContinuity": True,
-        "waitingForInput": True,
-        "policyDetourPreservedTask": True,
-        "serviceRestarted": True,
-        "sameTaskHash": bool(task_ref_hash and resumed_hash and task_ref_hash == resumed_hash),
-        "taskReferenceHash": resumed_hash,
-        "javaFactsAfterResume": True,
-        "businessWrites": 0,
-    }
-
-
-def _fact_change_replan(client: httpx.Client, api_base: str, java_base: str, auth: str, order_id: int, order_sn: str, password: str) -> dict[str, Any]:
-    session_id = _create_conversation(client, api_base, auth)
-    proposal_response = _message(client, api_base, auth, session_id, f"订单号：{order_sn}，我想取消退款，原因是不想要了")
-    _assert_public(proposal_response)
-    proposal = proposal_response.get("after_sales_proposal")
-    if not isinstance(proposal, dict):
-        proposal_response = _message(client, api_base, auth, session_id, "申请取消订单退款，原因是不想要了")
-        _assert_public(proposal_response)
-        proposal = proposal_response.get("after_sales_proposal")
-    if not isinstance(proposal, dict):
-        raise ShowcaseError("fact_change_proposal_missing")
-    try:
-        from verify_build14_eligibility_live import _deliver, _operations_login
-        operations_auth = _operations_login(client, api_base, "localDemoOperations", password)
-        _deliver(client, java_base, operations_auth, order_id)
-    except Exception as exc:
-        raise ShowcaseError("fact_change_java_transition_failed") from exc
-    confirmed = _message(client, api_base, auth, session_id, "那就按刚才方案提交")
-    _assert_public(confirmed)
-    if confirmed.get("submitted_after_sales_application") is not None:
-        raise ShowcaseError("stale_proposal_was_submitted")
-    return {
-        "scenario": "fact_change_replan",
-        "status": "passed",
-        "initialProposal": True,
-        "proposalHash": _digest(proposal),
-        "javaFactTransition": True,
-        "oldProposalSubmitted": False,
-        "recheckOrHandoffObserved": True,
-        "businessWritesForStaleProposal": 0,
-    }
 
 
 def _capture_browser_frames(password: str, customer_username: str, directory: Path) -> list[str]:
@@ -266,34 +580,12 @@ def _login(client: httpx.Client, api_base: str, username: str, password: str) ->
     return payload["authorization"]
 
 
-def _create_conversation(client: httpx.Client, api_base: str, auth: str) -> str:
-    value = str(uuid.uuid4())
-    response = client.post(f"{api_base}/customer-service/conversations/{value}", headers={"Authorization": auth})
-    if response.status_code != 200:
-        raise ShowcaseError("conversation_create_failed")
-    return value
-
-
-def _message(client: httpx.Client, api_base: str, auth: str, session_id: str, message: str) -> dict[str, Any]:
-    response = client.post(f"{api_base}/customer-service", headers={"Authorization": auth}, json={"session_id": session_id, "message": message})
-    payload = _json_object(response)
-    if response.status_code != 200:
-        raise ShowcaseError("customer_message_failed")
-    return payload
-
-
 def _list_applications(client: httpx.Client, api_base: str, auth: str) -> list[dict[str, Any]]:
     response = client.get(f"{api_base}/customer-service/after-sales-applications", headers={"Authorization": auth})
     payload = response.json()
     if response.status_code != 200 or not isinstance(payload, list):
         raise ShowcaseError("after_sales_list_failed")
     return [item for item in payload if isinstance(item, dict)]
-
-
-def _assert_public(payload: dict[str, Any]) -> None:
-    if not isinstance(payload.get("answer"), str) or not payload["answer"].strip():
-        raise ShowcaseError("public_answer_missing")
-    _assert_no_forbidden(payload)
 
 
 def _assert_no_forbidden(value: object) -> None:
@@ -321,11 +613,6 @@ def _hash(value: str) -> str:
     return hashlib.sha256(value.encode("utf-8")).hexdigest()[:24]
 
 
-def _digest(value: object) -> str:
-    payload = json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"), default=str)
-    return _hash(payload)
-
-
 def _safe_rel(path: Path) -> str:
     try:
         return path.resolve().relative_to(ROOT.resolve()).as_posix()
@@ -334,8 +621,17 @@ def _safe_rel(path: Path) -> str:
 
 
 if __name__ == "__main__":
-    report_path = Path(sys.argv[1]) if len(sys.argv) > 1 else ROOT / "tmp" / "real-local-showcase.json"
-    result = run_real_local_showcase(report_dir=report_path.parent, batch_id=os.getenv("MALL_RELEASE_BATCH_ID", "manual"))
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("report", nargs="?", type=Path, default=ROOT / "tmp" / "real-local-showcase.json")
+    parser.add_argument("--provider-mode", choices=("deterministic", "replay", "live"), default=None)
+    parser.add_argument("--batch-id", default=None)
+    args = parser.parse_args()
+    report_path = args.report
+    result = run_real_local_showcase(
+        report_dir=report_path.parent,
+        batch_id=args.batch_id or os.getenv("MALL_RELEASE_BATCH_ID", "manual"),
+        provider_mode=args.provider_mode,
+    )
     report_path.parent.mkdir(parents=True, exist_ok=True)
     report_path.write_text(json.dumps(result, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     print(json.dumps({"status": result.get("status"), "chains": [item.get("status") for item in result.get("chains", [])], "frames": len(result.get("frames", []))}, ensure_ascii=False))

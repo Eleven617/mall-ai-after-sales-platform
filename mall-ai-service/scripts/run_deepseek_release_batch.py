@@ -11,6 +11,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
 import sys
 import time
 import uuid
@@ -39,6 +40,7 @@ from app.services.llm_service import (  # noqa: E402
     DEEPSEEK_THINKING_MODE,
 )
 from app.skills.catalog import SKILL_CATALOG_VERSION  # noqa: E402
+from app.services.release_ledger import read_release_events, summarize_release_events  # noqa: E402
 
 
 REPOSITORY_ROOT = SERVICE_ROOT.parent
@@ -75,8 +77,12 @@ def _base_ledger(*, batch_id: str, release_id: str, phase: str, command: str) ->
         "promptVersion": RUNTIME_PROMPT_VERSION,
         "skillCatalogVersion": SKILL_CATALOG_VERSION,
         "requests": 0,
+        "providerRequests": 0,
         "successfulRequests": 0,
         "failedRequests": 0,
+        "providerFailures": 0,
+        "scenarioFailures": 0,
+        "testFailures": 0,
         "environmentBlocked": 0,
         "protocolCorrections": 0,
         "networkRetries": 0,
@@ -141,6 +147,27 @@ def _merge_ledger_metrics(ledger: dict[str, object], reports: list[dict[str, obj
         )
     ledger.update(totals)
     ledger["endedAt"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+
+
+def _sync_process_ledger(ledger: dict[str, object]) -> None:
+    """Merge container and host JSONL events without mixing failure classes."""
+
+    path = os.getenv("MALL_RELEASE_LEDGER_PATH")
+    if not path:
+        return
+    summary = summarize_release_events(read_release_events(path, batch_id=str(ledger["batchId"])))
+    ledger["providerRequests"] = summary["providerRequests"]
+    ledger["requests"] = summary["providerRequests"]
+    ledger["successfulRequests"] = summary["providerSuccesses"]
+    ledger["failedRequests"] = summary["providerFailures"]
+    ledger["providerFailures"] = summary["providerFailures"]
+    ledger["scenarioFailures"] = summary["scenarioFailures"]
+    ledger["testFailures"] = summary["testFailures"]
+    ledger["promptTokens"] = summary["promptTokens"]
+    ledger["completionTokens"] = summary["completionTokens"]
+    ledger["totalTokens"] = summary["totalTokens"]
+    ledger["networkRetries"] = summary["networkRetries"]
+    ledger["protocolCorrections"] = summary["protocolCorrections"]
 
 
 def _run_showcase(ledger: dict[str, object]) -> dict[str, object]:
@@ -250,9 +277,9 @@ def _run_candidate(ledger: dict[str, object], report_dir: Path) -> dict[str, obj
     )
     reports: dict[str, object] = {"realLocalShowcase": showcase}
     if showcase.get("status") != "passed":
+        _sync_process_ledger(ledger)
         ledger["status"] = "environment_blocked" if showcase.get("status") == "environment_blocked" else "failed"
         ledger["environmentBlocked"] = 1 if showcase.get("status") == "environment_blocked" else 0
-        ledger["failedRequests"] = int(ledger.get("failedRequests", 0) or 0) + (0 if showcase.get("status") == "environment_blocked" else 1)
         ledger["endedAt"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
         return {"status": ledger["status"], **reports}
 
@@ -315,6 +342,7 @@ def _run_candidate(ledger: dict[str, object], report_dir: Path) -> dict[str, obj
         overall = "passed"
     ledger["status"] = overall
     ledger["endedAt"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+    _sync_process_ledger(ledger)
     return {"status": overall, **reports}
 
 

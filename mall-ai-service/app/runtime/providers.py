@@ -497,6 +497,80 @@ class ScriptedRuntimeProvider:
 
 
 @dataclass
+class DeterministicRuntimeProvider:
+    """Offline/replay provider used only by the local release showcase.
+
+    It is selected only when ``MALL_RUNTIME_PROVIDER_MODE`` is explicitly set
+    to ``deterministic`` or ``replay``.  The real Task Runtime, Java gateway,
+    confirmation gate and persistence remain in the path; only the external
+    model response is replaced.
+    """
+
+    mode: str = "deterministic"
+    decision_calls: int = 0
+
+    def decide(self, context: RuntimeModelContext) -> ExecutorDecision:
+        self.decision_calls += 1
+        artifacts = list(context.artifact_details or [])
+        artifact_kinds = {str(item.get("kind")) for item in artifacts}
+        goal = context.goal
+        order_ref = context.reference_hints.get("orderRef")
+        if "order_fact" not in artifact_kinds:
+            if not order_ref:
+                return ExecutorDecision(
+                    decision="ask_user",
+                    reason_summary="需要当前账号可核验的订单标识。",
+                    user_question="请提供订单标识后继续核验。",
+                )
+            return ExecutorDecision(
+                decision="call_skill",
+                reason_summary="先读取当前账号可见的订单事实。",
+                skill_calls=[SkillCall(skill_id="read_order", arguments={"orderRef": order_ref})],
+            )
+        if "物流" in goal and "logistics_fact" not in artifact_kinds:
+            return ExecutorDecision(
+                decision="call_skill",
+                reason_summary="订单事实已核验，继续读取物流摘要。",
+                skill_calls=[SkillCall(skill_id="read_logistics", arguments={"orderRef": order_ref or ""})],
+            )
+        if any(term in goal for term in ("取消退款", "申请售后", "提交售后", "售后闭环")):
+            order_fact_ref = next(
+                (
+                    str(item.get("reference"))
+                    for item in reversed(artifacts)
+                    if item.get("kind") == "order_fact" and isinstance(item.get("reference"), str)
+                ),
+                None,
+            )
+            if order_fact_ref:
+                return ExecutorDecision(
+                    decision="propose_action",
+                    reason_summary="订单事实已核验，可生成取消退款申请方案，确认后由 Java 复核提交。",
+                    action_skill="commit_after_sales_action",
+                    action_arguments={
+                        "orderFactRef": order_fact_ref,
+                        "applicationType": "cancel_refund",
+                    },
+                )
+        return ExecutorDecision(
+            decision="finish",
+            reason_summary="已完成当前合成任务的事实核验，未执行未确认的业务动作。",
+        )
+
+    def curate(self, context: ContextCuratorInput) -> CuratorModelOutput:
+        return CuratorModelOutput(
+            verified_facts=list(context.artifact_summaries[:8]),
+            unresolved_assumptions=[],
+            candidate_actions=[],
+            executed_effects=[],
+            memory_hints=list(context.existing_memory_hints[:4]),
+        )
+
+    def critique(self, context: dict[str, Any]) -> ResolutionCritique:
+        return ResolutionCritique()
+
+
+@dataclass
 class UnavailableRuntimeProvider:
     """Explicit safe-stop provider for environments without a model key."""
 

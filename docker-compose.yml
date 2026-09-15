@@ -204,11 +204,17 @@ services:
       AGENT_TASK_STORE_BACKEND: mongo
       AGENT_TASK_MONGO_URL: mongodb://mongo:27017
       AGENT_TASK_MONGO_DATABASE: mall_ai
+      MALL_RUNTIME_PROVIDER_MODE: ${MALL_RUNTIME_PROVIDER_MODE:-live}
+      MALL_RELEASE_LEDGER_PATH: /app/release-ledger/ledger.jsonl
+      MALL_RUNTIME_COMMIT: ${MALL_RUNTIME_COMMIT:-unknown}
+      MALL_PROMPT_VERSION: ${MALL_PROMPT_VERSION:-agent_runtime_v3_3}
+      MALL_SCHEMA_VERSION: ${MALL_SCHEMA_VERSION:-task_runtime_v3_0}
     ports:
       - "8000:8000"
     volumes:
       - ./mall-ai-service/chroma_data:/app/chroma_data
       - ./mall-ai-service/models:/app/models:ro
+      - ./tmp/release-ledger:/app/release-ledger
     depends_on:
       redis:
         condition: service_healthy

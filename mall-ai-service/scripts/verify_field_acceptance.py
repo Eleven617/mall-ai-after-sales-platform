@@ -687,7 +687,19 @@ def _run_recovery_cases(
     report_dir: Path,
 ) -> list[CaseResult]:
     runner_id = "durable-recovery-field-runner"
-    command = [sys.executable, str(SERVICE_ROOT / "scripts" / "verify_build21_authenticated_live.py")]
+    report_path = report_dir / "durable-recovery-local.json"
+    command = [
+        sys.executable,
+        str(SERVICE_ROOT / "scripts" / "verify_durable_recovery_local.py"),
+        "--manifest",
+        str(DEFAULT_MANIFEST),
+        "--fixture",
+        str(fixture_path) if fixture_path else "",
+        "--report",
+        str(report_path),
+        "--provider-mode",
+        os.getenv("MALL_RUNTIME_PROVIDER_MODE", "deterministic"),
+    ]
     env = os.environ.copy()
     if fixture_path:
         env["MALL_FIELD_FIXTURE_FILE"] = str(fixture_path)
@@ -696,51 +708,49 @@ def _run_recovery_cases(
         env["MALL_BUILD21_BOOTSTRAP_LOCAL_DEMO"] = "true"
         env["MALL_LIVE_DEMO_PASSWORD"] = password
     try:
-        process = subprocess.run(command, cwd=SERVICE_ROOT, env=env, text=True, capture_output=True, timeout=360, check=False)
+        if not fixture_path or not fixture_path.exists() or not password:
+            raise RuntimeError("missing_synthetic_fixture_or_process_password")
+        process = subprocess.run(command, cwd=SERVICE_ROOT, env=env, text=True, capture_output=True, timeout=1200, check=False)
         code = process.returncode
         detail = _safe_output(process.stderr or process.stdout)
     except (OSError, subprocess.TimeoutExpired) as exc:
         code = 124
         detail = type(exc).__name__
     (report_dir / "durable-recovery.txt").write_text(f"exit_code={code}\ndetail={detail}\n", encoding="utf-8")
-    if code == 0:
-        return [
+    local_results: dict[str, dict[str, Any]] = {}
+    if report_path.exists():
+        try:
+            payload = json.loads(report_path.read_text(encoding="utf-8"))
+            local_results = {
+                str(item.get("caseId")): item
+                for item in payload.get("cases", [])
+                if isinstance(item, dict) and isinstance(item.get("caseId"), str)
+            }
+        except (OSError, ValueError, TypeError):
+            local_results = {}
+    results: list[CaseResult] = []
+    for case in cases:
+        local = local_results.get(str(case.get("caseId")))
+        passed = bool(local and local.get("status") == "passed") and code == 0
+        results.append(
             _result(
                 case,
                 runner_id,
-                "durable-recovery.v1",
-                "live_build21_restart_recovery",
-                "passed",
-                None,
+                "durable-recovery-local.v2",
+                "live_durable_recovery_deterministic_or_replay",
+                "passed" if passed else "failed",
+                None if passed else ("ENVIRONMENT_DEFECT" if code == 124 else "PRODUCT_DEFECT"),
                 commit,
                 manifest_hash,
                 fixture_hash,
                 _now(),
-                ["checkpoint_resume", "owner_isolation", "no_unrelated_business_write"],
-                ["Redis", "FastAPI", "mall-portal", "Mongo checkpoint"],
-                ["tmp/field-acceptance/durable-recovery.txt"],
+                list(local.get("assertions", [])) if local else [],
+                ["Redis", "FastAPI", "mall-portal", "Mongo task store", "RabbitMQ"],
+                [_safe_rel(report_path), "tmp/field-acceptance/durable-recovery.txt"],
+                error=None if passed else {"type": "durable_recovery_failed", "detail": str((local or {}).get("failureCode") or detail)[-300:]},
             )
-            for case in cases
-        ]
-    return [
-        _result(
-            case,
-            runner_id,
-            "durable-recovery.v1",
-            "live_build21_restart_recovery",
-            "failed",
-            "ENVIRONMENT_DEFECT" if code == 124 else "PRODUCT_DEFECT",
-            commit,
-            manifest_hash,
-            fixture_hash,
-            _now(),
-            [],
-            ["Redis", "FastAPI", "mall-portal", "Mongo checkpoint"],
-            ["tmp/field-acceptance/durable-recovery.txt"],
-            error={"type": "durable_recovery_failed", "detail": detail[-300:]},
         )
-        for case in cases
-    ]
+    return results
 
 
 def _http_login(client: httpx.Client, username: str, password: str) -> str:
