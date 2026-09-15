@@ -148,6 +148,7 @@ def run_real_local_showcase(
     ledger_path = os.getenv("MALL_RELEASE_LEDGER_PATH")
     chain_results: list[dict[str, Any]] = []
     frame_paths: list[str] = []
+    frame_groups: dict[str, dict[str, Any]] = {}
     with release_ledger_context(batch_id=batch_id, path=ledger_path, source="showcase-host"):
         try:
             account_a, account_b, order_a = _prepare_fixture(password)
@@ -158,7 +159,7 @@ def run_real_local_showcase(
                 failure_class="scenario_failure", scenario="fixture", stage="fixture_prepare",
                 failure_code=failure.failure_code,
             )
-            return _showcase_failure(batch_id, started, chain_results, frame_paths, failure)
+            return _showcase_failure(batch_id, started, chain_results, frame_paths, failure, frame_groups)
         web_base = os.getenv("MALL_DEMO_WEB_BASE_URL", "http://127.0.0.1:5173").rstrip("/")
         api_base = web_base + "/api"
         java_base = os.getenv("MALL_JAVA_BASE_URL", "http://127.0.0.1:8085").rstrip("/")
@@ -189,8 +190,23 @@ def run_real_local_showcase(
                             java_eligibility=failure.java_eligibility, java_commit=failure.java_commit,
                             status_readback=failure.status_readback,
                         )
-                        return _showcase_failure(batch_id, started, chain_results, frame_paths, failure)
+                        return _showcase_failure(batch_id, started, chain_results, frame_paths, failure, frame_groups)
                     chain_results.append(result)
+                    captured = _capture_chain_frames(
+                        password,
+                        account_a.username,
+                        report_dir / "browser",
+                        scenario,
+                    )
+                    frame_groups[scenario] = captured
+                    frame_paths.extend(captured["frames"])
+                    if not captured["valid"]:
+                        failure = ShowcaseError("browser_capture_failed", scenario=scenario, stage="capture")
+                        append_release_event(
+                            event_type="scenario", operation=f"showcase.{scenario}.frames", outcome="failed",
+                            failure_class="scenario_failure", scenario=scenario, stage="capture", failure_code=failure.failure_code,
+                        )
+                        return _showcase_failure(batch_id, started, chain_results, frame_paths, failure, frame_groups)
                     append_release_event(
                         event_type="scenario", operation=f"showcase.{scenario}", outcome="succeeded",
                         scenario=scenario, stage="complete", completed_step_count=int(result.get("completedStepCount", 0)),
@@ -198,14 +214,6 @@ def run_real_local_showcase(
                         java_eligibility=bool(result.get("javaRechecked", False)), java_commit=bool(result.get("confirmedWrite", False)),
                         status_readback=bool(result.get("statusReadback", False)),
                     )
-            frame_paths = _capture_browser_frames(password, account_a.username, report_dir / "browser")
-            if len(frame_paths) < 3:
-                failure = ShowcaseError("browser_capture_failed", scenario="browser", stage="capture")
-                append_release_event(
-                    event_type="scenario", operation="showcase.browser", outcome="failed",
-                    failure_class="scenario_failure", scenario="browser", stage="capture", failure_code=failure.failure_code,
-                )
-                return _showcase_failure(batch_id, started, chain_results, frame_paths, failure)
         except ShowcaseError as exc:
             failure = exc.for_scenario(exc.scenario if exc.scenario != "unknown" else "runtime")
             append_release_event(
@@ -213,14 +221,14 @@ def run_real_local_showcase(
                 failure_class="scenario_failure", scenario=failure.scenario, stage=failure.stage,
                 failure_code=failure.failure_code,
             )
-            return _showcase_failure(batch_id, started, chain_results, frame_paths, failure)
+            return _showcase_failure(batch_id, started, chain_results, frame_paths, failure, frame_groups)
         except (httpx.HTTPError, OSError, ValueError):
             failure = ShowcaseError("unknown_failure", scenario="runtime", stage="http")
             append_release_event(
                 event_type="scenario", operation="showcase.runtime", outcome="failed",
                 failure_class="scenario_failure", scenario="runtime", stage="http", failure_code=failure.failure_code,
             )
-            return _showcase_failure(batch_id, started, chain_results, frame_paths, failure)
+            return _showcase_failure(batch_id, started, chain_results, frame_paths, failure, frame_groups)
         except Exception:
             # Keep unexpected implementation errors inside the same safe
             # public failure contract; never print a provider body, token, or
@@ -230,8 +238,14 @@ def run_real_local_showcase(
                 event_type="scenario", operation="showcase.runtime", outcome="failed",
                 failure_class="scenario_failure", scenario="runtime", stage="unexpected", failure_code=failure.failure_code,
             )
-            return _showcase_failure(batch_id, started, chain_results, frame_paths, failure)
-    status = "passed" if all(item.get("status") == "passed" for item in chain_results) and len(frame_paths) >= 3 else "failed"
+            return _showcase_failure(batch_id, started, chain_results, frame_paths, failure, frame_groups)
+    status = "passed" if (
+        all(item.get("status") == "passed" for item in chain_results)
+        and len(frame_paths) >= 12
+        and all(group.get("valid") is True for group in frame_groups.values())
+        and len(frame_groups) == 3
+    ) else "failed"
+    gif_paths = _build_offline_gifs(frame_groups, report_dir / "gifs") if status == "passed" else []
     return {
         "status": status,
         "batchId": batch_id,
@@ -240,6 +254,8 @@ def run_real_local_showcase(
         "chains": chain_results,
         "frames": frame_paths,
         "browserFrameCount": len(frame_paths),
+        "frameGroups": frame_groups,
+        "gifPaths": gif_paths,
         "fixture": {"kind": "local_demo_synthetic", "containsRawValuesInReport": False},
     }
 
@@ -250,6 +266,7 @@ def _showcase_failure(
     chains: list[dict[str, Any]],
     frames: list[str],
     failure: ShowcaseError,
+    frame_groups: dict[str, dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
     return {
         "status": "failed",
@@ -257,6 +274,8 @@ def _showcase_failure(
         "durationMs": round((time.monotonic() - started) * 1000),
         "chains": chains,
         "frames": frames,
+        "browserFrameCount": len(frames),
+        "frameGroups": frame_groups or {},
         "failure": failure.to_public(),
     }
 
@@ -531,7 +550,101 @@ def _prepare_fixture(password: str):
     return accounts[0], accounts[1], order_a
 
 
+def _capture_chain_frames(
+    password: str,
+    customer_username: str,
+    directory: Path,
+    scenario: str,
+) -> dict[str, Any]:
+    """Capture four real role surfaces after each completed chain.
+
+    The frames are taken from the running Vue application, not generated or
+    painted by the verifier.  Different role surfaces make adjacent hashes
+    useful evidence while keeping all data synthetic and public-safe.
+    """
+
+    directory.mkdir(parents=True, exist_ok=True)
+    old_username = os.environ.get("MALL_FIELD_BROWSER_CUSTOMER_USER")
+    os.environ["MALL_FIELD_BROWSER_CUSTOMER_USER"] = customer_username
+    frame_specs = (
+        ("customer", "goal"),
+        ("operations", "evidence"),
+        ("service_operations", "handoff"),
+        ("customer", "status"),
+    )
+    paths: list[str] = []
+    hashes: list[str] = []
+    try:
+        from field_browser_support import BrowserSession
+
+        with BrowserSession(password=password, evidence_dir=directory) as browser:
+            for route, stage in frame_specs:
+                browser.open_route(route)
+                browser.assert_ready()
+                browser.assert_safe_public_text()
+                target = directory / f"{scenario}-{stage}.png"
+                browser.screenshot(target)
+                if not target.is_file() or target.stat().st_size < 1024:
+                    return {"frames": paths, "hashes": hashes, "valid": False, "frameCount": len(paths)}
+                digest = hashlib.sha256(target.read_bytes()).hexdigest()
+                paths.append(_safe_rel(target))
+                hashes.append(digest)
+    except Exception:
+        return {"frames": paths, "hashes": hashes, "valid": False, "frameCount": len(paths)}
+    finally:
+        if old_username is None:
+            os.environ.pop("MALL_FIELD_BROWSER_CUSTOMER_USER", None)
+        else:
+            os.environ["MALL_FIELD_BROWSER_CUSTOMER_USER"] = old_username
+    adjacent_distinct = all(left != right for left, right in zip(hashes, hashes[1:]))
+    return {
+        "frames": paths,
+        "hashes": hashes,
+        "valid": len(paths) == 4 and adjacent_distinct,
+        "frameCount": len(paths),
+        "adjacentDistinct": adjacent_distinct,
+    }
+
+
+def _build_offline_gifs(frame_groups: dict[str, dict[str, Any]], directory: Path) -> list[str]:
+    """Build small GIFs from already captured frames without any provider call."""
+
+    try:
+        from PIL import Image
+    except ImportError:
+        return []
+    directory.mkdir(parents=True, exist_ok=True)
+    names = {
+        "main_open_task_closed_loop": "main-open-task-closed-loop.gif",
+        "clarify_pause_resume": "clarify-pause-resume.gif",
+        "fact_change_replan": "fact-change-replan-handoff.gif",
+    }
+    outputs: list[str] = []
+    for scenario, group in frame_groups.items():
+        if not group.get("valid") or scenario not in names:
+            continue
+        images: list[Image.Image] = []
+        for relative in group.get("frames", []):
+            path = ROOT / str(relative)
+            try:
+                with Image.open(path) as image:
+                    images.append(image.convert("RGB"))
+            except (OSError, ValueError):
+                images = []
+                break
+        if len(images) != 4:
+            continue
+        target = directory / names[scenario]
+        images[0].save(target, save_all=True, append_images=images[1:], duration=900, loop=0, optimize=True)
+        for image in images:
+            image.close()
+        if target.stat().st_size <= 3 * 1024 * 1024:
+            outputs.append(_safe_rel(target))
+    return outputs
+
+
 def _capture_browser_frames(password: str, customer_username: str, directory: Path) -> list[str]:
+    """Backward-compatible helper for older local capture scripts."""
     try:
         from field_browser_support import BrowserSession
     except ImportError:

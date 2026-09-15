@@ -12,10 +12,13 @@ import argparse
 import hashlib
 import json
 import os
+import re
 import sys
 import time
 import uuid
 from pathlib import Path
+
+import httpx
 
 
 SERVICE_ROOT = Path(__file__).resolve().parents[1]
@@ -53,6 +56,58 @@ SHOWCASE_CASES = {
     "clarify_pause_resume": "agent-open-001",
     "fact_change_replan": "agent-open-021",
 }
+
+
+def _atomic_create_json(path: Path, payload: dict[str, object]) -> None:
+    """Create a lock without allowing an existing release to be overwritten."""
+
+    path.parent.mkdir(parents=True, exist_ok=True)
+    encoded = (json.dumps(payload, ensure_ascii=False, indent=2) + "\n").encode("utf-8")
+    descriptor = os.open(str(path), os.O_CREAT | os.O_EXCL | os.O_WRONLY)
+    try:
+        with os.fdopen(descriptor, "wb") as handle:
+            handle.write(encoded)
+    except Exception:
+        try:
+            path.unlink()
+        except OSError:
+            pass
+        raise
+
+
+def _atomic_replace_json(path: Path, payload: dict[str, object]) -> None:
+    temporary = path.with_name(f".{path.name}.{uuid.uuid4().hex}.tmp")
+    temporary.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    os.replace(temporary, path)
+
+
+def _runtime_identity(runtime_commit: str) -> tuple[bool, str]:
+    """Check the already-running container without making a provider call."""
+
+    expected = {
+        "runtimeCommit": runtime_commit,
+        "imageRevision": runtime_commit,
+        "providerMode": "live",
+        "model": "deepseek-flash",
+        "thinkingMode": DEEPSEEK_THINKING_MODE,
+        "reasoningEffort": DEEPSEEK_REASONING_EFFORT,
+        "promptVersion": RUNTIME_PROMPT_VERSION,
+        "skillCatalogVersion": SKILL_CATALOG_VERSION,
+    }
+    try:
+        response = httpx.get(
+            os.getenv("MALL_RUNTIME_VERSION_URL", "http://127.0.0.1:8000/health/version"),
+            timeout=5,
+            trust_env=False,
+        )
+        payload = response.json()
+    except (httpx.HTTPError, ValueError, TypeError):
+        return False, "runtime_identity_unavailable"
+    if response.status_code != 200 or not isinstance(payload, dict):
+        return False, "runtime_identity_unavailable"
+    if any(payload.get(key) != value for key, value in expected.items()):
+        return False, "runtime_identity_mismatch"
+    return True, "ok"
 
 
 def _sha256(path: Path) -> str:
@@ -283,6 +338,21 @@ def _run_candidate(ledger: dict[str, object], report_dir: Path) -> dict[str, obj
         ledger["endedAt"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
         return {"status": ledger["status"], **reports}
 
+    # A live showcase must have produced provider events in the shared ledger.
+    # This catches a deterministic/replay container accidentally serving the
+    # public endpoints before any paid evaluation is started.
+    _sync_process_ledger(ledger)
+    if int(ledger.get("providerRequests", 0) or 0) <= 0:
+        ledger["status"] = "failed"
+        ledger["failureCategory"] = "ledger_mismatch"
+        ledger["endedAt"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+        return {"status": "failed", "failureCategory": "ledger_mismatch", **reports}
+    if int(ledger.get("providerFailures", 0) or 0) > 0:
+        ledger["status"] = "failed"
+        ledger["failureCategory"] = "provider_failure"
+        ledger["endedAt"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+        return {"status": "failed", "failureCategory": "provider_failure", **reports}
+
     main = run_live_model_agent_evaluation(
         suite_path=DEFAULT_SUITE_PATH,
         required_runs=3,
@@ -352,10 +422,17 @@ def main() -> int:
     parser.add_argument("--release-id", required=True)
     parser.add_argument("--runtime-commit", required=True)
     parser.add_argument("--report", type=Path, required=True)
-    parser.add_argument("--lock", type=Path, default=RELEASE_LOCK_PATH)
+    parser.add_argument("--lock", type=Path, default=None)
     args = parser.parse_args()
 
-    lock_path = args.lock if args.lock.is_absolute() else REPOSITORY_ROOT / args.lock
+    if args.lock is None:
+        lock_path = (
+            REPOSITORY_ROOT / f"docs/evidence/deepseek-release-lock-v3.0.1-final-{args.runtime_commit}.json"
+            if args.phase == "candidate"
+            else RELEASE_LOCK_PATH
+        )
+    else:
+        lock_path = args.lock if args.lock.is_absolute() else REPOSITORY_ROOT / args.lock
 
     # Once a release has consumed its two paid batches, the release id is
     # permanently closed.  This guard is intentionally checked before any
@@ -379,6 +456,15 @@ def main() -> int:
     if settings.deepseek_model != "deepseek-flash":
         print("deepseek release batch refused: reviewed model is not deepseek-flash", file=sys.stderr)
         return 3
+
+    if args.phase == "candidate":
+        if not re.fullmatch(r"[0-9a-f]{40}", args.runtime_commit):
+            print("deepseek release batch refused: runtime commit must be a full SHA", file=sys.stderr)
+            return 3
+        identity_ok, identity_reason = _runtime_identity(args.runtime_commit)
+        if not identity_ok:
+            print(f"deepseek release batch refused: {identity_reason}", file=sys.stderr)
+            return 3
 
     batch_id = f"{args.phase}-{uuid.uuid4().hex[:12]}"
     ledger = _base_ledger(
@@ -404,13 +490,47 @@ def main() -> int:
         print(json.dumps({"status": "environment_blocked", "batchId": batch_id}, ensure_ascii=False))
         return 2
 
-    report = (
-        _run_showcase(ledger)
-        if args.phase == "showcase"
-        else _run_final(ledger)
-        if args.phase == "final"
-        else _run_candidate(ledger, args.report.parent / f"{batch_id}-artifacts")
-    )
+    os.environ["MALL_RELEASE_BATCH_ID"] = batch_id
+    lock_payload: dict[str, object] = {
+        "schemaVersion": "deepseek-release-lock.v2",
+        "releaseId": args.release_id,
+        "batchIds": [batch_id],
+        "runtimeCommit": args.runtime_commit,
+        "status": "RUNNING",
+        "testRunComplete": False,
+        "releaseQualified": False,
+        "requests": 0,
+        "totalTokens": 0,
+    }
+    lock_created = False
+    if args.phase == "candidate":
+        try:
+            _atomic_create_json(lock_path, lock_payload)
+            lock_created = True
+        except FileExistsError:
+            print(json.dumps({"status": "release_locked", "releaseId": args.release_id}, ensure_ascii=False), file=sys.stderr)
+            return 4
+
+    report: dict[str, object]
+    try:
+        report = (
+            _run_showcase(ledger)
+            if args.phase == "showcase"
+            else _run_final(ledger)
+            if args.phase == "final"
+            else _run_candidate(ledger, args.report.parent / f"{batch_id}-artifacts")
+        )
+    except KeyboardInterrupt:
+        ledger["status"] = "interrupted"
+        ledger["failureCategory"] = "interrupted"
+        report = {"status": "interrupted", "failureCategory": "interrupted"}
+    except Exception:
+        # The release record is intentionally safe even when a local runner
+        # implementation raises unexpectedly.  Do not write a traceback or
+        # provider response into the report.
+        ledger["status"] = "failed"
+        ledger["failureCategory"] = "runner_exception"
+        report = {"status": "failed", "failureCategory": "runner_exception"}
     ledger["testRunComplete"] = bool(
         args.phase == "candidate"
         and isinstance(report, dict)
@@ -436,27 +556,17 @@ def main() -> int:
             ensure_ascii=False,
         )
     )
-    if args.phase == "candidate":
-        lock_path.parent.mkdir(parents=True, exist_ok=True)
-        lock_path.write_text(
-            json.dumps(
-                {
-                    "schemaVersion": "deepseek-release-lock.v1",
-                    "releaseId": args.release_id,
-                    "batchIds": [batch_id],
-                    "runtimeCommit": args.runtime_commit,
-                    "status": ledger.get("status"),
-                    "testRunComplete": ledger.get("testRunComplete"),
-                    "releaseQualified": ledger.get("releaseQualified"),
-                    "requests": ledger.get("requests"),
-                    "totalTokens": ledger.get("totalTokens"),
-                },
-                ensure_ascii=False,
-                indent=2,
-            )
-            + "\n",
-            encoding="utf-8",
+    if lock_created:
+        lock_payload.update(
+            {
+                "status": "PASSED" if ledger.get("status") == "passed" else "INTERRUPTED" if ledger.get("status") == "interrupted" else "FAILED",
+                "testRunComplete": ledger.get("testRunComplete"),
+                "releaseQualified": ledger.get("releaseQualified"),
+                "requests": ledger.get("requests"),
+                "totalTokens": ledger.get("totalTokens"),
+            }
         )
+        _atomic_replace_json(lock_path, lock_payload)
     return 2 if ledger.get("status") == "environment_blocked" else 1 if ledger.get("status") == "failed" else 0
 
 

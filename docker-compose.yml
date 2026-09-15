@@ -177,6 +177,10 @@ services:
   mall-ai-service:
     build:
       context: ./mall-ai-service
+      args:
+        RUNTIME_COMMIT: ${MALL_RUNTIME_COMMIT:-unknown}
+    labels:
+      org.opencontainers.image.revision: ${MALL_RUNTIME_COMMIT:-unknown}
     logging: *default-logging
     env_file:
       # A fresh public clone can still start the non-model parts of the demo
@@ -207,6 +211,7 @@ services:
       MALL_RUNTIME_PROVIDER_MODE: ${MALL_RUNTIME_PROVIDER_MODE:-live}
       MALL_RELEASE_LEDGER_PATH: /app/release-ledger/ledger.jsonl
       MALL_RUNTIME_COMMIT: ${MALL_RUNTIME_COMMIT:-unknown}
+      MALL_IMAGE_REVISION: ${MALL_IMAGE_REVISION:-unknown}
       MALL_PROMPT_VERSION: ${MALL_PROMPT_VERSION:-agent_runtime_v3_3}
       MALL_SCHEMA_VERSION: ${MALL_SCHEMA_VERSION:-task_runtime_v3_0}
     ports:

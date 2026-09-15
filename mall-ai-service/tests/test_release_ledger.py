@@ -18,6 +18,7 @@ from app.services.release_ledger import (
     release_ledger_context,
     summarize_release_events,
 )
+from scripts.run_deepseek_release_batch import _atomic_create_json, _atomic_replace_json
 
 
 class _FakeProviderHandler(BaseHTTPRequestHandler):
@@ -47,6 +48,16 @@ class _FakeProviderHandler(BaseHTTPRequestHandler):
 
 
 class ReleaseLedgerTests(unittest.TestCase):
+    def test_release_lock_create_is_exclusive_and_final_update_is_atomic(self) -> None:
+        with TemporaryDirectory() as directory:
+            lock = Path(directory) / "deepseek-release-lock-v3.0.1-final-test.json"
+            running = {"releaseId": "release-test", "status": "RUNNING"}
+            _atomic_create_json(lock, running)
+            with self.assertRaises(FileExistsError):
+                _atomic_create_json(lock, running)
+            _atomic_replace_json(lock, {"releaseId": "release-test", "status": "PASSED"})
+            self.assertEqual("PASSED", json.loads(lock.read_text(encoding="utf-8"))["status"])
+
     def test_local_fake_provider_records_three_successes_and_one_failure(self) -> None:
         _FakeProviderHandler.calls = 0
         server = ThreadingHTTPServer(("127.0.0.1", 0), _FakeProviderHandler)
