@@ -75,6 +75,7 @@ from app.skills.commerce_gateway import (
 )
 from app.services.trace_service import record_trace
 from app.services.identifier_extraction import extract_order_sn, extract_sku_id
+from app.services.llm_observability import capture_llm_metrics
 
 
 class TaskRuntimeError(RuntimeError):
@@ -148,11 +149,7 @@ class TaskRuntime:
             success_criteria=list(success_criteria or [])[:6],
             status="planning",
             plan_version=1,
-            execution_budget=(
-                execution_budget.model_copy(deep=True)
-                if execution_budget is not None
-                else TaskExecutionBudget()
-            ),
+            execution_budget=self._bounded_execution_budget(execution_budget),
             expires_at=now + settings.agent_task_ttl_seconds,
         )
         bundle = TaskRecordBundle(task=task)
@@ -318,6 +315,7 @@ class TaskRuntime:
     ) -> TaskRuntimeResult:
         task = bundle.task
         started = self._now()
+        deadline_at = started + task.execution_budget.max_wall_clock_seconds
         # Identifier parsing is a syntax/ownership boundary, not intent
         # routing.  These values are available only for this request's model
         # turn and are never persisted in the task record, trace, or DTO.
@@ -339,7 +337,7 @@ class TaskRuntime:
         repeated_discovery = 0
         executed_read_signatures: set[str] = set()
         while True:
-            if self._now() - started > task.execution_budget.max_wall_clock_seconds:
+            if self._now() >= deadline_at:
                 self._block(bundle, "wall_clock_budget_exhausted", "任务达到时间预算，已安全停止。")
                 break
             if task.model_calls >= task.execution_budget.max_model_calls:
@@ -395,11 +393,24 @@ class TaskRuntime:
                 limitation_codes=list(task.limitation_codes[-8:]),
             )
             try:
-                decision = self._provider.decide(context)
+                remaining = self._remaining_seconds(deadline_at)
+                if remaining <= 0:
+                    self._block(bundle, "runtime_deadline_exceeded", "任务运行时间达到安全上限，已停止等待。")
+                    break
+                with capture_llm_metrics(
+                    timeout_seconds=min(settings.executor_timeout_seconds, remaining),
+                    max_attempts=1,
+                ):
+                    decision = self._provider.decide(context)
                 task.model_calls += 1
             except RuntimeModelError as exc:
                 task.model_calls += 1
-                self._block(bundle, f"model_{exc.category}", "任务模型暂时不可用，任务已安全暂停；未调用业务 Skill。")
+                failure_code = (
+                    "runtime_deadline_exceeded"
+                    if self._remaining_seconds(deadline_at) <= 0
+                    else f"model_{exc.category}"
+                )
+                self._block(bundle, failure_code, "任务模型暂时不可用，任务已安全暂停；未调用业务 Skill。")
                 record_trace(
                     "task_runtime",
                     "model_unavailable",
@@ -461,19 +472,40 @@ class TaskRuntime:
                     transient_input += " 重复发现不会产生事实，必须推进到下一种决策。"
                 continue
             if decision.decision == "call_skill":
+                if self._remaining_seconds(deadline_at) <= 0:
+                    self._block(bundle, "runtime_deadline_exceeded", "任务运行时间达到安全上限，已停止执行。")
+                    break
                 self._execute_skill_calls(bundle, decision, authorization, member_id)
                 executed_read_signatures.update(
                     self._read_signature(call.skill_id, call.arguments)
                     for call in decision.skill_calls
                 )
-                self._refresh_context(bundle, discovered)
-                if bundle.artifacts and self._critic.should_trigger(
-                    artifacts=bundle.artifacts,
-                    skill_calls=task.tool_calls,
-                    has_action=False,
-                    has_conflict=self._has_conflict(bundle),
-                ):
-                    self._maybe_critic(bundle)
+                try:
+                    self._refresh_context(bundle, discovered, deadline_at=deadline_at)
+                    if bundle.artifacts and self._critic.should_trigger(
+                        artifacts=bundle.artifacts,
+                        skill_calls=task.tool_calls,
+                        has_action=False,
+                        has_conflict=self._has_conflict(bundle),
+                    ):
+                        self._maybe_critic(bundle, deadline_at=deadline_at)
+                except RuntimeModelError as exc:
+                    failure_code = (
+                        "runtime_deadline_exceeded"
+                        if self._remaining_seconds(deadline_at) <= 0 or exc.category == "runtime_deadline_exceeded"
+                        else f"model_{exc.category}"
+                    )
+                    self._block(bundle, failure_code, "任务上下文服务暂时不可用，已安全停止；未执行业务写入。")
+                    record_trace(
+                        "task_runtime",
+                        "context_unavailable",
+                        task.task_ref,
+                        role=exc.role,
+                        result_kind="blocked",
+                        error_category=exc.category,
+                        **exc.diagnostics,
+                    )
+                    break
                 self._save(bundle)
                 transient_input = "观察刚刚获得的事实并决定是否需要继续、重规划或结束"
                 continue
@@ -528,6 +560,17 @@ class TaskRuntime:
             profile_version="v3_0",
         )
         return TaskRuntimeResult(self._public_view(bundle), list(bundle.events))
+
+    def _remaining_seconds(self, deadline_at: float) -> float:
+        return deadline_at - self._now()
+
+    @staticmethod
+    def _bounded_execution_budget(execution_budget: TaskExecutionBudget | None) -> TaskExecutionBudget:
+        budget = execution_budget.model_copy(deep=True) if execution_budget is not None else TaskExecutionBudget()
+        maximum = min(240, max(10, int(settings.agent_runtime_max_wall_clock_seconds)))
+        if budget.max_wall_clock_seconds > maximum:
+            budget = budget.model_copy(update={"max_wall_clock_seconds": maximum})
+        return budget
 
     def _preflight_required_input_question(
         self,
@@ -1044,17 +1087,30 @@ class TaskRuntime:
                 bundle.task.limitation_codes.append(code)
         return artifact
 
-    def _refresh_context(self, bundle: TaskRecordBundle, discovered: list[SkillDefinition]) -> ContextPack | None:
+    def _refresh_context(
+        self,
+        bundle: TaskRecordBundle,
+        discovered: list[SkillDefinition],
+        *,
+        deadline_at: float | None = None,
+    ) -> ContextPack | None:
         plan = bundle.latest_plan()
         if plan is None:
             return None
-        pack = self._curator.build_pack(
-            task=bundle.task,
-            plan=plan,
-            artifacts=bundle.artifacts[-24:],
-            memory_hints=bundle.memory_hints[-8:],
-            available_skills=[skill.skill_id for skill in discovered],
-        )
+        remaining = self._remaining_seconds(deadline_at) if deadline_at is not None else settings.context_timeout_seconds
+        if remaining <= 0:
+            raise RuntimeModelError("任务运行时间达到安全上限。", role="context_curator", category="runtime_deadline_exceeded")
+        with capture_llm_metrics(
+            timeout_seconds=min(settings.context_timeout_seconds, remaining),
+            max_attempts=1,
+        ):
+            pack = self._curator.build_pack(
+                task=bundle.task,
+                plan=plan,
+                artifacts=bundle.artifacts[-24:],
+                memory_hints=bundle.memory_hints[-8:],
+                available_skills=[skill.skill_id for skill in discovered],
+            )
         bundle.context_packs.append(pack)
         bundle.task.context_model_calls += 1
         bundle.task.context_pack_ref = pack.pack_id
@@ -1062,11 +1118,18 @@ class TaskRuntime:
         bundle.memory_hints.extend(pack.memory_hints[-4:])
         return pack
 
-    def _maybe_critic(self, bundle: TaskRecordBundle) -> None:
+    def _maybe_critic(self, bundle: TaskRecordBundle, *, deadline_at: float | None = None) -> None:
         plan = bundle.latest_plan()
         if plan is None:
             return
-        critique = self._critic.evaluate(task_ref=bundle.task.task_ref, plan=plan, artifacts=bundle.artifacts[-12:])
+        remaining = self._remaining_seconds(deadline_at) if deadline_at is not None else settings.critic_timeout_seconds
+        if remaining <= 0:
+            raise RuntimeModelError("任务运行时间达到安全上限。", role="resolution_critic", category="runtime_deadline_exceeded")
+        with capture_llm_metrics(
+            timeout_seconds=min(settings.critic_timeout_seconds, remaining),
+            max_attempts=1,
+        ):
+            critique = self._critic.evaluate(task_ref=bundle.task.task_ref, plan=plan, artifacts=bundle.artifacts[-12:])
         if critique is None:
             return
         bundle.task.critic_calls += 1

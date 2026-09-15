@@ -155,12 +155,25 @@ class Settings:
     )
     agent_task_ttl_seconds: int = int(os.getenv("AGENT_TASK_TTL_SECONDS", "86400"))
     agent_task_event_limit: int = int(os.getenv("AGENT_TASK_EVENT_LIMIT", "64"))
+    # A synchronous task request may run long enough for bounded multi-step
+    # planning, but the application deadline must remain below the public
+    # gateway timeout.  The v3.0.2 contract caps this at 240 seconds.
+    agent_runtime_max_wall_clock_seconds: int = min(
+        240,
+        max(10, int(os.getenv("AGENT_RUNTIME_MAX_WALL_CLOCK_SECONDS", "240"))),
+    )
     executor_model: str = os.getenv("EXECUTOR_MODEL", os.getenv("DEEPSEEK_MODEL", "deepseek-flash"))
     context_model: str = os.getenv("CONTEXT_MODEL", os.getenv("DEEPSEEK_MODEL", "deepseek-flash"))
     critic_model: str = os.getenv("CRITIC_MODEL", os.getenv("DEEPSEEK_MODEL", "deepseek-flash"))
     executor_timeout_seconds: float = float(os.getenv("EXECUTOR_TIMEOUT_SECONDS", "45"))
     context_timeout_seconds: float = float(os.getenv("CONTEXT_TIMEOUT_SECONDS", "20"))
     critic_timeout_seconds: float = float(os.getenv("CRITIC_TIMEOUT_SECONDS", "20"))
+    # Test-only deterministic delay used by the one-shot slow gateway gate.
+    # It is ignored by live providers and defaults to zero.
+    deterministic_provider_delay_seconds: float = min(
+        120.0,
+        max(0.0, float(os.getenv("MALL_DETERMINISTIC_PROVIDER_DELAY_SECONDS", "0"))),
+    )
 
 
 settings = Settings()

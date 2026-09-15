@@ -36,7 +36,14 @@ def _member(authorization: str | None):
 
 
 def _handle_runtime_error(exc: TaskRuntimeError) -> None:
-    raise HTTPException(status_code=exc.status_code, detail=str(exc)) from exc
+    # Keep the public body generic while exposing a bounded machine category to
+    # the gateway-aware verifier.  No prompt, task id or provider payload is
+    # returned in this header.
+    raise HTTPException(
+        status_code=exc.status_code,
+        detail=str(exc),
+        headers={"X-Mall-Failure-Code": exc.code},
+    ) from exc
 
 
 @router.post("", response_model=AgentTaskPublicView, status_code=201)

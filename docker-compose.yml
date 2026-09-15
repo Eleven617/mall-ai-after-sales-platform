@@ -214,12 +214,16 @@ services:
       MALL_IMAGE_REVISION: ${MALL_IMAGE_REVISION:-unknown}
       MALL_PROMPT_VERSION: ${MALL_PROMPT_VERSION:-agent_runtime_v3_3}
       MALL_SCHEMA_VERSION: ${MALL_SCHEMA_VERSION:-task_runtime_v3_0}
+      MALL_DETERMINISTIC_PROVIDER_DELAY_SECONDS: ${MALL_DETERMINISTIC_PROVIDER_DELAY_SECONDS:-0}
     ports:
       - "8000:8000"
     volumes:
       - ./mall-ai-service/chroma_data:/app/chroma_data
       - ./mall-ai-service/models:/app/models:ro
-      - ./tmp/release-ledger:/app/release-ledger
+      # The host runner and the container must append to the same metadata-only
+      # JSONL.  v3.0.2 can point this at an isolated ignored ledger while the
+      # default keeps the historical local-demo path unchanged.
+      - ${MALL_RELEASE_LEDGER_HOST_PATH:-./tmp/release-ledger}:/app/release-ledger
     depends_on:
       redis:
         condition: service_healthy

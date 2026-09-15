@@ -54,6 +54,16 @@ FORBIDDEN_PUBLIC_FIELDS = {
 
 
 SAFE_FAILURE_CODES = {
+    # Transport/runtime categories are intentionally separate from scenario
+    # assertions so a gateway failure can be diagnosed without retaining a
+    # response body.
+    "gateway_timeout",
+    "client_read_timeout",
+    "runtime_deadline_exceeded",
+    "provider_timeout",
+    "provider_http_failure",
+    "schema_failure",
+    "scenario_assertion_failure",
     "fixture_prepare_failed",
     "login_failed",
     "conversation_create_failed",
@@ -164,9 +174,15 @@ def run_real_local_showcase(
         api_base = web_base + "/api"
         java_base = os.getenv("MALL_JAVA_BASE_URL", "http://127.0.0.1:8085").rstrip("/")
         admin_base = os.getenv("MALL_ADMIN_BASE_URL", "http://127.0.0.1:8080").rstrip("/")
+        runner_timeout = httpx.Timeout(
+            float(os.getenv("MALL_RUNNER_READ_TIMEOUT_SECONDS", "330")),
+            connect=10.0,
+            write=10.0,
+            pool=10.0,
+        )
         try:
             with httpx.Client(
-                timeout=60,
+                timeout=runner_timeout,
                 trust_env=False,
                 headers={"X-Mall-Release-Batch-Id": batch_id},
             ) as client:
@@ -299,7 +315,12 @@ def _agent_closed_loop(
         f"订单号：{order_sn}，申请取消退款，完成售后闭环",
     )
     if created.get("status") != "ready_to_commit" or not isinstance(created.get("action"), dict):
-        raise ShowcaseError("closed_loop_proposal_missing", stage="proposal", completed_steps=1)
+        raise ShowcaseError(
+            _task_failure_code(created, fallback="scenario_assertion_failure"),
+            stage="agent_task_create",
+            completed_steps=1,
+            model_called=bool(created.get("limitation_codes")),
+        )
     task_ref = created.get("task_ref")
     if not isinstance(task_ref, str):
         raise ShowcaseError("closed_loop_proposal_missing", stage="proposal", completed_steps=1)
@@ -476,27 +497,45 @@ def _agent_fact_change_replan(
 
 
 def _create_agent_task(client: httpx.Client, api_base: str, auth: str, session_id: str, goal: str) -> dict[str, Any]:
-    response = client.post(
-        f"{api_base}/agent-tasks",
-        headers={"Authorization": auth},
-        json={"session_id": session_id, "goal": goal, "success_criteria": ["事实已核验"]},
-    )
-    payload = _json_object(response)
+    try:
+        response = client.post(
+            f"{api_base}/agent-tasks",
+            headers={"Authorization": auth},
+            json={"session_id": session_id, "goal": goal, "success_criteria": ["事实已核验"]},
+        )
+    except httpx.TimeoutException as exc:
+        raise ShowcaseError("client_read_timeout", stage="agent_task_create") from exc
+    except httpx.HTTPError as exc:
+        raise ShowcaseError("gateway_timeout", stage="agent_task_create") from exc
     if response.status_code != 201:
-        raise ShowcaseError("agent_task_create_failed", stage="agent_task_create", http_status_class=_status_class(response.status_code))
+        raise ShowcaseError(
+            _response_failure_code(response),
+            stage="agent_task_create",
+            http_status_class=_status_class(response.status_code),
+        )
+    payload = _json_object(response)
     _assert_task_public(payload)
     return payload
 
 
 def _continue_agent_task(client: httpx.Client, api_base: str, auth: str, task_ref: str, message: str) -> dict[str, Any]:
-    response = client.post(
-        f"{api_base}/agent-tasks/{task_ref}/messages",
-        headers={"Authorization": auth},
-        json={"message": message},
-    )
-    payload = _json_object(response)
+    try:
+        response = client.post(
+            f"{api_base}/agent-tasks/{task_ref}/messages",
+            headers={"Authorization": auth},
+            json={"message": message},
+        )
+    except httpx.TimeoutException as exc:
+        raise ShowcaseError("client_read_timeout", stage="agent_task_continue") from exc
+    except httpx.HTTPError as exc:
+        raise ShowcaseError("gateway_timeout", stage="agent_task_continue") from exc
     if response.status_code != 200:
-        raise ShowcaseError("agent_task_resume_failed", stage="agent_task_continue", http_status_class=_status_class(response.status_code))
+        raise ShowcaseError(
+            _response_failure_code(response),
+            stage="agent_task_continue",
+            http_status_class=_status_class(response.status_code),
+        )
+    payload = _json_object(response)
     _assert_task_public(payload)
     return payload
 
@@ -511,11 +550,16 @@ def _confirm_agent_task(client: httpx.Client, api_base: str, auth: str, task_ref
 
 
 def _confirm_agent_task_raw(client: httpx.Client, api_base: str, auth: str, task_ref: str, confirmation: str) -> httpx.Response:
-    return client.post(
-        f"{api_base}/agent-tasks/{task_ref}/action",
-        headers={"Authorization": auth},
-        json={"confirmation": confirmation},
-    )
+    try:
+        return client.post(
+            f"{api_base}/agent-tasks/{task_ref}/action",
+            headers={"Authorization": auth},
+            json={"confirmation": confirmation},
+        )
+    except httpx.TimeoutException as exc:
+        raise ShowcaseError("client_read_timeout", stage="java_commit") from exc
+    except httpx.HTTPError as exc:
+        raise ShowcaseError("gateway_timeout", stage="java_commit") from exc
 
 
 def _list_agent_events(client: httpx.Client, api_base: str, auth: str, task_ref: str) -> list[dict[str, Any]]:
@@ -530,6 +574,32 @@ def _assert_task_public(payload: dict[str, Any]) -> None:
     if not isinstance(payload.get("task_ref"), str) or not isinstance(payload.get("status"), str):
         raise ShowcaseError("public_answer_missing", stage="public_projection")
     _assert_no_forbidden(payload)
+
+
+def _response_failure_code(response: httpx.Response) -> str:
+    """Classify an HTTP failure without reading or persisting its body."""
+
+    header_code = response.headers.get("x-mall-failure-code", "").strip()
+    if header_code in SAFE_FAILURE_CODES:
+        return header_code
+    if response.status_code == 504 or response.status_code >= 500:
+        return "gateway_timeout"
+    return "scenario_assertion_failure"
+
+
+def _task_failure_code(payload: dict[str, Any], *, fallback: str) -> str:
+    codes = payload.get("limitation_codes")
+    if isinstance(codes, list):
+        for code in codes:
+            if code == "runtime_deadline_exceeded":
+                return "runtime_deadline_exceeded"
+            if code in {"model_timeout", "provider_timeout"}:
+                return "provider_timeout"
+            if code in {"model_provider_http_failure", "provider_http_failure", "model_provider_unavailable", "model_network"}:
+                return "provider_http_failure"
+            if code in {"model_invalid_response", "schema_failure", "invalid_executor_decision"}:
+                return "schema_failure"
+    return fallback
 
 
 def _status_class(status_code: int) -> str:

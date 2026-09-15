@@ -7,6 +7,7 @@ raises a categorized error and the task is blocked. Tests and offline evals use
 from __future__ import annotations
 
 import json
+import time
 from dataclasses import dataclass, field
 from typing import Any, Protocol
 
@@ -511,6 +512,8 @@ class DeterministicRuntimeProvider:
 
     def decide(self, context: RuntimeModelContext) -> ExecutorDecision:
         self.decision_calls += 1
+        if settings.deterministic_provider_delay_seconds > 0:
+            time.sleep(settings.deterministic_provider_delay_seconds)
         artifacts = list(context.artifact_details or [])
         artifact_kinds = {str(item.get("kind")) for item in artifacts}
         goal = context.goal

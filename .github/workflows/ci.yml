@@ -34,9 +34,7 @@ jobs:
       - name: Run v3 deterministic release preflight
         run: python scripts/run_v3_release_preflight.py --json
       - name: Run FastAPI regression suite
-        run: >-
-          python -m pytest -q
-          --junitxml=v3-fastapi-junit.xml
+        run: python scripts/run_fastapi_ci_report.py --junitxml=v3-fastapi-junit.xml --report=v3-fastapi-report.json
       - name: Upload FastAPI deterministic evidence
         if: always()
         uses: actions/upload-artifact@v7
@@ -44,6 +42,7 @@ jobs:
           name: fastapi-regression-evidence
           path: |
             mall-ai-service/v3-fastapi-junit.xml
+            mall-ai-service/v3-fastapi-report.json
           if-no-files-found: error
 
   java:
@@ -126,6 +125,7 @@ jobs:
 
   public-release:
     runs-on: ubuntu-latest
+    needs: python
     steps:
       - uses: actions/checkout@v7
         with:
@@ -133,5 +133,13 @@ jobs:
       - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
+      - name: Download the exact FastAPI report used by the Python gate
+        uses: actions/download-artifact@v7
+        with:
+          name: fastapi-regression-evidence
+          path: mall-ai-service/ci-evidence
       - name: Validate public claims, evidence links and release assets
+        env:
+          MALL_FASTAPI_REPORT: mall-ai-service/ci-evidence/v3-fastapi-report.json
+          MALL_FASTAPI_JUNIT: mall-ai-service/ci-evidence/v3-fastapi-junit.xml
         run: python scripts/validate_public_release.py

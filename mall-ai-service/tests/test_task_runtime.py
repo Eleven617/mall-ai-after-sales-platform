@@ -13,6 +13,7 @@ from types import SimpleNamespace
 from unittest.mock import patch
 
 import pytest
+from pydantic import ValidationError
 
 from app.runtime.providers import (
     CuratorModelOutput,
@@ -547,6 +548,13 @@ def test_model_failure_safely_blocks_before_any_skill_or_action() -> None:
     assert "model_timeout" in result.view.limitation_codes
     assert gateway.invocations == []
     assert gateway.commits == []
+
+
+def test_runtime_deadline_is_capped_at_240_seconds() -> None:
+    with pytest.raises(ValidationError):
+        TaskExecutionBudget(max_wall_clock_seconds=241)
+    bounded = TaskRuntime._bounded_execution_budget(TaskExecutionBudget(max_wall_clock_seconds=240))  # noqa: SLF001
+    assert bounded.max_wall_clock_seconds <= 240
 
 
 def test_runtime_cannot_finish_after_a_failed_fact_skill() -> None:

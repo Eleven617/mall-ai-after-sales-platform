@@ -102,7 +102,7 @@ class TaskExecutionBudget(BaseModel):
     max_model_calls: int = Field(default=6, ge=1, le=12)
     max_tool_calls: int = Field(default=8, ge=1, le=16)
     max_parallel_reads: int = Field(default=3, ge=1, le=4)
-    max_wall_clock_seconds: int = Field(default=90, ge=10, le=300)
+    max_wall_clock_seconds: int = Field(default=90, ge=10, le=240)
     max_provider_cost: float = Field(default=0.0, ge=0.0, le=50.0)
 
 

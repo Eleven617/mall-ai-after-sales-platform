@@ -204,12 +204,14 @@ def _merge_ledger_metrics(ledger: dict[str, object], reports: list[dict[str, obj
     ledger["endedAt"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
 
 
-def _sync_process_ledger(ledger: dict[str, object]) -> None:
+def _sync_process_ledger(ledger: dict[str, object]) -> bool:
     """Merge container and host JSONL events without mixing failure classes."""
 
     path = os.getenv("MALL_RELEASE_LEDGER_PATH")
     if not path:
-        return
+        ledger["ledgerReconciled"] = False
+        ledger["failureCategory"] = "ledger_mismatch"
+        return False
     summary = summarize_release_events(read_release_events(path, batch_id=str(ledger["batchId"])))
     ledger["providerRequests"] = summary["providerRequests"]
     ledger["requests"] = summary["providerRequests"]
@@ -223,6 +225,22 @@ def _sync_process_ledger(ledger: dict[str, object]) -> None:
     ledger["totalTokens"] = summary["totalTokens"]
     ledger["networkRetries"] = summary["networkRetries"]
     ledger["protocolCorrections"] = summary["protocolCorrections"]
+    ledger["ledgerReconciled"] = True
+    return True
+
+
+def _reconciled_report_metrics(ledger: dict[str, object]) -> dict[str, object]:
+    """Return the only provider counters allowed into a public batch report."""
+
+    return {
+        "providerRequests": int(ledger.get("providerRequests", 0) or 0),
+        "successfulRequests": int(ledger.get("successfulRequests", 0) or 0),
+        "failedRequests": int(ledger.get("failedRequests", 0) or 0),
+        "promptTokens": int(ledger.get("promptTokens", 0) or 0),
+        "completionTokens": int(ledger.get("completionTokens", 0) or 0),
+        "totalTokens": int(ledger.get("totalTokens", 0) or 0),
+        "ledgerReconciled": ledger.get("ledgerReconciled") is True,
+    }
 
 
 def _run_showcase(ledger: dict[str, object]) -> dict[str, object]:
@@ -332,8 +350,14 @@ def _run_candidate(ledger: dict[str, object], report_dir: Path) -> dict[str, obj
     )
     reports: dict[str, object] = {"realLocalShowcase": showcase}
     if showcase.get("status") != "passed":
-        _sync_process_ledger(ledger)
-        ledger["status"] = "environment_blocked" if showcase.get("status") == "environment_blocked" else "failed"
+        reconciled = _sync_process_ledger(ledger)
+        ledger["status"] = (
+            "failed"
+            if not reconciled
+            else "environment_blocked"
+            if showcase.get("status") == "environment_blocked"
+            else "failed"
+        )
         ledger["environmentBlocked"] = 1 if showcase.get("status") == "environment_blocked" else 0
         ledger["endedAt"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
         return {"status": ledger["status"], **reports}
@@ -341,7 +365,11 @@ def _run_candidate(ledger: dict[str, object], report_dir: Path) -> dict[str, obj
     # A live showcase must have produced provider events in the shared ledger.
     # This catches a deterministic/replay container accidentally serving the
     # public endpoints before any paid evaluation is started.
-    _sync_process_ledger(ledger)
+    if not _sync_process_ledger(ledger):
+        ledger["status"] = "failed"
+        ledger["failureCategory"] = "ledger_mismatch"
+        ledger["endedAt"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+        return {"status": "failed", "failureCategory": "ledger_mismatch", **reports}
     if int(ledger.get("providerRequests", 0) or 0) <= 0:
         ledger["status"] = "failed"
         ledger["failureCategory"] = "ledger_mismatch"
@@ -412,7 +440,9 @@ def _run_candidate(ledger: dict[str, object], report_dir: Path) -> dict[str, obj
         overall = "passed"
     ledger["status"] = overall
     ledger["endedAt"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
-    _sync_process_ledger(ledger)
+    if not _sync_process_ledger(ledger):
+        ledger["status"] = "failed"
+        ledger["failureCategory"] = "ledger_mismatch"
     return {"status": overall, **reports}
 
 
@@ -467,6 +497,7 @@ def main() -> int:
             return 3
 
     batch_id = f"{args.phase}-{uuid.uuid4().hex[:12]}"
+    os.environ["MALL_RELEASE_BATCH_ID"] = batch_id
     ledger = _base_ledger(
         batch_id=batch_id,
         release_id=args.release_id,
@@ -484,13 +515,14 @@ def main() -> int:
         ledger["environmentBlocked"] = 1
         ledger["failureCategory"] = "missing_configuration"
         ledger["endedAt"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
-        payload = {"ledger": ledger, "report": {"status": "environment_blocked"}}
+        if not _sync_process_ledger(ledger):
+            ledger["status"] = "failed"
+            ledger["failureCategory"] = "ledger_mismatch"
+        payload = {"ledger": ledger, "report": {"status": ledger["status"], "ledgerMetrics": _reconciled_report_metrics(ledger)}}
         args.report.parent.mkdir(parents=True, exist_ok=True)
         args.report.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-        print(json.dumps({"status": "environment_blocked", "batchId": batch_id}, ensure_ascii=False))
-        return 2
-
-    os.environ["MALL_RELEASE_BATCH_ID"] = batch_id
+        print(json.dumps({"status": ledger["status"], "batchId": batch_id}, ensure_ascii=False))
+        return 2 if ledger["status"] == "environment_blocked" else 1
     lock_payload: dict[str, object] = {
         "schemaVersion": "deepseek-release-lock.v2",
         "releaseId": args.release_id,
@@ -531,6 +563,14 @@ def main() -> int:
         ledger["status"] = "failed"
         ledger["failureCategory"] = "runner_exception"
         report = {"status": "failed", "failureCategory": "runner_exception"}
+    # Always reconcile before either the report or the immutable lock is
+    # written.  A missing host path is a gate failure, never a silent zero.
+    if args.phase in {"candidate", "final", "showcase"}:
+        if not _sync_process_ledger(ledger):
+            ledger["status"] = "failed"
+            ledger["failureCategory"] = "ledger_mismatch"
+    if isinstance(report, dict):
+        report["ledgerMetrics"] = _reconciled_report_metrics(ledger)
     ledger["testRunComplete"] = bool(
         args.phase == "candidate"
         and isinstance(report, dict)

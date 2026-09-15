@@ -19,6 +19,7 @@ from app.services.release_ledger import (
     summarize_release_events,
 )
 from scripts.run_deepseek_release_batch import _atomic_create_json, _atomic_replace_json
+from scripts.run_deepseek_release_batch import _sync_process_ledger
 
 
 class _FakeProviderHandler(BaseHTTPRequestHandler):
@@ -96,6 +97,53 @@ class ReleaseLedgerTests(unittest.TestCase):
             server.shutdown()
             server.server_close()
             thread.join(timeout=2)
+
+    def test_process_ledger_sync_binds_raw_events_and_fails_without_path(self) -> None:
+        with TemporaryDirectory() as directory:
+            ledger_path = Path(directory) / "release.jsonl"
+            with patch.dict(
+                "os.environ",
+                {
+                    "MALL_RELEASE_LEDGER_PATH": str(ledger_path),
+                    "MALL_RUNTIME_COMMIT": "a" * 40,
+                    "MALL_PROMPT_VERSION": "test_prompt",
+                    "MALL_SCHEMA_VERSION": "test_schema",
+                },
+                clear=False,
+            ):
+                with release_ledger_context(batch_id="sync-batch", path=ledger_path, source="test"):
+                    from app.services.release_ledger import append_release_event
+
+                    append_release_event(
+                        event_type="provider_request",
+                        operation="fake.decide",
+                        outcome="succeeded",
+                        prompt_tokens=2,
+                        completion_tokens=3,
+                        total_tokens=5,
+                    )
+                    append_release_event(
+                        event_type="scenario",
+                        operation="fake.scenario",
+                        outcome="failed",
+                        failure_class="scenario_failure",
+                        scenario="ledger_contract",
+                        stage="test",
+                        failure_code="scenario_assertion_failure",
+                    )
+                ledger = {"batchId": "sync-batch"}
+                self.assertTrue(_sync_process_ledger(ledger))
+                self.assertEqual(1, ledger["providerRequests"])
+                self.assertEqual(1, ledger["successfulRequests"])
+                self.assertEqual(5, ledger["totalTokens"])
+                self.assertEqual(1, ledger["scenarioFailures"])
+                self.assertTrue(ledger["ledgerReconciled"])
+
+            with patch.dict("os.environ", {}, clear=True):
+                ledger = {"batchId": "sync-batch"}
+                self.assertFalse(_sync_process_ledger(ledger))
+                self.assertFalse(ledger["ledgerReconciled"])
+                self.assertEqual("ledger_mismatch", ledger["failureCategory"])
 
 
 if __name__ == "__main__":

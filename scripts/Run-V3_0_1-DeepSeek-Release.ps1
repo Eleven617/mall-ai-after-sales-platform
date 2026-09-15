@@ -31,6 +31,9 @@ $env:MALL_RUNTIME_COMMIT = $RuntimeCommit
 $env:MALL_IMAGE_REVISION = $RuntimeCommit
 $env:MALL_PROMPT_VERSION = "agent_runtime_v3_3"
 $env:MALL_SCHEMA_VERSION = "task_runtime_v3_0"
+$ledgerDirectory = Join-Path $root "tmp\release-ledger"
+New-Item -ItemType Directory -Force -Path $ledgerDirectory | Out-Null
+$env:MALL_RELEASE_LEDGER_PATH = Join-Path $ledgerDirectory "ledger.jsonl"
 
 # The official candidate must use the same disposable password for the
 # employee/customer identities that the live showcase exercises.  Bootstrap
@@ -66,4 +69,5 @@ finally {
     Remove-Item Env:MALL_IMAGE_REVISION -ErrorAction SilentlyContinue
     Remove-Item Env:MALL_PROMPT_VERSION -ErrorAction SilentlyContinue
     Remove-Item Env:MALL_SCHEMA_VERSION -ErrorAction SilentlyContinue
+    Remove-Item Env:MALL_RELEASE_LEDGER_PATH -ErrorAction SilentlyContinue
 }
