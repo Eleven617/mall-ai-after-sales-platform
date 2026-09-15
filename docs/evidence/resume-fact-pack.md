@@ -2,7 +2,7 @@
 
 ## 当前事实快照｜v3.0.2 离线候选（2026-09-15）
 
-当前发布状态：**NOT_COMPLETE（等待远程 CI 与单独在线授权）**；冻结运行时代码 `061d60bb13004dc7df57a161b01e378335f8938c`，分支 `codex/v3.0.2-offline-candidate`。
+当前发布状态：**NOT_COMPLETE（离线候选与远程 CI 已通过，在线批次仍需单独授权）**；冻结运行时代码 `061d60bb13004dc7df57a161b01e378335f8938c`，分支 `codex/v3.0.2-offline-candidate`。证据提交 `dc7dee733ed056af054450df9b1399e199812539` 的 [`mall-ci`](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34978867905) 与 [`quality-evaluation`](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34978867657) 均为 success。
 
 本轮可核验事实：FastAPI **399 passed / 0 failed / 0 skipped**；v3 deterministic **478/478**、代表性 Runtime **8/8**；Java portal **14/14**、admin **6/6**、Spring context **1/1**；Vue build 通过；本机合成现场 Runner **122/122**（browser 24、Java/MySQL 30、fault 36、durable 32）；公共 Nginx 慢调用 **76.125 秒、HTTP 201、ready_to_commit、Provider 0、Java 写入 0**；deterministic/replay 展示链各 **3/3**、各 12 帧。
 

@@ -16,7 +16,7 @@
 
 现场报告：`tmp/offline-field-acceptance/field-20260915T133506Z-6b5f7e64/field-acceptance.json`，SHA-256 `fbf3e333ea09cc6010e6d1b67fdb82cb762cdb707a9561fb6478655291d00d84`，Fixture SHA-256 `ba77efdd1b2112d2a2dc50561cb3d7fcd041a48d07a00e7bf7611fac103cab6d`。慢调用报告 SHA-256 `7415253e3ee4b82c41ec2e00f7296d58f9f1e5160243b1d0ae59321e674e7652`；ledger SHA-256 `ce801099cd16a998bf39dae544425acb1fd5c6a6c353a1ce18035a1cb8a92323`。v3.0.1 的失败锁与报告未修改。
 
-当前不能宣称生产 SLA、真实用户泛化、真实支付/仓储/物流/维修履约或在线模型效果；远程 `mall-ci` 与 `quality-evaluation` 必须等本分支推送后以实际运行结果为准。 `environment_blocked=0` 仅适用于本次本机现场 Runner，不代表外部依赖在所有环境可用。
+当前分支的远程门禁已真实通过：[`mall-ci`](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34978867905)、[`quality-evaluation`](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34978867657)，对应提交 `dc7dee733ed056af054450df9b1399e199812539`。这不改变离线候选的边界：不能宣称生产 SLA、真实用户泛化、真实支付/仓储/物流/维修履约或在线模型效果；`environment_blocked=0` 仅适用于本次本机现场 Runner。
 
 ## 当前权威结论｜v3.0.1 在线验收（2026-09-15）
 

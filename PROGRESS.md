@@ -16,7 +16,7 @@
 ### 当前状态
 
 - `scripts/Test-V3_0_2-OfflineReadiness.ps1` 已真实通过：`OFFLINE_ACCEPTANCE_COMPLETE=true`、`SLOW_GATEWAY_TEST_PASSED=true`、`LEDGER_RECONCILIATION_PASSED=true`、`CI_VALIDATOR_DYNAMIC=true`、`EXTERNAL_PROVIDER_REQUESTS=0`、`V3_0_2_LIVE_READY=true`。报告 `docs/evidence/v3.0.2-live-readiness.json`，SHA-256 `0da05eefa8b4d036bc7cab2f2449eeed02d63e641d42d607e45287cf2577a29d`，18/18 检查通过。
-- 在线 DeepSeek 不在本轮范围。远程 `mall-ci` 和 `quality-evaluation` 需推送独立分支后等待真实结果，不能用历史 run 替代。
+- 在线 DeepSeek 不在本轮范围。证据提交 `dc7dee733ed056af054450df9b1399e199812539` 的远程 `mall-ci` [run 34978867905](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34978867905) 与 `quality-evaluation` [run 34978867657](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34978867657) 均真实 success；若追加证据提交，需再次以新 SHA 的结果为准。
 - v3.0.1 精确根因：`gateway_timeout_before_agent_completion`（Nginx 60 秒先于服务端最终形成 ready_to_commit 返回 504；不是 Provider 请求失败）。
 
 ### 尚未完成 / 不能宣称

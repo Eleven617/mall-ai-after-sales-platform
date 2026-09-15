@@ -2,7 +2,7 @@
 
 ## 当前权威记录｜v3.0.2 离线候选（2026-09-15）
 
-冻结 SHA `061d60bb13004dc7df57a161b01e378335f8938c`，分支 `codex/v3.0.2-offline-candidate`。当前发布状态 **NOT_COMPLETE**：离线条件已完成，等待该分支远程 `mall-ci`/`quality-evaluation` 和单独在线批次授权；本轮 DeepSeek/外部模型调用为 0。
+冻结 SHA `061d60bb13004dc7df57a161b01e378335f8938c`，分支 `codex/v3.0.2-offline-candidate`。当前发布状态 **NOT_COMPLETE**：离线条件与远程 `mall-ci`/`quality-evaluation` 已完成，在线批次仍需单独授权；本轮 DeepSeek/外部模型调用为 0。证据提交 `dc7dee733ed056af054450df9b1399e199812539` 的 [`mall-ci`](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34978867905) 与 [`quality-evaluation`](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34978867657) 均 success。
 
 | 门禁 | 结果 | 证据 |
 | --- | --- | --- |

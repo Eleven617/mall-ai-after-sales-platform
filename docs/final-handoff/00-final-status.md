@@ -2,7 +2,7 @@
 
 ## 当前权威快照｜v3.0.2 离线候选（2026-09-15）
 
-冻结 SHA `061d60bb13004dc7df57a161b01e378335f8938c`，分支 `codex/v3.0.2-offline-candidate`。`V3_0_2_LIVE_READY` 仅在离线条件下成立；发布状态仍 **NOT_COMPLETE**，等待本分支远程 Actions 和单独在线批次授权。
+冻结 SHA `061d60bb13004dc7df57a161b01e378335f8938c`，分支 `codex/v3.0.2-offline-candidate`。`V3_0_2_LIVE_READY` 已通过，且证据提交 `dc7dee733ed056af054450df9b1399e199812539` 的 [`mall-ci`](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34978867905) 与 [`quality-evaluation`](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34978867657) 均成功；发布状态仍 **NOT_COMPLETE**，因为在线模型批次尚未授权。
 
 - FastAPI：399 passed、0 failed、0 skipped；Java portal/admin/Spring：14/14、6/6、1/1；Vue build passed。
 - deterministic manifest/preflight：478/478、代表性 8/8；RAG 合同：21/21。

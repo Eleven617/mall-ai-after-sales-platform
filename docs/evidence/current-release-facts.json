@@ -125,7 +125,7 @@
     "showcase": {"status": "passed", "scenarios": [{"scenarioId": "deterministic", "status": "passed"}, {"scenarioId": "replay", "status": "passed"}]}
   },
   "releaseLedger": {"path": "tmp/release-ledger-v3.0.2/ledger.jsonl", "observedCandidateProviderRequests": 9, "observedCandidateSuccessfulRequests": 9, "observedCandidateFailedRequests": 0, "observedCandidateTotalTokens": 27329, "v3_0_2ProviderRequests": 0, "v3_0_2ProviderTokens": 0, "sha256": "ce801099cd16a998bf39dae544425acb1fd5c6a6c353a1ce18035a1cb8a92323"},
-  "ci": {"status": "pending_remote_final_sha", "testedCommit": "061d60bb13004dc7df57a161b01e378335f8938c", "mallCi": null, "qualityEvaluation": null, "mallCiConclusion": "pending_push", "qualityEvaluationConclusion": "pending_push", "previousRemoteRunsStale": true},
+  "ci": {"status": "passed", "testedCommit": "dc7dee733ed056af054450df9b1399e199812539", "mallCi": "https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34978867905", "qualityEvaluation": "https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34978867657", "mallCiConclusion": "success", "qualityEvaluationConclusion": "success", "previousRemoteRunsStale": true},
   "publicValidator": {"command": "python scripts/validate_public_release.py", "exitCode": 0, "status": "dynamic_report", "reason": "读取当前 FastAPI JUnit/sidecar，不再硬编码历史测试数量。"},
   "claims": {
     "testRunComplete": true,

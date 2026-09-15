@@ -92,7 +92,7 @@
     "grounding": "not_executed_after_candidate_failure",
     "limitation": "检索指标来自小型版本化合成政策集，不是答案准确率或生产 SLA。"
   },
-  "ci": {"status": "pending_remote_final_sha", "testedCommit": "061d60bb13004dc7df57a161b01e378335f8938c", "pushStatus": "pending_push", "previousRunsStale": true},
+  "ci": {"status": "passed", "testedCommit": "dc7dee733ed056af054450df9b1399e199812539", "mallCi": "https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34978867905", "qualityEvaluation": "https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34978867657", "pushStatus": "success", "previousRunsStale": true},
   "security": {"sideEffectsObserved": 0, "publicProjection": "safe DTO only", "secretsCommitted": false, "rawProviderPayloadsCommitted": false},
   "claims": {"testRunComplete": true, "releaseQualified": false, "productionAccuracy": false, "productionSla": false, "realUserGeneralization": false, "externalFulfillment": false}
 }
