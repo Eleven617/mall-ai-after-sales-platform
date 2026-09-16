@@ -77,6 +77,8 @@ _SAFE_DETAIL_KEYS = {
     "tool_call_count",
     "role",
     "skill_id",
+    "proposal_skill_id",
+    "execution_skill_id",
     "skill_version",
     "profile_id",
     "profile_version",
@@ -415,7 +417,7 @@ def _sanitize_details(details: dict[str, Any]) -> dict[str, Any]:
         elif key == "role":
             if value in _SAFE_ROLES:
                 safe_details[key] = value
-        elif key == "skill_id":
+        elif key in {"skill_id", "proposal_skill_id", "execution_skill_id"}:
             if value in _SAFE_SKILL_IDS:
                 safe_details[key] = value
         elif key in {"skill_version", "profile_id", "profile_version"}:

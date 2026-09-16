@@ -66,7 +66,13 @@ from app.runtime.task_store import (
     owner_ref_for_member,
     session_ref_for_session,
 )
-from app.skills.catalog import SkillDefinition, discovery_score, discover_skills, get_skill
+from app.skills.catalog import (
+    SkillDefinition,
+    confirmation_executor_skill,
+    discovery_score,
+    discover_skills,
+    get_skill,
+)
 from app.skills.commerce_gateway import (
     SafeCommerceSkillGateway,
     SkillGateway,
@@ -79,10 +85,18 @@ from app.services.llm_observability import capture_llm_metrics
 
 
 class TaskRuntimeError(RuntimeError):
-    def __init__(self, message: str, *, code: str = "runtime_error", status_code: int = 400) -> None:
+    def __init__(
+        self,
+        message: str,
+        *,
+        code: str = "runtime_error",
+        status_code: int = 400,
+        missing_keys: list[str] | None = None,
+    ) -> None:
         super().__init__(message)
         self.code = code
         self.status_code = status_code
+        self.missing_keys = list(missing_keys or [])
 
 
 @dataclass(frozen=True)
@@ -245,24 +259,136 @@ class TaskRuntime:
             return TaskRuntimeResult(self._public_view(bundle), list(bundle.events))
         if confirmation != "confirm":
             raise TaskRuntimeError("确认状态不合法。", code="invalid_confirmation")
-        skill = get_skill(proposal.action_skill)
+        proposal_skill = get_skill(proposal.action_skill)
+        executor_skill = confirmation_executor_skill(proposal.action_skill)
+        if proposal.confirmation_executor_skill_id is None:
+            # A record written before the v3.0.3 contract has no explicit
+            # executor.  Never infer one from the proposal name; block it in
+            # a persisted, user-safe state instead of raising/guessing.
+            proposal.confirmation_status = "blocked"
+            bundle.task.pending_action_ref = None
+            bundle.task.status = "blocked"
+            bundle.task.limitation_codes.append("confirmation_executor_missing")
+            self._append_event(bundle, "task_blocked", "待确认行动缺少受控执行映射，未执行任何业务写入。")
+            self._save(bundle)
+            return TaskRuntimeResult(self._public_view(bundle), list(bundle.events))
         if (
-            skill is None
-            or skill.action_mode not in {"draft", "commit", "async_task"}
-            or not skill.requires_confirmation
+            proposal_skill is None
+            or proposal_skill.action_mode not in {"draft", "commit", "async_task"}
+            or not proposal_skill.requires_confirmation
+            or executor_skill is None
+            or proposal.confirmation_executor_skill_id != executor_skill.skill_id
         ):
-            raise TaskRuntimeError("待确认行动不在受控提交白名单中。", code="action_skill_denied", status_code=403)
+            proposal.confirmation_status = "blocked"
+            bundle.task.pending_action_ref = None
+            bundle.task.status = "blocked"
+            bundle.task.limitation_codes.append("confirmation_executor_invalid")
+            self._append_event(bundle, "task_blocked", "待确认行动的执行映射未通过服务端目录校验，未执行任何业务写入。")
+            self._save(bundle)
+            record_trace(
+                "task_runtime",
+                "confirmation_rejected",
+                bundle.task.task_ref,
+                proposal_skill_id=proposal.action_skill,
+                execution_skill_id=proposal.confirmation_executor_skill_id,
+                result_kind="blocked",
+                contract_violation="confirmation_executor_invalid",
+            )
+            return TaskRuntimeResult(self._public_view(bundle), list(bundle.events))
         arguments = bundle.action_arguments.get(proposal.arguments_ref)
         if arguments is None:
             raise TaskRuntimeError("待确认行动参数已失效，请重新生成方案。", code="action_arguments_missing", status_code=409)
+        canonical_arguments = json.dumps(
+            arguments,
+            ensure_ascii=False,
+            sort_keys=True,
+            separators=(",", ":"),
+        ).encode("utf-8")
+        if hashlib.sha256(canonical_arguments).hexdigest() != proposal.content_hash:
+            proposal.confirmation_status = "blocked"
+            bundle.task.pending_action_ref = None
+            bundle.task.status = "blocked"
+            bundle.task.limitation_codes.append("proposal_content_hash_mismatch")
+            self._append_event(bundle, "task_blocked", "待确认行动内容校验失败，未执行任何业务写入。")
+            self._save(bundle)
+            record_trace(
+                "task_runtime",
+                "confirmation_rejected",
+                bundle.task.task_ref,
+                proposal_skill_id=proposal.action_skill,
+                execution_skill_id=executor_skill.skill_id,
+                result_kind="blocked",
+                contract_violation="proposal_content_hash_mismatch",
+            )
+            return TaskRuntimeResult(self._public_view(bundle), list(bundle.events))
+        if "idempotencyKey" in arguments:
+            proposal.confirmation_status = "blocked"
+            bundle.task.pending_action_ref = None
+            bundle.task.status = "blocked"
+            bundle.task.limitation_codes.append("model_idempotency_key_present")
+            self._append_event(bundle, "task_blocked", "待确认行动包含非服务端生成的幂等键，未执行任何业务写入。")
+            self._save(bundle)
+            return TaskRuntimeResult(self._public_view(bundle), list(bundle.events))
+        missing_keys = [
+            key
+            for key in executor_skill.confirmation_required_input_keys
+            if key not in arguments or arguments.get(key) in (None, "")
+        ]
+        if missing_keys:
+            proposal.confirmation_status = "blocked"
+            bundle.task.pending_action_ref = None
+            bundle.task.status = "waiting_for_user"
+            bundle.task.waiting_question = self._action_input_question(missing_keys)
+            bundle.task.limitation_codes.append("required_action_input_missing")
+            self._append_event(bundle, "waiting_for_user", bundle.task.waiting_question)
+            self._save(bundle)
+            return TaskRuntimeResult(self._public_view(bundle), list(bundle.events))
+        order_fact_ref = arguments.get("orderFactRef")
+        verified_order_artifacts = [
+            artifact
+            for artifact in bundle.artifacts
+            if artifact.kind == "order_fact"
+            and artifact.factuality == "verified"
+            and artifact.expires_at > self._now()
+        ]
+        if not isinstance(order_fact_ref, str) or not any(
+            artifact.reference == order_fact_ref for artifact in verified_order_artifacts
+        ):
+            proposal.confirmation_status = "blocked"
+            bundle.task.pending_action_ref = None
+            bundle.task.status = "blocked"
+            bundle.task.limitation_codes.append("commit_without_verified_order_fact")
+            self._append_event(bundle, "task_blocked", "提交行动缺少当前任务的有效订单事实，未执行任何业务写入。")
+            self._save(bundle)
+            return TaskRuntimeResult(self._public_view(bundle), list(bundle.events))
+        execution_arguments = {
+            "orderFactRef": order_fact_ref,
+            "applicationType": arguments.get("applicationType"),
+            # proposalRef is server-bound; a model-supplied value is never
+            # used to select the transaction gate.
+            "proposalRef": proposal.proposal_id,
+        }
+        if isinstance(arguments.get("actionRef"), str):
+            execution_arguments["actionRef"] = arguments["actionRef"]
+        execution_arguments["idempotencyKey"] = hashlib.sha256(
+            f"{bundle.task.task_id}:{proposal.proposal_id}:{proposal.content_hash}:{executor_skill.skill_id}".encode("utf-8")
+        ).hexdigest()[:32]
+        assert_safe_action_arguments(
+            execution_arguments,
+            allow_generated_idempotency_key=True,
+            allowed_opaque_references={
+                artifact.reference for artifact in bundle.artifacts
+            }
+            | {proposal.proposal_id},
+        )
         proposal.confirmation_status = "confirmed"
         bundle.task.status = "committing"
         self._append_event(bundle, "action_committed", "已收到客户确认，正在由受控领域服务复核执行。")
         self._save(bundle)
         try:
             observation = self._gateway.commit(
-                proposal.action_skill,
-                arguments,
+                executor_skill.skill_id,
+                execution_arguments,
                 authorization=authorization,
                 member_id=member_id,
                 task_ref=bundle.task.task_ref,
@@ -277,7 +403,15 @@ class TaskRuntime:
                 factuality="unavailable",
                 safe_facts={"failure_code": "commit_result_unknown"},
             )
-        self._record_observation(bundle, proposal.action_skill, observation)
+        self._record_observation(bundle, executor_skill.skill_id, observation)
+        record_trace(
+            "task_runtime",
+            "confirmation_execution",
+            bundle.task.task_ref,
+            proposal_skill_id=proposal.action_skill,
+            execution_skill_id=executor_skill.skill_id,
+            result_kind=observation.status,
+        )
         if observation.status == "succeeded":
             proposal.confirmation_status = "committed"
             bundle.task.status = "executing"
@@ -456,8 +590,23 @@ class TaskRuntime:
                 )
             except TaskRuntimeError as exc:
                 task.invalid_decisions += 1
-                self._block(bundle, exc.code, "任务决策未通过服务端能力校验，未执行任何业务动作。")
-                record_trace("task_runtime", "decision_rejected", task.task_ref, result_kind="blocked", contract_violation=exc.code)
+                if exc.code == "required_action_input_missing":
+                    task.status = "waiting_for_user"
+                    task.waiting_question = self._action_input_question(getattr(exc, "missing_keys", []))
+                    if exc.code not in task.limitation_codes:
+                        task.limitation_codes.append(exc.code)
+                    self._append_event(bundle, "waiting_for_user", task.waiting_question)
+                    self._save(bundle)
+                    record_trace(
+                        "task_runtime",
+                        "decision_waiting",
+                        task.task_ref,
+                        result_kind="pending",
+                        contract_violation=exc.code,
+                    )
+                else:
+                    self._block(bundle, exc.code, "任务决策未通过服务端能力校验，未执行任何业务动作。")
+                    record_trace("task_runtime", "decision_rejected", task.task_ref, result_kind="blocked", contract_violation=exc.code)
                 break
             if decision.decision == "discover_skills":
                 discovery_complete = True
@@ -737,20 +886,38 @@ class TaskRuntime:
                 raise TaskRuntimeError("行动 Skill 必须先经当前任务发现。", code="undiscovered_action_skill")
             if not skill.requires_confirmation:
                 raise TaskRuntimeError("行动 Skill 必须声明客户确认前置条件。", code="confirmation_contract_invalid")
+            executor = confirmation_executor_skill(skill.skill_id)
+            if executor is None:
+                raise TaskRuntimeError(
+                    "该行动尚未配置受控确认执行器。",
+                    code="confirmation_executor_not_configured",
+                )
             if not bundle.artifacts:
                 raise TaskRuntimeError("没有已核验事实，不能形成业务行动提案。", code="action_without_evidence")
             if self._skill_call_count(bundle, skill.skill_id) >= skill.max_calls_per_task:
                 raise TaskRuntimeError("当前行动 Skill 已达到该任务的调用上限。", code="skill_call_budget_exhausted")
             self._validate_skill_arguments(decision.action_skill, decision.action_arguments)
-            if skill.action_mode == "commit":
-                order_fact_ref = decision.action_arguments.get("orderFactRef")
-                verified_order_refs = {
-                    artifact.reference
-                    for artifact in bundle.artifacts
-                    if artifact.kind == "order_fact" and artifact.factuality == "verified" and artifact.expires_at > self._now()
-                }
-                if not isinstance(order_fact_ref, str) or order_fact_ref not in verified_order_refs:
-                    raise TaskRuntimeError("提交行动必须引用当前任务的已核验订单事实。", code="commit_without_verified_order_fact")
+            required_keys = executor.confirmation_required_input_keys
+            missing_keys = [
+                key
+                for key in required_keys
+                if key not in decision.action_arguments or decision.action_arguments.get(key) in (None, "")
+            ]
+            if missing_keys:
+                error = TaskRuntimeError(
+                    "行动提案缺少确认执行所需字段。",
+                    code="required_action_input_missing",
+                    missing_keys=missing_keys,
+                )
+                raise error
+            order_fact_ref = decision.action_arguments.get("orderFactRef")
+            verified_order_refs = {
+                artifact.reference
+                for artifact in bundle.artifacts
+                if artifact.kind == "order_fact" and artifact.factuality == "verified" and artifact.expires_at > self._now()
+            }
+            if not isinstance(order_fact_ref, str) or order_fact_ref not in verified_order_refs:
+                raise TaskRuntimeError("提交行动必须引用当前任务的已核验订单事实。", code="commit_without_verified_order_fact")
         if decision.decision == "revise_plan":
             if task.plan_version >= 99:
                 raise TaskRuntimeError("计划版本已达到上限。", code="plan_version_exhausted")
@@ -1220,16 +1387,15 @@ class TaskRuntime:
         skill = get_skill(decision.action_skill or "")
         if skill is None:
             raise TaskRuntimeError("行动 Skill 不存在。", code="action_skill_denied")
+        executor = confirmation_executor_skill(skill.skill_id)
+        if executor is None:
+            raise TaskRuntimeError("该行动尚未配置受控确认执行器。", code="confirmation_executor_not_configured")
         # Action arguments are a server-side vault entry. They contain only
         # opaque references, not order numbers, credentials or raw messages.
         action_arguments = dict(decision.action_arguments)
-        if skill.action_mode == "commit":
-            action_arguments["idempotencyKey"] = hashlib.sha256(
-                f"{bundle.task.task_id}:{bundle.task.plan_version}:{json.dumps(action_arguments, ensure_ascii=False, sort_keys=True)}".encode("utf-8")
-            ).hexdigest()[:32]
-        # The model may never choose an idempotency key.  It is generated only
-        # after the action schema/evidence checks and accepted by the vault
-        # validator through its explicit internal-only flag.
+        # The model may never choose an idempotency key. It is generated only
+        # during confirmation, after the proposal hash and current facts are
+        # revalidated by the Runtime.
         assert_safe_action_arguments(
             action_arguments,
             allow_generated_idempotency_key=skill.action_mode == "commit",
@@ -1244,6 +1410,7 @@ class TaskRuntime:
             proposal_id=new_proposal_id(),
             task_id=bundle.task.task_id,
             action_skill=skill.skill_id,
+            confirmation_executor_skill_id=executor.skill_id,
             arguments_ref=arguments_ref,
             expected_effect=decision.reason_summary,
             evidence_refs=[artifact.reference for artifact in bundle.artifacts[-8:]],
@@ -1261,6 +1428,14 @@ class TaskRuntime:
         else:
             bundle.task.status = "executing"
             self._append_event(bundle, "action_proposed", "已生成结构化行动提案。")
+
+    @staticmethod
+    def _action_input_question(missing_keys: list[str]) -> str:
+        questions = {
+            "orderFactRef": "请先补充或选择一笔已核验订单。",
+            "applicationType": "请补充售后类型：取消退款、退货退款、换货或维修。",
+        }
+        return " ".join(questions[key] for key in missing_keys if key in questions) or "请补充方案执行所需的信息后继续。"
 
     def _has_conflict(self, bundle: TaskRecordBundle) -> bool:
         return len({artifact.reference for artifact in bundle.artifacts[-12:]}) != len(bundle.artifacts[-12:])

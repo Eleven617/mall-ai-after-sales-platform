@@ -205,6 +205,13 @@ class ActionProposal(BaseModel):
     proposal_id: str = Field(pattern=r"^proposal-[a-z0-9]{8,32}$")
     task_id: str = Field(pattern=r"^task-[a-z0-9]{8,32}$")
     action_skill: str = Field(pattern=r"^[a-z][a-z0-9_]{2,63}$")
+    # The model-facing proposal Skill and the server-selected confirmation
+    # executor are deliberately separate. Older records may not have this
+    # field; confirm_action() handles that as a safe contract mismatch.
+    confirmation_executor_skill_id: str | None = Field(
+        default=None,
+        pattern=r"^[a-z][a-z0-9_]{2,63}$",
+    )
     arguments_ref: str = Field(pattern=r"^args-[a-z0-9]{8,64}$")
     expected_effect: str = Field(min_length=1, max_length=240)
     evidence_refs: list[str] = Field(default_factory=list, max_length=8)

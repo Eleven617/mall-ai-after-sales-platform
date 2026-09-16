@@ -45,6 +45,7 @@ from app.skills.commerce_gateway import (
     SkillObservation,
     SyntheticSkillGateway,
 )
+from app.services.trace_service import capture_safe_traces
 
 
 AUTHORIZATION = "Bearer synthetic-runtime-credential"
@@ -649,6 +650,292 @@ def test_commit_requires_current_verified_order_fact_and_explicit_confirmation()
     assert arguments["orderFactRef"] == order_reference
     assert arguments["applicationType"] == "return_refund"
     assert len(arguments["idempotencyKey"]) == 32
+
+
+def test_draft_confirmation_uses_catalog_executor_and_writes_once() -> None:
+    """The v3.0.2 regression: a draft proposal maps to the sole commit adapter."""
+
+    order_reference = "fact-order-confirmation-contract"
+    provider = ScriptedRuntimeProvider(
+        decisions=[
+            _decision(
+                name="call_skill",
+                summary="先核验当前账号订单事实。",
+                calls=[SkillCall(skill_id="read_order", arguments={"orderRef": "ref-order-alpha"})],
+            ),
+            _decision(
+                name="propose_action",
+                summary="已形成待确认的退货退款草案。",
+                action_skill="create_after_sales_draft",
+                action_arguments={
+                    "orderFactRef": order_reference,
+                    "applicationType": "return_refund",
+                },
+            ),
+        ]
+    )
+    gateway = RecordingGateway(
+        {
+            "read_order": _observation(reference=order_reference),
+            "commit_after_sales_action": _observation(
+                kind="action_result",
+                reference="action-confirmation-contract",
+                summary="Java 已返回合成售后提交结果。",
+            ),
+        }
+    )
+    runtime = _runtime(provider, gateway)
+
+    with capture_safe_traces() as traces:
+        proposed = runtime.create_task(
+            session_id=SESSION_ID,
+            goal="核验订单后准备售后处理方案",
+            member_id=MEMBER_ID,
+            authorization=AUTHORIZATION,
+        )
+        assert proposed.view.status == "ready_to_commit"
+        assert gateway.commits == []
+
+        stored = runtime._store._items[proposed.view.task_ref]  # type: ignore[attr-defined] # noqa: SLF001
+        assert stored.action_proposal is not None
+        proposal = stored.action_proposal
+        assert proposal.action_skill == "create_after_sales_draft"
+        assert proposal.confirmation_executor_skill_id == "commit_after_sales_action"
+        assert "idempotencyKey" not in stored.action_arguments[proposal.arguments_ref]
+
+        committed = runtime.confirm_action(
+            task_ref=proposed.view.task_ref,
+            confirmation="confirm",
+            member_id=MEMBER_ID,
+            authorization=AUTHORIZATION,
+        )
+
+    assert committed.view.status == "executing"
+    assert len(gateway.commits) == 1
+    execution_skill, execution_arguments = gateway.commits[0]
+    assert execution_skill == "commit_after_sales_action"
+    assert execution_arguments["orderFactRef"] == order_reference
+    assert execution_arguments["applicationType"] == "return_refund"
+    expected_key = hashlib.sha256(
+        f"{proposal.task_id}:{proposal.proposal_id}:{proposal.content_hash}:commit_after_sales_action".encode("utf-8")
+    ).hexdigest()[:32]
+    assert execution_arguments["idempotencyKey"] == expected_key
+    execution_traces = [event for event in traces.events if event.event == "confirmation_execution"]
+    assert execution_traces
+    assert execution_traces[-1].details == {
+        "proposal_skill_id": "create_after_sales_draft",
+        "execution_skill_id": "commit_after_sales_action",
+    }
+    with pytest.raises(TaskRuntimeError) as duplicate:
+        runtime.confirm_action(
+            task_ref=proposed.view.task_ref,
+            confirmation="confirm",
+            member_id=MEMBER_ID,
+            authorization=AUTHORIZATION,
+        )
+    assert duplicate.value.code == "action_gate_missing"
+    assert len(gateway.commits) == 1
+
+
+def test_unmapped_confirmation_skill_fails_closed_before_ready_to_commit() -> None:
+    provider = ScriptedRuntimeProvider(
+        decisions=[
+            _decision(
+                name="call_skill",
+                summary="先核验订单事实。",
+                calls=[SkillCall(skill_id="read_order", arguments={"orderRef": "ref-order-alpha"})],
+            ),
+            _decision(
+                name="propose_action",
+                summary="尝试建立人工协同案件。",
+                action_skill="open_human_case",
+                action_arguments={},
+            ),
+        ]
+    )
+    gateway = RecordingGateway({"read_order": _observation()})
+    runtime = _runtime(provider, gateway)
+    with patch.object(
+        runtime,
+        "_discover_for_turn",
+        return_value=[get_skill("read_order"), get_skill("open_human_case")],
+    ):
+        result = runtime.create_task(
+            session_id=SESSION_ID,
+            goal="核验订单后建立人工协同案件",
+            member_id=MEMBER_ID,
+            authorization=AUTHORIZATION,
+        )
+    assert result.view.status == "blocked"
+    assert "confirmation_executor_not_configured" in result.view.limitation_codes
+    assert result.view.action is None
+    assert gateway.commits == []
+
+
+def test_missing_application_type_waits_and_same_task_can_resume() -> None:
+    order_reference = "fact-order-supplement-contract"
+    provider = ScriptedRuntimeProvider(
+        decisions=[
+            _decision(
+                name="call_skill",
+                summary="先核验当前账号订单事实。",
+                calls=[SkillCall(skill_id="read_order", arguments={"orderRef": "ref-order-alpha"})],
+            ),
+            _decision(
+                name="propose_action",
+                summary="先保存已核验订单草案，待补充售后类型。",
+                action_skill="create_after_sales_draft",
+                action_arguments={"orderFactRef": order_reference},
+            ),
+            _decision(
+                name="propose_action",
+                summary="已补齐退货退款类型，形成待确认方案。",
+                action_skill="create_after_sales_draft",
+                action_arguments={
+                    "orderFactRef": order_reference,
+                    "applicationType": "return_refund",
+                },
+            ),
+        ]
+    )
+    gateway = RecordingGateway(
+        {
+            "read_order": _observation(reference=order_reference),
+            "commit_after_sales_action": _observation(
+                kind="action_result",
+                reference="action-supplement-contract",
+                summary="Java 已返回合成售后提交结果。",
+            ),
+        }
+    )
+    runtime = _runtime(provider, gateway)
+    first = runtime.create_task(
+        session_id=SESSION_ID,
+        goal="核验订单后准备售后处理方案",
+        member_id=MEMBER_ID,
+        authorization=AUTHORIZATION,
+    )
+    assert first.view.status == "waiting_for_user"
+    assert first.view.action is None
+    assert "required_action_input_missing" in first.view.limitation_codes
+    resumed = runtime.continue_task(
+        task_ref=first.view.task_ref,
+        message="补充类型：退货退款",
+        member_id=MEMBER_ID,
+        authorization=AUTHORIZATION,
+    )
+    assert resumed.view.task_ref == first.view.task_ref
+    assert resumed.view.status == "ready_to_commit"
+    assert resumed.view.action is not None
+    assert gateway.commits == []
+    committed = runtime.confirm_action(
+        task_ref=first.view.task_ref,
+        confirmation="confirm",
+        member_id=MEMBER_ID,
+        authorization=AUTHORIZATION,
+    )
+    assert committed.view.status == "executing"
+    assert len(gateway.commits) == 1
+
+
+def test_legacy_proposal_without_executor_mapping_is_safe_block() -> None:
+    order_reference = "fact-order-legacy-contract"
+    provider = ScriptedRuntimeProvider(
+        decisions=[
+            _decision(
+                name="call_skill",
+                summary="先核验订单事实。",
+                calls=[SkillCall(skill_id="read_order", arguments={"orderRef": "ref-order-alpha"})],
+            ),
+            _decision(
+                name="propose_action",
+                summary="已形成待确认方案。",
+                action_skill="create_after_sales_draft",
+                action_arguments={"orderFactRef": order_reference, "applicationType": "repair"},
+            ),
+        ]
+    )
+    gateway = RecordingGateway(
+        {
+            "read_order": _observation(reference=order_reference),
+            "commit_after_sales_action": _observation(kind="action_result", reference="action-legacy-contract", summary="提交结果"),
+        }
+    )
+    runtime = _runtime(provider, gateway)
+    proposed = runtime.create_task(
+        session_id=SESSION_ID,
+        goal="核验订单后准备售后处理方案",
+        member_id=MEMBER_ID,
+        authorization=AUTHORIZATION,
+    )
+    stored = runtime._store._items[proposed.view.task_ref]  # type: ignore[attr-defined] # noqa: SLF001
+    assert stored.action_proposal is not None
+    stored.action_proposal.confirmation_executor_skill_id = None
+    blocked = runtime.confirm_action(
+        task_ref=proposed.view.task_ref,
+        confirmation="confirm",
+        member_id=MEMBER_ID,
+        authorization=AUTHORIZATION,
+    )
+    assert blocked.view.status == "blocked"
+    assert "confirmation_executor_missing" in blocked.view.limitation_codes
+    assert gateway.commits == []
+
+
+def test_confirmation_rejects_proposal_hash_or_mapping_tampering_without_gateway_call() -> None:
+    order_reference = "fact-order-tamper-contract"
+
+    def create_proposal():
+        provider = ScriptedRuntimeProvider(
+            decisions=[
+                _decision(
+                    name="call_skill",
+                    summary="先核验订单事实。",
+                    calls=[SkillCall(skill_id="read_order", arguments={"orderRef": "ref-order-alpha"})],
+                ),
+                _decision(
+                    name="propose_action",
+                    summary="已形成待确认方案。",
+                    action_skill="create_after_sales_draft",
+                    action_arguments={"orderFactRef": order_reference, "applicationType": "exchange"},
+                ),
+            ]
+        )
+        gateway = RecordingGateway({"read_order": _observation(reference=order_reference), "commit_after_sales_action": _observation(kind="action_result", reference="action-tamper-contract", summary="提交结果")})
+        runtime = _runtime(provider, gateway)
+        result = runtime.create_task(
+            session_id=SESSION_ID,
+            goal="核验订单后准备售后处理方案",
+            member_id=MEMBER_ID,
+            authorization=AUTHORIZATION,
+        )
+        return runtime, gateway, result
+
+    runtime, gateway, result = create_proposal()
+    stored = runtime._store._items[result.view.task_ref]  # type: ignore[attr-defined] # noqa: SLF001
+    assert stored.action_proposal is not None
+    stored.action_arguments[stored.action_proposal.arguments_ref]["applicationType"] = "repair"
+    blocked = runtime.confirm_action(
+        task_ref=result.view.task_ref,
+        confirmation="confirm",
+        member_id=MEMBER_ID,
+        authorization=AUTHORIZATION,
+    )
+    assert "proposal_content_hash_mismatch" in blocked.view.limitation_codes
+    assert gateway.commits == []
+
+    runtime, gateway, result = create_proposal()
+    stored = runtime._store._items[result.view.task_ref]  # type: ignore[attr-defined] # noqa: SLF001
+    assert stored.action_proposal is not None
+    stored.action_proposal.confirmation_executor_skill_id = "open_human_case"
+    blocked = runtime.confirm_action(
+        task_ref=result.view.task_ref,
+        confirmation="confirm",
+        member_id=MEMBER_ID,
+        authorization=AUTHORIZATION,
+    )
+    assert "confirmation_executor_invalid" in blocked.view.limitation_codes
+    assert gateway.commits == []
 
 
 def test_unknown_commit_result_keeps_binding_and_rejects_duplicate_confirmation() -> None:

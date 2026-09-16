@@ -44,6 +44,14 @@ class SkillDefinition(BaseModel):
     # input-contract check.  It is deliberately about syntax/availability,
     # never about choosing a business intent or outcome.
     required_input_keys: tuple[str, ...] = ()
+    # Exact server-side mapping used after a customer confirms a proposal.
+    # It is never inferred from a Skill name or suffix.
+    confirmation_executor_skill_id: str | None = Field(
+        default=None,
+        pattern=r"^[a-z][a-z0-9_]{2,63}$",
+    )
+    # Fields required before this Skill may produce a confirmation gate.
+    confirmation_required_input_keys: tuple[str, ...] = ()
     allowed_roles: tuple[Literal["customer", "quality_evaluation"] , ...] = ("customer",)
     requires_confirmation: bool = False
     max_calls_per_task: int = Field(default=2, ge=1, le=8)
@@ -200,6 +208,8 @@ _CATALOG: tuple[SkillDefinition, ...] = (
         examples=["准备一个退货退款草案"],
         discovery_terms=["草案", "退货", "退款", "售后"],
         requires_confirmation=True,
+        confirmation_executor_skill_id="commit_after_sales_action",
+        confirmation_required_input_keys=("orderFactRef", "applicationType"),
     ),
     SkillDefinition(
         skill_id="amend_after_sales_draft",
@@ -215,6 +225,7 @@ _CATALOG: tuple[SkillDefinition, ...] = (
         examples=["补充售后草案说明"],
         discovery_terms=["修改", "补充", "草案", "售后"],
         requires_confirmation=True,
+        confirmation_required_input_keys=("orderFactRef", "applicationType"),
     ),
     SkillDefinition(
         skill_id="commit_after_sales_action",
@@ -231,6 +242,8 @@ _CATALOG: tuple[SkillDefinition, ...] = (
         discovery_terms=["提交", "确认", "申请", "售后"],
         requires_confirmation=True,
         prerequisite_skill_ids=("read_order",),
+        confirmation_executor_skill_id="commit_after_sales_action",
+        confirmation_required_input_keys=("orderFactRef", "applicationType"),
     ),
     SkillDefinition(
         skill_id="open_human_case",
@@ -314,6 +327,22 @@ def list_skills(*, role: str = "customer") -> list[SkillDefinition]:
 
 def get_skill(skill_id: str, *, role: str = "customer") -> SkillDefinition | None:
     return next((skill for skill in list_skills(role=role) if skill.skill_id == skill_id), None)
+
+
+def confirmation_executor_skill(skill_id: str, *, role: str = "customer") -> SkillDefinition | None:
+    """Resolve a catalog-declared executor for a confirmed proposal.
+
+    The lookup is exact and fail-closed: an absent/invalid mapping never
+    falls back to the proposal Skill or to a naming convention.
+    """
+
+    source = get_skill(skill_id, role=role)
+    if source is None or not source.confirmation_executor_skill_id:
+        return None
+    target = get_skill(source.confirmation_executor_skill_id, role=role)
+    if target is None or target.action_mode != "commit" or not target.requires_confirmation:
+        return None
+    return target
 
 
 def discovery_score(skill: SkillDefinition, query: str) -> int:
