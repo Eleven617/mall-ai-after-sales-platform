@@ -1,5 +1,22 @@
 # Mall v3.0 Release Gate 复核
 
+## 当前权威结论｜v3.0.2 唯一正式 DeepSeek 批次（2026-09-16）
+
+运行时冻结 `061d60bb13004dc7df57a161b01e378335f8938c`，候选分支 `codex/v3.0.2-offline-candidate`，候选 HEAD `a9271ac295d98d265ffdd54b03333734b1beea4c`。Docker Engine `29.8.0` 已恢复，Compose 八个服务均为 `healthy`，运行时身份与冻结 SHA 一致。
+
+唯一正式批次 Release ID 为 `v3.0.2-final-061d60bb13004dc7df57a161b01e378335f8938c`，Batch ID `candidate-61f2a1fd5453`。批次 **FAILED，Release Gate 未通过，V3_0_2_LIVE_READY=false（在线验收结论）**；不重跑、不创建第二批次。第一条 `main_open_task_closed_loop` 在 `java_commit` 阶段停止，安全失败码为 `closed_loop_java_submission_missing`，网关记录 `commit_skill_not_allowlisted`；Proposal 已形成但没有 Java 最终写入。浏览器帧、暂停恢复链、事实变化链、主评测集、补充评测集和 Grounding 均未执行。
+
+| 项目 | 结果 |
+| --- | --- |
+| Provider | 9 请求、9 成功、0 失败；总 Token 27661（仅本批次账本元数据） |
+| 共享在线 Ledger | 对账通过；`tmp/release-ledger-v3.0.2-online/ledger.jsonl` SHA-256 `583193cf2538494c3368d524ffa5c482e88d56daa7d2210166b8aec396ec0731` |
+| 批次报告 | `tmp/deepseek-v3.0.2-final-061d60bb13004dc7df57a161b01e378335f8938c.json`，SHA-256 `9bb76cab99e6bd3b761fc57d0ba76411bb0f373cefe5fe15ce384efb6a98ee1f` |
+| Release Lock | `docs/evidence/deepseek-release-lock-v3.0.2-final-061d60bb13004dc7df57a161b01e378335f8938c.json`，状态 `FAILED`，SHA-256 `ca5a027e554a4f76a435bbebfc166c0c1d386b9bc41871adbf0568e3b4dba531` |
+| 离线候选 | `OFFLINE_ACCEPTANCE_COMPLETE=true` 等离线条件仍成立；不等同于在线模型发布资格 |
+| GitHub Actions / main | 本批次失败，未推送新代码、未更新 README、未 fast-forward main；没有可填写的新 Actions 链接 |
+
+本节只记录当前正式批次；v3.0.1 历史 Lock、Ledger 和报告保持原样。失败不是 Provider 超时或模型 HTTP 失败，而是受控 Skill 合同不匹配；不得把 9 次成功请求解释为任务准确率、泛化率或生产能力。
+
 ## 当前权威结论｜v3.0.2 离线候选（2026-09-15）
 
 冻结运行时代码 `061d60bb13004dc7df57a161b01e378335f8938c`，分支 `codex/v3.0.2-offline-candidate`。离线候选门禁 **NOT_COMPLETE（等待远程 CI 与单独在线授权）**，但本机离线验收条件已满足：`OFFLINE_ACCEPTANCE_COMPLETE=true`、慢网关、ledger 对账、动态公共校验均通过，外部 Provider 请求为 `0`。

@@ -1,5 +1,9 @@
 # Mall v3.0 最终交付状态
 
+## 当前权威快照｜v3.0.2 唯一正式 DeepSeek 批次（2026-09-16）
+
+v3.0.2 候选分支 `codex/v3.0.2-offline-candidate`（HEAD `a9271ac295d98d265ffdd54b03333734b1beea4c`），运行时冻结 `061d60bb13004dc7df57a161b01e378335f8938c`。唯一正式批次 `candidate-61f2a1fd5453` **FAILED**，Release Gate **未通过**，`V3_0_2_LIVE_READY=false`（在线结论）。第一展示链在 `java_commit` 阶段因 `commit_skill_not_allowlisted` fail-closed；没有 Java 写入。报告、Lock 与 Ledger 的 SHA-256 见 `docs/evidence/release-gate-summary.md`；不重跑、不创建第二批次、不更新 README、不合并 main。离线候选门禁仍为通过，但不能替代在线模型验收。
+
 ## 当前权威快照｜v3.0.2 离线候选（2026-09-15）
 
 冻结 SHA `061d60bb13004dc7df57a161b01e378335f8938c`，分支 `codex/v3.0.2-offline-candidate`。`V3_0_2_LIVE_READY` 已通过，且证据提交 `dc7dee733ed056af054450df9b1399e199812539` 的 [`mall-ci`](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34978867905) 与 [`quality-evaluation`](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34978867657) 均成功；发布状态仍 **NOT_COMPLETE**，因为在线模型批次尚未授权。

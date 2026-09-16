@@ -1,5 +1,18 @@
 # 公开发布记录
 
+## 当前权威记录｜v3.0.2 唯一正式 DeepSeek 批次（2026-09-16）
+
+候选分支 `codex/v3.0.2-offline-candidate`，候选 HEAD `a9271ac295d98d265ffdd54b03333734b1beea4c`；运行时冻结 `061d60bb13004dc7df57a161b01e378335f8938c`。Docker Engine `29.8.0` 与 Compose 八服务均 healthy，运行时身份已核对。
+
+本轮唯一正式 Release ID：`v3.0.2-final-061d60bb13004dc7df57a161b01e378335f8938c`；Batch ID：`candidate-61f2a1fd5453`。**在线 Release Gate：未通过；V3_0_2_LIVE_READY=false。** 第一条 `main_open_task_closed_loop` 在 Java 确认阶段安全停止：`closed_loop_java_submission_missing` / `commit_skill_not_allowlisted`。模型形成了待确认 Proposal，但选择的草案 Skill 不在最终提交白名单中，因而没有 Java 写入；没有继续执行其他链路，也没有重跑。
+
+- Provider：9 请求、9 成功、0 失败；总 Token 27661（账本元数据，不代表准确率/成本）。
+- 报告：`tmp/deepseek-v3.0.2-final-061d60bb13004dc7df57a161b01e378335f8938c.json`，SHA-256 `9bb76cab99e6bd3b761fc57d0ba76411bb0f373cefe5fe15ce384efb6a98ee1f`。
+- Lock：`docs/evidence/deepseek-release-lock-v3.0.2-final-061d60bb13004dc7df57a161b01e378335f8938c.json`，`FAILED`，SHA-256 `ca5a027e554a4f76a435bbebfc166c0c1d386b9bc41871adbf0568e3b4dba531`。
+- 在线 Ledger：`tmp/release-ledger-v3.0.2-online/ledger.jsonl`，对账通过，SHA-256 `583193cf2538494c3368d524ffa5c482e88d56daa7d2210166b8aec396ec0731`。
+- 主集、补充集、Grounding、在线展示素材均 `not_executed`；本批次失败后不创建第二批次。
+- 本轮未推送新代码、未修改 README、未 fast-forward `main`，因此没有新的 Actions 成功链接。v3.0.1 历史 Lock/Ledger/报告未修改。
+
 ## 当前权威记录｜v3.0.2 离线候选（2026-09-15）
 
 冻结 SHA `061d60bb13004dc7df57a161b01e378335f8938c`，分支 `codex/v3.0.2-offline-candidate`。当前发布状态 **NOT_COMPLETE**：离线条件与远程 `mall-ci`/`quality-evaluation` 已完成，在线批次仍需单独授权；本轮 DeepSeek/外部模型调用为 0。证据提交 `dc7dee733ed056af054450df9b1399e199812539` 的 [`mall-ci`](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34978867905) 与 [`quality-evaluation`](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34978867657) 均 success。

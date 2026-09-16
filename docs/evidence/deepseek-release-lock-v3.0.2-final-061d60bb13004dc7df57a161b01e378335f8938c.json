@@ -1,0 +1,13 @@
+{
+  "schemaVersion": "deepseek-release-lock.v2",
+  "releaseId": "v3.0.2-final-061d60bb13004dc7df57a161b01e378335f8938c",
+  "batchIds": [
+    "candidate-61f2a1fd5453"
+  ],
+  "runtimeCommit": "061d60bb13004dc7df57a161b01e378335f8938c",
+  "status": "FAILED",
+  "testRunComplete": false,
+  "releaseQualified": false,
+  "requests": 9,
+  "totalTokens": 27661
+}
