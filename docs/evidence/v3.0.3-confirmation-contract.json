@@ -101,8 +101,8 @@
       "fixtureSha256": "9ef0cf308ab13861992196736bb665cd0ec149ce1b6c3aee12b03a1704b7c9cd"
     },
     "showcase": {
-      "deterministic": {"chains": "3/3", "frames": 12, "providerRequests": 0, "reportSha256": "a1cc355efc5ae70292db6393ef6081de97a4184db7912c36f550948055606cf2"},
-      "replay": {"chains": "3/3", "frames": 12, "providerRequests": 0, "reportSha256": "eb7c587fb23ee14ea1a78de0c8041bf92bf583b0abb7e10b65de68334b980a2e"}
+      "deterministic": {"chains": "3/3", "frames": 12, "providerRequests": 0, "reportSha256": "a1cc355efc5ae70292db6393ef6081de97a4184db7912c36f550948055606cf2", "mainClosedLoop": {"proposalFormed": true, "javaRechecked": true, "confirmedWrite": true, "statusReadback": true, "duplicateConfirmationWrites": 0, "crossAccountLeakage": 0}},
+      "replay": {"chains": "3/3", "frames": 12, "providerRequests": 0, "reportSha256": "eb7c587fb23ee14ea1a78de0c8041bf92bf583b0abb7e10b65de68334b980a2e", "mainClosedLoop": {"proposalFormed": true, "javaRechecked": true, "confirmedWrite": true, "statusReadback": true, "duplicateConfirmationWrites": 0, "crossAccountLeakage": 0}}
     },
     "slowGateway": {"status": "passed", "elapsedSeconds": 76.156, "httpStatus": 201, "taskStatus": "ready_to_commit", "providerRequests": 0, "javaWriteObserved": false, "reportSha256": "b5b081721252da62db1d11dfb7930c567c956d5f5332a301312fffa9f91c3f5e", "ledgerSha256": "3cc6656ce6ffb1a6e11e47fd5530d8a405e035f844cc201b5ba086676b714227"}
   },

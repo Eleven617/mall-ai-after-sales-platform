@@ -90,7 +90,7 @@
       "javaWriteObserved": false,
       "providerRequests": 0
     },
-    "showcase": {
+      "showcase": {
       "deterministic": {
         "status": "passed",
         "chains": "3/3",
@@ -99,7 +99,8 @@
         "reportSha256": "a1cc355efc5ae70292db6393ef6081de97a4184db7912c36f550948055606cf2",
         "ledger": "tmp/release-ledger-v3.0.3-deterministic/ledger.jsonl",
         "ledgerSha256": "8ab77b9505fdbaff0da60ca68d0ea9f5c17c435e202bcffecc97592496b7dc0a",
-        "providerRequests": 0
+        "providerRequests": 0,
+        "mainClosedLoop": {"proposalFormed": true, "javaRechecked": true, "confirmedWrite": true, "statusReadback": true, "duplicateConfirmationWrites": 0, "crossAccountLeakage": 0}
       },
       "replay": {
         "status": "passed",
@@ -109,7 +110,8 @@
         "reportSha256": "eb7c587fb23ee14ea1a78de0c8041bf92bf583b0abb7e10b65de68334b980a2e",
         "ledger": "tmp/release-ledger-v3.0.3-replay/ledger.jsonl",
         "ledgerSha256": "8ce953819c10834c51103a08663a436591d53ccebafa8bf492513452eb8e8c00",
-        "providerRequests": 0
+        "providerRequests": 0,
+        "mainClosedLoop": {"proposalFormed": true, "javaRechecked": true, "confirmedWrite": true, "statusReadback": true, "duplicateConfirmationWrites": 0, "crossAccountLeakage": 0}
       }
     },
     "V3_0_3_LIVE_READY": false
