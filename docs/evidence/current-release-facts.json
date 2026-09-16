@@ -3,8 +3,8 @@
   "generatedAt": "2026-09-16T15:40:49Z",
   "releaseStatus": "NOT_COMPLETE",
   "runtimeCommit": "f193db37ea7602ec7a379d7dc98d8b44d19bbf97",
-  "evidenceCommit": "f193db37ea7602ec7a379d7dc98d8b44d19bbf97",
-  "statusReason": "v3.0.3 Proposal-to-Commit 合同修复已完成离线回归；确定性与本机现场通过，但一次 grounding CLI 误触发了 16 次外部 Provider 请求（14553 tokens），因此本候选门禁作废并保持 NOT_COMPLETE。",
+  "evidenceCommit": "66abd4e4df04f499f71a245349653cf354eb72aa",
+  "statusReason": "v3.0.3 Proposal-to-Commit 合同修复已完成离线回归；确定性与本机现场通过，当前证据提交的 mall-ci 与 quality-evaluation 均成功，但一次 grounding CLI 误触发了 16 次外部 Provider 请求（14553 tokens），因此本候选门禁作废并保持 NOT_COMPLETE。",
   "project": {
     "name": "Mall AI After-sales Platform",
     "repository": "https://github.com/Eleven617/mall-ai-after-sales-platform",
@@ -194,7 +194,7 @@
     "showcase": {"status": "passed", "scenarios": [{"scenarioId": "deterministic", "status": "passed", "chains": "3/3", "frames": 12}, {"scenarioId": "replay", "status": "passed", "chains": "3/3", "frames": 12}]}
   },
   "releaseLedger": {"path": "tmp/release-ledger-v3.0.2/ledger.jsonl", "observedCandidateProviderRequests": 9, "observedCandidateSuccessfulRequests": 9, "observedCandidateFailedRequests": 0, "observedCandidateTotalTokens": 27329, "v3_0_2ProviderRequests": 0, "v3_0_2ProviderTokens": 0, "sha256": "ce801099cd16a998bf39dae544425acb1fd5c6a6c353a1ce18035a1cb8a92323", "v3_0_3OfflineLedgers": [{"path": "tmp/release-ledger-v3.0.3-deterministic/ledger.jsonl", "batchId": "v3.0.3-offline-deterministic-clean", "providerRequests": 0, "totalTokens": 0, "sha256": "8ab77b9505fdbaff0da60ca68d0ea9f5c17c435e202bcffecc97592496b7dc0a"}, {"path": "tmp/release-ledger-v3.0.3-replay/ledger.jsonl", "batchId": "v3.0.3-offline-replay-clean", "providerRequests": 0, "totalTokens": 0, "sha256": "8ce953819c10834c51103a08663a436591d53ccebafa8bf492513452eb8e8c00"}, {"path": "tmp/release-ledger-v3.0.3-slow/ledger.jsonl", "batchId": "v3.0.3-offline-slow-gateway", "providerRequests": 0, "totalTokens": 0, "sha256": "3cc6656ce6ffb1a6e11e47fd5530d8a405e035f844cc201b5ba086676b714227"}], "v3_0_3UnplannedProviderRequests": 16, "v3_0_3UnplannedProviderTokens": 14553},
-  "ci": {"status": "pending_remote_final_sha", "testedCommit": "f193db37ea7602ec7a379d7dc98d8b44d19bbf97", "mallCi": null, "qualityEvaluation": null, "mallCiConclusion": "pending", "qualityEvaluationConclusion": "pending", "previousRemoteRunsStale": true},
+  "ci": {"status": "passed", "testedCommit": "66abd4e4df04f499f71a245349653cf354eb72aa", "mallCi": "https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/35121757903", "qualityEvaluation": "https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/35121757911", "mallCiConclusion": "success", "qualityEvaluationConclusion": "success", "previousRemoteRunsStale": true},
   "publicValidator": {"command": "python scripts/validate_public_release.py", "exitCode": 0, "status": "dynamic_report", "reason": "读取当前 FastAPI JUnit/sidecar，不再硬编码历史测试数量。"},
   "claims": {
     "testRunComplete": true,

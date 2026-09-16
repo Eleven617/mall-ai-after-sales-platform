@@ -6,7 +6,7 @@
 
 本机合成现场 Runner **122/122**（Browser 24、Java/MySQL 30、Fault 36、Durable 32，0 failed/0 blocked）；deterministic/replay 展示链各 3/3、12 帧；慢网关经公共 Nginx 76.156 秒返回 201/ready_to_commit，Java 写入 0。现场报告 SHA `1e250a9c78ff62a2b51aed59d02d2e6226fa5b999f6661a6659e85fb7bb7bbb3`，FastAPI 报告 SHA `6519ba973808f0063195751f1cfed40d079c154f3ba0355684b2c9663a6eb56`。
 
-本候选 **NOT_COMPLETE / `V3_0_3_LIVE_READY=false`**：一次 grounding CLI 误触发已配置 DeepSeek（16 请求、14,553 tokens），已作废且没有正式 Release ID/Lock；gitleaks 本机缺失为 `environment_blocked`，OSV 缓存扫描 exit 0。不得把该次输出当成 Grounding 通过、在线批次或模型准确率；v3.0.2 FAILED 历史证据保持不变。
+本候选 **NOT_COMPLETE / `V3_0_3_LIVE_READY=false`**：一次 grounding CLI 误触发已配置 DeepSeek（16 请求、14,553 tokens），已作废且没有正式 Release ID/Lock；gitleaks 本机缺失为 `environment_blocked`，OSV 缓存扫描 exit 0。证据提交 `66abd4e` 的 [`mall-ci`](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/35121757903) 与 [`quality-evaluation`](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/35121757911) 均成功。不得把该次输出当成 Grounding 通过、在线批次或模型准确率；v3.0.2 FAILED 历史证据保持不变。
 
 ## 当前权威快照｜v3.0.2 离线候选（2026-09-15）
 

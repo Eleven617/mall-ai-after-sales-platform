@@ -11,6 +11,7 @@
   },
   "revision": {
     "runtimeFreezeCommit": "f193db37ea7602ec7a379d7dc98d8b44d19bbf97",
+    "evidenceCommit": "66abd4e4df04f499f71a245349653cf354eb72aa",
     "runtimeFreezeStatus": "frozen",
     "candidateStatus": "V3_0_3_LIVE_READY=false",
     "readmeChanged": false,
@@ -18,6 +19,14 @@
     "onlineReleaseId": null,
     "onlineBatchId": null,
     "onlineReleaseLock": null
+  },
+  "ci": {
+    "status": "passed",
+    "testedCommit": "66abd4e4df04f499f71a245349653cf354eb72aa",
+    "mallCi": "https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/35121757903",
+    "qualityEvaluation": "https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/35121757911",
+    "mallCiConclusion": "success",
+    "qualityEvaluationConclusion": "success"
   },
   "architecture": {
     "agentRuntime": [

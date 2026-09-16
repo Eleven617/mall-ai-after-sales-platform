@@ -8,7 +8,7 @@
 
 本候选 **NOT_COMPLETE / `V3_0_3_LIVE_READY=false`**：一次错误 grounding CLI 产生了 **16 次 DeepSeek Provider 请求、14,553 tokens**，已标为 `invalidated_offline_run`，没有 Release ID/Lock，不能计入通过率或成本；后续未再调用 Provider。gitleaks 本机缺少可执行文件，标记 `environment_blocked`；OSV 缓存扫描 exit 0。未修改 README、未合并 `main`、未创建 Tag/Release。
 
-证据：[`v3.0.3-confirmation-contract.md`](evidence/v3.0.3-confirmation-contract.md)、[`v3.0.3-confirmation-contract.json`](evidence/v3.0.3-confirmation-contract.json)。v3.0.2 的正式 FAILED Lock、Ledger、报告和提交 `0eb964b` 未修改；历史报告不与本候选合并。不能宣称真实模型准确率、生产 SLA、真实支付/仓储/物流/维修履约或模型成本。
+证据：[`v3.0.3-confirmation-contract.md`](evidence/v3.0.3-confirmation-contract.md)、[`v3.0.3-confirmation-contract.json`](evidence/v3.0.3-confirmation-contract.json)。证据提交 `66abd4e` 的 [`mall-ci`](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/35121757903) 与 [`quality-evaluation`](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/35121757911) 均成功。v3.0.2 的正式 FAILED Lock、Ledger、报告和提交 `0eb964b` 未修改；历史报告不与本候选合并。不能宣称真实模型准确率、生产 SLA、真实支付/仓储/物流/维修履约或模型成本。
 
 ## 当前权威记录｜v3.0.2 唯一正式 DeepSeek 批次（2026-09-16）
 

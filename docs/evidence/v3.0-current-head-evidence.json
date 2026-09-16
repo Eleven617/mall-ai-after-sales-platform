@@ -19,6 +19,8 @@
     "fieldAcceptance": {"total": "122/122", "failed": 0, "environmentBlocked": 0, "report": "tmp/offline-field-acceptance/field-20260916T103457Z-8a574bec/field-acceptance.json", "reportSha256": "1e250a9c78ff62a2b51aed59d02d2e6226fa5b999f6661a6659e85fb7bb7bbb3", "fixtureSha256": "9ef0cf308ab13861992196736bb665cd0ec149ce1b6c3aee12b03a1704b7c9cd"},
     "showcase": {"deterministic": "3/3", "replay": "3/3", "framesPerRun": 12, "providerRequests": 0},
     "slowGateway": {"elapsedSeconds": 76.156, "httpStatus": 201, "taskStatus": "ready_to_commit", "javaWrites": 0, "providerRequests": 0, "reportSha256": "b5b081721252da62db1d11dfb7930c567c956d5f5332a301312fffa9f91c3f5e"},
+    "groundingContracts": {"passed": 12, "failed": 0, "mode": "deterministic contract; no external Provider", "command": "mall-ai-service/.venv/Scripts/python.exe -m pytest -q tests/test_rag_grounding_evaluation.py tests/test_rag_evidence_verifier.py", "exitCode": 0},
+    "ci": {"status": "passed", "testedCommit": "66abd4e4df04f499f71a245349653cf354eb72aa", "mallCi": "https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/35121757903", "qualityEvaluation": "https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/35121757911", "mallCiConclusion": "success", "qualityEvaluationConclusion": "success"},
     "unplannedProviderRun": {"status": "invalidated_offline_run", "requests": 16, "tokens": 14553, "formalRelease": false},
     "V3_0_3_LIVE_READY": false
   },
@@ -53,6 +55,7 @@
     "taskOrchestration": {"total": 11, "passed": 11, "failed": 0},
     "chunkMetadata": {"total": 8, "passed": 8, "failed": 0},
     "ragContracts": {"total": 21, "passed": 21, "failed": 0},
+    "groundingContracts": {"total": 12, "passed": 12, "failed": 0, "exitCode": 0},
     "java": {"portal": "12/12", "admin": "6/6", "springContext": "1/1", "exitCode": 0},
     "web": {"status": "passed", "exitCode": 0},
     "compose": {"configExitCode": 0, "servicesHealthy": "8/8"}
@@ -135,7 +138,7 @@
     "grounding": "not_executed_after_candidate_failure",
     "limitation": "检索指标来自小型版本化合成政策集，不是答案准确率或生产 SLA。"
   },
-  "ci": {"status": "pending_remote_final_sha", "testedCommit": "f193db37ea7602ec7a379d7dc98d8b44d19bbf97", "mallCi": null, "qualityEvaluation": null, "pushStatus": "pending_evidence_commit", "previousRunsStale": true},
+  "ci": {"status": "passed", "testedCommit": "66abd4e4df04f499f71a245349653cf354eb72aa", "mallCi": "https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/35121757903", "qualityEvaluation": "https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/35121757911", "mallCiConclusion": "success", "qualityEvaluationConclusion": "success", "pushStatus": "passed", "previousRunsStale": true},
   "security": {"sideEffectsObserved": 0, "publicProjection": "safe DTO only", "secretsCommitted": false, "rawProviderPayloadsCommitted": false},
   "claims": {"testRunComplete": true, "releaseQualified": false, "productionAccuracy": false, "productionSla": false, "realUserGeneralization": false, "externalFulfillment": false, "unplannedProviderRun": true}
 }

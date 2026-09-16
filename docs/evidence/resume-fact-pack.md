@@ -6,7 +6,7 @@
 
 本机现场和展示链均使用合成数据：Browser 24、Java/MySQL 30、Fault 36、Durable 32；deterministic/replay 各 3/3、12 帧；公共 Nginx 慢调用 76.156 秒、HTTP 201/ready_to_commit、Java 写入 0、Provider 0。报告与 hash 见 [`v3.0.3-confirmation-contract.md`](v3.0.3-confirmation-contract.md) 和 [`v3.0.3-confirmation-contract.json`](v3.0.3-confirmation-contract.json)。
 
-注意：一次错误 grounding CLI 触发了 16 次 DeepSeek 请求和 14,553 tokens，已标记 `invalidated_offline_run`，没有 Release ID/Lock，不能计入模型通过率；因此 `V3_0_3_LIVE_READY=false`。gitleaks 本机未安装为 `environment_blocked`，OSV 缓存扫描 exit 0。不能把本轮写成真实模型准确率、生产 SLA、真实外部履约或在线发布。
+注意：一次错误 grounding CLI 触发了 16 次 DeepSeek 请求和 14,553 tokens，已标记 `invalidated_offline_run`，没有 Release ID/Lock，不能计入模型通过率；因此 `V3_0_3_LIVE_READY=false`。gitleaks 本机未安装为 `environment_blocked`，OSV 缓存扫描 exit 0。证据提交 `66abd4e` 的 [`mall-ci`](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/35121757903) 与 [`quality-evaluation`](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/35121757911) 均成功。不能把本轮写成真实模型准确率、生产 SLA、真实外部履约或在线发布。
 
 ## 当前事实快照｜v3.0.2 离线候选（2026-09-15）
 

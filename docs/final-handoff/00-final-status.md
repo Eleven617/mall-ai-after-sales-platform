@@ -6,7 +6,7 @@
 
 本机合成现场 Runner 为 **122/122**（Browser 24、Java/MySQL 30、Fault 36、Durable 32），deterministic/replay 展示链各 3/3、各 12 帧；慢网关经公共 Nginx 76.156 秒返回 201/ready_to_commit，Java 写入 0、Provider 0。报告与 hash 见 [`v3.0.3-confirmation-contract.md`](../evidence/v3.0.3-confirmation-contract.md)。
 
-发布门禁 **未通过（`V3_0_3_LIVE_READY=false`）**：grounding CLI 一次误触发已配置 DeepSeek，16 请求/14,553 tokens，非正式批次且无 Release Lock，但违反零 Provider 约束，已作废；后续无模型调用。gitleaks 本机 `environment_blocked`，OSV 缓存扫描通过。v3.0.2 FAILED 历史锁/报告/账本保持不变，未修改 README、未合并 main、未创建 Release。
+发布门禁 **未通过（`V3_0_3_LIVE_READY=false`）**：grounding CLI 一次误触发已配置 DeepSeek，16 请求/14,553 tokens，非正式批次且无 Release Lock，但违反零 Provider 约束，已作废；后续无模型调用。gitleaks 本机 `environment_blocked`，OSV 缓存扫描通过。证据提交 `66abd4e` 的 [`mall-ci`](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/35121757903) 与 [`quality-evaluation`](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/35121757911) 均成功。v3.0.2 FAILED 历史锁/报告/账本保持不变，未修改 README、未合并 main、未创建 Release。
 
 ## 当前权威快照｜v3.0.2 唯一正式 DeepSeek 批次（2026-09-16）
 
