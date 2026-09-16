@@ -1,5 +1,13 @@
 # Mall AI 售后平台｜简历事实包
 
+## 当前事实快照｜v3.0.3 Proposal 确认执行合同（2026-09-17）
+
+当前候选分支 `codex/v3.0.3-confirmation-contract`，Runtime Freeze `f193db37ea7602ec7a379d7dc98d8b44d19bbf97`，发布状态 **NOT_COMPLETE**。本轮真实完成的是服务器控制的 Proposal→Commit 映射、确认重校验、Runtime 幂等键和无 Adapter 的安全阻塞；聚焦 38/38、Trace 45/45、FastAPI 终端 392 passed + 12 subtests（JUnit 404/404）、manifest 478/478、现场 Runner 122/122、Java 12/12 + 6/6 + Spring 1/1、Vue/Compose 均通过。
+
+本机现场和展示链均使用合成数据：Browser 24、Java/MySQL 30、Fault 36、Durable 32；deterministic/replay 各 3/3、12 帧；公共 Nginx 慢调用 76.156 秒、HTTP 201/ready_to_commit、Java 写入 0、Provider 0。报告与 hash 见 [`v3.0.3-confirmation-contract.md`](v3.0.3-confirmation-contract.md) 和 [`v3.0.3-confirmation-contract.json`](v3.0.3-confirmation-contract.json)。
+
+注意：一次错误 grounding CLI 触发了 16 次 DeepSeek 请求和 14,553 tokens，已标记 `invalidated_offline_run`，没有 Release ID/Lock，不能计入模型通过率；因此 `V3_0_3_LIVE_READY=false`。gitleaks 本机未安装为 `environment_blocked`，OSV 缓存扫描 exit 0。不能把本轮写成真实模型准确率、生产 SLA、真实外部履约或在线发布。
+
 ## 当前事实快照｜v3.0.2 离线候选（2026-09-15）
 
 当前发布状态：**NOT_COMPLETE（离线候选与远程 CI 已通过，在线批次仍需单独授权）**；冻结运行时代码 `061d60bb13004dc7df57a161b01e378335f8938c`，分支 `codex/v3.0.2-offline-candidate`。证据提交 `dc7dee733ed056af054450df9b1399e199812539` 的 [`mall-ci`](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34978867905) 与 [`quality-evaluation`](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34978867657) 均为 success。

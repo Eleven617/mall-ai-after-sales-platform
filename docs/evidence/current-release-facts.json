@@ -1,14 +1,14 @@
 {
   "schemaVersion": "mall-public-release-facts.v4",
-  "generatedAt": "2026-09-15T13:44:36Z",
+  "generatedAt": "2026-09-16T15:40:49Z",
   "releaseStatus": "NOT_COMPLETE",
-  "runtimeCommit": "061d60bb13004dc7df57a161b01e378335f8938c",
-  "evidenceCommit": "6a0bc59375238eb9f7fb78459e89e5374e059ec8",
-  "statusReason": "v3.0.2 离线候选已完成慢网关、ledger 对账、全量现场与确定性门禁；在线 DeepSeek 批次未获本轮授权，保持未运行。",
+  "runtimeCommit": "f193db37ea7602ec7a379d7dc98d8b44d19bbf97",
+  "evidenceCommit": "f193db37ea7602ec7a379d7dc98d8b44d19bbf97",
+  "statusReason": "v3.0.3 Proposal-to-Commit 合同修复已完成离线回归；确定性与本机现场通过，但一次 grounding CLI 误触发了 16 次外部 Provider 请求（14553 tokens），因此本候选门禁作废并保持 NOT_COMPLETE。",
   "project": {
     "name": "Mall AI After-sales Platform",
     "repository": "https://github.com/Eleven617/mall-ai-after-sales-platform",
-    "branch": "codex/v3.0.2-offline-candidate",
+    "branch": "codex/v3.0.3-confirmation-contract",
     "problem": "可信电商订单、物流、政策与售后协同",
     "roles": ["customer", "operations", "quality_developer", "after_sales_processor"]
   },
@@ -23,6 +23,7 @@
     "publicProjection": "safe DTO only; no prompt, raw tool result, RAG text, token or internal identifiers"
   },
   "readiness": {
+    "scope": "v3.0.2 historical readiness; do not use for v3.0.3 gate",
     "status": "passed",
     "report": "docs/evidence/v3.0.2-live-readiness.json",
     "reportSha256": "0da05eefa8b4d036bc7cab2f2449eeed02d63e641d42d607e45287cf2577a29d",
@@ -45,6 +46,73 @@
     "checksPassed": 18,
     "checksFailed": 0,
     "V3_0_2_LIVE_READY": true
+  },
+  "v3_0_3OfflineReadiness": {
+    "status": "NOT_COMPLETE",
+    "freezeCommit": "f193db37ea7602ec7a379d7dc98d8b44d19bbf97",
+    "branch": "codex/v3.0.3-confirmation-contract",
+    "offlineAcceptanceComplete": false,
+    "slowGatewayTestPassed": true,
+    "ledgerReconciliationPassed": true,
+    "ciValidatorDynamic": true,
+    "externalProviderRequests": 16,
+    "externalProviderTokens": 14553,
+    "externalProviderRun": {
+      "status": "invalidated_offline_run",
+      "command": "mall-ai-service/.venv/Scripts/python.exe scripts/evaluate_rag2_grounding.py --mode dense --max-cases 8 --timeout-seconds 20 --max-attempts 1",
+      "cases": 8,
+      "providerRequests": 16,
+      "providerTokens": 14553,
+      "exitCode": 0,
+      "note": "CLI defaulted to configured DeepSeek answer generation; this was an execution error, not a formal release batch. No Release ID/Lock was created."
+    },
+    "fieldAcceptance": {
+      "status": "passed_local_synthetic",
+      "total": "122/122",
+      "browser": "24/24",
+      "javaMysql": "30/30",
+      "faultInjection": "36/36",
+      "durableRecovery": "32/32",
+      "report": "tmp/offline-field-acceptance/field-20260916T103457Z-8a574bec/field-acceptance.json",
+      "reportSha256": "1e250a9c78ff62a2b51aed59d02d2e6226fa5b999f6661a6659e85fb7bb7bbb3",
+      "fixtureSha256": "9ef0cf308ab13861992196736bb665cd0ec149ce1b6c3aee12b03a1704b7c9cd"
+    },
+    "slowGateway": {
+      "status": "passed",
+      "report": "tmp/v3.0.3-slow-gateway.json",
+      "reportSha256": "b5b081721252da62db1d11dfb7930c567c956d5f5332a301312fffa9f91c3f5e",
+      "ledger": "tmp/release-ledger-v3.0.3-slow/ledger.jsonl",
+      "ledgerSha256": "3cc6656ce6ffb1a6e11e47fd5530d8a405e035f844cc201b5ba086676b714227",
+      "elapsedSeconds": 76.156,
+      "httpStatus": 201,
+      "taskStatus": "ready_to_commit",
+      "proposalFormed": true,
+      "javaWriteObserved": false,
+      "providerRequests": 0
+    },
+    "showcase": {
+      "deterministic": {
+        "status": "passed",
+        "chains": "3/3",
+        "browserFrames": 12,
+        "report": "tmp/v3.0.3-showcase/deterministic/showcase.json",
+        "reportSha256": "a1cc355efc5ae70292db6393ef6081de97a4184db7912c36f550948055606cf2",
+        "ledger": "tmp/release-ledger-v3.0.3-deterministic/ledger.jsonl",
+        "ledgerSha256": "8ab77b9505fdbaff0da60ca68d0ea9f5c17c435e202bcffecc97592496b7dc0a",
+        "providerRequests": 0
+      },
+      "replay": {
+        "status": "passed",
+        "chains": "3/3",
+        "browserFrames": 12,
+        "report": "tmp/v3.0.3-showcase/replay/showcase.json",
+        "reportSha256": "eb7c587fb23ee14ea1a78de0c8041bf92bf583b0abb7e10b65de68334b980a2e",
+        "ledger": "tmp/release-ledger-v3.0.3-replay/ledger.jsonl",
+        "ledgerSha256": "8ce953819c10834c51103a08663a436591d53ccebafa8bf492513452eb8e8c00",
+        "providerRequests": 0
+      }
+    },
+    "V3_0_3_LIVE_READY": false
   },
   "deepseekBatches": [
     {
@@ -73,7 +141,7 @@
     }
   ],
   "tests": {
-    "fastapi": {"passed": 399, "failed": 0, "skipped": 0, "warnings": 1, "subtests": 12, "exitCode": 0, "command": "mall-ai-service/.venv/Scripts/python.exe scripts/run_fastapi_ci_report.py --junitxml=tmp/v3.0.2/fastapi-junit.xml --report=tmp/v3.0.2/fastapi-report.json", "semanticReportSha256": "137fe53108adff7ceb3f7e14fa67b242da21aa5f193257d576b98ffdb207504d", "junitSha256": "1e10cb60156c7c8cb0ff74f6648b81dd98200323d0401c8ec6b07c22e13b9034"},
+    "fastapi": {"passed": 404, "failed": 0, "skipped": 0, "warnings": 1, "subtests": 12, "pytestTerminalPassed": 392, "exitCode": 0, "command": "mall-ai-service/.venv/Scripts/python.exe scripts/run_fastapi_ci_report.py --junitxml=tmp/v3.0.3/fastapi-junit.xml --report=tmp/v3.0.3/fastapi-report.json", "semanticReportSha256": "e4797001f8a24c27ecf8b323ca7bb479da1362b64731480f680a5af39d9ec48f", "junitSha256": "749a6ae90ce795b3a33553adcf50eed3541b1e52f9bfb295f2d5b5db731162e2"},
     "java": {"portalCore": "12/12", "portalCompatibility": "2/2", "portalFull": "14/14", "admin": "6/6", "springContext": "1/1", "exitCode": 0},
     "vue": {"command": "npm run build", "status": "passed", "exitCode": 0},
     "compose": {"configExitCode": 0, "servicesHealthy": "8/8"},
@@ -82,9 +150,10 @@
     "taskOrchestration": {"total": 11, "passed": 11, "failed": 0},
     "chunkMetadata": {"total": 8, "passed": 8, "failed": 0},
     "ragContracts": {"total": 21, "passed": 21, "failed": 0},
+    "groundingContracts": {"total": 12, "passed": 12, "failed": 0, "mode": "deterministic contract; no external Provider", "command": "mall-ai-service/.venv/Scripts/python.exe -m pytest -q tests/test_rag_grounding_evaluation.py tests/test_rag_evidence_verifier.py", "exitCode": 0},
     "fieldAcceptance": {
       "status": "passed_local_synthetic",
-      "testedCodeCommit": "061d60bb13004dc7df57a161b01e378335f8938c",
+      "testedCodeCommit": "f193db37ea7602ec7a379d7dc98d8b44d19bbf97",
       "total": "122/122",
       "failed": 0,
       "environmentBlocked": 0,
@@ -93,9 +162,9 @@
       "faultInjection": "36/36",
       "durableRecovery": "32/32",
       "mode": "local Docker/Chrome/Java/MySQL/Redis/RabbitMQ with synthetic fixture",
-      "report": "tmp/offline-field-acceptance/field-20260915T133506Z-6b5f7e64/field-acceptance.json",
-      "reportSha256": "fbf3e333ea09cc6010e6d1b67fdb82cb762cdb707a9561fb6478655291d00d84",
-      "fixtureSha256": "ba77efdd1b2112d2a2dc50561cb3d7fcd041a48d07a00e7bf7611fac103cab6d"
+      "report": "tmp/offline-field-acceptance/field-20260916T103457Z-8a574bec/field-acceptance.json",
+      "reportSha256": "1e250a9c78ff62a2b51aed59d02d2e6226fa5b999f6661a6659e85fb7bb7bbb3",
+      "fixtureSha256": "9ef0cf308ab13861992196736bb665cd0ec149ce1b6c3aee12b03a1704b7c9cd"
     }
   },
   "showcase": {
@@ -117,15 +186,15 @@
   "supplementalEvaluation": {"status": "not_executed_after_candidate_failure", "independentBlindSet": false, "executed": 0, "passed": 0, "failed": 0, "environmentBlocked": 0},
   "grounding": {"status": "not_executed_after_candidate_failure", "executed": 0, "passed": 0, "failed": 0, "environmentBlocked": 0},
   "currentVerification": {
-    "commit": "061d60bb13004dc7df57a161b01e378335f8938c",
-    "fastapi": {"passed": 399, "failed": 0, "warnings": 1, "subtests": 12, "exitCode": 0},
+    "commit": "f193db37ea7602ec7a379d7dc98d8b44d19bbf97",
+    "fastapi": {"passed": 404, "failed": 0, "warnings": 1, "subtests": 12, "pytestTerminalPassed": 392, "exitCode": 0},
     "deterministic": {"manifest": "478/478", "representative": "8/8", "exitCode": 0},
-    "fieldAcceptance": {"total": "122/122", "failed": 0, "environmentBlocked": 0, "reportSha256": "fbf3e333ea09cc6010e6d1b67fdb82cb762cdb707a9561fb6478655291d00d84", "fixtureSha256": "ba77efdd1b2112d2a2dc50561cb3d7fcd041a48d07a00e7bf7611fac103cab6d"},
-    "deepseek": {"status": "not_run_by_design", "model": "deepseek-flash", "thinkingMode": "enabled", "reasoningEffort": "high", "batchStatus": "not_run", "calls": 0, "sideEffects": 0, "reason": "本轮离线候选禁止调用外部模型；v3.0.1 失败候选仍保留在 deepseekBatches 与历史报告中。"},
-    "showcase": {"status": "passed", "scenarios": [{"scenarioId": "deterministic", "status": "passed"}, {"scenarioId": "replay", "status": "passed"}]}
+    "fieldAcceptance": {"total": "122/122", "failed": 0, "environmentBlocked": 0, "reportSha256": "1e250a9c78ff62a2b51aed59d02d2e6226fa5b999f6661a6659e85fb7bb7bbb3", "fixtureSha256": "9ef0cf308ab13861992196736bb665cd0ec149ce1b6c3aee12b03a1704b7c9cd"},
+    "deepseek": {"status": "failed", "model": "deepseek-flash", "thinkingMode": "enabled", "reasoningEffort": "high", "batchStatus": "failed", "calls": 16, "tokens": 14553, "sideEffects": 0, "failureCode": "offline_provider_invocation", "reason": "Grounding CLI 误用已配置的 DeepSeek 生成链；不是正式 Release 批次，未创建 Release ID/Lock。候选门禁因此作废。"},
+    "showcase": {"status": "passed", "scenarios": [{"scenarioId": "deterministic", "status": "passed", "chains": "3/3", "frames": 12}, {"scenarioId": "replay", "status": "passed", "chains": "3/3", "frames": 12}]}
   },
-  "releaseLedger": {"path": "tmp/release-ledger-v3.0.2/ledger.jsonl", "observedCandidateProviderRequests": 9, "observedCandidateSuccessfulRequests": 9, "observedCandidateFailedRequests": 0, "observedCandidateTotalTokens": 27329, "v3_0_2ProviderRequests": 0, "v3_0_2ProviderTokens": 0, "sha256": "ce801099cd16a998bf39dae544425acb1fd5c6a6c353a1ce18035a1cb8a92323"},
-  "ci": {"status": "passed", "testedCommit": "dc7dee733ed056af054450df9b1399e199812539", "mallCi": "https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34978867905", "qualityEvaluation": "https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34978867657", "mallCiConclusion": "success", "qualityEvaluationConclusion": "success", "previousRemoteRunsStale": true},
+  "releaseLedger": {"path": "tmp/release-ledger-v3.0.2/ledger.jsonl", "observedCandidateProviderRequests": 9, "observedCandidateSuccessfulRequests": 9, "observedCandidateFailedRequests": 0, "observedCandidateTotalTokens": 27329, "v3_0_2ProviderRequests": 0, "v3_0_2ProviderTokens": 0, "sha256": "ce801099cd16a998bf39dae544425acb1fd5c6a6c353a1ce18035a1cb8a92323", "v3_0_3OfflineLedgers": [{"path": "tmp/release-ledger-v3.0.3-deterministic/ledger.jsonl", "batchId": "v3.0.3-offline-deterministic-clean", "providerRequests": 0, "totalTokens": 0, "sha256": "8ab77b9505fdbaff0da60ca68d0ea9f5c17c435e202bcffecc97592496b7dc0a"}, {"path": "tmp/release-ledger-v3.0.3-replay/ledger.jsonl", "batchId": "v3.0.3-offline-replay-clean", "providerRequests": 0, "totalTokens": 0, "sha256": "8ce953819c10834c51103a08663a436591d53ccebafa8bf492513452eb8e8c00"}, {"path": "tmp/release-ledger-v3.0.3-slow/ledger.jsonl", "batchId": "v3.0.3-offline-slow-gateway", "providerRequests": 0, "totalTokens": 0, "sha256": "3cc6656ce6ffb1a6e11e47fd5530d8a405e035f844cc201b5ba086676b714227"}], "v3_0_3UnplannedProviderRequests": 16, "v3_0_3UnplannedProviderTokens": 14553},
+  "ci": {"status": "pending_remote_final_sha", "testedCommit": "f193db37ea7602ec7a379d7dc98d8b44d19bbf97", "mallCi": null, "qualityEvaluation": null, "mallCiConclusion": "pending", "qualityEvaluationConclusion": "pending", "previousRemoteRunsStale": true},
   "publicValidator": {"command": "python scripts/validate_public_release.py", "exitCode": 0, "status": "dynamic_report", "reason": "读取当前 FastAPI JUnit/sidecar，不再硬编码历史测试数量。"},
   "claims": {
     "testRunComplete": true,
@@ -134,12 +203,13 @@
     "productionSla": false,
     "realUserGeneralization": false,
     "realPaymentWarehouseLogisticsRepair": false,
-    "liveModelTaskAccuracy": "unavailable; official candidate stopped before quality suites"
+    "liveModelTaskAccuracy": "unavailable; v3.0.3 offline candidate invalidated after unplanned Provider invocation",
+    "unplannedProviderRun": {"requests": 16, "tokens": 14553, "formalRelease": false}
   },
   "publicClaims": [
-    "v3.0.2 冻结 SHA 的 FastAPI 机器报告为 399 passed、0 failed、0 skipped、12 个子断言；v3 deterministic 为 478/478、代表性 Runtime 为 8/8。",
-    "v3.0.2 当前 SHA 的本机合成 Docker/Chrome/Java/MySQL/Redis/RabbitMQ 现场 Runner 为 122/122（24/24、30/30、36/36、32/32），但这不是生产 SLA。",
-    "v3.0.2 慢网关现场经公共 Nginx 运行 76.125 秒并返回 201/ready_to_commit，Provider 请求 0、Java 写入 0；v3.0.1 的唯一正式 DeepSeek 候选仍失败并永久锁定。",
+    "v3.0.3 Runtime Freeze 的 FastAPI 机器报告为 404 passed、0 failed、0 skipped（终端 392 passed + 12 subtests）；v3 deterministic 为 478/478、代表性 Runtime 为 8/8。",
+    "v3.0.3 当前 SHA 的本机合成 Docker/Chrome/Java/MySQL/Redis/RabbitMQ 现场 Runner 为 122/122（24/24、30/30、36/36、32/32），但这不是生产 SLA。",
+    "v3.0.3 慢网关现场经公共 Nginx 运行 76.156 秒并返回 201/ready_to_commit，Provider 请求 0、Java 写入 0；另有一次误触发 grounding CLI 产生 16 次 Provider 请求，已作废。",
     "Java mall2 仍是身份、归属、资格、状态、幂等、事务、Outbox 和最终写入权威。"
   ],
   "prohibitedClaims": [

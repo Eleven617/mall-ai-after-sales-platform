@@ -1,5 +1,13 @@
 # 测试、评测与现场证据
 
+## 当前权威快照｜v3.0.3 Proposal 确认执行合同（2026-09-17）
+
+候选分支 `codex/v3.0.3-confirmation-contract`，Runtime Freeze `f193db37ea7602ec7a379d7dc98d8b44d19bbf97`。Proposal-to-Commit 映射、确认时事实/hash/owner/TTL 重校验、Runtime 幂等键和无 Adapter 的 fail-closed 已由聚焦测试 **38/38** 与 Trace 合同 **45/45** 验证；FastAPI 终端 **392 passed + 12 subtests**，JUnit **404/404**；manifest **478/478**、代表性 **8/8**；Task 11/11、Quality 17/17、Chunk/Metadata 8/8；Java portal/admin/Spring 12/12、6/6、1/1；Vue build、Compose 8/8 healthy。
+
+本机合成现场 Runner **122/122**（Browser 24、Java/MySQL 30、Fault 36、Durable 32，0 failed/0 blocked）；deterministic/replay 展示链各 3/3、12 帧；慢网关经公共 Nginx 76.156 秒返回 201/ready_to_commit，Java 写入 0。现场报告 SHA `1e250a9c78ff62a2b51aed59d02d2e6226fa5b999f6661a6659e85fb7bb7bbb3`，FastAPI 报告 SHA `6519ba973808f0063195751f1cfed40d079c154f3ba0355684b2c9663a6eb56`。
+
+本候选 **NOT_COMPLETE / `V3_0_3_LIVE_READY=false`**：一次 grounding CLI 误触发已配置 DeepSeek（16 请求、14,553 tokens），已作废且没有正式 Release ID/Lock；gitleaks 本机缺失为 `environment_blocked`，OSV 缓存扫描 exit 0。不得把该次输出当成 Grounding 通过、在线批次或模型准确率；v3.0.2 FAILED 历史证据保持不变。
+
 ## 当前权威快照｜v3.0.2 离线候选（2026-09-15）
 
 当前状态：**NOT_COMPLETE（离线条件与远程 CI 已满足，在线批次待单独确认）**。冻结 SHA `061d60bb13004dc7df57a161b01e378335f8938c`；FastAPI **399/399**（0 failed、0 skipped，机器报告）；Java portal/admin/Spring **14/14、6/6、1/1**；Vue build passed；manifest/preflight **478/478、8/8**；RAG 合同 **21/21**。证据提交 `dc7dee733ed056af054450df9b1399e199812539` 的 [`mall-ci`](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34978867905) 与 [`quality-evaluation`](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34978867657) 均成功。

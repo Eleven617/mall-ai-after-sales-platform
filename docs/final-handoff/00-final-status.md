@@ -1,5 +1,13 @@
 # Mall v3.0 最终交付状态
 
+## 当前权威快照｜v3.0.3 Proposal 确认执行合同（2026-09-17）
+
+分支 `codex/v3.0.3-confirmation-contract`，Runtime Freeze `f193db37ea7602ec7a379d7dc98d8b44d19bbf97`。服务器控制的 Draft-to-Commit 映射、确认重校验、Runtime 幂等键和无 Adapter 的 fail-closed 已实现；聚焦测试 38/38、Trace 合同 45/45、FastAPI JUnit 404/404（终端 392 passed + 12 subtests）、manifest 478/478、代表性 8/8、Task 11/11、Quality 17/17、Chunk/Metadata 8/8、Java 12/12 + 6/6 + Spring 1/1、Vue/Compose 均通过。
+
+本机合成现场 Runner 为 **122/122**（Browser 24、Java/MySQL 30、Fault 36、Durable 32），deterministic/replay 展示链各 3/3、各 12 帧；慢网关经公共 Nginx 76.156 秒返回 201/ready_to_commit，Java 写入 0、Provider 0。报告与 hash 见 [`v3.0.3-confirmation-contract.md`](../evidence/v3.0.3-confirmation-contract.md)。
+
+发布门禁 **未通过（`V3_0_3_LIVE_READY=false`）**：grounding CLI 一次误触发已配置 DeepSeek，16 请求/14,553 tokens，非正式批次且无 Release Lock，但违反零 Provider 约束，已作废；后续无模型调用。gitleaks 本机 `environment_blocked`，OSV 缓存扫描通过。v3.0.2 FAILED 历史锁/报告/账本保持不变，未修改 README、未合并 main、未创建 Release。
+
 ## 当前权威快照｜v3.0.2 唯一正式 DeepSeek 批次（2026-09-16）
 
 v3.0.2 候选分支 `codex/v3.0.2-offline-candidate`（HEAD `a9271ac295d98d265ffdd54b03333734b1beea4c`），运行时冻结 `061d60bb13004dc7df57a161b01e378335f8938c`。唯一正式批次 `candidate-61f2a1fd5453` **FAILED**，Release Gate **未通过**，`V3_0_2_LIVE_READY=false`（在线结论）。第一展示链在 `java_commit` 阶段因 `commit_skill_not_allowlisted` fail-closed；没有 Java 写入。报告、Lock 与 Ledger 的 SHA-256 见 `docs/evidence/release-gate-summary.md`；不重跑、不创建第二批次、不更新 README、不合并 main。离线候选门禁仍为通过，但不能替代在线模型验收。

@@ -1,12 +1,26 @@
 {
   "schemaVersion": "v3.0-current-head-evidence.v5",
-  "generatedAt": "2026-09-15T13:44:36Z",
+  "generatedAt": "2026-09-17T00:00:00+08:00",
   "repository": {
     "remote": "https://github.com/Eleven617/mall-ai-after-sales-platform.git",
-    "branch": "codex/v3.0.2-offline-candidate",
-    "testedCodeCommit": "061d60bb13004dc7df57a161b01e378335f8938c",
+    "branch": "codex/v3.0.3-confirmation-contract",
+    "testedCodeCommit": "f193db37ea7602ec7a379d7dc98d8b44d19bbf97",
     "workspaceAtReadiness": "clean_except_ignored_tmp",
     "releaseStatus": "NOT_COMPLETE"
+  },
+  "v3_0_3ConfirmationContract": {
+    "status": "NOT_COMPLETE",
+    "runtimeFreezeCommit": "f193db37ea7602ec7a379d7dc98d8b44d19bbf97",
+    "branch": "codex/v3.0.3-confirmation-contract",
+    "focusedTaskRuntime": "38/38",
+    "taskRuntimeTrace": "45/45",
+    "fastapi": {"pytestTerminalPassed": 392, "subtests": 12, "junitPassed": 404, "failed": 0, "skipped": 0, "report": "tmp/v3.0.3/fastapi-report.json", "reportSha256": "6519ba973808f0063195751f1cfed40d079c154f3ba0355684b2c9663a6eb56", "junitSha256": "749a6ae90ce795b3a33553adcf50eed3541b1e52f9bfb295f2d5b5db731162e2"},
+    "manifest": {"deterministic": "478/478", "representative": "8/8", "manifestSha256": "d9fc72be81e2f67330710052c03287d49677bf7eb6f54eed51b87c01db2ac1ad", "caseSetSha256": "18a3ad20485417bbebd8bad875490cf80b171ed28760b1dc2dfbd203d1938ccd"},
+    "fieldAcceptance": {"total": "122/122", "failed": 0, "environmentBlocked": 0, "report": "tmp/offline-field-acceptance/field-20260916T103457Z-8a574bec/field-acceptance.json", "reportSha256": "1e250a9c78ff62a2b51aed59d02d2e6226fa5b999f6661a6659e85fb7bb7bbb3", "fixtureSha256": "9ef0cf308ab13861992196736bb665cd0ec149ce1b6c3aee12b03a1704b7c9cd"},
+    "showcase": {"deterministic": "3/3", "replay": "3/3", "framesPerRun": 12, "providerRequests": 0},
+    "slowGateway": {"elapsedSeconds": 76.156, "httpStatus": 201, "taskStatus": "ready_to_commit", "javaWrites": 0, "providerRequests": 0, "reportSha256": "b5b081721252da62db1d11dfb7930c567c956d5f5332a301312fffa9f91c3f5e"},
+    "unplannedProviderRun": {"status": "invalidated_offline_run", "requests": 16, "tokens": 14553, "formalRelease": false},
+    "V3_0_3_LIVE_READY": false
   },
   "readiness": {
     "status": "passed",
@@ -32,21 +46,21 @@
     "V3_0_2_LIVE_READY": true
   },
   "deterministicGates": {
-    "fastapi": {"command": "mall-ai-service/.venv/Scripts/python.exe scripts/run_fastapi_ci_report.py --junitxml=tmp/v3.0.2/fastapi-junit.xml --report=tmp/v3.0.2/fastapi-report.json", "passed": 399, "failed": 0, "skipped": 0, "warnings": 1, "subtestsPassed": 12, "exitCode": 0, "semanticReportSha256": "137fe53108adff7ceb3f7e14fa67b242da21aa5f193257d576b98ffdb207504d", "junitSha256": "1e10cb60156c7c8cb0ff74f6648b81dd98200323d0401c8ec6b07c22e13b9034"},
+    "fastapi": {"command": "mall-ai-service/.venv/Scripts/python.exe scripts/run_fastapi_ci_report.py --junitxml=tmp/v3.0.3/fastapi-junit.xml --report=tmp/v3.0.3/fastapi-report.json", "passed": 404, "pytestTerminalPassed": 392, "failed": 0, "skipped": 0, "warnings": 1, "subtestsPassed": 12, "exitCode": 0, "semanticReportSha256": "e4797001f8a24c27ecf8b323ca7bb479da1362b64731480f680a5af39d9ec48f", "junitSha256": "749a6ae90ce795b3a33553adcf50eed3541b1e52f9bfb295f2d5b5db731162e2"},
     "v3Manifest": {"registered": 478, "passed": 478, "manifestSha256": "2f9d60f3903b3046236a71e1557d89fac87e916d9586d787a193c6deb4c71d2e", "exitCode": 0},
     "v3Preflight": {"passed": 478, "registered": 478, "representativePassed": 8, "representativeRegistered": 8, "exitCode": 0},
     "qualityAgent": {"total": 17, "passed": 17, "failed": 0},
     "taskOrchestration": {"total": 11, "passed": 11, "failed": 0},
     "chunkMetadata": {"total": 8, "passed": 8, "failed": 0},
     "ragContracts": {"total": 21, "passed": 21, "failed": 0},
-    "java": {"portal": "14/14", "admin": "6/6", "springContext": "1/1", "exitCode": 0},
+    "java": {"portal": "12/12", "admin": "6/6", "springContext": "1/1", "exitCode": 0},
     "web": {"status": "passed", "exitCode": 0},
     "compose": {"configExitCode": 0, "servicesHealthy": "8/8"}
   },
     "fieldAcceptance": {
-    "report": "tmp/offline-field-acceptance/field-20260915T133506Z-6b5f7e64/field-acceptance.json",
-    "reportSha256": "fbf3e333ea09cc6010e6d1b67fdb82cb762cdb707a9561fb6478655291d00d84",
-    "testedCodeCommit": "061d60bb13004dc7df57a161b01e378335f8938c",
+    "report": "tmp/offline-field-acceptance/field-20260916T103457Z-8a574bec/field-acceptance.json",
+    "reportSha256": "1e250a9c78ff62a2b51aed59d02d2e6226fa5b999f6661a6659e85fb7bb7bbb3",
+    "testedCodeCommit": "f193db37ea7602ec7a379d7dc98d8b44d19bbf97",
     "releaseGate": "passed_local_synthetic",
     "total": 122,
     "passed": 122,
@@ -58,8 +72,8 @@
   },
   "showcase": {
     "entryPoint": "/agent-tasks",
-    "deterministic": {"status": "passed", "chains": "3/3", "browserFrames": 12, "providerRequests": 0, "report": "tmp/offline-field/deterministic/showcase.json", "reportSha256": "0586ca0e43d441a4bc570f7d185533c17dc4ca926d9e8eeef2a5a2a394cbf5e7", "commit": "061d60bb13004dc7df57a161b01e378335f8938c"},
-    "replay": {"status": "passed", "chains": "3/3", "browserFrames": 12, "providerRequests": 0, "report": "tmp/offline-field/replay/showcase.json", "reportSha256": "047d578d5bc3f6f78bc5f5353149de59da52b3ad3ff2e39cdbf8f6d2c09dd35a", "commit": "061d60bb13004dc7df57a161b01e378335f8938c"},
+    "deterministic": {"status": "passed", "chains": "3/3", "browserFrames": 12, "providerRequests": 0, "report": "tmp/v3.0.3-showcase/deterministic/showcase.json", "reportSha256": "a1cc355efc5ae70292db6393ef6081de97a4184db7912c36f550948055606cf2", "commit": "f193db37ea7602ec7a379d7dc98d8b44d19bbf97"},
+    "replay": {"status": "passed", "chains": "3/3", "browserFrames": 12, "providerRequests": 0, "report": "tmp/v3.0.3-showcase/replay/showcase.json", "reportSha256": "eb7c587fb23ee14ea1a78de0c8041bf92bf583b0abb7e10b65de68334b980a2e", "commit": "f193db37ea7602ec7a379d7dc98d8b44d19bbf97"},
     "officialLive": {"status": "failed", "completedChains": "0/3", "report": "tmp/deepseek-v3.0.1-final-06ef600e51e7b0dc362d43a98e274c28144738d8.json", "reportSha256": "6615d069122cb66ee8f3467f98ae79457ef287afd6f19c5e56035c45fb0b65c8"}
   },
   "liveModelCandidate": {
@@ -121,7 +135,7 @@
     "grounding": "not_executed_after_candidate_failure",
     "limitation": "检索指标来自小型版本化合成政策集，不是答案准确率或生产 SLA。"
   },
-  "ci": {"status": "passed", "testedCommit": "dc7dee733ed056af054450df9b1399e199812539", "mallCi": "https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34978867905", "qualityEvaluation": "https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/34978867657", "pushStatus": "success", "previousRunsStale": true},
+  "ci": {"status": "pending_remote_final_sha", "testedCommit": "f193db37ea7602ec7a379d7dc98d8b44d19bbf97", "mallCi": null, "qualityEvaluation": null, "pushStatus": "pending_evidence_commit", "previousRunsStale": true},
   "security": {"sideEffectsObserved": 0, "publicProjection": "safe DTO only", "secretsCommitted": false, "rawProviderPayloadsCommitted": false},
-  "claims": {"testRunComplete": true, "releaseQualified": false, "productionAccuracy": false, "productionSla": false, "realUserGeneralization": false, "externalFulfillment": false}
+  "claims": {"testRunComplete": true, "releaseQualified": false, "productionAccuracy": false, "productionSla": false, "realUserGeneralization": false, "externalFulfillment": false, "unplannedProviderRun": true}
 }

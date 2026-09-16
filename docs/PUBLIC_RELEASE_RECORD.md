@@ -1,5 +1,15 @@
 # 公开发布记录
 
+## 当前权威记录｜v3.0.3 Proposal 确认执行合同（2026-09-17）
+
+候选分支 `codex/v3.0.3-confirmation-contract`，Runtime Freeze `f193db37ea7602ec7a379d7dc98d8b44d19bbf97`。本次修复把 Proposal Skill 与服务器确认执行 Skill 分离：仅 `create_after_sales_draft` 精确映射到真实 `commit_after_sales_action`，其它无 Adapter 的确认 Skill 一律安全阻塞；确认时由 Runtime 重读事实/hash/归属并生成幂等键，Java 继续负责资格、状态机、事务和最终写入。
+
+离线确定性与本机现场：FastAPI 终端 **392 passed + 12 subtests**，JUnit **404 passed/0 failed/0 skipped**；manifest **478/478**、代表性 **8/8**；Task orchestration **11/11**、Quality Agent **17/17**、Chunk/Metadata **8/8**；Java portal/admin/Spring **12/12、6/6、1/1**；Vue build、Compose 8/8 healthy；现场 Runner **122/122**（24/30/36/32）。三条 deterministic 与三条 replay 展示链各 **3/3、12 帧**。公共 Nginx 慢调用 **76.156 秒、HTTP 201、ready_to_commit**，Proposal 已形成、Java 写入 0、Provider 0。
+
+本候选 **NOT_COMPLETE / `V3_0_3_LIVE_READY=false`**：一次错误 grounding CLI 产生了 **16 次 DeepSeek Provider 请求、14,553 tokens**，已标为 `invalidated_offline_run`，没有 Release ID/Lock，不能计入通过率或成本；后续未再调用 Provider。gitleaks 本机缺少可执行文件，标记 `environment_blocked`；OSV 缓存扫描 exit 0。未修改 README、未合并 `main`、未创建 Tag/Release。
+
+证据：[`v3.0.3-confirmation-contract.md`](evidence/v3.0.3-confirmation-contract.md)、[`v3.0.3-confirmation-contract.json`](evidence/v3.0.3-confirmation-contract.json)。v3.0.2 的正式 FAILED Lock、Ledger、报告和提交 `0eb964b` 未修改；历史报告不与本候选合并。不能宣称真实模型准确率、生产 SLA、真实支付/仓储/物流/维修履约或模型成本。
+
 ## 当前权威记录｜v3.0.2 唯一正式 DeepSeek 批次（2026-09-16）
 
 候选分支 `codex/v3.0.2-offline-candidate`，候选 HEAD `a9271ac295d98d265ffdd54b03333734b1beea4c`；运行时冻结 `061d60bb13004dc7df57a161b01e378335f8938c`。Docker Engine `29.8.0` 与 Compose 八服务均 healthy，运行时身份已核对。
