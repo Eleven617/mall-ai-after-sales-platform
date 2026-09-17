@@ -1,18 +1,18 @@
 param(
-    [ValidateSet('Preflight', 'BatchA', 'BatchB')]
+    [ValidateSet('Preflight', 'BatchA', 'BatchB', 'FinalAfterBatchAFailure')]
     [string]$Phase = 'Preflight',
-    [string]$ReleaseId = 'mall-v3.0.3-portfolio-final-3a0d59080e94',
-    [string]$RuntimeCommit = '3a0d59080e94848553ac2d981116acf236df3cf6'
+    [string]$ReleaseId = 'mall-v3.0.3-portfolio-final-db3860701086',
+    [string]$RuntimeCommit = 'db3860701086bf9718ac23ef7b272a28bff2083f'
 )
 
 $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent $PSScriptRoot
 $python = Join-Path $root 'mall-ai-service\.venv\Scripts\python.exe'
-$ledgerDirectory = Join-Path $root 'tmp\release-ledger-portfolio-final'
+$ledgerDirectory = Join-Path $root "tmp\release-ledger-$ReleaseId"
 $ledgerPath = Join-Path $ledgerDirectory 'ledger.jsonl'
 $lockPath = Join-Path $root "docs\evidence\deepseek-release-lock-$ReleaseId.json"
-$reportDirectory = Join-Path $root 'tmp\portfolio-final-release'
-$reportName = if ($Phase -eq 'BatchA') { 'batch-a.json' } elseif ($Phase -eq 'BatchB') { 'batch-b.json' } else { 'preflight.json' }
+$reportDirectory = Join-Path $root "tmp\portfolio-final-release-$ReleaseId"
+$reportName = if ($Phase -eq 'BatchA') { 'batch-a.json' } elseif ($Phase -eq 'BatchB') { 'batch-b.json' } elseif ($Phase -eq 'FinalAfterBatchAFailure') { 'final-after-batch-a-failure.json' } else { 'preflight.json' }
 $reportPath = Join-Path $reportDirectory $reportName
 
 if (-not (Test-Path -LiteralPath $python)) { throw 'mall-ai-service/.venv is missing.' }
@@ -76,10 +76,10 @@ if ($Phase -eq 'Preflight') {
     exit 0
 }
 
-if ($Phase -eq 'BatchA') {
+if ($Phase -eq 'BatchA' -or $Phase -eq 'FinalAfterBatchAFailure') {
     if (Test-Path -LiteralPath $lockPath) { throw 'Batch A is already consumed or locked.' }
-    if (Test-Path -LiteralPath $ledgerPath) { throw 'Batch A requires a fresh dedicated ledger.' }
-    $pythonPhase = 'portfolio_a'
+    if (Test-Path -LiteralPath $ledgerPath) { throw 'A new final batch requires a fresh dedicated ledger.' }
+    $pythonPhase = if ($Phase -eq 'BatchA') { 'portfolio_a' } else { 'portfolio_final' }
 } else {
     if (-not (Test-Path -LiteralPath $lockPath)) { throw 'Batch B requires a successful Batch A lock.' }
     $lock = Get-Content -Raw -LiteralPath $lockPath | ConvertFrom-Json

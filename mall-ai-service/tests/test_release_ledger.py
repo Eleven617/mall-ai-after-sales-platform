@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import json
+import os
+import sys
 import threading
 import unittest
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -19,6 +21,7 @@ from app.services.release_ledger import (
     release_ledger_context,
     summarize_release_events,
 )
+from scripts import run_deepseek_release_batch as batch_runner
 from scripts.run_deepseek_release_batch import _atomic_create_json, _atomic_replace_json
 from scripts.run_deepseek_release_batch import _sync_process_ledger
 
@@ -154,6 +157,40 @@ class ReleaseLedgerTests(unittest.TestCase):
                 self.assertFalse(_sync_process_ledger(ledger))
                 self.assertFalse(ledger["ledgerReconciled"])
                 self.assertEqual("ledger_mismatch", ledger["failureCategory"])
+
+    def test_final_after_failed_batch_uses_a_new_single_use_lock(self) -> None:
+        """A repaired Runtime may consume one new final batch without reusing A."""
+
+        with TemporaryDirectory() as directory:
+            root = Path(directory)
+            lock = root / "new-release-lock.json"
+            report = root / "final.json"
+            ledger_path = root / "ledger.jsonl"
+
+            def sync(ledger: dict[str, object]) -> bool:
+                ledger.update({"providerRequests": 1, "successfulRequests": 1, "failedRequests": 0, "totalTokens": 5, "ledgerReconciled": True})
+                return True
+
+            completed = {
+                "status": "passed",
+                "realLocalShowcase": {"status": "passed"},
+                "main": {"status": "passed"},
+                "supplemental": {"status": "passed"},
+                "grounding": {"status": "passed"},
+            }
+            with patch.object(batch_runner, "settings", SimpleNamespace(deepseek_model="deepseek-flash", deepseek_api_key="fixture-only")), patch.object(
+                batch_runner, "_runtime_identity", return_value=(True, "ok")
+            ), patch.object(batch_runner, "_run_portfolio_b", return_value=completed), patch.object(
+                batch_runner, "_sync_process_ledger", side_effect=sync
+            ), patch.object(
+                sys, "argv", ["runner", "--phase", "portfolio_final", "--release-id", "new-release", "--runtime-commit", "a" * 40, "--report", str(report), "--lock", str(lock)]
+            ), patch.dict(os.environ, {"MALL_RELEASE_LEDGER_PATH": str(ledger_path)}, clear=False):
+                self.assertEqual(0, batch_runner.main())
+
+            result_lock = json.loads(lock.read_text(encoding="utf-8"))
+            self.assertEqual("PASSED", result_lock["status"])
+            self.assertEqual(1, len(result_lock["batchIds"]))
+            self.assertEqual("portfolio_final", result_lock["phase"])
 
 
 if __name__ == "__main__":

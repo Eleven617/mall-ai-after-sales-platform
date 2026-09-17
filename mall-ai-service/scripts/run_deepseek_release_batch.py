@@ -3,8 +3,10 @@
 The historical phases remain for immutable evidence. ``portfolio_a`` and
 ``portfolio_b`` are the controlled v3.0.3 entry points: A consumes exactly one
 batch for the three end-to-end live showcase chains; B is allowed exactly once
-after A passes and consumes the final evaluation batch. Both use one release
-lock and a metadata-only shared ledger.
+after A passes and consumes the final evaluation batch. If A has already
+failed and a Runtime fix has passed offline acceptance, ``portfolio_final``
+creates one new Release ID and consumes its one permitted final batch. Every
+path uses an immutable lock and a metadata-only shared ledger.
 """
 from __future__ import annotations
 
@@ -553,7 +555,7 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "--phase",
-        choices=("showcase", "final", "candidate", "portfolio_a", "portfolio_b"),
+        choices=("showcase", "final", "candidate", "portfolio_a", "portfolio_b", "portfolio_final"),
         required=True,
     )
     parser.add_argument("--release-id", required=True)
@@ -571,7 +573,7 @@ def main() -> int:
     else:
         lock_path = args.lock if args.lock.is_absolute() else REPOSITORY_ROOT / args.lock
 
-    portfolio_phase = args.phase in {"portfolio_a", "portfolio_b"}
+    portfolio_phase = args.phase in {"portfolio_a", "portfolio_b", "portfolio_final"}
     existing_lock: dict[str, object] | None = None
     # A portfolio release has exactly two distinct consumed states. A records
     # its own batch before it can make a request; B may proceed only from a
@@ -601,6 +603,9 @@ def main() -> int:
             if not isinstance(batches, list):
                 print(json.dumps({"status": "release_locked", "releaseId": args.release_id}, ensure_ascii=False), file=sys.stderr)
                 return 4
+            if args.phase == "portfolio_final":
+                print(json.dumps({"status": "release_locked", "releaseId": args.release_id}, ensure_ascii=False), file=sys.stderr)
+                return 4
             if args.phase == "portfolio_a" or existing_lock.get("status") != "BATCH_A_PASSED" or len(batches) != 1:
                 print(json.dumps({"status": "release_locked", "releaseId": args.release_id}, ensure_ascii=False), file=sys.stderr)
                 return 4
@@ -612,7 +617,7 @@ def main() -> int:
         print("deepseek release batch refused: reviewed model is not deepseek-flash", file=sys.stderr)
         return 3
 
-    if args.phase in {"candidate", "portfolio_a", "portfolio_b"}:
+    if args.phase in {"candidate", "portfolio_a", "portfolio_b", "portfolio_final"}:
         if not re.fullmatch(r"[0-9a-f]{40}", args.runtime_commit):
             print("deepseek release batch refused: runtime commit must be a full SHA", file=sys.stderr)
             return 3
@@ -670,10 +675,13 @@ def main() -> int:
         "totalTokens": 0,
     }
     lock_created = False
-    if args.phase in {"candidate", "portfolio_a"}:
+    if args.phase in {"candidate", "portfolio_a", "portfolio_final"}:
         try:
             if args.phase == "portfolio_a":
                 lock_payload["status"] = "BATCH_A_RUNNING"
+                lock_payload["phase"] = args.phase
+            elif args.phase == "portfolio_final":
+                lock_payload["status"] = "FINAL_RUNNING"
                 lock_payload["phase"] = args.phase
             _atomic_create_json(lock_path, lock_payload)
             lock_created = True
@@ -712,16 +720,21 @@ def main() -> int:
         ledger["status"] = "failed"
         ledger["failureCategory"] = "runner_exception"
         report = {"status": "failed", "failureCategory": "runner_exception"}
+    # Batch helpers normally set the ledger status themselves. Keep the
+    # top-level contract defensive so a future helper cannot emit a completed
+    # report while leaving an immutable lock with an undefined status.
+    if ledger.get("status") is None and isinstance(report, dict) and isinstance(report.get("status"), str):
+        ledger["status"] = report["status"]
     # Always reconcile before either the report or the immutable lock is
     # written.  A missing host path is a gate failure, never a silent zero.
-    if args.phase in {"candidate", "final", "showcase", "portfolio_a", "portfolio_b"}:
+    if args.phase in {"candidate", "final", "showcase", "portfolio_a", "portfolio_b", "portfolio_final"}:
         if not _sync_process_ledger(ledger):
             ledger["status"] = "failed"
             ledger["failureCategory"] = "ledger_mismatch"
     if isinstance(report, dict):
         report["ledgerMetrics"] = _reconciled_report_metrics(ledger)
     ledger["testRunComplete"] = bool(
-        args.phase in {"candidate", "portfolio_b"}
+        args.phase in {"candidate", "portfolio_b", "portfolio_final"}
         and isinstance(report, dict)
         and all(key in report for key in ("realLocalShowcase", "main", "supplemental", "grounding"))
     )
@@ -749,7 +762,7 @@ def main() -> int:
         lock_payload.update({
             "status": (
                 "BATCH_A_PASSED" if args.phase == "portfolio_a" and ledger.get("status") == "passed"
-                else "PASSED" if args.phase == "portfolio_b" and ledger.get("status") == "passed"
+                else "PASSED" if args.phase in {"portfolio_b", "portfolio_final"} and ledger.get("status") == "passed"
                 else "INTERRUPTED" if ledger.get("status") == "interrupted"
                 else "FAILED"
             ),
