@@ -423,16 +423,39 @@ def _extract_json_object(data: dict) -> dict:
     try:
         payload = json.loads(_strip_markdown_json(text))
     except (json.JSONDecodeError, TypeError) as exc:
-        raise LLMServiceError(
-            "Model did not return valid JSON",
-            category="invalid_response",
-        ) from exc
+        # Some OpenAI-compatible providers occasionally prepend a short
+        # presentation label despite JSON-object mode.  Accept only one
+        # bounded embedded object, then hand it to the existing strict schema
+        # validator.  The raw text remains process-local and is never traced,
+        # persisted or exposed to callers.
+        payload = _extract_embedded_json_object(text)
+        if payload is None:
+            raise LLMServiceError(
+                "Model did not return valid JSON",
+                category="invalid_response",
+            ) from exc
     if not isinstance(payload, dict):
         raise LLMServiceError(
             "Model JSON result must be an object",
             category="invalid_response",
         )
     return payload
+
+
+def _extract_embedded_json_object(text: str) -> dict | None:
+    if not isinstance(text, str) or len(text) > 32_000:
+        return None
+    start = text.find("{")
+    if start < 0 or start > 240:
+        return None
+    try:
+        value, end = json.JSONDecoder().raw_decode(text[start:])
+    except (json.JSONDecodeError, TypeError, ValueError):
+        return None
+    trailing = text[start + end:].strip()
+    if trailing and len(trailing) > 240:
+        return None
+    return value if isinstance(value, dict) else None
 
 
 def _headers() -> dict[str, str]:

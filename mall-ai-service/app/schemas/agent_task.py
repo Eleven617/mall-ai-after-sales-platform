@@ -12,7 +12,7 @@ import re
 import time
 from typing import Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+from pydantic import AliasChoices, BaseModel, ConfigDict, Field, field_validator, model_validator
 
 
 AgentTaskStatus = Literal[
@@ -355,15 +355,15 @@ class ExecutorDecision(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     decision: ExecutorDecisionName
-    reason_summary: str = Field(min_length=1, max_length=240)
-    target_node_id: str | None = Field(default=None, pattern=r"^node-[a-z0-9]{8,32}$")
-    skill_calls: list[SkillCall] = Field(default_factory=list, max_length=4)
-    new_plan_nodes: list[TaskPlanNode] = Field(default_factory=list, max_length=4)
-    artifact_refs: list[str] = Field(default_factory=list, max_length=12)
-    expected_next_observation: str | None = Field(default=None, max_length=240)
-    action_skill: str | None = Field(default=None, pattern=r"^[a-z][a-z0-9_]{2,63}$")
-    action_arguments: dict[str, Any] = Field(default_factory=dict, max_length=8)
-    user_question: str | None = Field(default=None, max_length=240)
+    reason_summary: str = Field(min_length=1, max_length=240, validation_alias=AliasChoices("reason_summary", "reasonSummary"))
+    target_node_id: str | None = Field(default=None, pattern=r"^node-[a-z0-9]{8,32}$", validation_alias=AliasChoices("target_node_id", "targetNodeId"))
+    skill_calls: list[SkillCall] = Field(default_factory=list, max_length=4, validation_alias=AliasChoices("skill_calls", "skillCalls"))
+    new_plan_nodes: list[TaskPlanNode] = Field(default_factory=list, max_length=4, validation_alias=AliasChoices("new_plan_nodes", "newPlanNodes"))
+    artifact_refs: list[str] = Field(default_factory=list, max_length=12, validation_alias=AliasChoices("artifact_refs", "artifactRefs"))
+    expected_next_observation: str | None = Field(default=None, max_length=240, validation_alias=AliasChoices("expected_next_observation", "expectedNextObservation"))
+    action_skill: str | None = Field(default=None, pattern=r"^[a-z][a-z0-9_]{2,63}$", validation_alias=AliasChoices("action_skill", "actionSkill"))
+    action_arguments: dict[str, Any] = Field(default_factory=dict, max_length=8, validation_alias=AliasChoices("action_arguments", "actionArguments"))
+    user_question: str | None = Field(default=None, max_length=240, validation_alias=AliasChoices("user_question", "userQuestion"))
 
     @field_validator("reason_summary", "expected_next_observation", "user_question")
     @classmethod

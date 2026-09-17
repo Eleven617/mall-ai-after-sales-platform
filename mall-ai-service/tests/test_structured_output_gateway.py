@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 from pydantic import BaseModel
 
-from app.services.llm_service import LLMServiceError, generate_json
+from app.services.llm_service import LLMServiceError, _extract_json_object, generate_json
 from app.services.structured_output_gateway import (
     StructuredOutputError,
     StructuredOutputMode,
@@ -32,6 +32,43 @@ class _FakeResponse:
 
 
 class StructuredOutputGatewayTests(unittest.TestCase):
+    def test_executor_decision_accepts_only_declared_camel_case_wire_aliases(self) -> None:
+        from app.schemas.agent_task import ExecutorDecision
+
+        decision = ExecutorDecision.model_validate(
+            {
+                "decision": "propose_action",
+                "reasonSummary": "基于已核验事实形成待确认草案。",
+                "actionSkill": "create_after_sales_draft",
+                "actionArguments": {"orderFactRef": "fact-order-abcdefgh"},
+            },
+            strict=True,
+            extra="forbid",
+        )
+
+        self.assertEqual("propose_action", decision.decision)
+        self.assertEqual("create_after_sales_draft", decision.action_skill)
+        with self.assertRaises(Exception):
+            ExecutorDecision.model_validate(
+                {
+                    "decision": "finish",
+                    "reasonSummary": "完成。",
+                    "untrustedExtra": True,
+                },
+                strict=True,
+                extra="forbid",
+            )
+
+    def test_json_object_parser_accepts_one_bounded_presentation_prefix(self) -> None:
+        parsed = _extract_json_object(
+            {"choices": [{"message": {"content": 'JSON: {"ok": true}'}}]}
+        )
+        self.assertEqual({"ok": True}, parsed)
+        with self.assertRaises(LLMServiceError):
+            _extract_json_object(
+                {"choices": [{"message": {"content": "x" * 241 + ' {"ok": true}'}}]}
+            )
+
     def test_gateway_appends_schema_and_returns_strictly_valid_model(self) -> None:
         captured: dict = {}
 
