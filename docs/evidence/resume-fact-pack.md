@@ -2,11 +2,11 @@
 
 ## 当前事实快照｜v3.0.3 Proposal 确认执行合同（2026-09-17）
 
-当前候选分支 `codex/v3.0.3-confirmation-contract`，Runtime Freeze `db3860701086bf9718ac23ef7b272a28bff2083f`，发布状态 **IMPLEMENTATION_READY_FOR_FINAL_VALIDATION**。本轮真实完成的是版本化 Proposal→Commit 映射、草案修改、旧版本冲突拒绝、人工协同确认与 Runtime 幂等键；FastAPI 终端 **415 passed + 12 subtests**（JUnit **427/427**）、manifest 478/478、现场 Runner 122/122、Java 定向测试、Vue/Compose 均通过。
+当前候选分支 `codex/v3.0.3-confirmation-contract`，Runtime Freeze `db3860701086bf9718ac23ef7b272a28bff2083f`，发布状态 **NOT_COMPLETE**。本轮真实完成的是版本化 Proposal→Commit 映射、草案修改、旧版本冲突拒绝、人工协同确认与 Runtime 幂等键；FastAPI 终端 **415 passed + 12 subtests**（JUnit **427/427**）、manifest 478/478、现场 Runner 122/122、Java 定向测试、Vue/Compose 均通过。
 
 本机现场均使用合成数据：Browser 24、Java/MySQL 30、Fault 36、Durable 32；草案修改链确认前 Java 写入 0、旧版本确认 409、当前版本写入 1、重复确认写入 0；人工协同链确认前写入 0、跨账号确认 404、确认后创建 1、重复确认 0。本次验证 Provider 0。报告与 hash 见 [`v3.0.3-capability-completion.md`](v3.0.3-capability-completion.md)。
 
-注意：历史 grounding CLI 的 16 次 DeepSeek 调用仍标记 `invalidated_offline_run`，没有 Release ID/Lock，不能计入模型通过率；当前 Runtime 的正式在线结果为 `not_run_for_current_runtime`，候选调用为 0。提交 `697deab` 的 [`mall-ci`](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/35195018957) 与 [`quality-evaluation`](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/35195018813) 已成功。不能把本轮写成真实模型准确率、生产 SLA、真实外部履约或在线发布。
+注意：历史 grounding CLI 的 16 次 DeepSeek 调用仍标记 `invalidated_offline_run`，不能计入模型通过率。唯一授权的当前在线批次在首条核心链 `agent_task_create` 发生 `scenario_assertion_failure` 后停止：8 次 Provider 请求成功、29,542 Token、Ledger 已对账，但 Proposal/Java 写入为 0，主集、补充集、Grounding、素材均 `not_executed`。因此不能把本轮写成真实模型准确率、生产 SLA、真实外部履约或在线发布；本失败不是 `environment_blocked`。
 
 ## 当前事实快照｜v3.0.2 离线候选（2026-09-15）
 

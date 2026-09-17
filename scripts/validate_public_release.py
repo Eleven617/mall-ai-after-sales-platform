@@ -155,6 +155,11 @@ def main() -> int:
         else:
             require(current.get("deepseek", {}).get("model") == "deepseek-flash", "current DeepSeek model mismatch")
             require(current.get("deepseek", {}).get("batchStatus") == "failed", "current DeepSeek failure status mismatch")
+            require(current.get("deepseek", {}).get("calls", 0) > 0, "failed DeepSeek batch must record calls")
+            require(current.get("deepseek", {}).get("tokens", 0) > 0, "failed DeepSeek batch must record tokens")
+            require(bool(current.get("deepseek", {}).get("releaseId")), "failed DeepSeek batch must record releaseId")
+            require(bool(current.get("deepseek", {}).get("batchId")), "failed DeepSeek batch must record batchId")
+            require(current.get("deepseek", {}).get("ledgerReconciled") is True, "failed DeepSeek batch ledger must reconcile")
         showcase_status = current.get("showcase", {}).get("status")
         require(showcase_status in {"environment_blocked", "passed", "failed"}, "showcase status must be explicit")
         require(
@@ -167,6 +172,9 @@ def main() -> int:
             require(readiness.get("currentCandidateProviderRequests") == 0, "current candidate must not inherit historical provider calls")
             require(readiness.get("currentLiveEvaluation") == "not_run_for_current_runtime", "current live evaluation state mismatch")
             require(readiness.get("historicalInvalidatedRun") is True, "historical invalidated run must remain recorded")
+        elif deepseek_status == "failed":
+            require(facts.get("claims", {}).get("releaseQualified") is False, "failed live batch cannot qualify release")
+            require(current.get("showcase", {}).get("status") == "failed", "failed live batch must fail showcase")
     require(tests["java"]["portalCore"] == "12/12", "Java portal core fact mismatch")
     require(tests["java"]["portalCompatibility"] == "2/2", "Java portal compatibility fact mismatch")
     require(tests["java"]["admin"] == "6/6", "Java admin fact mismatch")

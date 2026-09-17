@@ -1,10 +1,10 @@
 {
   "schemaVersion": "mall-public-release-facts.v4",
-  "generatedAt": "2026-09-17T11:30:00Z",
-  "releaseStatus": "IMPLEMENTATION_READY_FOR_FINAL_VALIDATION",
+  "generatedAt": "2026-09-17T11:35:17Z",
+  "releaseStatus": "NOT_COMPLETE",
   "runtimeCommit": "db3860701086bf9718ac23ef7b272a28bff2083f",
-  "evidenceCommit": "e70e6d71638aa5dcacdbc7061294b2d57c10e121",
-  "statusReason": "当前冻结提交已完成离线回归与本机合成现场验收，提交 697deab 的 mall-ci 与 quality-evaluation 均真实成功；当前正式在线评测尚未运行。历史 v3.0.3 grounding CLI 的误调用保留为独立作废记录，不计入当前候选。",
+  "evidenceCommit": "8f109eefa6ab57794277c3f3cfa50a539043aaeb",
+  "statusReason": "当前冻结提交已完成离线回归、本机合成现场验收和候选分支远程 CI；唯一授权的 v3.0.3 最终在线批次在第一条核心链的 agent_task_create 断言失败后安全停止。Provider 8 次请求均成功且 Ledger 已对账，但未形成 Proposal、未发生 Java 资格核验或写入；按批次契约不得重跑。",
   "project": {
     "name": "Mall AI After-sales Platform",
     "repository": "https://github.com/Eleven617/mall-ai-after-sales-platform",
@@ -127,9 +127,10 @@
     "historicalInvalidatedReason": "unplanned_provider_invocation",
     "historicalProviderRequests": 16,
     "historicalProviderTokens": 14553,
-    "currentCandidateProviderRequests": 0,
-    "currentLiveEvaluation": "not_run_for_current_runtime",
-    "currentLiveReady": true
+    "currentCandidateProviderRequests": 8,
+    "currentCandidateProviderTokens": 29542,
+    "currentLiveEvaluation": "failed_after_authorized_final_batch",
+    "currentLiveReady": false
   },
   "deepseekBatches": [
     {
@@ -207,11 +208,11 @@
     "fastapi": {"passed": 427, "failed": 0, "warnings": 1, "subtests": 12, "pytestTerminalPassed": 415, "exitCode": 0},
     "deterministic": {"manifest": "478/478", "representative": "8/8", "exitCode": 0},
     "fieldAcceptance": {"total": "122/122", "failed": 0, "environmentBlocked": 0, "reportSha256": "c975374fa6c9f6484063779be62e1cde6be499f5f3f397275f27e89c20c0e6cd", "fixtureSha256": "46626a529ec5939f20cb920501d8386583cd4c15db929b54ea9d93a6d1025c6d"},
-    "deepseek": {"status": "not_run_by_design", "model": "deepseek-flash", "thinkingMode": "enabled", "reasoningEffort": "high", "batchStatus": "not_run", "calls": 0, "tokens": 0, "sideEffects": 0, "reason": "当前冻结 Runtime 的正式在线批次尚未启动；历史误调用保留在 v3_0_3OfflineReadiness.externalProviderRun。"},
-    "showcase": {"status": "passed", "scenarios": [{"scenarioId": "deterministic", "status": "passed", "chains": "3/3", "frames": 12}, {"scenarioId": "replay", "status": "passed", "chains": "3/3", "frames": 12}]}
+    "deepseek": {"status": "failed", "model": "deepseek-flash", "thinkingMode": "enabled", "reasoningEffort": "high", "batchStatus": "failed", "releaseId": "mall-v3.0.3-portfolio-final-db3860701086", "batchId": "portfolio_final-c9b46de42c2d", "calls": 8, "successfulCalls": 8, "failedCalls": 0, "tokens": 29542, "sideEffects": 0, "ledgerReconciled": true, "failureCode": "scenario_assertion_failure", "failureStage": "agent_task_create", "reason": "唯一授权批次在 main_open_task_closed_loop 未形成 Proposal 后停止；未发生 Java 资格核验、写入或状态回查，且不得重跑。"},
+    "showcase": {"status": "failed", "scenarios": [{"scenarioId": "main_open_task_closed_loop", "status": "failed", "stage": "agent_task_create", "failureCode": "scenario_assertion_failure", "completedSteps": 1, "proposalFormed": false, "javaWrite": false, "frames": 0}, {"scenarioId": "pause_resume", "status": "not_executed"}, {"scenarioId": "fact_change_handoff", "status": "not_executed"}]}
   },
-  "releaseLedger": {"path": "tmp/release-ledger-v3.0.2/ledger.jsonl", "observedCandidateProviderRequests": 9, "observedCandidateSuccessfulRequests": 9, "observedCandidateFailedRequests": 0, "observedCandidateTotalTokens": 27329, "v3_0_2ProviderRequests": 0, "v3_0_2ProviderTokens": 0, "sha256": "ce801099cd16a998bf39dae544425acb1fd5c6a6c353a1ce18035a1cb8a92323", "v3_0_3OfflineLedgers": [{"path": "tmp/release-ledger-v3.0.3-deterministic/ledger.jsonl", "batchId": "v3.0.3-offline-deterministic-clean", "providerRequests": 0, "totalTokens": 0, "sha256": "8ab77b9505fdbaff0da60ca68d0ea9f5c17c435e202bcffecc97592496b7dc0a"}, {"path": "tmp/release-ledger-v3.0.3-replay/ledger.jsonl", "batchId": "v3.0.3-offline-replay-clean", "providerRequests": 0, "totalTokens": 0, "sha256": "8ce953819c10834c51103a08663a436591d53ccebafa8bf492513452eb8e8c00"}, {"path": "tmp/release-ledger-v3.0.3-slow/ledger.jsonl", "batchId": "v3.0.3-offline-slow-gateway", "providerRequests": 0, "totalTokens": 0, "sha256": "3cc6656ce6ffb1a6e11e47fd5530d8a405e035f844cc201b5ba086676b714227"}], "v3_0_3UnplannedProviderRequests": 16, "v3_0_3UnplannedProviderTokens": 14553},
-  "ci": {"status": "pending_remote_final_sha", "scope": "current runtime and evidence commit", "testedCommit": "e70e6d71638aa5dcacdbc7061294b2d57c10e121", "mallCi": "https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/35214832182", "qualityEvaluation": "https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/35214832118", "mallCiConclusion": "failed_current_sha", "qualityEvaluationConclusion": "success", "previousRemoteRunsStale": true},
+  "releaseLedger": {"path": "tmp/release-ledger-mall-v3.0.3-portfolio-final-db3860701086/ledger.jsonl", "releaseId": "mall-v3.0.3-portfolio-final-db3860701086", "batchId": "portfolio_final-c9b46de42c2d", "providerRequests": 8, "successfulRequests": 8, "failedRequests": 0, "totalTokens": 29542, "ledgerReconciled": true, "sha256": "814cdcf09a3e9d37b6450bfbacbe7ff65915a76c378a07f60dfd3a8725087b18", "v3_0_3UnplannedProviderRequests": 16, "v3_0_3UnplannedProviderTokens": 14553},
+  "ci": {"status": "pending_remote_final_sha", "scope": "failure-evidence commit pending push", "testedCommit": "8f109eefa6ab57794277c3f3cfa50a539043aaeb", "mallCi": null, "qualityEvaluation": null, "mallCiConclusion": "not_started_for_failure_evidence", "qualityEvaluationConclusion": "not_started_for_failure_evidence", "previousRemoteRunsStale": true},
   "publicValidator": {"command": "python scripts/validate_public_release.py", "exitCode": 0, "status": "dynamic_report", "reason": "读取当前 FastAPI JUnit/sidecar，不再硬编码历史测试数量。"},
   "claims": {
     "testRunComplete": true,
@@ -220,13 +221,13 @@
     "productionSla": false,
     "realUserGeneralization": false,
     "realPaymentWarehouseLogisticsRepair": false,
-    "liveModelTaskAccuracy": "unavailable; v3.0.3 offline candidate invalidated after unplanned Provider invocation",
+    "liveModelTaskAccuracy": "unavailable; the single current authorized batch stopped on its first core-chain assertion failure",
     "unplannedProviderRun": {"requests": 16, "tokens": 14553, "formalRelease": false}
   },
   "publicClaims": [
     "当前 Runtime 的 FastAPI 机器报告为 427 passed、0 failed、0 skipped（终端 415 passed + 12 subtests）；v3 deterministic 为 478/478、代表性 Runtime 为 8/8。",
     "当前冻结提交的本机合成 Docker/Chrome/Java/MySQL/Redis/RabbitMQ 现场 Runner 为 122/122（24/24、30/30、36/36、32/32），但这不是生产 SLA。",
-    "v3.0.3 慢网关现场经公共 Nginx 运行 76.156 秒并返回 201/ready_to_commit，Provider 请求 0、Java 写入 0；另有一次误触发 grounding CLI 产生 16 次 Provider 请求，已作废。",
+    "v3.0.3 慢网关现场经公共 Nginx 运行 76.156 秒并返回 201/ready_to_commit，Provider 请求 0、Java 写入 0；唯一正式在线批次的 8 次 Provider 调用均成功且账本对账，但第一核心链未形成 Proposal 后安全停止。",
     "Java mall2 仍是身份、归属、资格、状态、幂等、事务、Outbox 和最终写入权威。"
   ],
   "prohibitedClaims": [

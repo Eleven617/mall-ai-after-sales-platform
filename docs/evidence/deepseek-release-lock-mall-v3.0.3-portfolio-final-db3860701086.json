@@ -1,0 +1,14 @@
+{
+  "schemaVersion": "deepseek-release-lock.v2",
+  "releaseId": "mall-v3.0.3-portfolio-final-db3860701086",
+  "batchIds": [
+    "portfolio_final-c9b46de42c2d"
+  ],
+  "runtimeCommit": "db3860701086bf9718ac23ef7b272a28bff2083f",
+  "status": "FAILED",
+  "testRunComplete": false,
+  "releaseQualified": false,
+  "requests": 8,
+  "totalTokens": 29542,
+  "phase": "portfolio_final"
+}

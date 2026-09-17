@@ -6,7 +6,7 @@
 
 本机合成现场 Runner **122/122**（Browser 24、Java/MySQL 30、Fault 36、Durable 32，0 failed/0 blocked）；版本化草案与人工协同现场链通过。现场报告 SHA `c975374fa6c9f6484063779be62e1cde6be499f5f3f397275f27e89c20c0e6cd`，FastAPI 语义报告 SHA `8698f94d3f13e070cb4ca9a71a8ad1eef024483ec64008918ea86549dd95b3f2`。
 
-本候选 **IMPLEMENTATION_READY_FOR_FINAL_VALIDATION**：历史 grounding CLI 误调用仍作废；当前 Runtime 的正式在线结果为 `not_run_for_current_runtime`，候选调用为 0。gitleaks 本机缺失为 `environment_blocked`，提交 `697deab` 的 [`mall-ci`](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/35195018957) 和 [`quality-evaluation`](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/35195018813) 已成功。不得把本次离线验收当成 Grounding 通过、在线批次或模型准确率；v3.0.2 FAILED 历史证据保持不变。
+本候选 **NOT_COMPLETE**：唯一授权的正式批次 `mall-v3.0.3-portfolio-final-db3860701086` 在 `main_open_task_closed_loop` 的 `agent_task_create` 因 `scenario_assertion_failure` 停止。Provider 8/8 成功、29,542 Token、Ledger 对账通过，却未形成 Proposal，Java 核验/写入/回查均为 0；另两条核心链、主集、补充集、Grounding、素材均 `not_executed`。这不是 `environment_blocked`，且不得重跑。gitleaks 本机缺失仍为 `environment_blocked`；候选 `8f109ee` 的 CI 双绿，失败证据提交需以新 SHA 重新核对。不得把离线验收当成 Grounding 通过、在线批次或模型准确率。
 
 ## 当前权威快照｜v3.0.2 离线候选（2026-09-15）
 

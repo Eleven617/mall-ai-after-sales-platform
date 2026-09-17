@@ -1,5 +1,24 @@
 # 当前工作进度记录
 
+## 2026-09-17｜v3.0.3 最终在线批次失败证据收口（当前）
+
+### 已完成
+
+- Runtime 冻结提交为 `db3860701086bf9718ac23ef7b272a28bff2083f`；候选证据提交为 `8f109eefa6ab57794277c3f3cfa50a539043aaeb`，该提交的 `mall-ci` 与 `quality-evaluation` 均真实成功。
+- 当前 Runtime 的离线/本机合成验证保持有效：FastAPI 终端 415 passed + 12 subtests（JUnit 427/427）、manifest 478/478、代表性 8/8、现场 Runner 122/122（24/30/36/32），均不等于真实模型泛化或生产能力。
+- 已执行唯一授权的正式在线批次：Release ID `mall-v3.0.3-portfolio-final-db3860701086`，Batch ID `portfolio_final-c9b46de42c2d`。Provider 8 请求均成功、0 Provider 失败、29,542 Token；Ledger SHA-256 `814cdcf09a3e9d37b6450bfbacbe7ff65915a76c378a07f60dfd3a8725087b18` 已对账。
+
+### 当前问题与状态
+
+- 第一条核心链 `main_open_task_closed_loop` 在 `agent_task_create` 阶段触发 `scenario_assertion_failure`。Proposal 未形成，Java 资格核验、写入和状态回查均未发生；主评测集、补充集、Grounding、另两条核心链和在线素材均 `not_executed`。
+- 这不是 Docker、网络、余额或 Provider HTTP 失败，而是 Runtime 的严格场景合同安全停止。根据本批次授权，不得重跑、不得创建第三个 Batch、不得余额探测或单 Case 重试。
+- 发布状态为 **`NOT_COMPLETE`**；不得合并 `main`、不得将 README 改写为在线发布成功、不得生成或上传 live GIF。失败锁和脱敏事实证据应提交推送后，以新 SHA 再核对两条 GitHub Actions。
+
+### 不可删除或重复执行
+
+- 不修改历史 v3.0.1/v3.0.2 Lock、Ledger 或报告；不覆盖本批次失败锁。
+- 不调用 DeepSeek 或任何外部模型；不执行 `docker compose down`、删除卷/VHDX、清库、`git reset --hard` 或 `git checkout --`。
+
 ## 2026-09-17｜v3.0.3 能力补齐候选（当前）
 
 ### 已完成

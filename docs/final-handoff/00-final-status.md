@@ -6,7 +6,7 @@
 
 本机合成现场 Runner 为 **122/122**（Browser 24、Java/MySQL 30、Fault 36、Durable 32）；新增两条经 Nginx/FastAPI/Java 的能力链均通过，且本次 Provider 请求为 0。报告与 hash 见 [`v3.0.3-capability-completion.md`](../evidence/v3.0.3-capability-completion.md)。
 
-发布门禁 **`IMPLEMENTATION_READY_FOR_FINAL_VALIDATION`**：历史 grounding CLI 误调用记录仍作废，但当前冻结提交的正式在线结果为 `not_run_for_current_runtime`，候选调用为 0。提交 `697deab` 的 [`mall-ci`](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/35195018957) 和 [`quality-evaluation`](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/35195018813) 已成功。v3.0.2 FAILED 历史锁/报告/账本保持不变，未修改 README、未合并 main、未创建 Release。
+发布门禁 **`NOT_COMPLETE`**：唯一授权的当前 Runtime 批次 `mall-v3.0.3-portfolio-final-db3860701086` / `portfolio_final-c9b46de42c2d` 在第一条核心链 `main_open_task_closed_loop` 的 `agent_task_create` 发生 `scenario_assertion_failure` 后安全停止。Provider 8 请求均成功、Token 29,542、Ledger 已对账；但 Proposal 未形成，Java 资格核验、写入与回查均为 0，余下核心链、主/补充评测、Grounding 和素材均 `not_executed`，不得重跑。候选 `8f109ee` 的 [`mall-ci`](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/35216172369) 与 [`quality-evaluation`](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/35216172446) 已成功；失败证据提交仍需重新核对 CI。未修改 README、未合并 main、未创建 Release。
 
 ## 当前权威快照｜v3.0.2 唯一正式 DeepSeek 批次（2026-09-16）
 

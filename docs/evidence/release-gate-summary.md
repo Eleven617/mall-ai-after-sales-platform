@@ -6,7 +6,7 @@
 
 当前冻结提交的本机 Docker/Chrome/Java/MySQL/Redis/RabbitMQ 现场 Runner **122/122**（Browser 24、Java/MySQL 30、Fault 36、Durable 32，0 failed/0 environment_blocked）；新增能力现场链验证草案修改不会写 Java、旧版本确认返回 409、当前版本只写入一次，以及人工协同确认前零写入、跨账号确认 404、确认后只创建一次案件。本次现场/离线验证的外部 Provider 请求为 **0**。详见 [`v3.0.3-capability-completion.md`](v3.0.3-capability-completion.md)。
 
-**Release Gate：`IMPLEMENTATION_READY_FOR_FINAL_VALIDATION`。** 历史 v3.0.3 grounding CLI 的 16 次误调用保留为 `invalidated_offline_run`，不删除、不改写，也不计入当前冻结 Runtime 的在线统计。当前 Runtime 的正式 DeepSeek 验收为 `not_run_for_current_runtime`，候选 Provider 请求为 0；当前候选的 quality-evaluation 已成功，mall-ci 的公共事实校验将在本事实更新提交后重新验证。未合并 `main`、未更新 README，待受控在线批次完成后再发布。
+**Release Gate：`NOT_COMPLETE`。** 唯一授权的当前 Runtime 正式批次 `mall-v3.0.3-portfolio-final-db3860701086`（Batch `portfolio_final-c9b46de42c2d`）在首条核心链 `main_open_task_closed_loop` 的 `agent_task_create` 阶段因 `scenario_assertion_failure` 安全停止。8 次 Provider 请求均成功、共 29,542 Token，Ledger SHA-256 `814cdcf09a3e9d37b6450bfbacbe7ff65915a76c378a07f60dfd3a8725087b18` 已对账；但未形成 Proposal、Java 资格核验/写入/状态回查均为 0，另外两条核心链、主集、补充集、Grounding 和素材均为 `not_executed`。不得重跑或创建第三批次，未合并 `main`、未更新 README。
 
 v3.0.2 的 FAILED Lock/Ledger/报告和提交 `0eb964b` 保持原样：其准确根因是 Runtime 缺少 Draft-to-Commit 服务器映射，确认时把 Draft Skill 传给只允许 commit Skill 的 Gateway，安全停止且 Java 写入为 0；不能归因于模型随机选错。
 

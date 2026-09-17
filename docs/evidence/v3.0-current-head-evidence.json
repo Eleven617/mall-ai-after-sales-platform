@@ -1,27 +1,28 @@
 {
   "schemaVersion": "v3.0-current-head-evidence.v5",
-  "generatedAt": "2026-09-17T07:25:00Z",
+  "generatedAt": "2026-09-17T11:35:17Z",
   "repository": {
     "remote": "https://github.com/Eleven617/mall-ai-after-sales-platform.git",
     "branch": "codex/v3.0.3-confirmation-contract",
-    "testedCodeCommit": "3a0d59080e94848553ac2d981116acf236df3cf6",
-    "workspaceAtReadiness": "clean_except_ignored_tmp",
+    "testedCodeCommit": "db3860701086bf9718ac23ef7b272a28bff2083f",
+    "workspaceAtReadiness": "failure_lock_pending_evidence_commit",
     "releaseStatus": "NOT_COMPLETE"
   },
   "v3_0_3ConfirmationContract": {
     "status": "NOT_COMPLETE",
-    "runtimeFreezeCommit": "3a0d59080e94848553ac2d981116acf236df3cf6",
+    "runtimeFreezeCommit": "db3860701086bf9718ac23ef7b272a28bff2083f",
     "branch": "codex/v3.0.3-confirmation-contract",
     "focusedTaskRuntime": "38/38",
     "taskRuntimeTrace": "45/45",
-    "fastapi": {"pytestTerminalPassed": 411, "subtests": 12, "junitPassed": 423, "failed": 0, "skipped": 0, "report": "tmp/v3.0.3-capability-final/fastapi-report.json", "reportSha256": "c3a7818c3bf6a8f31e134150202ac905da315275b479a82c021c040117214c29", "junitSha256": "a9d3cd40e0be058dca570b5b7ac09a892e09fbd4384bf33778f9c95a58b1e8c0"},
+    "fastapi": {"pytestTerminalPassed": 415, "subtests": 12, "junitPassed": 427, "failed": 0, "skipped": 0, "report": "mall-ai-service/ci-evidence/v3-fastapi-report.json", "reportSha256": "8698f94d3f13e070cb4ca9a71a8ad1eef024483ec64008918ea86549dd95b3f2", "junitSha256": "7ab4d6cc7689f27c0947f8f025c8290fc665fc1507169e8e0caa5b8bbddc60f2"},
     "manifest": {"deterministic": "478/478", "representative": "8/8", "manifestSha256": "d9fc72be81e2f67330710052c03287d49677bf7eb6f54eed51b87c01db2ac1ad", "caseSetSha256": "18a3ad20485417bbebd8bad875490cf80b171ed28760b1dc2dfbd203d1938ccd"},
-    "fieldAcceptance": {"total": "122/122", "failed": 0, "environmentBlocked": 0, "report": "tmp/v303-field-acceptance-final/field-20260917T070925Z-3bb225d4/field-acceptance.json", "reportSha256": "730d9789b3dc0456f3028e259f42d412dea0c0d77307a5559a55e97554f993cf", "fixtureSha256": "410759e4f144681dc9b48437addbb0d5b89fc4ab4ccd60b7fc3207e2886606c3"},
+    "fieldAcceptance": {"total": "122/122", "failed": 0, "environmentBlocked": 0, "report": "tmp/v303-final-field-acceptance/field-20260917T110449Z-84b4888b/field-acceptance.json", "reportSha256": "c975374fa6c9f6484063779be62e1cde6be499f5f3f397275f27e89c20c0e6cd", "fixtureSha256": "46626a529ec5939f20cb920501d8386583cd4c15db929b54ea9d93a6d1025c6d"},
     "showcase": {"deterministic": "3/3", "replay": "3/3", "framesPerRun": 12, "providerRequests": 0, "mainClosedLoop": {"proposalFormed": true, "javaRechecked": true, "confirmedWrite": true, "statusReadback": true, "duplicateConfirmationWrites": 0, "crossAccountLeakage": 0}},
     "slowGateway": {"elapsedSeconds": 76.156, "httpStatus": 201, "taskStatus": "ready_to_commit", "javaWrites": 0, "providerRequests": 0, "reportSha256": "b5b081721252da62db1d11dfb7930c567c956d5f5332a301312fffa9f91c3f5e"},
     "groundingContracts": {"passed": 12, "failed": 0, "mode": "deterministic contract; no external Provider", "command": "mall-ai-service/.venv/Scripts/python.exe -m pytest -q tests/test_rag_grounding_evaluation.py tests/test_rag_evidence_verifier.py", "exitCode": 0},
-    "ci": {"status": "passed", "scope": "runtime and evidence commit 697deab", "testedCommit": "697deab662a55f17c8f9cdd5ae2723605f63a7db", "mallCi": "https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/35195018957", "qualityEvaluation": "https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/35195018813", "mallCiConclusion": "success", "qualityEvaluationConclusion": "success", "previousRemoteRunsStale": true},
+    "ci": {"status": "passed", "scope": "runtime and evidence commit 8f109ee", "testedCommit": "8f109eefa6ab57794277c3f3cfa50a539043aaeb", "mallCi": "https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/35216172369", "qualityEvaluation": "https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/35216172446", "mallCiConclusion": "success", "qualityEvaluationConclusion": "success", "previousRemoteRunsStale": true},
     "unplannedProviderRun": {"status": "invalidated_offline_run", "requests": 16, "tokens": 14553, "formalRelease": false},
+    "authorizedFinalBatch": {"status": "failed", "releaseId": "mall-v3.0.3-portfolio-final-db3860701086", "batchId": "portfolio_final-c9b46de42c2d", "providerRequests": 8, "providerSuccess": 8, "providerFailure": 0, "totalTokens": 29542, "ledgerReconciled": true, "failureScenario": "main_open_task_closed_loop", "failureStage": "agent_task_create", "failureCode": "scenario_assertion_failure", "proposalFormed": false, "javaEligibility": false, "javaWrite": false, "mainSupplementalGrounding": "not_executed", "assets": "not_generated"},
     "V3_0_3_LIVE_READY": false
   },
   "readiness": {
