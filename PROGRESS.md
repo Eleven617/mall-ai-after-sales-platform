@@ -1,5 +1,29 @@
 # 当前工作进度记录
 
+## 2026-09-17｜v3.0.3 能力补齐候选（当前）
+
+### 已完成
+
+- 代码冻结提交为 `3a0d59080e94848553ac2d981116acf236df3cf6`，分支为 `codex/v3.0.3-confirmation-contract`；本轮没有调用 DeepSeek 或其他外部模型，没有修改 README、`main`、历史 Release Lock、Ledger 或报告。
+- 实现并验证版本化 ActionProposal、草案修改、旧 revision 拒绝，以及受控人工协同：模型只能形成 Proposal，服务器选择内部确认执行器，Java 继续拥有最终写入权威。
+- 当前冻结提交的 FastAPI 机器报告为 pytest 终端 411 passed + 12 subtests，JUnit 423 passed / 0 failed / 0 skipped；能力相关聚焦测试 12 passed。
+- 本机合成现场 Runner 122/122、0 failed、0 environment blocked：Browser 24/24、Java/MySQL 30/30、Fault 36/36、Durable 32/32。报告位于 `tmp/v303-field-acceptance-final/field-20260917T070925Z-3bb225d4/field-acceptance.json`，SHA-256 `730d9789b3dc0456f3028e259f42d412dea0c0d77307a5559a55e97554f993cf`。
+- 独立能力现场链经 `http://127.0.0.1:5173/api` Nginx、FastAPI 与 Java 通过：草案修改阶段 Java 写入 0；旧 revision 确认 HTTP 409；当前 revision 单次写入、重复确认 0；人工协同确认前写入 0、跨账号确认 HTTP 404、确认后单次创建、重复确认 0。报告 SHA-256 `55c4b8cf62531f2930c2cbc8f76350282c86b965ff0d0a6597f8ccfad864e909`。
+- Java portal 定向测试 13 passed、admin 6 passed；Vue production build、Compose config、v3 manifest 478/478、代表性 preflight 8/8、Task 11/11、Quality Agent 17/17 和动态公共证据校验均通过。
+- 新增 `docs/evidence/v3.0.3-capability-completion.md` 与 JSON，并将当前事实、Release Gate、交接与公开记录绑定到冻结提交；临时夹具、浏览器帧和 `tmp/` 报告保持忽略，不提交。
+
+### 当前状态与边界
+
+- 当前发布状态仍为 `NOT_COMPLETE`，`V3_0_3_LIVE_READY=false`：历史 v3.0.3 grounding CLI 的 16 次误触发外部 Provider 请求保留为 `invalidated_offline_run`，且当前候选提交尚未取得 GitHub Actions 远程结果。
+- 本机没有 gitleaks 或 osv-scanner 可执行文件，均记录为 `environment_blocked`；远程 `dependency-and-secret-risk` Job 保留为最终安全门禁。
+- 本机现场只使用合成数据，不能宣传真实模型准确率/泛化、生产 SLA、真实支付、仓储、物流或维修履约。
+
+### 下一步
+
+1. 提交本轮证据文档，推送候选分支。
+2. 等待该提交的 `mall-ci` 和 `quality-evaluation`，只记录当前 SHA 的真实结论。
+3. 两个远程工作流成功后更新证据中的 CI 链接；不得因此改变历史外部 Provider 误调用或把候选写成正式在线发布。
+
 ## 2026-09-15｜v3.0.2 离线候选（当前）
 
 ### 已完成

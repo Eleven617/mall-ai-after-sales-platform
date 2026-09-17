@@ -2,13 +2,13 @@
 
 ## 当前权威记录｜v3.0.3 Proposal 确认执行合同（2026-09-17）
 
-候选分支 `codex/v3.0.3-confirmation-contract`，Runtime Freeze `f193db37ea7602ec7a379d7dc98d8b44d19bbf97`。本次修复把 Proposal Skill 与服务器确认执行 Skill 分离：仅 `create_after_sales_draft` 精确映射到真实 `commit_after_sales_action`，其它无 Adapter 的确认 Skill 一律安全阻塞；确认时由 Runtime 重读事实/hash/归属并生成幂等键，Java 继续负责资格、状态机、事务和最终写入。
+候选分支 `codex/v3.0.3-confirmation-contract`，Runtime Freeze `3a0d59080e94848553ac2d981116acf236df3cf6`。本次实现版本化售后草案和人工协同：`create_after_sales_draft` 精确映射到 `commit_after_sales_action`，`open_human_case` 仅在用户确认后映射到内部 `commit_human_case`；确认时由 Runtime 重读事实/hash/归属并生成幂等键，Java 继续负责资格、状态机、事务和最终写入。
 
-离线确定性与本机现场：FastAPI 终端 **392 passed + 12 subtests**，JUnit **404 passed/0 failed/0 skipped**；manifest **478/478**、代表性 **8/8**；Task orchestration **11/11**、Quality Agent **17/17**、Chunk/Metadata **8/8**；Java portal/admin/Spring **12/12、6/6、1/1**；Vue build、Compose 8/8 healthy；现场 Runner **122/122**（24/30/36/32）。三条 deterministic 与三条 replay 展示链各 **3/3、12 帧**。公共 Nginx 慢调用 **76.156 秒、HTTP 201、ready_to_commit**，Proposal 已形成、Java 写入 0、Provider 0。
+离线确定性与本机现场：FastAPI 终端 **411 passed + 12 subtests**，JUnit **423 passed/0 failed/0 skipped**；manifest **478/478**、代表性 **8/8**；Task orchestration **11/11**、Quality Agent **17/17**、Dense RAG 52 条检索评测；Java 定向测试、Vue build、Compose 8/8 healthy；现场 Runner **122/122**（24/30/36/32）。新增现场能力链验证了草案修改不写 Java、旧版本 409、当前版本单次写入、人工协同确认前零写入、跨账号 404 和确认后单次创建。当前本机验证 Provider 0。
 
-本候选 **NOT_COMPLETE / `V3_0_3_LIVE_READY=false`**：一次错误 grounding CLI 产生了 **16 次 DeepSeek Provider 请求、14,553 tokens**，已标为 `invalidated_offline_run`，没有 Release ID/Lock，不能计入通过率或成本；后续未再调用 Provider。gitleaks 本机缺少可执行文件，标记 `environment_blocked`；OSV 缓存扫描 exit 0。未修改 README、未合并 `main`、未创建 Tag/Release。
+本候选 **NOT_COMPLETE / `V3_0_3_LIVE_READY=false`**：历史 grounding CLI 的 16 次误调用仍标为 `invalidated_offline_run`，不能计入通过率或成本；本次未调用 Provider。gitleaks 本机缺少可执行文件，标记 `environment_blocked`；当前冻结提交远程 CI 尚待验证。未修改 README、未合并 `main`、未创建 Tag/Release。
 
-证据：[`v3.0.3-confirmation-contract.md`](evidence/v3.0.3-confirmation-contract.md)、[`v3.0.3-confirmation-contract.json`](evidence/v3.0.3-confirmation-contract.json)。证据提交 `66abd4e` 的 [`mall-ci`](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/35121757903) 与 [`quality-evaluation`](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/35121757911) 均成功。v3.0.2 的正式 FAILED Lock、Ledger、报告和提交 `0eb964b` 未修改；历史报告不与本候选合并。不能宣称真实模型准确率、生产 SLA、真实支付/仓储/物流/维修履约或模型成本。
+证据：[`v3.0.3-capability-completion.md`](evidence/v3.0.3-capability-completion.md)、[`v3.0.3-capability-completion.json`](evidence/v3.0.3-capability-completion.json)。历史提交的远程结果不替代当前 SHA；v3.0.2 的正式 FAILED Lock、Ledger、报告和提交 `0eb964b` 未修改。不能宣称真实模型准确率、生产 SLA、真实支付/仓储/物流/维修履约或模型成本。
 
 ## 当前权威记录｜v3.0.2 唯一正式 DeepSeek 批次（2026-09-16）
 

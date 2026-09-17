@@ -1,0 +1,100 @@
+{
+  "schemaVersion": "mall-v3.0.3-capability-completion.v1",
+  "generatedAt": "2026-09-17T07:25:00Z",
+  "revision": {
+    "runtimeCommit": "3a0d59080e94848553ac2d981116acf236df3cf6",
+    "branch": "codex/v3.0.3-confirmation-contract",
+    "releaseStatus": "NOT_COMPLETE",
+    "V3_0_3_LIVE_READY": false
+  },
+  "executionBoundary": {
+    "data": "disposable local synthetic fixtures and safe DTO summaries only",
+    "externalProviderRequests": 0,
+    "externalModelsCalled": false,
+    "javaAuthority": "mall2 owns identity, ownership, qualification, state machine, idempotency, transaction, Outbox and final write",
+    "notProduction": true
+  },
+  "capabilityLocalAcceptance": {
+    "executionMode": "local_nginx_fastapi_java_deterministic",
+    "report": "tmp/v3.0.3-capability-completion-local.json",
+    "reportSha256": "55c4b8cf62531f2930c2cbc8f76350282c86b965ff0d0a6597f8ccfad864e909",
+    "status": "passed",
+    "draftAmendment": {
+      "proposalRevisionsObserved": 3,
+      "staleConfirmationHttpStatus": 409,
+      "amendmentJavaWrites": 0,
+      "currentRevisionJavaWrites": 1,
+      "duplicateConfirmationJavaWrites": 0
+    },
+    "humanHandoff": {
+      "proposalJavaWritesBeforeConfirmation": 0,
+      "currentConfirmationJavaWrites": 1,
+      "duplicateConfirmationJavaWrites": 0,
+      "crossAccountConfirmationHttpStatus": 404
+    }
+  },
+  "tests": {
+    "fastapi": {
+      "command": "mall-ai-service/.venv/Scripts/python.exe scripts/run_fastapi_ci_report.py --junitxml=tmp/v3.0.3-capability-final/fastapi-junit.xml --report=tmp/v3.0.3-capability-final/fastapi-report.json",
+      "repositoryCommit": "3a0d59080e94848553ac2d981116acf236df3cf6",
+      "passed": 423,
+      "failed": 0,
+      "skipped": 0,
+      "pytestTerminalPassed": 411,
+      "subtests": 12,
+      "exitCode": 0,
+      "semanticReportSha256": "d80ce2833305412db6220765df6f509286e0ca9940c04d0101470f80471b7de1",
+      "junitSha256": "a9d3cd40e0be058dca570b5b7ac09a892e09fbd4384bf33778f9c95a58b1e8c0"
+    },
+    "java": {"portal": 13, "admin": 6, "exitCode": 0},
+    "web": {"command": "npm run build", "status": "passed", "exitCode": 0},
+    "compose": {"command": "docker compose config --quiet", "status": "passed", "servicesHealthy": "8/8"},
+    "deterministicManifest": {"registered": 478, "passed": 478, "representative": "8/8", "mode": "no model, no business write"},
+    "taskOrchestrationContract": {"passed": 11, "failed": 0, "mode": "contract_mock"},
+    "qualityAgentContract": {"passed": 17, "failed": 0, "mode": "deterministic contract"},
+    "ragDense": {"dataset": "52 versioned synthetic policy cases", "supported": 39, "abstentions": 13, "recallAt3": 1.0, "mrr": 0.948718, "ndcgAt3": 0.962147, "externalProviderRequests": 0},
+    "grounding": {"status": "environment_blocked", "cases": 52, "externalProviderRequests": 0}
+  },
+  "fieldAcceptance": {
+    "report": "tmp/v303-field-acceptance-final/field-20260917T070925Z-3bb225d4/field-acceptance.json",
+    "reportSha256": "730d9789b3dc0456f3028e259f42d412dea0c0d77307a5559a55e97554f993cf",
+    "fixtureSha256": "410759e4f144681dc9b48437addbb0d5b89fc4ab4ccd60b7fc3207e2886606c3",
+    "testedCodeCommit": "3a0d59080e94848553ac2d981116acf236df3cf6",
+    "status": "passed_local_synthetic",
+    "releaseGatePassed": true,
+    "durationMs": 240553,
+    "total": 122,
+    "passed": 122,
+    "failed": 0,
+    "environmentBlocked": 0,
+    "categories": {"browserE2E": "24/24", "javaMysql": "30/30", "faultInjection": "36/36", "durableRecovery": "32/32"}
+  },
+  "slowGateway": {
+    "mode": "nginx deterministic provider",
+    "elapsedSeconds": 150.093,
+    "httpStatus": 201,
+    "taskStatus": "ready_to_commit",
+    "runtimeDeadlineSeconds": 240,
+    "nginxTimeoutSeconds": 300,
+    "runnerTimeoutSeconds": 330,
+    "proposalFormed": true,
+    "javaWriteObserved": false,
+    "externalProviderRequests": 0
+  },
+  "security": {
+    "gitleaks": "environment_blocked_local_binary_unavailable; required in remote CI",
+    "osv": "required in remote CI; no local executable available",
+    "secretsPersistedInEvidence": false
+  },
+  "historicalBoundary": {
+    "v3_0_3InvalidatedProviderRun": {"requests": 16, "tokens": 14553, "status": "invalidated_offline_run", "unchanged": true},
+    "v3_0_2FailedLockAndLedger": "unchanged",
+    "remoteCiForCurrentCommit": "pending"
+  },
+  "notReadyClaims": [
+    "real-model task accuracy or natural-language generalization",
+    "production SLA, QPS, cost or user scale",
+    "real payment, warehouse, logistics or repair fulfillment",
+    "generative Grounding success"
+  ]
+}

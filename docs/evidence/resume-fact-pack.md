@@ -2,11 +2,11 @@
 
 ## 当前事实快照｜v3.0.3 Proposal 确认执行合同（2026-09-17）
 
-当前候选分支 `codex/v3.0.3-confirmation-contract`，Runtime Freeze `f193db37ea7602ec7a379d7dc98d8b44d19bbf97`，发布状态 **NOT_COMPLETE**。本轮真实完成的是服务器控制的 Proposal→Commit 映射、确认重校验、Runtime 幂等键和无 Adapter 的安全阻塞；聚焦 38/38、Trace 45/45、FastAPI 终端 392 passed + 12 subtests（JUnit 404/404）、manifest 478/478、现场 Runner 122/122、Java 12/12 + 6/6 + Spring 1/1、Vue/Compose 均通过。
+当前候选分支 `codex/v3.0.3-confirmation-contract`，Runtime Freeze `3a0d59080e94848553ac2d981116acf236df3cf6`，发布状态 **NOT_COMPLETE**。本轮真实完成的是版本化 Proposal→Commit 映射、草案修改、旧版本冲突拒绝、人工协同确认与 Runtime 幂等键；FastAPI 终端 **411 passed + 12 subtests**（JUnit **423/423**）、manifest 478/478、现场 Runner 122/122、Java 定向测试、Vue/Compose 均通过。
 
-本机现场和展示链均使用合成数据：Browser 24、Java/MySQL 30、Fault 36、Durable 32；deterministic/replay 各 3/3、12 帧；公共 Nginx 慢调用 76.156 秒、HTTP 201/ready_to_commit、Java 写入 0、Provider 0。报告与 hash 见 [`v3.0.3-confirmation-contract.md`](v3.0.3-confirmation-contract.md) 和 [`v3.0.3-confirmation-contract.json`](v3.0.3-confirmation-contract.json)。
+本机现场均使用合成数据：Browser 24、Java/MySQL 30、Fault 36、Durable 32；草案修改链确认前 Java 写入 0、旧版本确认 409、当前版本写入 1、重复确认写入 0；人工协同链确认前写入 0、跨账号确认 404、确认后创建 1、重复确认 0。本次验证 Provider 0。报告与 hash 见 [`v3.0.3-capability-completion.md`](v3.0.3-capability-completion.md)。
 
-注意：一次错误 grounding CLI 触发了 16 次 DeepSeek 请求和 14,553 tokens，已标记 `invalidated_offline_run`，没有 Release ID/Lock，不能计入模型通过率；因此 `V3_0_3_LIVE_READY=false`。gitleaks 本机未安装为 `environment_blocked`，OSV 缓存扫描 exit 0。证据提交 `66abd4e` 的 [`mall-ci`](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/35121757903) 与 [`quality-evaluation`](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/35121757911) 均成功。不能把本轮写成真实模型准确率、生产 SLA、真实外部履约或在线发布。
+注意：历史 grounding CLI 的 16 次 DeepSeek 调用仍标记 `invalidated_offline_run`，没有 Release ID/Lock，不能计入模型通过率；因此 `V3_0_3_LIVE_READY=false`。本机 gitleaks 为 `environment_blocked`，当前冻结提交的远程 CI 尚待验证。不能把本轮写成真实模型准确率、生产 SLA、真实外部履约或在线发布。
 
 ## 当前事实快照｜v3.0.2 离线候选（2026-09-15）
 
