@@ -64,8 +64,18 @@ Assert-ContainerIdentity
 
 # This only invokes the in-process guard. It does not instantiate a provider
 # client or open a network socket.
-docker compose exec -T mall-ai-service python -c "from app.services.provider_guard import assert_provider_request_allowed,ProviderGuardError; assert_provider_request_allowed('https://api.deepseek.com')" 2>$null
-if ($LASTEXITCODE -eq 0) { throw 'Provider Guard unexpectedly allowed an unauthorised request.' }
+$previousNativeErrorPreference = $PSNativeCommandUseErrorActionPreference
+try {
+    # A non-zero exit is the expected safe result here.  PowerShell 7 otherwise
+    # upgrades it to a terminating NativeCommandError under ErrorActionPreference=Stop.
+    $PSNativeCommandUseErrorActionPreference = $false
+    docker compose exec -T mall-ai-service python -c "from app.services.provider_guard import assert_provider_request_allowed; assert_provider_request_allowed('https://api.deepseek.com')" 2>$null
+    $guardExitCode = $LASTEXITCODE
+}
+finally {
+    $PSNativeCommandUseErrorActionPreference = $previousNativeErrorPreference
+}
+if ($guardExitCode -eq 0) { throw 'Provider Guard unexpectedly allowed an unauthorised request.' }
 
 if ($Phase -eq 'Preflight') {
     if (Test-Path -LiteralPath $lockPath) { throw 'A portfolio release lock already exists.' }
