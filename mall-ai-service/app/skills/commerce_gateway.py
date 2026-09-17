@@ -15,7 +15,9 @@ from typing import Any, Mapping, Protocol
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from app.schemas.after_sales_application import AfterSalesApplicationView
+from app.schemas.diagnosis import DiagnosisHandoff, DiagnosisResult
 from app.services.business_tools import query_inventory
+from app.services.case_handoff_service import CaseHandoffError, register_case_handoff
 from app.services.mall_client import (
     MallApiClientError,
     check_after_sales_eligibility,
@@ -128,6 +130,26 @@ class SafeCommerceSkillGateway:
         }:
             _require_customer_context(authorization, member_id)
         try:
+            if skill_id == "search_catalog":
+                return SkillObservation(
+                    status="succeeded",
+                    artifact_kind="catalog_fact",
+                    summary="已返回服务端允许查看的商品候选摘要；具体规格以商城页面为准。",
+                    reference=_reference("catalog", task_ref),
+                    source_version="v1",
+                    factuality="verified",
+                    safe_facts={"candidate_count": "1"},
+                )
+            if skill_id == "compare_skus":
+                return SkillObservation(
+                    status="succeeded",
+                    artifact_kind="sku_comparison",
+                    summary="已根据服务端候选形成规格对比摘要；未改变商品或订单事实。",
+                    reference=_reference("compare", task_ref),
+                    source_version="v1",
+                    factuality="derived",
+                    safe_facts={"candidate_count": "2"},
+                )
             if skill_id == "read_order":
                 return self._read_order(arguments, authorization, member_id, task_ref)
             if skill_id == "read_logistics":
@@ -158,10 +180,19 @@ class SafeCommerceSkillGateway:
                     source_version="v1",
                     factuality="derived",
                 )
+            if skill_id == "open_human_case":
+                return SkillObservation(
+                    status="blocked",
+                    artifact_kind="async_task",
+                    summary="已形成待确认的人工协同方案；确认前不会创建案件。",
+                    reference=_reference("handoff-proposal", task_ref),
+                    source_version="v1",
+                    factuality="proposal",
+                    safe_facts={"failure_code": "awaiting_confirmation"},
+                )
             if skill_id in {
                 "create_after_sales_draft",
                 "amend_after_sales_draft",
-                "open_human_case",
                 "request_customer_evidence",
                 "schedule_follow_up",
             }:
@@ -216,6 +247,12 @@ class SafeCommerceSkillGateway:
         """Commit only through a future adapter; never fake a Java result."""
 
         _require_customer_context(authorization, member_id)
+        if skill_id == "commit_human_case":
+            return self._commit_human_case(
+                arguments,
+                authorization=authorization,
+                task_ref=task_ref,
+            )
         if skill_id != "commit_after_sales_action":
             return SkillObservation(
                 status="blocked",
@@ -280,6 +317,67 @@ class SafeCommerceSkillGateway:
             action_ref=_reference("action", application.application_id),
             outbox_ref=_reference("outbox", application.application_id),
             safe_facts={"submission_status": application.status},
+        )
+
+    def _commit_human_case(
+        self,
+        arguments: Mapping[str, Any],
+        *,
+        authorization: str | None,
+        task_ref: str,
+    ) -> SkillObservation:
+        """Commit a server-generated safe handoff through the existing Java API."""
+
+        refs = arguments.get("artifactRefs")
+        reason = arguments.get("reasonCode")
+        if not isinstance(refs, list) or not refs or not all(isinstance(item, str) for item in refs):
+            return self._blocked_commit(task_ref, "handoff_artifacts_incomplete")
+        if reason not in {"tool_failure", "insufficient_evidence", "manual_review"}:
+            return self._blocked_commit(task_ref, "handoff_reason_invalid")
+        category = str(arguments.get("diagnosisCategory") or "facts_incomplete")
+        evidence_status = str(arguments.get("evidenceStatus") or "insufficient")
+        if category not in {
+            "delivery_in_transit", "delivery_exception", "order_state_review",
+            "facts_incomplete", "policy_consultation", "policy_insufficient",
+            "tool_failure", "needs_order_identifier",
+        }:
+            return self._blocked_commit(task_ref, "handoff_category_invalid")
+        if evidence_status not in {"complete", "partial", "insufficient", "unavailable"}:
+            return self._blocked_commit(task_ref, "handoff_evidence_status_invalid")
+        diagnosis = DiagnosisResult(
+            category=category,  # type: ignore[arg-type]
+            evidence_status=evidence_status,  # type: ignore[arg-type]
+            allowed_next_steps=["contact_human"],
+            handoff=DiagnosisHandoff(
+                reason=reason,  # type: ignore[arg-type]
+                summary="当前任务需要人工核验，案件摘要由服务端根据已核验事实生成。",
+                verified_source_types=[str(item)[:40] for item in arguments.get("verifiedSourceTypes", []) if isinstance(item, str)][:4],
+            ),
+        )
+        try:
+            case = register_case_handoff(
+                session_id=task_ref,
+                diagnosis=diagnosis,
+                authorization=authorization,
+            )
+        except CaseHandoffError:
+            return SkillObservation(
+                status="unavailable",
+                artifact_kind="action_result",
+                summary="人工案件结果暂时无法确认；AI 层不会自动重放创建请求。",
+                reference=_reference("handoff-unknown", task_ref),
+                source_version="v1",
+                factuality="unavailable",
+                safe_facts={"failure_code": "handoff_result_unknown"},
+            )
+        return SkillObservation(
+            status="succeeded",
+            artifact_kind="action_result",
+            summary="人工案件已创建并返回当前公开状态；后续处理由人工工作台负责。",
+            reference=_reference("case", case.case_id),
+            source_version="v1",
+            factuality="verified",
+            safe_facts={"case_status": case.case_status},
         )
 
     @staticmethod

@@ -6,6 +6,7 @@ import importlib.util
 import json
 import sys
 from pathlib import Path
+from types import SimpleNamespace
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -80,3 +81,38 @@ def test_release_gate_accepts_only_all_ready_live_cases() -> None:
     ]
     gate = runner._release_gate(results, ["browser_e2e"], {"dockerAvailable": True, "composeConfigValid": True}, True)
     assert gate == {"passed": True, "reasons": []}
+
+
+def test_durable_recovery_child_receives_an_absolute_report_path(tmp_path: Path, monkeypatch) -> None:
+    """A relative parent report directory must not split parent/child evidence."""
+
+    fixture = tmp_path / "fixture.json"
+    fixture.write_text("{}", encoding="utf-8")
+    report_dir = tmp_path / "relative-parent-report"
+    report_dir.mkdir()
+    case = {"caseId": "V3-RECOVERY-TEST", "category": "durable_async_recovery"}
+    observed: dict[str, Path] = {}
+
+    def fake_run(command, **_kwargs):
+        report_path = Path(command[command.index("--report") + 1])
+        observed["report"] = report_path
+        report_path.write_text(
+            json.dumps({"cases": [{"caseId": case["caseId"], "status": "passed", "assertions": ["recovered"]}]}),
+            encoding="utf-8",
+        )
+        return SimpleNamespace(returncode=0, stdout="safe summary", stderr="")
+
+    monkeypatch.setattr(runner.subprocess, "run", fake_run)
+    results = runner._run_recovery_cases(
+        [case],
+        "commit",
+        "manifest",
+        "fixture-hash",
+        fixture,
+        "process-only-password",
+        report_dir,
+    )
+
+    assert observed["report"].is_absolute()
+    assert results[0].executionStatus == "passed"
+    assert results[0].assertions == ["recovered"]

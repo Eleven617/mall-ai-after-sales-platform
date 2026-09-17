@@ -26,6 +26,7 @@ from app.services.llm_service import (
     DEEPSEEK_REASONING_EFFORT,
     DEEPSEEK_THINKING_MODE,
 )
+from app.services.provider_guard import assert_provider_request_allowed
 
 
 MAX_AGENT_DECISIONS = 5
@@ -90,6 +91,7 @@ class DeepSeekJsonDecisionProvider:
         self._model = model
 
     def decide(self, state: dict[str, Any]) -> dict[str, Any]:
+        assert_provider_request_allowed(f"{self._base_url}/v1/chat/completions")
         response = httpx.post(
             f"{self._base_url}/v1/chat/completions",
             headers={"Authorization": f"Bearer {self._api_key}"},

@@ -14,8 +14,15 @@ import os
 import time
 import uuid
 from pathlib import Path
+import sys
+from types import SimpleNamespace
 
 import httpx
+
+
+SERVICE_ROOT = Path(__file__).resolve().parents[1]
+if str(SERVICE_ROOT) not in sys.path:
+    sys.path.insert(0, str(SERVICE_ROOT))
 
 from app.services.release_ledger import (
     append_release_event,
@@ -32,7 +39,7 @@ from scripts.run_real_local_showcase import (
 )
 
 
-ROOT = Path(__file__).resolve().parents[2]
+ROOT = SERVICE_ROOT.parent
 
 
 def run(report_path: Path, batch_id: str) -> dict[str, object]:
@@ -54,7 +61,7 @@ def run(report_path: Path, batch_id: str) -> dict[str, object]:
     }
     with release_ledger_context(batch_id=batch_id, path=ledger_path, source="slow-gateway-host"):
         try:
-            account_a, _, order_a = _prepare_fixture(password)
+            account_a, _, order_a = _prepare_synthetic_fixture(password)
             timeout = httpx.Timeout(330.0, connect=10.0, write=10.0, pool=10.0)
             with httpx.Client(timeout=timeout, trust_env=False, headers={"X-Mall-Release-Batch-Id": batch_id}) as client:
                 auth = _login(client, api_base, account_a.username, password)
@@ -119,6 +126,8 @@ def run(report_path: Path, batch_id: str) -> dict[str, object]:
                 proposal_formed=exc.proposal_formed,
                 java_commit=exc.java_commit,
             )
+        except (OSError, RuntimeError, ValueError):
+            result.update({"status": "failed", "failureCode": "fixture_prepare_failed", "stage": "fixture_prepare"})
         except httpx.TimeoutException:
             result.update({"status": "failed", "failureCode": "client_read_timeout", "stage": "agent_task_create"})
         except Exception:
@@ -136,6 +145,35 @@ def run(report_path: Path, batch_id: str) -> dict[str, object]:
     report_path.parent.mkdir(parents=True, exist_ok=True)
     report_path.write_text(json.dumps(result, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     return result
+
+
+def _prepare_synthetic_fixture(password: str):
+    """Prefer the process-local bootstrap fixture over creating more orders.
+
+    The slow gateway check validates proxy/runtime timing, not order creation.
+    A caller that already bootstrapped a disposable local account supplies its
+    short-lived fixture path in the process environment.  The raw values are
+    used only for this request and never enter the report or ledger.  The
+    legacy fresh-fixture path remains available for manual local use.
+    """
+
+    fixture_value = os.getenv("MALL_FIELD_FIXTURE_FILE") or os.getenv("MALL_LIVE_DEMO_RESULT_FILE")
+    if not fixture_value:
+        return _prepare_fixture(password)
+    fixture_path = Path(fixture_value)
+    payload = json.loads(fixture_path.read_text(encoding="utf-8"))
+    account = payload.get("account_a") if isinstance(payload, dict) else None
+    if not isinstance(account, dict):
+        raise RuntimeError("synthetic_fixture_invalid")
+    username = account.get("username")
+    order_sn = account.get("order_sn")
+    if not isinstance(username, str) or not username or not isinstance(order_sn, str) or not order_sn:
+        raise RuntimeError("synthetic_fixture_incomplete")
+    return (
+        SimpleNamespace(username=username),
+        SimpleNamespace(username="unused"),
+        SimpleNamespace(order_sn=order_sn),
+    )
 
 
 def main() -> int:

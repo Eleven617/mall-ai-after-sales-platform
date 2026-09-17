@@ -5,6 +5,7 @@ from unittest.mock import patch
 import httpx
 
 from app.services.llm_observability import capture_llm_metrics
+from app.services.provider_guard import provider_access_context
 from app.services.llm_service import (
     LLMServiceError,
     _extract_response,
@@ -108,6 +109,21 @@ class _MissingToolIdResponse(_FakeResponse):
 
 
 class LLMServiceObservabilityTests(unittest.TestCase):
+    def setUp(self) -> None:
+        self._provider_grant = provider_access_context(
+            mode="mock",
+            release_id="fixture-release",
+            batch_id="fixture-batch",
+            ledger_path="C:/fixture/release.jsonl",
+            runtime_commit="a" * 40,
+            authorized=True,
+            allow_mock=True,
+        )
+        self._provider_grant.__enter__()
+
+    def tearDown(self) -> None:
+        self._provider_grant.__exit__(None, None, None)
+
     def test_success_records_latency_attempts_and_usage_without_prompt(self) -> None:
         fake_settings = SimpleNamespace(
             deepseek_api_key="test-key",

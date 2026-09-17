@@ -497,7 +497,14 @@ def main() -> int:
             return 3
 
     batch_id = f"{args.phase}-{uuid.uuid4().hex[:12]}"
+    # The formal entry point binds every required authorization dimension in
+    # the host process.  The FastAPI container receives the same values through
+    # Compose environment and request headers; a key by itself never unlocks
+    # the shared HTTP guard.
     os.environ["MALL_RELEASE_BATCH_ID"] = batch_id
+    os.environ["MALL_RELEASE_ID"] = args.release_id
+    os.environ["MALL_PROVIDER_LIVE_AUTH"] = "1"
+    os.environ["MALL_RUNTIME_PROVIDER_MODE"] = "live"
     ledger = _base_ledger(
         batch_id=batch_id,
         release_id=args.release_id,

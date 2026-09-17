@@ -687,7 +687,13 @@ def _run_recovery_cases(
     report_dir: Path,
 ) -> list[CaseResult]:
     runner_id = "durable-recovery-field-runner"
-    report_path = report_dir / "durable-recovery-local.json"
+    # The child verifier executes from ``mall-ai-service`` while the parent
+    # accepts a report directory relative to the repository root.  Resolve
+    # before spawning so both processes refer to the same physical report;
+    # otherwise a successful child report is written under
+    # ``mall-ai-service/tmp`` and the parent incorrectly marks all recovery
+    # cases failed.
+    report_path = (report_dir / "durable-recovery-local.json").resolve()
     command = [
         sys.executable,
         str(SERVICE_ROOT / "scripts" / "verify_durable_recovery_local.py"),

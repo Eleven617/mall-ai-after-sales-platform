@@ -1,1 +1,1 @@
-{"$schema":"https://json-schema.org/draft/2020-12/schema","title":"open_human_case output","type":"object","additionalProperties":false}
+{"$schema":"https://json-schema.org/draft/2020-12/schema","title":"open_human_case output","type":"object","additionalProperties":false,"properties":{"proposalRef":{"type":"string","pattern":"^proposalref-[a-z0-9]{8,32}$"},"revision":{"type":"integer","minimum":1,"maximum":99},"confirmationStatus":{"const":"awaiting_confirmation"},"javaSideEffect":{"const":false}},"required":["proposalRef","revision","confirmationStatus","javaSideEffect"]}

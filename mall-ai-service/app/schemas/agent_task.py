@@ -42,6 +42,7 @@ ConfirmationStatus = Literal[
     "committed",
     "blocked",
     "unknown",
+    "superseded",
 ]
 ExecutorDecisionName = Literal[
     "discover_skills",
@@ -203,6 +204,11 @@ class ActionProposal(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     proposal_id: str = Field(pattern=r"^proposal-[a-z0-9]{8,32}$")
+    proposal_ref: str | None = Field(default=None, pattern=r"^proposalref-[a-z0-9]{8,32}$")
+    revision: int = Field(default=1, ge=1, le=99)
+    supersedes_proposal_ref: str | None = Field(
+        default=None, pattern=r"^proposalref-[a-z0-9]{8,32}$"
+    )
     task_id: str = Field(pattern=r"^task-[a-z0-9]{8,32}$")
     action_skill: str = Field(pattern=r"^[a-z][a-z0-9_]{2,63}$")
     # The model-facing proposal Skill and the server-selected confirmation
@@ -220,6 +226,18 @@ class ActionProposal(BaseModel):
     confirmation_status: ConfirmationStatus = "awaiting_confirmation"
     content_hash: str = Field(min_length=64, max_length=64, pattern=r"^[a-f0-9]{64}$")
     expires_at: float
+    created_at: float = Field(default_factory=time.time)
+    updated_at: float = Field(default_factory=time.time)
+
+    @model_validator(mode="after")
+    def bind_public_reference(self) -> "ActionProposal":
+        if self.proposal_ref is None:
+            object.__setattr__(
+                self,
+                "proposal_ref",
+                f"proposalref-{self.proposal_id.removeprefix('proposal-')}",
+            )
+        return self
 
     @field_validator("expected_effect", "user_explanation")
     @classmethod
@@ -413,6 +431,16 @@ class AgentTaskConfirmationRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     confirmation: Literal["confirm", "withdraw"]
+    proposal_ref: str = Field(pattern=r"^proposalref-[a-z0-9]{8,32}$")
+    revision: int = Field(ge=1, le=99)
+
+
+class AgentTaskActionAmendRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    proposal_ref: str = Field(pattern=r"^proposalref-[a-z0-9]{8,32}$")
+    revision: int = Field(ge=1, le=99)
+    application_type: Literal["cancel_refund", "return_refund", "exchange", "repair"]
 
 
 class AgentTaskPlanNodeView(BaseModel):
@@ -433,6 +461,11 @@ class AgentTaskActionView(BaseModel):
     expected_effect: str
     user_explanation: str
     confirmation_status: ConfirmationStatus
+    proposal_ref: str
+    revision: int = Field(ge=1, le=99)
+    application_type: str | None = None
+    application_type_label: str | None = None
+    evidence_summaries: list[str] = Field(default_factory=list, max_length=4)
 
 
 class AgentTaskContextView(BaseModel):
@@ -478,6 +511,7 @@ class AgentTaskEvent(BaseModel):
         "skill_observed",
         "waiting_for_user",
         "action_proposed",
+        "action_revised",
         "action_committed",
         "task_completed",
         "task_blocked",

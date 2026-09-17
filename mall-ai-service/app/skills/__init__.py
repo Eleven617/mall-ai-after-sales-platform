@@ -5,7 +5,11 @@ from app.skills.catalog import (
     SkillDefinition,
     discover_skills,
     get_skill,
+    list_backlog_skills,
+    list_internal_skills,
+    list_model_visible_skills,
     list_skills,
+    validate_catalog_consistency,
 )
 
 __all__ = [
@@ -13,5 +17,9 @@ __all__ = [
     "SkillDefinition",
     "discover_skills",
     "get_skill",
+    "list_backlog_skills",
+    "list_internal_skills",
+    "list_model_visible_skills",
     "list_skills",
+    "validate_catalog_consistency",
 ]

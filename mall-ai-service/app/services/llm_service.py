@@ -19,6 +19,7 @@ from app.services.llm_observability import (
     current_llm_call_policy,
     record_llm_metric,
 )
+from app.services.provider_guard import ProviderGuardError, assert_provider_request_allowed
 from app.services.reliability_service import (
     DependencyCircuitOpen,
     reliability_governor,
@@ -223,6 +224,20 @@ def _request_json(
             provider_request_id_hash=provider_request_id_hash,
         )
         raise error from exc
+    except ProviderGuardError as exc:
+        error = LLMServiceError(
+            "外部模型请求被安全策略阻止",
+            category=exc.category,
+        )
+        record_llm_metric(
+            operation=operation,
+            outcome="failed",
+            elapsed_ms=_elapsed_ms(started_at),
+            attempts=0,
+            failure_class=error.category,
+            ledger_event_type="test",
+        )
+        raise error from exc
     except LLMServiceError as exc:
         if isinstance(exc.attempts, int) and exc.attempts > 0:
             attempts = exc.attempts
@@ -263,6 +278,9 @@ def _post_with_retry(
     headers: dict,
     payload: dict,
 ) -> tuple[httpx.Response, int]:
+    # Keep the check at the lowest shared HTTP boundary so a new caller cannot
+    # accidentally bypass the public LLM helpers or the release runner.
+    assert_provider_request_allowed(url)
     retry_status_codes = {429, 500, 502, 503, 504}
     last_error: Exception | None = None
     error_category = "unknown"

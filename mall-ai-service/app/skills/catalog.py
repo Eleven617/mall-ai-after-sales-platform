@@ -5,10 +5,10 @@ from dataclasses import dataclass
 import re
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 
-SKILL_CATALOG_VERSION = "skill_catalog_v3_0"
+SKILL_CATALOG_VERSION = "skill_catalog_v3_1"
 SkillDomain = Literal[
     "catalog",
     "order",
@@ -20,6 +20,7 @@ SkillDomain = Literal[
     "runtime",
 ]
 SkillActionMode = Literal["read", "draft", "commit", "async_task"]
+SkillExposure = Literal["model_visible", "internal_executor", "backlog"]
 
 
 class SkillDefinition(BaseModel):
@@ -34,6 +35,10 @@ class SkillDefinition(BaseModel):
     input_schema_ref: str = Field(pattern=r"^schemas/skills/[a-z0-9_.-]+\.input\.json$")
     output_schema_ref: str = Field(pattern=r"^schemas/skills/[a-z0-9_.-]+\.output\.json$")
     action_mode: SkillActionMode
+    # Full server catalog entries are retained for validation and history, but
+    # only model_visible entries are serialized into Executor context.
+    exposure: SkillExposure = "model_visible"
+    model_visible: bool = True
     estimated_latency_ms: int = Field(ge=0, le=120_000)
     estimated_model_cost: str = Field(min_length=1, max_length=40)
     artifact_kinds: list[str] = Field(default_factory=list, max_length=4)
@@ -55,6 +60,13 @@ class SkillDefinition(BaseModel):
     allowed_roles: tuple[Literal["customer", "quality_evaluation"] , ...] = ("customer",)
     requires_confirmation: bool = False
     max_calls_per_task: int = Field(default=2, ge=1, le=8)
+
+    @model_validator(mode="after")
+    def validate_exposure(self) -> "SkillDefinition":
+        expected = self.exposure == "model_visible"
+        if self.model_visible != expected:
+            raise ValueError("Skill 可见性字段不一致")
+        return self
 
     @field_validator("artifact_kinds")
     @classmethod
@@ -219,6 +231,8 @@ _CATALOG: tuple[SkillDefinition, ...] = (
         input_schema_ref="schemas/skills/amend_after_sales_draft.input.json",
         output_schema_ref="schemas/skills/amend_after_sales_draft.output.json",
         action_mode="draft",
+        exposure="internal_executor",
+        model_visible=False,
         estimated_latency_ms=400,
         estimated_model_cost="none",
         artifact_kinds=["action_result"],
@@ -235,6 +249,8 @@ _CATALOG: tuple[SkillDefinition, ...] = (
         input_schema_ref="schemas/skills/commit_after_sales_action.input.json",
         output_schema_ref="schemas/skills/commit_after_sales_action.output.json",
         action_mode="commit",
+        exposure="internal_executor",
+        model_visible=False,
         estimated_latency_ms=700,
         estimated_model_cost="none",
         artifact_kinds=["action_result", "async_task"],
@@ -246,6 +262,24 @@ _CATALOG: tuple[SkillDefinition, ...] = (
         confirmation_required_input_keys=("orderFactRef", "applicationType"),
     ),
     SkillDefinition(
+        skill_id="commit_human_case",
+        semantic_version="v1",
+        domain="collaboration",
+        description="提交经客户确认的人工协同案件；由服务器生成安全交接摘要并调用 Java",
+        input_schema_ref="schemas/skills/commit_human_case.input.json",
+        output_schema_ref="schemas/skills/commit_human_case.output.json",
+        action_mode="commit",
+        exposure="internal_executor",
+        model_visible=False,
+        estimated_latency_ms=700,
+        estimated_model_cost="none",
+        artifact_kinds=["action_result", "async_task"],
+        examples=["客户确认后转人工处理"],
+        discovery_terms=["人工", "协同", "确认"],
+        requires_confirmation=True,
+        confirmation_required_input_keys=("artifactRefs", "reasonCode"),
+    ),
+    SkillDefinition(
         skill_id="open_human_case",
         semantic_version="v1",
         domain="collaboration",
@@ -253,12 +287,16 @@ _CATALOG: tuple[SkillDefinition, ...] = (
         input_schema_ref="schemas/skills/open_human_case.input.json",
         output_schema_ref="schemas/skills/open_human_case.output.json",
         action_mode="async_task",
+        exposure="model_visible",
+        model_visible=True,
         estimated_latency_ms=500,
         estimated_model_cost="none",
         artifact_kinds=["async_task"],
         examples=["事实不足且需要人工核验"],
         discovery_terms=["人工", "协同", "投诉", "核验"],
         requires_confirmation=True,
+        confirmation_executor_skill_id="commit_human_case",
+        confirmation_required_input_keys=("artifactRefs", "reasonCode"),
     ),
     SkillDefinition(
         skill_id="request_customer_evidence",
@@ -268,6 +306,8 @@ _CATALOG: tuple[SkillDefinition, ...] = (
         input_schema_ref="schemas/skills/request_customer_evidence.input.json",
         output_schema_ref="schemas/skills/request_customer_evidence.output.json",
         action_mode="async_task",
+        exposure="backlog",
+        model_visible=False,
         estimated_latency_ms=350,
         estimated_model_cost="none",
         artifact_kinds=["async_task"],
@@ -283,6 +323,8 @@ _CATALOG: tuple[SkillDefinition, ...] = (
         input_schema_ref="schemas/skills/schedule_follow_up.input.json",
         output_schema_ref="schemas/skills/schedule_follow_up.output.json",
         action_mode="async_task",
+        exposure="backlog",
+        model_visible=False,
         estimated_latency_ms=350,
         estimated_model_cost="none",
         artifact_kinds=["async_task"],
@@ -325,6 +367,20 @@ def list_skills(*, role: str = "customer") -> list[SkillDefinition]:
     return [skill for skill in _CATALOG if role in skill.allowed_roles]
 
 
+def list_model_visible_skills(*, role: str = "customer") -> list[SkillDefinition]:
+    """Return only capabilities that the Executor may discover."""
+
+    return [skill for skill in list_skills(role=role) if skill.model_visible]
+
+
+def list_internal_skills(*, role: str = "customer") -> list[SkillDefinition]:
+    return [skill for skill in list_skills(role=role) if skill.exposure == "internal_executor"]
+
+
+def list_backlog_skills(*, role: str = "customer") -> list[SkillDefinition]:
+    return [skill for skill in list_skills(role=role) if skill.exposure == "backlog"]
+
+
 def get_skill(skill_id: str, *, role: str = "customer") -> SkillDefinition | None:
     return next((skill for skill in list_skills(role=role) if skill.skill_id == skill_id), None)
 
@@ -343,6 +399,52 @@ def confirmation_executor_skill(skill_id: str, *, role: str = "customer") -> Ski
     if target is None or target.action_mode != "commit" or not target.requires_confirmation:
         return None
     return target
+
+
+_READ_EXECUTORS = {
+    "search_catalog",
+    "compare_skus",
+    "read_order",
+    "read_logistics",
+    "read_inventory",
+    "retrieve_policy",
+    "list_service_applications",
+    "build_service_resolution",
+    "search_task_memory",
+}
+_ACTION_EXECUTOR_MAPPINGS = {
+    "create_after_sales_draft": "commit_after_sales_action",
+    "open_human_case": "commit_human_case",
+}
+
+
+def validate_catalog_consistency(*, role: str = "customer") -> list[str]:
+    """Return deterministic catalog/adapter contract violations.
+
+    The function is intentionally pure and is also used as a startup gate and
+    by CI tests.  It does not call Java, RAG, or a model.
+    """
+
+    errors: list[str] = []
+    visible = list_model_visible_skills(role=role)
+    for skill in visible:
+        if skill.exposure != "model_visible" or not skill.model_visible:
+            errors.append(f"visible_exposure:{skill.skill_id}")
+        if skill.action_mode == "read" and skill.skill_id not in _READ_EXECUTORS:
+            errors.append(f"read_adapter_missing:{skill.skill_id}")
+        if skill.action_mode in {"draft", "async_task"} and skill.skill_id != "spawn_subtask":
+            target = _ACTION_EXECUTOR_MAPPINGS.get(skill.skill_id)
+            if not target or confirmation_executor_skill(skill.skill_id, role=role) is None:
+                errors.append(f"confirmation_adapter_missing:{skill.skill_id}")
+    for skill in list_internal_skills(role=role):
+        if skill.model_visible:
+            errors.append(f"internal_visible:{skill.skill_id}")
+        if skill.skill_id not in {"commit_after_sales_action", "commit_human_case", "amend_after_sales_draft"}:
+            errors.append(f"internal_adapter_missing:{skill.skill_id}")
+    for skill in list_backlog_skills(role=role):
+        if skill.model_visible:
+            errors.append(f"backlog_visible:{skill.skill_id}")
+    return errors
 
 
 def discovery_score(skill: SkillDefinition, query: str) -> int:
@@ -372,7 +474,7 @@ def discover_skills(query: str, *, role: str = "customer", limit: int = 8) -> li
 
     normalized = " ".join((query or "").lower().split())
     scored: list[tuple[int, SkillDefinition]] = []
-    for skill in list_skills(role=role):
+    for skill in list_model_visible_skills(role=role):
         scored.append((discovery_score(skill, normalized), skill))
     scored.sort(
         key=lambda pair: (
@@ -412,7 +514,7 @@ def discover_skills(query: str, *, role: str = "customer", limit: int = 8) -> li
     if not selected:
         selected = [
             skill
-            for skill in list_skills(role=role)
+            for skill in list_model_visible_skills(role=role)
             if skill.skill_id in {"search_catalog", "read_order", "retrieve_policy", "list_service_applications"}
         ][:limit]
     return selected

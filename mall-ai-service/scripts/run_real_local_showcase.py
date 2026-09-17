@@ -150,8 +150,8 @@ def run_real_local_showcase(
     password = os.getenv("MALL_LIVE_DEMO_PASSWORD")
     if not password:
         return {"status": "environment_blocked", "reason": "missing_process_fixture_password"}
-    provider_mode = (provider_mode or os.getenv("MALL_RUNTIME_PROVIDER_MODE", "live")).strip().lower()
-    if provider_mode not in {"deterministic", "replay", "live"}:
+    provider_mode = (provider_mode or os.getenv("MALL_RUNTIME_PROVIDER_MODE", "offline")).strip().lower()
+    if provider_mode not in {"deterministic", "replay", "live", "offline"}:
         return {"status": "environment_blocked", "reason": "invalid_provider_mode"}
     report_dir.mkdir(parents=True, exist_ok=True)
     started = time.monotonic()
@@ -161,7 +161,7 @@ def run_real_local_showcase(
     frame_groups: dict[str, dict[str, Any]] = {}
     with release_ledger_context(batch_id=batch_id, path=ledger_path, source="showcase-host"):
         try:
-            account_a, account_b, order_a = _prepare_fixture(password)
+            account_a, account_b, closed_loop_order, fact_change_order = _prepare_showcase_fixture(password)
         except (httpx.HTTPError, OSError, ValueError, RuntimeError):
             failure = ShowcaseError("fixture_prepare_failed", scenario="fixture", stage="fixture_prepare")
             append_release_event(
@@ -184,14 +184,14 @@ def run_real_local_showcase(
             with httpx.Client(
                 timeout=runner_timeout,
                 trust_env=False,
-                headers={"X-Mall-Release-Batch-Id": batch_id},
+                headers={"X-Mall-Release-Batch-Id": batch_id, **_provider_headers()},
             ) as client:
                 auth_a = _login(client, api_base, account_a.username, password)
                 auth_b = _login(client, api_base, account_b.username, password)
                 for scenario, callback in (
-                    ("main_open_task_closed_loop", lambda: _agent_closed_loop(client, api_base, auth_a, auth_b, order_a.order_sn)),
-                    ("clarify_pause_resume", lambda: _agent_pause_resume(client, api_base, auth_a, order_a.order_sn)),
-                    ("fact_change_replan", lambda: _agent_fact_change_replan(client, api_base, admin_base, auth_a, order_a.order_id, order_a.order_sn, password)),
+                    ("main_open_task_closed_loop", lambda: _agent_closed_loop(client, api_base, auth_a, auth_b, closed_loop_order.order_sn)),
+                    ("clarify_pause_resume", lambda: _agent_pause_resume(client, api_base, auth_a, closed_loop_order.order_sn)),
+                    ("fact_change_replan", lambda: _agent_fact_change_replan(client, api_base, admin_base, auth_a, fact_change_order.order_id, fact_change_order.order_sn, password)),
                 ):
                     try:
                         result = callback()
@@ -296,6 +296,21 @@ def _showcase_failure(
     }
 
 
+def _provider_headers() -> dict[str, str]:
+    """Forward only formal release metadata, never provider credentials."""
+
+    values = {
+        "X-Mall-Provider-Mode": os.getenv("MALL_RUNTIME_PROVIDER_MODE", "offline"),
+        "X-Mall-Release-Id": os.getenv("MALL_RELEASE_ID", ""),
+        "X-Mall-Release-Batch-Id": os.getenv("MALL_RELEASE_BATCH_ID", ""),
+        "X-Mall-Release-Ledger-Path": os.getenv(
+            "MALL_RELEASE_LEDGER_CONTAINER_PATH", "/app/release-ledger/ledger.jsonl"
+        ),
+        "X-Mall-Runtime-Commit": os.getenv("MALL_RUNTIME_COMMIT", ""),
+    }
+    return {key: value for key, value in values.items() if value}
+
+
 def _agent_closed_loop(
     client: httpx.Client,
     api_base: str,
@@ -324,7 +339,7 @@ def _agent_closed_loop(
     task_ref = created.get("task_ref")
     if not isinstance(task_ref, str):
         raise ShowcaseError("closed_loop_proposal_missing", stage="proposal", completed_steps=1)
-    committed = _confirm_agent_task(client, api_base, auth_a, task_ref, "confirm")
+    committed = _confirm_agent_task(client, api_base, auth_a, task_ref, "confirm", created)
     action = committed.get("action") or {}
     # A committed proposal is intentionally omitted from the public action
     # card.  The task status plus the Java-backed list read establish the
@@ -349,7 +364,7 @@ def _agent_closed_loop(
         )
     # A second confirmation must fail closed because the proposal was already
     # consumed; it must not create a second Java application.
-    duplicate = _confirm_agent_task_raw(client, api_base, auth_a, task_ref, "confirm")
+    duplicate = _confirm_agent_task_raw(client, api_base, auth_a, task_ref, "confirm", created)
     duplicate_after = _list_applications(client, api_base, auth_a)
     if duplicate.status_code not in {404, 409} or len(duplicate_after) != len(after):
         raise ShowcaseError(
@@ -461,7 +476,7 @@ def _agent_fact_change_replan(
     except Exception as exc:
         del exc
         raise ShowcaseError("java_fact_transition_failed", stage="java_fact_transition", completed_steps=2, proposal_formed=True)
-    confirmed = _confirm_agent_task(client, api_base, auth, task_ref, "confirm")
+    confirmed = _confirm_agent_task(client, api_base, auth, task_ref, "confirm", created)
     confirmed_action = confirmed.get("action") or {}
     if confirmed_action.get("confirmation_status") not in {"blocked", "unknown", None}:
         raise ShowcaseError(
@@ -540,8 +555,8 @@ def _continue_agent_task(client: httpx.Client, api_base: str, auth: str, task_re
     return payload
 
 
-def _confirm_agent_task(client: httpx.Client, api_base: str, auth: str, task_ref: str, confirmation: str) -> dict[str, Any]:
-    response = _confirm_agent_task_raw(client, api_base, auth, task_ref, confirmation)
+def _confirm_agent_task(client: httpx.Client, api_base: str, auth: str, task_ref: str, confirmation: str, task: dict[str, Any]) -> dict[str, Any]:
+    response = _confirm_agent_task_raw(client, api_base, auth, task_ref, confirmation, task)
     payload = _json_object(response)
     if response.status_code != 200:
         raise ShowcaseError("closed_loop_java_submission_missing", stage="java_commit", http_status_class=_status_class(response.status_code))
@@ -549,12 +564,17 @@ def _confirm_agent_task(client: httpx.Client, api_base: str, auth: str, task_ref
     return payload
 
 
-def _confirm_agent_task_raw(client: httpx.Client, api_base: str, auth: str, task_ref: str, confirmation: str) -> httpx.Response:
+def _confirm_agent_task_raw(client: httpx.Client, api_base: str, auth: str, task_ref: str, confirmation: str, task: dict[str, Any]) -> httpx.Response:
     try:
+        action = task.get("action") if isinstance(task.get("action"), dict) else {}
         return client.post(
             f"{api_base}/agent-tasks/{task_ref}/action",
             headers={"Authorization": auth},
-            json={"confirmation": confirmation},
+            json={
+                "confirmation": confirmation,
+                "proposal_ref": action.get("proposal_ref"),
+                "revision": action.get("revision"),
+            },
         )
     except httpx.TimeoutException as exc:
         raise ShowcaseError("client_read_timeout", stage="java_commit") from exc
@@ -618,6 +638,47 @@ def _prepare_fixture(password: str):
         order_a = _prepare_account_order(client, java_base, accounts[0], int(os.getenv("MALL_LIVE_DEMO_PRODUCT_ID", "26")), required_stock=2)
         _prepare_account_order(client, java_base, accounts[1], int(os.getenv("MALL_LIVE_DEMO_PRODUCT_ID", "26")), required_stock=1)
     return accounts[0], accounts[1], order_a
+
+
+def _prepare_showcase_fixture(password: str):
+    """Create independent synthetic orders for mutually exclusive scenarios.
+
+    The closed-loop path intentionally changes an order through the after-sales
+    state machine.  A later fact-change/replan assertion must therefore use a
+    different, still-paid order instead of trying to deliver the already
+    changed order.  All identities and identifiers stay process-local.
+    """
+
+    nonce = uuid.uuid4().hex[:12]
+    seed = uuid.uuid4().int % 100_000_000
+    accounts = (
+        DemoAccount("v301-A", f"v301_a_{nonce}", password, f"197{seed:08d}"),
+        DemoAccount("v301-B", f"v301_b_{nonce}", password, f"196{(seed + 1) % 100_000_000:08d}"),
+    )
+    java_base = os.getenv("MALL_JAVA_BASE_URL", "http://127.0.0.1:8085").rstrip("/")
+    with httpx.Client(timeout=60, trust_env=False) as client:
+        closed_loop_order = _prepare_account_order(
+            client,
+            java_base,
+            accounts[0],
+            int(os.getenv("MALL_LIVE_DEMO_PRODUCT_ID", "26")),
+            required_stock=3,
+        )
+        fact_change_order = _prepare_account_order(
+            client,
+            java_base,
+            accounts[0],
+            int(os.getenv("MALL_LIVE_DEMO_PRODUCT_ID", "26")),
+            required_stock=2,
+        )
+        _prepare_account_order(
+            client,
+            java_base,
+            accounts[1],
+            int(os.getenv("MALL_LIVE_DEMO_PRODUCT_ID", "26")),
+            required_stock=1,
+        )
+    return accounts[0], accounts[1], closed_loop_order, fact_change_order
 
 
 def _capture_chain_frames(

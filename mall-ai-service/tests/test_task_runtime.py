@@ -284,8 +284,8 @@ def test_provider_binds_echoed_turn_order_ref_to_unique_verified_artifact() -> N
         ],
         available_skills=[
             {
-                "skillId": "commit_after_sales_action",
-                "actionMode": "commit",
+                "skillId": "create_after_sales_draft",
+                "actionMode": "draft",
                 "requiresConfirmation": True,
             }
         ],
@@ -297,7 +297,7 @@ def test_provider_binds_echoed_turn_order_ref_to_unique_verified_artifact() -> N
     provider._structured = lambda **_: ExecutorDecision(
         decision="propose_action",
         reason_summary="已形成待确认方案",
-        action_skill="commit_after_sales_action",
+        action_skill="create_after_sales_draft",
         action_arguments={
             "orderFactRef": "123456789012",
             "applicationType": "return_refund",
@@ -605,7 +605,7 @@ def test_commit_requires_current_verified_order_fact_and_explicit_confirmation()
             _decision(
                 name="propose_action",
                 summary="已形成一个待确认的退货退款行动。",
-                action_skill="commit_after_sales_action",
+                action_skill="create_after_sales_draft",
                 action_arguments={
                     "orderFactRef": order_reference,
                     "applicationType": "return_refund",
@@ -737,7 +737,7 @@ def test_draft_confirmation_uses_catalog_executor_and_writes_once() -> None:
     assert len(gateway.commits) == 1
 
 
-def test_unmapped_confirmation_skill_fails_closed_before_ready_to_commit() -> None:
+def test_human_case_proposal_waits_for_required_safe_artifacts() -> None:
     provider = ScriptedRuntimeProvider(
         decisions=[
             _decision(
@@ -766,8 +766,8 @@ def test_unmapped_confirmation_skill_fails_closed_before_ready_to_commit() -> No
             member_id=MEMBER_ID,
             authorization=AUTHORIZATION,
         )
-    assert result.view.status == "blocked"
-    assert "confirmation_executor_not_configured" in result.view.limitation_codes
+    assert result.view.status == "waiting_for_user"
+    assert "required_action_input_missing" in result.view.limitation_codes
     assert result.view.action is None
     assert gateway.commits == []
 
@@ -952,7 +952,7 @@ def test_unknown_commit_result_keeps_binding_and_rejects_duplicate_confirmation(
             _decision(
                 name="propose_action",
                 summary="已形成待确认行动。",
-                action_skill="commit_after_sales_action",
+                action_skill="create_after_sales_draft",
                 action_arguments={
                     "orderFactRef": order_reference,
                     "applicationType": "cancel_refund",
@@ -1012,7 +1012,7 @@ def test_commit_proposal_cannot_reference_another_task_or_unverified_fact() -> N
             _decision(
                 name="propose_action",
                 summary="不应提交未核验事实。",
-                action_skill="commit_after_sales_action",
+                action_skill="create_after_sales_draft",
                 action_arguments={
                     "orderFactRef": "fact-not-owned-abcdefghijklmnopqrstuvwxyz",
                     "applicationType": "exchange",
@@ -1057,7 +1057,7 @@ def test_executor_cannot_supply_the_runtime_idempotency_key() -> None:
             _decision(
                 name="propose_action",
                 summary="错误地尝试自行指定提交幂等键。",
-                action_skill="commit_after_sales_action",
+                action_skill="create_after_sales_draft",
                 action_arguments={
                     "orderFactRef": order_reference,
                     "applicationType": "return_refund",

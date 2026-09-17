@@ -3,6 +3,7 @@ import { computed, ref, watch } from "vue";
 
 import {
   confirmAgentTaskAction,
+  amendAgentTaskAction,
   continueAgentTask,
   createAgentTask,
   CustomerServiceApiError,
@@ -21,6 +22,7 @@ const continuationByTask = ref<Record<string, string>>({});
 const error = ref("");
 const busyTaskRef = ref("");
 const isCreating = ref(false);
+const editTypeByTask = ref<Record<string, "cancel_refund" | "return_refund" | "exchange" | "repair">>({});
 
 const visibleTasks = computed(() => tasks.value.filter((task) => task.status !== "cancelled"));
 
@@ -88,9 +90,28 @@ async function act(task: AgentTaskPublicView, confirmation: "confirm" | "withdra
   busyTaskRef.value = task.task_ref;
   error.value = "";
   try {
-    upsert(await confirmAgentTaskAction(task.task_ref, confirmation, props.authorization));
+    if (!task.action) return;
+    upsert(await confirmAgentTaskAction(task.task_ref, confirmation, props.authorization, task.action.proposal_ref, task.action.revision));
   } catch (reason) {
     error.value = messageFor(reason, "行动未完成，请刷新后重试。");
+  } finally {
+    busyTaskRef.value = "";
+  }
+}
+
+async function amend(task: AgentTaskPublicView): Promise<void> {
+  if (!task.action || busyTaskRef.value) return;
+  const applicationType = editTypeByTask.value[task.task_ref] || task.action.application_type || "return_refund";
+  busyTaskRef.value = task.task_ref;
+  error.value = "";
+  try {
+    upsert(await amendAgentTaskAction(task.task_ref, {
+      proposal_ref: task.action.proposal_ref,
+      revision: task.action.revision,
+      application_type: applicationType,
+    }, props.authorization));
+  } catch (reason) {
+    error.value = messageFor(reason, "方案已更新，请刷新后重新确认。");
   } finally {
     busyTaskRef.value = "";
   }
@@ -167,6 +188,7 @@ function actionStatusLabel(status: NonNullable<AgentTaskPublicView["action"]>["c
     committed: "已提交",
     blocked: "暂时阻塞",
     unknown: "状态待核实",
+    superseded: "已被新版本替代",
   }[status];
 }
 </script>
@@ -234,7 +256,13 @@ function actionStatusLabel(status: NonNullable<AgentTaskPublicView["action"]>["c
           <div class="agent-action-heading"><p class="card-caption">行动方案</p><span class="status-badge" :class="task.action.confirmation_status === 'awaiting_confirmation' ? 'warning' : task.action.confirmation_status === 'committed' ? 'success' : 'agent'">{{ actionStatusLabel(task.action.confirmation_status) }}</span></div>
           <strong>{{ task.action.expected_effect }}</strong>
           <p>{{ task.action.user_explanation }}</p>
+          <p v-if="task.action.application_type_label" class="agent-action-detail">当前类型：{{ task.action.application_type_label }} · 版本 {{ task.action.revision }} · 确认前不会写入商城</p>
+          <ul v-if="task.action.evidence_summaries.length" class="agent-action-evidence"><li v-for="item in task.action.evidence_summaries" :key="item">{{ item }}</li></ul>
           <div v-if="task.action.confirmation_status === 'awaiting_confirmation'" class="agent-action-buttons">
+            <select v-model="editTypeByTask[task.task_ref]" aria-label="修改售后类型">
+              <option value="cancel_refund">取消退款</option><option value="return_refund">退货退款</option><option value="exchange">换货</option><option value="repair">维修</option>
+            </select>
+            <button class="secondary-button" type="button" :disabled="busyTaskRef === task.task_ref" @click="amend(task)">修改方案</button>
             <button class="primary-button" type="button" :disabled="busyTaskRef === task.task_ref" @click="act(task, 'confirm')">确认后提交</button>
             <button class="secondary-button" type="button" :disabled="busyTaskRef === task.task_ref" @click="act(task, 'withdraw')">暂不提交</button>
           </div>

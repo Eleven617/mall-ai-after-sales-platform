@@ -55,7 +55,13 @@ export interface AgentTaskActionView {
     | "expired"
     | "committed"
     | "blocked"
-    | "unknown";
+    | "unknown"
+    | "superseded";
+  proposal_ref: string;
+  revision: number;
+  application_type?: "cancel_refund" | "return_refund" | "exchange" | "repair" | null;
+  application_type_label?: string | null;
+  evidence_summaries: string[];
 }
 
 /** Aggregate-only Context Pack metrics; no prompt, source reference or raw fact is exposed. */

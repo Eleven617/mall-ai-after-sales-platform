@@ -54,6 +54,7 @@ class TaskRecordBundle(BaseModel):
     artifacts: list[TaskArtifact] = Field(default_factory=list, max_length=128)
     context_packs: list[ContextPack] = Field(default_factory=list, max_length=100)
     action_proposal: ActionProposal | None = None
+    action_proposal_history: list[ActionProposal] = Field(default_factory=list, max_length=32)
     action_arguments: dict[str, dict[str, Any]] = Field(default_factory=dict, max_length=8)
     memory_hints: list[str] = Field(default_factory=list, max_length=32)
     events: list[AgentTaskEvent] = Field(default_factory=list, max_length=128)
@@ -95,7 +96,11 @@ class TaskRecordBundle(BaseModel):
             ).encode("utf-8")
             if hashlib.sha256(canonical).hexdigest() != self.action_proposal.content_hash:
                 raise ValueError("行动提案内容哈希不匹配")
-        elif self.task.pending_action_ref is not None:
+        if any(proposal.task_id != task_id for proposal in self.action_proposal_history):
+            raise ValueError("行动提案历史与任务绑定不一致")
+        if any(proposal.confirmation_status in {"awaiting_confirmation", "confirmed", "unknown"} for proposal in self.action_proposal_history):
+            raise ValueError("旧版本行动提案不能继续占用活动确认状态")
+        if self.action_proposal is None and self.task.pending_action_ref is not None:
             raise ValueError("任务存在无主待确认引用")
         if len({plan.version for plan in self.plans}) != len(self.plans):
             raise ValueError("计划版本重复")

@@ -223,7 +223,7 @@ def _run_proposal_case(
         raise RecoveryCaseError("proposal_not_ready", "proposal")
     before = _list_applications(client, base, authorization)
     if scenario == "cancel_race":
-        withdrawn = _confirm_raw(client, base, authorization, task_ref, "withdraw")
+        withdrawn = _confirm_raw(client, base, authorization, task_ref, "withdraw", created)
         if withdrawn.status_code != 200:
             raise RecoveryCaseError("withdraw_not_safe", "withdraw")
         after = _list_applications(client, base, authorization)
@@ -231,10 +231,10 @@ def _run_proposal_case(
             raise RecoveryCaseError("withdraw_not_safe", "withdraw_write")
         return {"assertions": ["withdraw_without_java_write", "transaction_gate_released"]}
 
-    confirmed = _confirm_raw(client, base, authorization, task_ref, "confirm")
+    confirmed = _confirm_raw(client, base, authorization, task_ref, "confirm", created)
     if confirmed.status_code != 200:
         raise RecoveryCaseError("task_resume_failed", "confirm")
-    duplicate = _confirm_raw(client, base, authorization, task_ref, "confirm")
+    duplicate = _confirm_raw(client, base, authorization, task_ref, "confirm", created)
     after = _list_applications(client, base, authorization)
     # Depending on whether the Java facade returns its idempotent result or
     # the task gate is already consumed, the second confirmation is 200, 404,
@@ -302,11 +302,12 @@ def _continue_raw(client: httpx.Client, base: str, authorization: str, task_ref:
     )
 
 
-def _confirm_raw(client: httpx.Client, base: str, authorization: str, task_ref: str, confirmation: str) -> httpx.Response:
+def _confirm_raw(client: httpx.Client, base: str, authorization: str, task_ref: str, confirmation: str, task: dict[str, Any]) -> httpx.Response:
+    action = task.get("action") if isinstance(task.get("action"), dict) else {}
     return client.post(
         f"{base}/agent-tasks/{task_ref}/action",
         headers={"Authorization": authorization},
-        json={"confirmation": confirmation},
+        json={"confirmation": confirmation, "proposal_ref": action.get("proposal_ref"), "revision": action.get("revision")},
     )
 
 

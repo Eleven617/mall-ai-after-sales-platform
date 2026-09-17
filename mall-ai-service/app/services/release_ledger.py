@@ -38,6 +38,7 @@ _SAFE_FAILURE_CLASSES = {
     "scenario_failure",
     "test_failure",
     "unknown",
+    "provider_guard",
 }
 
 

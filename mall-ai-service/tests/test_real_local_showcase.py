@@ -5,6 +5,8 @@ from __future__ import annotations
 import httpx
 import pytest
 from pathlib import Path
+import json
+from unittest.mock import patch
 
 from app.services.release_ledger import release_ledger_context
 from scripts.run_real_local_showcase import (
@@ -13,7 +15,9 @@ from scripts.run_real_local_showcase import (
     _response_failure_code,
     _status_class,
     _task_failure_code,
+    _prepare_showcase_fixture,
 )
+from scripts.run_v3_0_2_slow_gateway_test import _prepare_synthetic_fixture
 
 
 def test_showcase_error_is_a_safe_enumerated_projection() -> None:
@@ -90,3 +94,43 @@ def test_runtime_gateway_runner_timeout_order_is_explicit() -> None:
     assert 'MALL_RUNNER_READ_TIMEOUT_SECONDS", "330"' in runner
     assert "max_wall_clock_seconds: int = Field(default=90, ge=10, le=240)" in budget
     assert 240 < 300 < 330
+
+
+def test_slow_gateway_uses_only_the_process_local_synthetic_fixture(tmp_path, monkeypatch) -> None:
+    fixture = tmp_path / "fixture.json"
+    fixture.write_text(
+        json.dumps({"account_a": {"username": "synthetic-slow-user", "order_sn": "202601010000000001"}}),
+        encoding="utf-8",
+    )
+    monkeypatch.setenv("MALL_FIELD_FIXTURE_FILE", str(fixture))
+
+    account, unused, order = _prepare_synthetic_fixture("not-written")
+
+    assert account.username == "synthetic-slow-user"
+    assert unused.username == "unused"
+    assert order.order_sn == "202601010000000001"
+
+
+def test_showcase_uses_independent_orders_for_commit_and_fact_change(monkeypatch) -> None:
+    created: list[str] = []
+
+    class Client:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *_args):
+            return False
+
+    def create_order(_client, _base, account, _product_id, *, required_stock):
+        created.append(f"{account.label}:{required_stock}")
+        return type("Order", (), {"order_sn": f"order-{required_stock}", "order_id": required_stock})()
+
+    monkeypatch.setenv("MALL_LIVE_DEMO_PRODUCT_ID", "26")
+    with patch("scripts.run_real_local_showcase.httpx.Client", return_value=Client()), patch(
+        "scripts.run_real_local_showcase._prepare_account_order", side_effect=create_order
+    ):
+        account_a, account_b, closed_loop, fact_change = _prepare_showcase_fixture("not-written")
+
+    assert account_a.username != account_b.username
+    assert closed_loop.order_id != fact_change.order_id
+    assert created == ["v301-A:3", "v301-A:2", "v301-B:1"]

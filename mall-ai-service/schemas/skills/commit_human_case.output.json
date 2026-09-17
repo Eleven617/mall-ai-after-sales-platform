@@ -1,0 +1,1 @@
+{"$schema":"https://json-schema.org/draft/2020-12/schema","title":"commit_human_case output","type":"object","additionalProperties":false,"properties":{"status":{"type":"string","enum":["OPEN","CLOSED"]},"javaSideEffect":{"const":true}},"required":["status","javaSideEffect"]}

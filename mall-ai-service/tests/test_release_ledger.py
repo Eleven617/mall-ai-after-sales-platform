@@ -13,6 +13,7 @@ from unittest.mock import patch
 
 from app.services.llm_observability import capture_llm_metrics
 from app.services.llm_service import LLMServiceError, generate_text
+from app.services.provider_guard import provider_access_context
 from app.services.release_ledger import (
     read_release_events,
     release_ledger_context,
@@ -75,11 +76,20 @@ class ReleaseLedgerTests(unittest.TestCase):
                 )
                 with patch("app.services.llm_service.settings", fake_settings):
                     with release_ledger_context(batch_id="fake-batch", path=ledger, source="test"):
-                        with capture_llm_metrics(max_attempts=1, timeout_seconds=2.0):
-                            for _ in range(3):
-                                self.assertEqual("synthetic answer", generate_text("fixture input"))
-                            with self.assertRaises(LLMServiceError):
-                                generate_text("fixture input")
+                        with provider_access_context(
+                            mode="mock",
+                            release_id="fixture-release",
+                            batch_id="fake-batch",
+                            ledger_path=str(ledger),
+                            runtime_commit="a" * 40,
+                            authorized=True,
+                            allow_mock=True,
+                        ):
+                            with capture_llm_metrics(max_attempts=1, timeout_seconds=2.0):
+                                for _ in range(3):
+                                    self.assertEqual("synthetic answer", generate_text("fixture input"))
+                                with self.assertRaises(LLMServiceError):
+                                    generate_text("fixture input")
                 events = read_release_events(ledger, batch_id="fake-batch")
                 summary = summarize_release_events(events)
                 self.assertEqual(4, summary["providerRequests"])

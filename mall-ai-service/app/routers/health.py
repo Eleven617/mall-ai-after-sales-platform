@@ -34,7 +34,7 @@ def runtime_version() -> dict[str, str]:
     return {
         "runtimeCommit": os.getenv("MALL_RUNTIME_COMMIT", "unknown"),
         "imageRevision": os.getenv("MALL_IMAGE_REVISION", "unknown"),
-        "providerMode": os.getenv("MALL_RUNTIME_PROVIDER_MODE", "live"),
+        "providerMode": os.getenv("MALL_RUNTIME_PROVIDER_MODE", "offline"),
         "model": settings.deepseek_model,
         "thinkingMode": "enabled",
         "reasoningEffort": "high",

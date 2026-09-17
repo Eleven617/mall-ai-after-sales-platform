@@ -21,7 +21,17 @@ from app.services.rag2_evaluation import (  # noqa: E402
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--mode", choices=("dense", "hybrid", "hybrid_rerank"), required=True)
+    parser.add_argument(
+        "--mode",
+        choices=("offline", "live"),
+        default="offline",
+        help="offline is the safe default; live is an explicit, separately authorized provider run.",
+    )
+    parser.add_argument(
+        "--retrieval-mode",
+        choices=("dense", "hybrid", "hybrid_rerank"),
+        default="dense",
+    )
     parser.add_argument(
         "--max-cases",
         type=int,
@@ -38,6 +48,18 @@ def main() -> int:
     parser.add_argument("--input-token-price-per-million", type=float)
     parser.add_argument("--output-token-price-per-million", type=float)
     args = parser.parse_args()
+    suite = load_rag2_golden_suite(PROJECT_ROOT / "evals" / "rag2_golden_cases.v1.json")
+    if args.mode == "offline":
+        report = {
+            "status": "environment_blocked",
+            "mode": "offline",
+            "total_cases": len(suite.get("cases", [])),
+            "environment_blocked_cases": len(suite.get("cases", [])),
+            "external_model_calls": 0,
+            "reason": "explicit live mode is required for generated-answer grounding",
+        }
+        print(json.dumps(report, ensure_ascii=False, indent=2))
+        return 2
     if (args.input_token_price_per_million is None) != (args.output_token_price_per_million is None):
         raise SystemExit("Both token-price values are required together.")
     pricing = (
@@ -45,10 +67,9 @@ def main() -> int:
         if args.input_token_price_per_million is not None
         else None
     )
-    suite = load_rag2_golden_suite(PROJECT_ROOT / "evals" / "rag2_golden_cases.v1.json")
     report = evaluate_grounded_answer_suite(
         suite,
-        mode=args.mode,
+        mode=args.retrieval_mode,
         pricing=pricing,
         timeout_seconds=args.timeout_seconds,
         max_attempts=args.max_attempts,

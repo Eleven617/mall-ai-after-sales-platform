@@ -72,6 +72,7 @@ from app.skills.catalog import (
     discovery_score,
     discover_skills,
     get_skill,
+    validate_catalog_consistency,
 )
 from app.skills.commerce_gateway import (
     SafeCommerceSkillGateway,
@@ -120,12 +121,20 @@ class TaskRuntime:
         read_skill_allowlist: set[str] | None = None,
     ) -> None:
         self._store = store or get_task_store()
+        catalog_errors = validate_catalog_consistency()
+        if catalog_errors:
+            raise RuntimeError("Skill Catalog contract invalid: " + ",".join(catalog_errors))
         if provider is None:
-            provider_mode = str(os.getenv("MALL_RUNTIME_PROVIDER_MODE", "live")).strip().lower()
+            # A configured provider key is never sufficient to enable network
+            # access.  Live mode is selected only by an explicit formal
+            # runner grant and is rechecked by the shared HTTP guard.
+            provider_mode = str(os.getenv("MALL_RUNTIME_PROVIDER_MODE", "offline")).strip().lower()
             if provider_mode in {"deterministic", "replay"}:
                 provider = DeterministicRuntimeProvider(mode=provider_mode)
+            elif provider_mode == "live" and os.getenv("MALL_PROVIDER_LIVE_AUTH", "0") == "1":
+                provider = DeepSeekRuntimeProvider()
             else:
-                provider = DeepSeekRuntimeProvider() if settings.deepseek_api_key else UnavailableRuntimeProvider()
+                provider = UnavailableRuntimeProvider()
         self._provider = provider
         self._gateway = gateway or SafeCommerceSkillGateway()
         self._memory = memory or TaskMemory()
@@ -226,6 +235,90 @@ class TaskRuntime:
         except TaskStoreAccessDenied as exc:
             raise TaskRuntimeError(str(exc), code="task_not_found", status_code=404) from exc
 
+    def amend_action(
+        self,
+        *,
+        task_ref: str,
+        proposal_ref: str,
+        revision: int,
+        application_type: str,
+        member_id: int | None,
+        authorization: str | None,
+    ) -> TaskRuntimeResult:
+        """Create a new version of an uncommitted after-sales draft.
+
+        This path only changes the owner-scoped Runtime proposal vault.  It
+        never calls Java, creates an idempotency key, or mutates a business
+        application; confirmation of the returned version remains separate.
+        """
+
+        owner_ref, _ = self._require_owner("task-session", member_id, authorization, allow_session_placeholder=True)
+        if application_type not in {"cancel_refund", "return_refund", "exchange", "repair"}:
+            raise TaskRuntimeError("售后类型不受支持。", code="application_type_invalid")
+        try:
+            bundle = self._store.load_owned(task_ref, owner_ref)
+        except TaskStoreAccessDenied as exc:
+            raise TaskRuntimeError(str(exc), code="task_not_found", status_code=404) from exc
+        current = bundle.action_proposal
+        if current is None or current.confirmation_status != "awaiting_confirmation":
+            raise TaskRuntimeError("当前没有可修改的待确认草案。", code="action_gate_missing", status_code=409)
+        if proposal_ref != current.proposal_ref or revision != current.revision:
+            raise TaskRuntimeError("方案已更新，请刷新后再修改。", code="stale_proposal_revision", status_code=409)
+        if current.expires_at <= self._now():
+            current.confirmation_status = "expired"
+            bundle.task.pending_action_ref = None
+            bundle.task.status = "blocked"
+            bundle.task.limitation_codes.append("action_expired")
+            self._append_event(bundle, "task_blocked", "待确认草案已过期，未执行任何业务写入。")
+            self._save(bundle)
+            raise TaskRuntimeError("待确认草案已过期。", code="proposal_expired", status_code=409)
+        if current.action_skill != "create_after_sales_draft":
+            raise TaskRuntimeError("当前方案不是可修改的售后草案。", code="action_not_amendable", status_code=409)
+        arguments = bundle.action_arguments.get(current.arguments_ref)
+        if not isinstance(arguments, dict):
+            raise TaskRuntimeError("草案参数已失效，请重新发起任务。", code="action_arguments_missing", status_code=409)
+        canonical = json.dumps(arguments, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8")
+        if hashlib.sha256(canonical).hexdigest() != current.content_hash:
+            raise TaskRuntimeError("草案内容校验失败，请重新发起任务。", code="proposal_content_hash_mismatch", status_code=409)
+        next_arguments = dict(arguments)
+        next_arguments["applicationType"] = application_type
+        assert_safe_action_arguments(
+            next_arguments,
+            allowed_opaque_references={artifact.reference for artifact in bundle.artifacts},
+        )
+        bundle.action_proposal_history.append(current.model_copy(update={"confirmation_status": "superseded", "updated_at": self._now()}))
+        bundle.action_proposal_history = bundle.action_proposal_history[-32:]
+        arguments_ref = new_arguments_ref()
+        bundle.action_arguments[arguments_ref] = next_arguments
+        content_hash = hashlib.sha256(
+            json.dumps(next_arguments, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8")
+        ).hexdigest()
+        new_id = new_proposal_id()
+        next_proposal = ActionProposal(
+            proposal_id=new_id,
+            proposal_ref=f"proposalref-{new_id.removeprefix('proposal-')}",
+            revision=current.revision + 1,
+            supersedes_proposal_ref=current.proposal_ref,
+            task_id=bundle.task.task_id,
+            action_skill=current.action_skill,
+            confirmation_executor_skill_id=current.confirmation_executor_skill_id,
+            arguments_ref=arguments_ref,
+            expected_effect=current.expected_effect,
+            evidence_refs=list(current.evidence_refs),
+            alternatives=list(current.alternatives),
+            user_explanation="售后类型已更新；确认当前版本前不会写入商城。",
+            confirmation_status="awaiting_confirmation",
+            content_hash=content_hash,
+            expires_at=min(bundle.task.expires_at, self._now() + 900),
+        )
+        bundle.action_proposal = next_proposal
+        bundle.task.pending_action_ref = new_id
+        bundle.task.status = "ready_to_commit"
+        bundle.task.limitation_codes = [code for code in bundle.task.limitation_codes if code != "required_action_input_missing"]
+        self._append_event(bundle, "action_revised", "售后草案已生成新版本；旧版本已失效，确认前不会写入商城。")
+        self._save(bundle)
+        return TaskRuntimeResult(self._public_view(bundle), list(bundle.events))
+
     def confirm_action(
         self,
         *,
@@ -233,6 +326,8 @@ class TaskRuntime:
         confirmation: str,
         member_id: int | None,
         authorization: str | None,
+        proposal_ref: str | None = None,
+        revision: int | None = None,
     ) -> TaskRuntimeResult:
         owner_ref, _ = self._require_owner("task-session", member_id, authorization, allow_session_placeholder=True)
         try:
@@ -242,6 +337,14 @@ class TaskRuntime:
         proposal = bundle.action_proposal
         if proposal is None or proposal.confirmation_status != "awaiting_confirmation":
             raise TaskRuntimeError("当前任务没有有效的待确认行动。", code="action_gate_missing", status_code=409)
+        if (proposal_ref is not None or revision is not None) and (
+            proposal_ref != proposal.proposal_ref or revision != proposal.revision
+        ):
+            raise TaskRuntimeError(
+                "待确认方案已更新，请刷新后重新确认。",
+                code="stale_proposal_revision",
+                status_code=409,
+            )
         if proposal.expires_at <= self._now():
             proposal.confirmation_status = "expired"
             bundle.task.pending_action_ref = None
@@ -343,33 +446,72 @@ class TaskRuntime:
             self._append_event(bundle, "waiting_for_user", bundle.task.waiting_question)
             self._save(bundle)
             return TaskRuntimeResult(self._public_view(bundle), list(bundle.events))
-        order_fact_ref = arguments.get("orderFactRef")
-        verified_order_artifacts = [
-            artifact
-            for artifact in bundle.artifacts
-            if artifact.kind == "order_fact"
-            and artifact.factuality == "verified"
-            and artifact.expires_at > self._now()
-        ]
-        if not isinstance(order_fact_ref, str) or not any(
-            artifact.reference == order_fact_ref for artifact in verified_order_artifacts
-        ):
+        if executor_skill.skill_id == "commit_after_sales_action":
+            order_fact_ref = arguments.get("orderFactRef")
+            verified_order_artifacts = [
+                artifact
+                for artifact in bundle.artifacts
+                if artifact.kind == "order_fact"
+                and artifact.factuality == "verified"
+                and artifact.expires_at > self._now()
+            ]
+            if not isinstance(order_fact_ref, str) or not any(
+                artifact.reference == order_fact_ref for artifact in verified_order_artifacts
+            ):
+                proposal.confirmation_status = "blocked"
+                bundle.task.pending_action_ref = None
+                bundle.task.status = "blocked"
+                bundle.task.limitation_codes.append("commit_without_verified_order_fact")
+                self._append_event(bundle, "task_blocked", "提交行动缺少当前任务的有效订单事实，未执行任何业务写入。")
+                self._save(bundle)
+                return TaskRuntimeResult(self._public_view(bundle), list(bundle.events))
+            execution_arguments = {
+                "orderFactRef": order_fact_ref,
+                "applicationType": arguments.get("applicationType"),
+                # proposalRef is server-bound; a model-supplied value is never
+                # used to select the transaction gate.
+                "proposalRef": proposal.proposal_id,
+            }
+            if isinstance(arguments.get("actionRef"), str):
+                execution_arguments["actionRef"] = arguments["actionRef"]
+        elif executor_skill.skill_id == "commit_human_case":
+            artifact_refs = arguments.get("artifactRefs")
+            reason_code = arguments.get("reasonCode")
+            current_artifacts = {
+                artifact.reference: artifact
+                for artifact in bundle.artifacts
+                if artifact.expires_at > self._now()
+            }
+            if (
+                not isinstance(artifact_refs, list)
+                or not artifact_refs
+                or not all(isinstance(ref, str) and ref in current_artifacts for ref in artifact_refs)
+                or reason_code not in {"tool_failure", "insufficient_evidence", "manual_review"}
+            ):
+                proposal.confirmation_status = "blocked"
+                bundle.task.pending_action_ref = None
+                bundle.task.status = "blocked"
+                bundle.task.limitation_codes.append("handoff_artifact_reference_invalid")
+                self._append_event(bundle, "task_blocked", "人工协同提案引用已失效，未创建人工案件。")
+                self._save(bundle)
+                return TaskRuntimeResult(self._public_view(bundle), list(bundle.events))
+            selected = [current_artifacts[ref] for ref in artifact_refs]
+            evidence_status = "complete" if all(item.factuality == "verified" for item in selected) else "partial"
+            execution_arguments = {
+                "artifactRefs": list(artifact_refs),
+                "reasonCode": reason_code,
+                "diagnosisCategory": "tool_failure" if reason_code == "tool_failure" else "facts_incomplete",
+                "evidenceStatus": evidence_status,
+                "verifiedSourceTypes": sorted({item.kind for item in selected})[:4],
+            }
+        else:
             proposal.confirmation_status = "blocked"
             bundle.task.pending_action_ref = None
             bundle.task.status = "blocked"
-            bundle.task.limitation_codes.append("commit_without_verified_order_fact")
-            self._append_event(bundle, "task_blocked", "提交行动缺少当前任务的有效订单事实，未执行任何业务写入。")
+            bundle.task.limitation_codes.append("confirmation_executor_invalid")
+            self._append_event(bundle, "task_blocked", "待确认行动没有受控服务器执行器，未创建业务对象。")
             self._save(bundle)
             return TaskRuntimeResult(self._public_view(bundle), list(bundle.events))
-        execution_arguments = {
-            "orderFactRef": order_fact_ref,
-            "applicationType": arguments.get("applicationType"),
-            # proposalRef is server-bound; a model-supplied value is never
-            # used to select the transaction gate.
-            "proposalRef": proposal.proposal_id,
-        }
-        if isinstance(arguments.get("actionRef"), str):
-            execution_arguments["actionRef"] = arguments["actionRef"]
         execution_arguments["idempotencyKey"] = hashlib.sha256(
             f"{bundle.task.task_id}:{proposal.proposal_id}:{proposal.content_hash}:{executor_skill.skill_id}".encode("utf-8")
         ).hexdigest()[:32]
@@ -806,7 +948,7 @@ class TaskRuntime:
         for artifact in bundle.artifacts[-8:]:
             if artifact.source_skill and artifact.source_skill not in known:
                 skill = get_skill(artifact.source_skill)
-                if skill is not None and (
+                if skill is not None and skill.model_visible and (
                     skill.action_mode != "read"
                     or self._read_skill_allowlist is None
                     or skill.skill_id in self._read_skill_allowlist
@@ -882,6 +1024,8 @@ class TaskRuntime:
             skill = get_skill(decision.action_skill)
             if skill is None or skill.action_mode not in {"draft", "commit", "async_task"}:
                 raise TaskRuntimeError("行动 Skill 不在受控范围内。", code="action_skill_denied")
+            if skill.model_visible is not True or skill.exposure != "model_visible":
+                raise TaskRuntimeError("模型不能直接选择服务器内部执行器。", code="internal_executor_denied")
             if skill.skill_id not in discovered_ids:
                 raise TaskRuntimeError("行动 Skill 必须先经当前任务发现。", code="undiscovered_action_skill")
             if not skill.requires_confirmation:
@@ -910,14 +1054,30 @@ class TaskRuntime:
                     missing_keys=missing_keys,
                 )
                 raise error
-            order_fact_ref = decision.action_arguments.get("orderFactRef")
-            verified_order_refs = {
-                artifact.reference
-                for artifact in bundle.artifacts
-                if artifact.kind == "order_fact" and artifact.factuality == "verified" and artifact.expires_at > self._now()
-            }
-            if not isinstance(order_fact_ref, str) or order_fact_ref not in verified_order_refs:
-                raise TaskRuntimeError("提交行动必须引用当前任务的已核验订单事实。", code="commit_without_verified_order_fact")
+            if skill.skill_id == "create_after_sales_draft":
+                order_fact_ref = decision.action_arguments.get("orderFactRef")
+                verified_order_refs = {
+                    artifact.reference
+                    for artifact in bundle.artifacts
+                    if artifact.kind == "order_fact" and artifact.factuality == "verified" and artifact.expires_at > self._now()
+                }
+                if not isinstance(order_fact_ref, str) or order_fact_ref not in verified_order_refs:
+                    raise TaskRuntimeError("提交行动必须引用当前任务的已核验订单事实。", code="commit_without_verified_order_fact")
+            elif skill.skill_id == "open_human_case":
+                refs = decision.action_arguments.get("artifactRefs")
+                reason = decision.action_arguments.get("reasonCode")
+                owned_refs = {
+                    artifact.reference
+                    for artifact in bundle.artifacts
+                    if artifact.expires_at > self._now()
+                }
+                if (
+                    not isinstance(refs, list)
+                    or not refs
+                    or not all(isinstance(ref, str) and ref in owned_refs for ref in refs)
+                    or reason not in {"tool_failure", "insufficient_evidence", "manual_review"}
+                ):
+                    raise TaskRuntimeError("人工协同提案必须引用当前任务的安全 Artifact。", code="handoff_artifact_reference_invalid")
         if decision.decision == "revise_plan":
             if task.plan_version >= 99:
                 raise TaskRuntimeError("计划版本已达到上限。", code="plan_version_exhausted")
@@ -951,8 +1111,6 @@ class TaskRuntime:
             # from an Executor decision, even when the value has a valid shape.
             "commit_after_sales_action": {"actionRef", "proposalRef", "orderFactRef", "applicationType"},
             "open_human_case": {"artifactRefs", "reasonCode"},
-            "request_customer_evidence": {"questionCode"},
-            "schedule_follow_up": {"taskRef", "delayCode"},
             "search_task_memory": {"query"},
             "spawn_subtask": {"goalCode", "requiredSkills"},
         }
@@ -1401,6 +1559,23 @@ class TaskRuntime:
             allow_generated_idempotency_key=skill.action_mode == "commit",
             allowed_opaque_references={artifact.reference for artifact in bundle.artifacts},
         )
+        current_proposal = bundle.action_proposal
+        if current_proposal is not None:
+            # A natural-language amendment must use the same immutable
+            # version chain as the structured PATCH endpoint.  Never silently
+            # overwrite a pending gate: retain the old proposal as a
+            # superseded history record and bind the task only to the new
+            # proposal.  The old arguments remain server-side and cannot be
+            # confirmed through the current gate.
+            bundle.action_proposal_history.append(
+                current_proposal.model_copy(
+                    update={
+                        "confirmation_status": "superseded",
+                        "updated_at": self._now(),
+                    }
+                )
+            )
+            bundle.action_proposal_history = bundle.action_proposal_history[-32:]
         arguments_ref = new_arguments_ref()
         bundle.action_arguments[arguments_ref] = action_arguments
         content_hash = hashlib.sha256(
@@ -1408,6 +1583,8 @@ class TaskRuntime:
         ).hexdigest()
         proposal = ActionProposal(
             proposal_id=new_proposal_id(),
+            revision=(current_proposal.revision + 1) if current_proposal is not None else 1,
+            supersedes_proposal_ref=(current_proposal.proposal_ref if current_proposal is not None else None),
             task_id=bundle.task.task_id,
             action_skill=skill.skill_id,
             confirmation_executor_skill_id=executor.skill_id,
@@ -1491,11 +1668,27 @@ class TaskRuntime:
         ]
         action_view = None
         if bundle.action_proposal is not None and bundle.action_proposal.confirmation_status in {"awaiting_confirmation", "confirmed", "unknown"}:
+            proposal_arguments = bundle.action_arguments.get(bundle.action_proposal.arguments_ref, {})
+            application_type = proposal_arguments.get("applicationType") if isinstance(proposal_arguments, dict) else None
+            type_labels = {
+                "cancel_refund": "取消退款",
+                "return_refund": "退货退款",
+                "exchange": "换货",
+                "repair": "维修",
+            }
             action_view = AgentTaskActionView(
                 action_skill=bundle.action_proposal.action_skill,
                 expected_effect=bundle.action_proposal.expected_effect,
                 user_explanation=bundle.action_proposal.user_explanation,
                 confirmation_status=bundle.action_proposal.confirmation_status,
+                proposal_ref=bundle.action_proposal.proposal_ref or "",
+                revision=bundle.action_proposal.revision,
+                application_type=application_type if isinstance(application_type, str) else None,
+                application_type_label=type_labels.get(application_type) if isinstance(application_type, str) else None,
+                evidence_summaries=[
+                    artifact.summary for artifact in bundle.artifacts
+                    if artifact.reference in set(bundle.action_proposal.evidence_refs)
+                ][:4],
             )
         context = bundle.latest_context_pack()
         context_view = None

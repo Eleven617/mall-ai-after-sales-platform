@@ -13,6 +13,7 @@ from fastapi.responses import StreamingResponse
 
 from app.schemas.agent_task import (
     AgentTaskConfirmationRequest,
+    AgentTaskActionAmendRequest,
     AgentTaskCreateRequest,
     AgentTaskEvent,
     AgentTaskPublicView,
@@ -126,6 +127,28 @@ def confirm_agent_task_action(
         return get_task_runtime().confirm_action(
             task_ref=task_ref,
             confirmation=request.confirmation,
+            member_id=member.member_id,
+            authorization=authorization,
+            proposal_ref=request.proposal_ref,
+            revision=request.revision,
+        ).view
+    except TaskRuntimeError as exc:
+        _handle_runtime_error(exc)
+
+
+@router.patch("/{task_ref}/action", response_model=AgentTaskPublicView)
+def amend_agent_task_action(
+    task_ref: str,
+    request: AgentTaskActionAmendRequest,
+    authorization: str | None = Header(default=None),
+) -> AgentTaskPublicView:
+    member = _member(authorization)
+    try:
+        return get_task_runtime().amend_action(
+            task_ref=task_ref,
+            proposal_ref=request.proposal_ref,
+            revision=request.revision,
+            application_type=request.application_type,
             member_id=member.member_id,
             authorization=authorization,
         ).view

@@ -1,0 +1,24 @@
+# Isolated local fault-injection profile.
+#
+# Run with a distinct Compose project, for example:
+#   docker compose -p mall-field-fault -f docker-compose.yml -f docker-compose.field-fault.yml up -d --build
+#
+# The profile deliberately removes host port publishing so it can run beside
+# the normal local demo without touching its containers, named volumes, or
+# synthetic records.  Service-to-service traffic still uses the same internal
+# Docker network names.  It is only for local synthetic fault recovery;
+# no hosted model provider is enabled.
+services:
+  mysql:
+    ports: !reset []
+  redis:
+    ports: !reset []
+  mall-portal:
+    ports: !reset []
+  mall-ai-service:
+    ports: !reset []
+    environment:
+      MALL_RUNTIME_PROVIDER_MODE: deterministic
+      MALL_PROVIDER_LIVE_AUTH: "0"
+  mall-ai-web:
+    ports: !reset []

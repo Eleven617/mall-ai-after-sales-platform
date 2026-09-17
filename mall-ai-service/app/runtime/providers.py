@@ -114,8 +114,9 @@ EXECUTOR_SYSTEM_PROMPT = """
 
 每次只返回一个严格 JSON 决策：discover_skills、call_skill、spawn_subtask、revise_plan、ask_user、propose_action 或 finish。
 不要输出思维链，不要编造事实，不要输出完整订单号/凭证/客户原话，不要自创 Skill。
-``call_skill`` 只能列出 actionMode=read 的已发现 Skill；即使列表中同时展示了 draft、async_task 或 commit Skill，
-也绝不能把它们放进 call_skill。需要 draft 或 commit 能力时，只能使用 propose_action；
+``call_skill`` 只能列出 actionMode=read 的已发现 Skill。模型上下文只包含真正可发现的能力；
+需要 draft 或人工协同能力时，只能使用 propose_action；服务器内部 commit Skill 永远不会出现在上下文中，
+也不能被模型直接选择。
 ``spawn_subtask`` 是 Runtime 的受控规划决策，完成必要只读事实后可直接选择它，不能把它包装成 propose_action。
 由 Runtime 生成受版本、owner、TTL、内容哈希和确认状态约束的 ActionProposal。commit Skill 永远需要客户确认，
 不能在 Executor 决策中直接执行。
@@ -129,6 +130,7 @@ EXECUTOR_SYSTEM_PROMPT = """
 - 目标需要商城事实而当前没有对应 Artifact 时，调用一个最直接相关的只读 Skill；不要先 finish，也不要并发调用无关 Skill。
 - 读取结果后，如果目标仍依赖另一项事实，继续读取或形成受控的事实组合；如果只是只读咨询且证据足够，才 finish。
 - 目标涉及创建、修改、提交、人工协同或其他业务效果时，不能直接 finish。先取得必要的核验事实，再用 propose_action 形成待确认 ActionProposal；客户确认之前绝不提交。
+- 人工协同时只能提出 open_human_case，并仅提供安全 Artifact 引用和受限 reasonCode；不能提供案件摘要、Case Key 或用户识别信息。
 - create_after_sales_draft 只是模型提出的草案 Skill；确认后的最终执行 Skill 由服务端目录映射为 commit_after_sales_action，模型不得自行选择或改写最终执行器。
 - 如果目标明确要求先准备售后草案/提案，且已经有 verified 的 order_fact，但申请类型尚未明确，不要猜测四种申请类型；可以用 create_after_sales_draft 仅引用 orderFactRef 形成未提交草案，再在待确认阶段澄清类型。不得把草案当成最终写入，也不得直接选择 commit_after_sales_action。
 - list_service_applications 只用于用户明确要查看已有售后申请/进度的目标；它不能替代订单事实，也不是新售后动作的默认第一步。
@@ -152,8 +154,8 @@ EXECUTOR_SYSTEM_PROMPT = """
 - read_inventory: skuRef；retrieve_policy: query, policy_version
 - list_service_applications: 不需要参数；build_service_resolution: factRefs
 - search_task_memory: query；spawn_subtask: goalCode, requiredSkills
-- 需要行动提案时，commit_after_sales_action 只允许 orderFactRef, applicationType, proposalRef, actionRef；
-  create_after_sales_draft 只允许 orderFactRef, applicationType, proposalRef；其他 draft/async 能力只允许其目录声明的引用键。
+- 需要售后草案提案时，create_after_sales_draft 只允许 orderFactRef, applicationType, proposalRef；
+  需要人工协同时，open_human_case 只允许 artifactRefs, reasonCode；服务器内部 commit Skill 不可由模型选择。
   行动提案中的 orderFactRef、proposalRef、actionRef 必须逐字复制已核验 ``artifact_details`` 的 opaque reference；
   不得把 reference_hints、用户输入的订单号/SKU 或任何原始业务标识直接放进行动参数。
   Runtime 会拒绝任何额外键，且由服务端生成幂等键。  
@@ -537,6 +539,22 @@ class DeterministicRuntimeProvider:
                 reason_summary="订单事实已核验，继续读取物流摘要。",
                 skill_calls=[SkillCall(skill_id="read_logistics", arguments={"orderRef": order_ref or ""})],
             )
+        if any(term in goal.lower() for term in ("人工", "转人工", "human", "manual review")):
+            safe_refs = [
+                str(item.get("reference"))
+                for item in artifacts
+                if isinstance(item.get("reference"), str) and item.get("factuality") in {"verified", "derived"}
+            ]
+            if safe_refs:
+                return ExecutorDecision(
+                    decision="propose_action",
+                    reason_summary="当前自动处理需要人工复核；确认后才会创建协同案件。",
+                    action_skill="open_human_case",
+                    action_arguments={
+                        "artifactRefs": safe_refs[-3:],
+                        "reasonCode": "manual_review",
+                    },
+                )
         if any(term in goal for term in ("取消退款", "申请售后", "提交售后", "售后闭环")):
             order_fact_ref = next(
                 (
@@ -550,7 +568,12 @@ class DeterministicRuntimeProvider:
                 return ExecutorDecision(
                     decision="propose_action",
                     reason_summary="订单事实已核验，可生成取消退款申请方案，确认后由 Java 复核提交。",
-                    action_skill="commit_after_sales_action",
+                    # The Executor can only propose the public draft skill.
+                    # The catalog binds this immutable proposal to the hidden
+                    # commit_after_sales_action executor after explicit
+                    # customer confirmation; returning that internal executor
+                    # here would correctly be rejected by the Runtime.
+                    action_skill="create_after_sales_draft",
                     action_arguments={
                         "orderFactRef": order_fact_ref,
                         "applicationType": "cancel_refund",

@@ -153,18 +153,38 @@ export async function confirmAgentTaskAction(
   taskRef: string,
   confirmation: "confirm" | "withdraw",
   authorization: string,
+  proposalRef: string,
+  revision: number,
 ): Promise<AgentTaskPublicView> {
   const response = await fetch(
     `${apiBaseUrl}/agent-tasks/${encodeURIComponent(taskRef)}/action`,
     {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: authorization },
-      body: JSON.stringify({ confirmation }),
+      body: JSON.stringify({ confirmation, proposal_ref: proposalRef, revision }),
     },
   ).catch(() => {
     throw new CustomerServiceApiError("Agent 行动确认服务暂不可用。", 503);
   });
   return parseAgentTaskResponse(response, "Agent 行动确认失败");
+}
+
+export async function amendAgentTaskAction(
+  taskRef: string,
+  request: { proposal_ref: string; revision: number; application_type: "cancel_refund" | "return_refund" | "exchange" | "repair" },
+  authorization: string,
+): Promise<AgentTaskPublicView> {
+  const response = await fetch(
+    apiBaseUrl + "/agent-tasks/" + encodeURIComponent(taskRef) + "/action",
+    {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json", Authorization: authorization },
+      body: JSON.stringify(request),
+    },
+  ).catch(() => {
+    throw new CustomerServiceApiError("Agent 草案修改服务暂不可用。", 503);
+  });
+  return parseAgentTaskResponse(response, "Agent 草案修改失败");
 }
 
 export async function loginCustomer(
@@ -1012,8 +1032,19 @@ function isAgentTaskPublicView(payload: unknown): payload is AgentTaskPublicView
     && Array.isArray(data.plan_nodes)
     && Array.isArray(data.artifacts)
     && Array.isArray(data.limitation_codes)
+    && (data.action === undefined || data.action === null || isAgentTaskActionView(data.action))
     && (data.context_summary === undefined || data.context_summary === null || isAgentTaskContextView(data.context_summary))
   );
+}
+
+function isAgentTaskActionView(payload: unknown): boolean {
+  if (!payload || typeof payload !== "object") return false;
+  const data = payload as Record<string, unknown>;
+  return typeof data.action_skill === "string"
+    && typeof data.proposal_ref === "string"
+    && typeof data.revision === "number"
+    && typeof data.confirmation_status === "string"
+    && Array.isArray(data.evidence_summaries);
 }
 
 function isAgentTaskContextView(payload: unknown): boolean {
