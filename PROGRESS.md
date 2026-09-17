@@ -14,15 +14,14 @@
 
 ### 当前状态与边界
 
-- 当前发布状态仍为 `NOT_COMPLETE`，`V3_0_3_LIVE_READY=false`：历史 v3.0.3 grounding CLI 的 16 次误触发外部 Provider 请求保留为 `invalidated_offline_run`，且当前候选提交尚未取得 GitHub Actions 远程结果。
+- 当前发布状态仍为 `NOT_COMPLETE`，`V3_0_3_LIVE_READY=false`：历史 v3.0.3 grounding CLI 的 16 次误触发外部 Provider 请求保留为 `invalidated_offline_run`；提交 `697deab` 的 `mall-ci` 与 `quality-evaluation` 均已真实成功。
 - 本机没有 gitleaks 或 osv-scanner 可执行文件，均记录为 `environment_blocked`；远程 `dependency-and-secret-risk` Job 保留为最终安全门禁。
 - 本机现场只使用合成数据，不能宣传真实模型准确率/泛化、生产 SLA、真实支付、仓储、物流或维修履约。
 
 ### 下一步
 
-1. 提交本轮证据文档，推送候选分支。
-2. 等待该提交的 `mall-ci` 和 `quality-evaluation`，只记录当前 SHA 的真实结论。
-3. 两个远程工作流成功后更新证据中的 CI 链接；不得因此改变历史外部 Provider 误调用或把候选写成正式在线发布。
+1. 提交远程 CI 链接的证据更新，推送候选分支。
+2. 复核新证据提交的 Actions；不得因此改变历史外部 Provider 误调用或把候选写成正式在线发布。
 
 ## 2026-09-15｜v3.0.2 离线候选（当前）
 

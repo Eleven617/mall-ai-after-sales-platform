@@ -6,7 +6,7 @@
 
 当前冻结提交的本机 Docker/Chrome/Java/MySQL/Redis/RabbitMQ 现场 Runner **122/122**（Browser 24、Java/MySQL 30、Fault 36、Durable 32，0 failed/0 environment_blocked）；新增能力现场链验证草案修改不会写 Java、旧版本确认返回 409、当前版本只写入一次，以及人工协同确认前零写入、跨账号确认 404、确认后只创建一次案件。本次现场/离线验证的外部 Provider 请求为 **0**。详见 [`v3.0.3-capability-completion.md`](v3.0.3-capability-completion.md)。
 
-**Release Gate：未通过，`V3_0_3_LIVE_READY=false`。** 这是历史 v3.0.3 grounding CLI 的 16 次误调用使原候选作废的边界；该历史记录不被删除或改写。本冻结提交没有调用 Provider，但当前提交的 GitHub CI 尚待验证；gitleaks 本机仍为 `environment_blocked`，远程安全扫描是最终门禁。未合并 `main`、未更新 README。
+**Release Gate：未通过，`V3_0_3_LIVE_READY=false`。** 这是历史 v3.0.3 grounding CLI 的 16 次误调用使原候选作废的边界；该历史记录不被删除或改写。本冻结提交没有调用 Provider，且提交 `697deab` 的 [`mall-ci`](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/35195018957) 与 [`quality-evaluation`](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/35195018813) 成功；gitleaks 本机仍为 `environment_blocked`，远程安全扫描已作为门禁执行。未合并 `main`、未更新 README。
 
 v3.0.2 的 FAILED Lock/Ledger/报告和提交 `0eb964b` 保持原样：其准确根因是 Runtime 缺少 Draft-to-Commit 服务器映射，确认时把 Draft Skill 传给只允许 commit Skill 的 Gateway，安全停止且 Java 写入为 0；不能归因于模型随机选错。
 

@@ -6,7 +6,7 @@
 
 本机合成现场 Runner 为 **122/122**（Browser 24、Java/MySQL 30、Fault 36、Durable 32）；新增两条经 Nginx/FastAPI/Java 的能力链均通过，且本次 Provider 请求为 0。报告与 hash 见 [`v3.0.3-capability-completion.md`](../evidence/v3.0.3-capability-completion.md)。
 
-发布门禁 **未通过（`V3_0_3_LIVE_READY=false`）**：历史 grounding CLI 误调用记录仍作废；当前冻结提交不调用模型，但 gitleaks 本机 `environment_blocked` 且远程 CI 尚待验证。v3.0.2 FAILED 历史锁/报告/账本保持不变，未修改 README、未合并 main、未创建 Release。
+发布门禁 **未通过（`V3_0_3_LIVE_READY=false`）**：历史 grounding CLI 误调用记录仍作废；当前冻结提交不调用模型，提交 `697deab` 的 [`mall-ci`](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/35195018957) 和 [`quality-evaluation`](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/35195018813) 已成功，gitleaks 本机仍为 `environment_blocked`。v3.0.2 FAILED 历史锁/报告/账本保持不变，未修改 README、未合并 main、未创建 Release。
 
 ## 当前权威快照｜v3.0.2 唯一正式 DeepSeek 批次（2026-09-16）
 

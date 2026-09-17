@@ -89,7 +89,12 @@
   "historicalBoundary": {
     "v3_0_3InvalidatedProviderRun": {"requests": 16, "tokens": 14553, "status": "invalidated_offline_run", "unchanged": true},
     "v3_0_2FailedLockAndLedger": "unchanged",
-    "remoteCiForCurrentCommit": "pending"
+    "remoteCiForRuntimeAndEvidenceCommit": {
+      "testedCommit": "697deab662a55f17c8f9cdd5ae2723605f63a7db",
+      "mallCi": "https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/35195018957",
+      "qualityEvaluation": "https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/35195018813",
+      "status": "success"
+    }
   },
   "notReadyClaims": [
     "real-model task accuracy or natural-language generalization",

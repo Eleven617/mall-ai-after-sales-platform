@@ -6,7 +6,7 @@
 
 本机现场均使用合成数据：Browser 24、Java/MySQL 30、Fault 36、Durable 32；草案修改链确认前 Java 写入 0、旧版本确认 409、当前版本写入 1、重复确认写入 0；人工协同链确认前写入 0、跨账号确认 404、确认后创建 1、重复确认 0。本次验证 Provider 0。报告与 hash 见 [`v3.0.3-capability-completion.md`](v3.0.3-capability-completion.md)。
 
-注意：历史 grounding CLI 的 16 次 DeepSeek 调用仍标记 `invalidated_offline_run`，没有 Release ID/Lock，不能计入模型通过率；因此 `V3_0_3_LIVE_READY=false`。本机 gitleaks 为 `environment_blocked`，当前冻结提交的远程 CI 尚待验证。不能把本轮写成真实模型准确率、生产 SLA、真实外部履约或在线发布。
+注意：历史 grounding CLI 的 16 次 DeepSeek 调用仍标记 `invalidated_offline_run`，没有 Release ID/Lock，不能计入模型通过率；因此 `V3_0_3_LIVE_READY=false`。本机 gitleaks 为 `environment_blocked`，但提交 `697deab` 的 [`mall-ci`](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/35195018957) 与 [`quality-evaluation`](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/35195018813) 已成功。不能把本轮写成真实模型准确率、生产 SLA、真实外部履约或在线发布。
 
 ## 当前事实快照｜v3.0.2 离线候选（2026-09-15）
 

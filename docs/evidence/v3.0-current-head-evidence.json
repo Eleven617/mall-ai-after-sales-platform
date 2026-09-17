@@ -20,7 +20,7 @@
     "showcase": {"deterministic": "3/3", "replay": "3/3", "framesPerRun": 12, "providerRequests": 0, "mainClosedLoop": {"proposalFormed": true, "javaRechecked": true, "confirmedWrite": true, "statusReadback": true, "duplicateConfirmationWrites": 0, "crossAccountLeakage": 0}},
     "slowGateway": {"elapsedSeconds": 76.156, "httpStatus": 201, "taskStatus": "ready_to_commit", "javaWrites": 0, "providerRequests": 0, "reportSha256": "b5b081721252da62db1d11dfb7930c567c956d5f5332a301312fffa9f91c3f5e"},
     "groundingContracts": {"passed": 12, "failed": 0, "mode": "deterministic contract; no external Provider", "command": "mall-ai-service/.venv/Scripts/python.exe -m pytest -q tests/test_rag_grounding_evaluation.py tests/test_rag_evidence_verifier.py", "exitCode": 0},
-    "ci": {"status": "pending_remote_current_evidence", "testedCommit": "3a0d59080e94848553ac2d981116acf236df3cf6", "previousRemoteRunsStale": true},
+    "ci": {"status": "passed", "scope": "runtime and evidence commit 697deab", "testedCommit": "697deab662a55f17c8f9cdd5ae2723605f63a7db", "mallCi": "https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/35195018957", "qualityEvaluation": "https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/35195018813", "mallCiConclusion": "success", "qualityEvaluationConclusion": "success", "previousRemoteRunsStale": true},
     "unplannedProviderRun": {"status": "invalidated_offline_run", "requests": 16, "tokens": 14553, "formalRelease": false},
     "V3_0_3_LIVE_READY": false
   },
