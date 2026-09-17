@@ -64,16 +64,18 @@ Assert-ContainerIdentity
 
 # This only invokes the in-process guard. It does not instantiate a provider
 # client or open a network socket.
-$previousNativeErrorPreference = $PSNativeCommandUseErrorActionPreference
+$previousErrorActionPreference = $ErrorActionPreference
 try {
-    # A non-zero exit is the expected safe result here.  PowerShell 7 otherwise
-    # upgrades it to a terminating NativeCommandError under ErrorActionPreference=Stop.
-    $PSNativeCommandUseErrorActionPreference = $false
+    # A non-zero exit is the expected safe result here.  Windows PowerShell 5
+    # turns native stderr into a terminating NativeCommandError when the script
+    # runs with ErrorActionPreference=Stop; PowerShell 7 needs the same safe
+    # handling for a portable runner contract.
+    $ErrorActionPreference = 'Continue'
     docker compose exec -T mall-ai-service python -c "from app.services.provider_guard import assert_provider_request_allowed; assert_provider_request_allowed('https://api.deepseek.com')" 2>$null
     $guardExitCode = $LASTEXITCODE
 }
 finally {
-    $PSNativeCommandUseErrorActionPreference = $previousNativeErrorPreference
+    $ErrorActionPreference = $previousErrorActionPreference
 }
 if ($guardExitCode -eq 0) { throw 'Provider Guard unexpectedly allowed an unauthorised request.' }
 

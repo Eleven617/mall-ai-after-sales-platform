@@ -25,6 +25,6 @@ def test_portfolio_release_treats_the_denied_provider_guard_as_a_preflight_pass(
 
     content = PORTFOLIO_SCRIPT_PATH.read_text(encoding="utf-8")
 
-    assert "$PSNativeCommandUseErrorActionPreference = $false" in content
+    assert "$ErrorActionPreference = 'Continue'" in content
     assert "$guardExitCode = $LASTEXITCODE" in content
     assert "if ($guardExitCode -eq 0)" in content
