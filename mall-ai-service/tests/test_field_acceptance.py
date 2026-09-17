@@ -96,6 +96,7 @@ def test_durable_recovery_child_receives_an_absolute_report_path(tmp_path: Path,
     def fake_run(command, **_kwargs):
         report_path = Path(command[command.index("--report") + 1])
         observed["report"] = report_path
+        observed["fixture"] = Path(command[command.index("--fixture") + 1])
         report_path.write_text(
             json.dumps({"cases": [{"caseId": case["caseId"], "status": "passed", "assertions": ["recovered"]}]}),
             encoding="utf-8",
@@ -114,5 +115,38 @@ def test_durable_recovery_child_receives_an_absolute_report_path(tmp_path: Path,
     )
 
     assert observed["report"].is_absolute()
+    assert observed["fixture"].is_absolute()
     assert results[0].executionStatus == "passed"
     assert results[0].assertions == ["recovered"]
+
+
+def test_browser_runner_binds_the_disposable_fixture_customer(monkeypatch, tmp_path: Path) -> None:
+    """Rotated field fixtures must not fall back to a historic demo login."""
+
+    fixture = tmp_path / "fixture.json"
+    fixture.write_text(json.dumps({"account_a": {"username": "rotated-synthetic-customer"}}), encoding="utf-8")
+    observed: dict[str, str] = {}
+
+    class FakeBrowser:
+        def __init__(self, *, customer_username: str | None = None, **_kwargs) -> None:
+            observed["username"] = customer_username or ""
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *_args):
+            return False
+
+    monkeypatch.setitem(sys.modules, "field_browser_support", SimpleNamespace(BrowserSession=FakeBrowser))
+    results = runner._run_browser_cases(
+        [],
+        "commit",
+        "manifest",
+        "fixture-hash",
+        fixture,
+        "process-only-password",
+        tmp_path,
+    )
+
+    assert results == []
+    assert observed["username"] == "rotated-synthetic-customer"

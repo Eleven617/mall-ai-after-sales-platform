@@ -149,6 +149,7 @@ def main() -> int:
                     commit,
                     manifest_hash,
                     fixture_hash,
+                    fixture_path,
                     password,
                     report_dir,
                 )
@@ -321,17 +322,46 @@ def _run(command: list[str], *, timeout: int, cwd: Path = ROOT) -> dict[str, Any
 
 
 def _run_browser_cases(
-    cases: list[dict[str, Any]], commit: str, manifest_hash: str, fixture_hash: str, password: str, report_dir: Path
+    cases: list[dict[str, Any]],
+    commit: str,
+    manifest_hash: str,
+    fixture_hash: str,
+    fixture_path: Path | None,
+    password: str,
+    report_dir: Path,
 ) -> list[CaseResult]:
     runner_id = "browser-cdp-field-runner"
     try:
         from field_browser_support import BrowserSession  # local tracked helper
     except ImportError as exc:
         return [_blocked_case(case, commit, manifest_hash, fixture_hash, str(exc), "ENVIRONMENT_DEFECT", runner_id) for case in cases]
-    if not password:
-        return [_blocked_case(case, commit, manifest_hash, fixture_hash, "missing_process_fixture_password", "ENVIRONMENT_DEFECT", runner_id) for case in cases]
+    if not fixture_path or not fixture_path.exists() or not password:
+        return [
+            _blocked_case(
+                case,
+                commit,
+                manifest_hash,
+                fixture_hash,
+                "missing_process_fixture_or_password",
+                "ENVIRONMENT_DEFECT",
+                runner_id,
+            )
+            for case in cases
+        ]
     try:
-        with BrowserSession(password=password, evidence_dir=report_dir / "browser") as browser:
+        fixture = json.loads(fixture_path.read_text(encoding="utf-8"))
+        account = fixture.get("account_a") if isinstance(fixture, dict) else None
+        customer_username = account.get("username") if isinstance(account, dict) else None
+        if not isinstance(customer_username, str) or not customer_username:
+            raise ValueError("fixture_customer_account_unavailable")
+        # Browser assertions must use the disposable account created for this
+        # field run.  Falling back to a historic demo login makes an otherwise
+        # healthy page look unavailable after the fixture is rotated.
+        with BrowserSession(
+            password=password,
+            evidence_dir=report_dir / "browser",
+            customer_username=customer_username,
+        ) as browser:
             return [
                 _run_one_browser_case(case, browser, commit, manifest_hash, fixture_hash, runner_id, report_dir)
                 for case in cases
@@ -700,7 +730,7 @@ def _run_recovery_cases(
         "--manifest",
         str(DEFAULT_MANIFEST),
         "--fixture",
-        str(fixture_path) if fixture_path else "",
+        str(fixture_path.resolve()) if fixture_path else "",
         "--report",
         str(report_path),
         "--provider-mode",
@@ -708,7 +738,7 @@ def _run_recovery_cases(
     ]
     env = os.environ.copy()
     if fixture_path:
-        env["MALL_FIELD_FIXTURE_FILE"] = str(fixture_path)
+        env["MALL_FIELD_FIXTURE_FILE"] = str(fixture_path.resolve())
     if password:
         env["MALL_FIELD_FIXTURE_PASSWORD"] = password
         env["MALL_BUILD21_BOOTSTRAP_LOCAL_DEMO"] = "true"

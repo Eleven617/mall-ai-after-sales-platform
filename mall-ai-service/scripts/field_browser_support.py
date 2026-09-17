@@ -79,7 +79,7 @@ class _Page:
 
 
 class BrowserSession:
-    def __init__(self, *, password: str, evidence_dir: Path) -> None:
+    def __init__(self, *, password: str, evidence_dir: Path, customer_username: str | None = None) -> None:
         self.password = password
         self.evidence_dir = evidence_dir
         self.chrome: subprocess.Popen[str] | None = None
@@ -92,7 +92,7 @@ class BrowserSession:
         # A field run may create a disposable customer account in the same
         # process.  Keep seeded demo identities as defaults, but let the
         # runner bind the browser to its own process-only fixture.
-        self.customer_username = os.getenv("MALL_FIELD_BROWSER_CUSTOMER_USER", "localDemoCustomerA")
+        self.customer_username = customer_username or os.getenv("MALL_FIELD_BROWSER_CUSTOMER_USER", "localDemoCustomerA")
         self.operations_username = os.getenv("MALL_FIELD_BROWSER_OPERATIONS_USER", "localDemoOperations")
         self.service_username = os.getenv("MALL_FIELD_BROWSER_SERVICE_USER", "afterSalesProcessor")
 
