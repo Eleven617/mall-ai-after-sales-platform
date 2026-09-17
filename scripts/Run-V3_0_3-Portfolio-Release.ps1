@@ -47,8 +47,19 @@ function Assert-ContainerIdentity {
     }
 }
 
+function Wait-AiServiceHealthy {
+    $deadline = [DateTime]::UtcNow.AddSeconds(120)
+    do {
+        $state = @(docker compose ps --format '{{.Service}}|{{.State}}|{{.Health}}')
+        if ($state -contains 'mall-ai-service|running|healthy') { return }
+        Start-Sleep -Seconds 2
+    } while ([DateTime]::UtcNow -lt $deadline)
+    throw 'AI service did not reach healthy state within 120 seconds.'
+}
+
 New-Item -ItemType Directory -Force -Path $ledgerDirectory, $reportDirectory | Out-Null
 Disable-LiveAuthorization
+Wait-AiServiceHealthy
 Assert-ContainerIdentity
 
 # This only invokes the in-process guard. It does not instantiate a provider
@@ -93,6 +104,7 @@ $env:MALL_PROMPT_VERSION = 'agent_runtime_v3_3'
 
 try {
     docker compose up -d --no-deps --force-recreate mall-ai-service | Out-Null
+    Wait-AiServiceHealthy
     Assert-ContainerIdentity
     $securePassword = ConvertTo-SecureString $temporaryPassword -AsPlainText -Force
     & (Join-Path $root 'scripts\Initialize-LocalDemoAccess.ps1') -DemoPassword $securePassword -PrepareCustomerFixtures | Out-Null
