@@ -2,11 +2,11 @@
 
 ## 当前权威结论｜v3.0.3 Proposal 确认执行合同（2026-09-17）
 
-当前冻结提交为 `db3860701086bf9718ac23ef7b272a28bff2083f`。本轮完成版本化售后草案、旧版本确认拒绝、受控人工协同 Proposal 和服务器选择的确认执行器；确认时仍重校验 owner/TTL/hash/事实，并由 Runtime 生成幂等键。FastAPI 终端 **415 passed + 12 subtests**（JUnit **427/427**），manifest **478/478**、代表性 **8/8**，Task orchestration **11/11**、Quality Agent **17/17**、Dense RAG 52 条检索评测均已运行。
+当前冻结提交为 `7159e1c57df5f3dc73ef3ab36f0999bb28e4967b`。本轮修复了“明确售后类型 + 已核验订单 + 政策证据不足”时的有条件草案，并让展示 Runner 支持合法 `waiting_for_user → 同任务恢复`；确认时仍重校验 owner/TTL/hash/事实，并由 Runtime 生成幂等键。FastAPI 终端 **417 passed + 12 subtests**（JUnit **429/429**），manifest **478/478**、代表性 **8/8**，Task orchestration **11/11**、Quality Agent **17/17**、RAG 质量合同 **84/84** 均已运行，外部 Provider 请求为 **0**。
 
-当前冻结提交的本机 Docker/Chrome/Java/MySQL/Redis/RabbitMQ 现场 Runner **122/122**（Browser 24、Java/MySQL 30、Fault 36、Durable 32，0 failed/0 environment_blocked）；新增能力现场链验证草案修改不会写 Java、旧版本确认返回 409、当前版本只写入一次，以及人工协同确认前零写入、跨账号确认 404、确认后只创建一次案件。本次现场/离线验证的外部 Provider 请求为 **0**。详见 [`v3.0.3-capability-completion.md`](v3.0.3-capability-completion.md)。
+当前 Commit 的 Docker 现场 Runner 为 **122 environment_blocked**：Docker Desktop 重启后 Secrets Engine 无法处理内部 `engine.sock` 残留 ReparsePoint，Linux Engine 未能启动，因此浏览器、Java/MySQL、故障和 Durable 的新现场执行均未开始。历史 `122/122` 绑定旧 Commit，已标记 stale，绝不并入本轮。
 
-**Release Gate：`NOT_COMPLETE`。** 唯一授权的当前 Runtime 正式批次 `mall-v3.0.3-portfolio-final-db3860701086`（Batch `portfolio_final-c9b46de42c2d`）在首条核心链 `main_open_task_closed_loop` 的 `agent_task_create` 阶段因 `scenario_assertion_failure` 安全停止。8 次 Provider 请求均成功、共 29,542 Token，Ledger SHA-256 `814cdcf09a3e9d37b6450bfbacbe7ff65915a76c378a07f60dfd3a8725087b18` 已对账；但未形成 Proposal、Java 资格核验/写入/状态回查均为 0，另外两条核心链、主集、补充集、Grounding 和素材均为 `not_executed`。失败证据提交 `85b3afb` 的 [`mall-ci`](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/35217445887) 与 [`quality-evaluation`](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/35217445834) 均成功。不得重跑或创建第三批次，未合并 `main`、未更新 README。
+**Release Gate：`NOT_COMPLETE`。** 旧正式批次 `mall-v3.0.3-portfolio-final-db3860701086`（Batch `portfolio_final-c9b46de42c2d`）保持 FAILED：8 次 Provider 请求均成功、共 29,542 Token，Ledger 已对账，但展示 Runner 当时未处理合法澄清路径。该批次不改写、不重跑。当前候选的 [`quality-evaluation`](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/35230133083) 已成功；[`mall-ci`](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/35230133079) 仅因旧 FastAPI 公开事实为 427、与当前机器报告 429 不一致而失败，证据回填后必须重新验证。未合并 `main`、未更新 README、未创建新在线批次。
 
 v3.0.2 的 FAILED Lock/Ledger/报告和提交 `0eb964b` 保持原样：其准确根因是 Runtime 缺少 Draft-to-Commit 服务器映射，确认时把 Draft Skill 传给只允许 commit Skill 的 Gateway，安全停止且 Java 写入为 0；不能归因于模型随机选错。
 

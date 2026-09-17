@@ -2,9 +2,9 @@
 
 ## 当前权威快照｜v3.0.3 Proposal 确认执行合同（2026-09-17）
 
-分支 `codex/v3.0.3-confirmation-contract`，Runtime Freeze `db3860701086bf9718ac23ef7b272a28bff2083f`。服务器控制的 Draft-to-Commit 映射、版本化修改、人工协同确认、确认重校验和 Runtime 幂等键已实现；FastAPI JUnit **427/427**（终端 **415 passed + 12 subtests**）、manifest 478/478、代表性 8/8、Task 11/11、Quality 17/17、Java 定向测试、Vue/Compose 均通过。
+分支 `codex/v3.0.3-confirmation-contract`，Runtime Freeze `7159e1c57df5f3dc73ef3ab36f0999bb28e4967b`。服务器控制的 Draft-to-Commit 映射、版本化修改、人工协同确认、确认重校验和 Runtime 幂等键仍保持；新修复覆盖了政策证据不足的有条件草案和同 Task 合法澄清恢复。FastAPI JUnit **429/429**（终端 **417 passed + 12 subtests**）、manifest 478/478、代表性 8/8、Task 11/11、Quality 17/17、Java 定向测试和 Vue build 均通过。
 
-本机合成现场 Runner 为 **122/122**（Browser 24、Java/MySQL 30、Fault 36、Durable 32）；新增两条经 Nginx/FastAPI/Java 的能力链均通过，且本次 Provider 请求为 0。报告与 hash 见 [`v3.0.3-capability-completion.md`](../evidence/v3.0.3-capability-completion.md)。
+当前 Commit 的本机合成现场 Runner 为 **122 environment_blocked**，因为 Docker Desktop Secrets Engine 的 `engine.sock` 残留使 Linux Engine 无法启动；没有把旧 Commit 的 122/122 复用为当前结果。本轮离线 Provider 请求为 0。
 
 发布门禁 **`NOT_COMPLETE`**：唯一授权的当前 Runtime 批次 `mall-v3.0.3-portfolio-final-db3860701086` / `portfolio_final-c9b46de42c2d` 在第一条核心链 `main_open_task_closed_loop` 的 `agent_task_create` 发生 `scenario_assertion_failure` 后安全停止。Provider 8 请求均成功、Token 29,542、Ledger 已对账；但 Proposal 未形成，Java 资格核验、写入与回查均为 0，余下核心链、主/补充评测、Grounding 和素材均 `not_executed`，不得重跑。候选 `8f109ee` 的 [`mall-ci`](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/35216172369) 与 [`quality-evaluation`](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/35216172446) 已成功；失败证据提交仍需重新核对 CI。未修改 README、未合并 main、未创建 Release。
 

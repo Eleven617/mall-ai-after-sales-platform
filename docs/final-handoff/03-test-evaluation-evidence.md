@@ -2,9 +2,9 @@
 
 ## 当前权威快照｜v3.0.3 Proposal 确认执行合同（2026-09-17）
 
-候选分支 `codex/v3.0.3-confirmation-contract`，Runtime Freeze `db3860701086bf9718ac23ef7b272a28bff2083f`。Proposal-to-Commit 映射、版本化草案、人工协同确认、确认时事实/hash/owner/TTL 重校验和 Runtime 幂等键均有覆盖；FastAPI 终端 **415 passed + 12 subtests**，JUnit **427/427**；manifest **478/478**、代表性 **8/8**；Task 11/11、Quality 17/17、Dense RAG 52 条检索评测；Java 定向测试、Vue build、Compose 8/8 healthy。
+候选分支 `codex/v3.0.3-confirmation-contract`，Runtime Freeze `7159e1c57df5f3dc73ef3ab36f0999bb28e4967b`。Proposal-to-Commit 映射、版本化草案、人工协同确认、确认时事实/hash/owner/TTL 重校验和 Runtime 幂等键均有覆盖；新增测试覆盖政策证据不足时的条件草案和同 Task 澄清恢复。FastAPI 终端 **417 passed + 12 subtests**，JUnit **429/429**；manifest **478/478**、代表性 **8/8**；Task 11/11、Quality 17/17、RAG 合同 84/84；Java 定向测试、Vue build 均通过。
 
-本机合成现场 Runner **122/122**（Browser 24、Java/MySQL 30、Fault 36、Durable 32，0 failed/0 blocked）；版本化草案与人工协同现场链通过。现场报告 SHA `c975374fa6c9f6484063779be62e1cde6be499f5f3f397275f27e89c20c0e6cd`，FastAPI 语义报告 SHA `8698f94d3f13e070cb4ca9a71a8ad1eef024483ec64008918ea86549dd95b3f2`。
+当前 Commit 的现场 Runner 为 **122 environment_blocked**：Docker Desktop Secrets Engine 的内部 `engine.sock` 残留使 Linux Engine 无法启动，因此没有创建本轮现场报告。历史 122/122 已标 stale。FastAPI 语义报告 SHA `6c3fced39b8cf667f6f7880e42b8f79ac70b9ed2cf396109fc2334e72f9025b7`。
 
 本候选 **NOT_COMPLETE**：唯一授权的正式批次 `mall-v3.0.3-portfolio-final-db3860701086` 在 `main_open_task_closed_loop` 的 `agent_task_create` 因 `scenario_assertion_failure` 停止。Provider 8/8 成功、29,542 Token、Ledger 对账通过，却未形成 Proposal，Java 核验/写入/回查均为 0；另两条核心链、主集、补充集、Grounding、素材均 `not_executed`。这不是 `environment_blocked`，且不得重跑。gitleaks 本机缺失仍为 `environment_blocked`；候选 `8f109ee` 的 CI 双绿，失败证据提交需以新 SHA 重新核对。不得把离线验收当成 Grounding 通过、在线批次或模型准确率。
 

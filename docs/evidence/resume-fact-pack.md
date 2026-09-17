@@ -2,9 +2,9 @@
 
 ## 当前事实快照｜v3.0.3 Proposal 确认执行合同（2026-09-17）
 
-当前候选分支 `codex/v3.0.3-confirmation-contract`，Runtime Freeze `db3860701086bf9718ac23ef7b272a28bff2083f`，发布状态 **NOT_COMPLETE**。本轮真实完成的是版本化 Proposal→Commit 映射、草案修改、旧版本冲突拒绝、人工协同确认与 Runtime 幂等键；FastAPI 终端 **415 passed + 12 subtests**（JUnit **427/427**）、manifest 478/478、现场 Runner 122/122、Java 定向测试、Vue/Compose 均通过。
+当前候选分支 `codex/v3.0.3-confirmation-contract`，Runtime Freeze `7159e1c57df5f3dc73ef3ab36f0999bb28e4967b`，发布状态 **NOT_COMPLETE**。本轮修复明确售后类型在政策证据不足时的有条件草案，以及合法澄清后的同任务恢复；FastAPI 终端 **417 passed + 12 subtests**（JUnit **429/429**）、manifest 478/478、Java 定向测试和 Vue build 均通过。
 
-本机现场均使用合成数据：Browser 24、Java/MySQL 30、Fault 36、Durable 32；草案修改链确认前 Java 写入 0、旧版本确认 409、当前版本写入 1、重复确认写入 0；人工协同链确认前写入 0、跨账号确认 404、确认后创建 1、重复确认 0。本次验证 Provider 0。报告与 hash 见 [`v3.0.3-capability-completion.md`](v3.0.3-capability-completion.md)。
+当前 Commit 的 Docker 现场层为 **environment_blocked（122 条未启动）**：Docker Desktop Secrets Engine 的内部 socket 残留阻止 Linux Engine 启动。历史 `122/122` 只适用于旧 Commit，不能用于当前简历或发布结论。本轮新增离线验证的外部 Provider 请求为 0。
 
 注意：历史 grounding CLI 的 16 次 DeepSeek 调用仍标记 `invalidated_offline_run`，不能计入模型通过率。唯一授权的当前在线批次在首条核心链 `agent_task_create` 发生 `scenario_assertion_failure` 后停止：8 次 Provider 请求成功、29,542 Token、Ledger 已对账，但 Proposal/Java 写入为 0，主集、补充集、Grounding、素材均 `not_executed`。因此不能把本轮写成真实模型准确率、生产 SLA、真实外部履约或在线发布；本失败不是 `environment_blocked`。
 

@@ -2,9 +2,9 @@
 
 ## 当前权威记录｜v3.0.3 Proposal 确认执行合同（2026-09-17）
 
-候选分支 `codex/v3.0.3-confirmation-contract`，Runtime Freeze `db3860701086bf9718ac23ef7b272a28bff2083f`。本次实现版本化售后草案和人工协同：`create_after_sales_draft` 精确映射到 `commit_after_sales_action`，`open_human_case` 仅在用户确认后映射到内部 `commit_human_case`；确认时由 Runtime 重读事实/hash/归属并生成幂等键，Java 继续负责资格、状态机、事务和最终写入。
+候选分支 `codex/v3.0.3-confirmation-contract`，Runtime Freeze `7159e1c57df5f3dc73ef3ab36f0999bb28e4967b`。本次修复使明确售后类型在政策证据不足、订单事实已核验时只形成受限待确认草案，并支持合法 `waiting_for_user → 同任务恢复`；确认时由 Runtime 重读事实/hash/归属并生成幂等键，Java 继续负责资格、状态机、事务和最终写入。
 
-离线确定性与本机现场：FastAPI 终端 **415 passed + 12 subtests**，JUnit **427 passed/0 failed/0 skipped**；manifest **478/478**、代表性 **8/8**；Task orchestration **11/11**、Quality Agent **17/17**、Dense RAG 52 条检索评测；Java 定向测试、Vue build、Compose 8/8 healthy；现场 Runner **122/122**（24/30/36/32）。新增现场能力链验证了草案修改不写 Java、旧版本 409、当前版本单次写入、人工协同确认前零写入、跨账号 404 和确认后单次创建。当前本机验证 Provider 0。
+离线确定性：FastAPI 终端 **417 passed + 12 subtests**，JUnit **429 passed/0 failed/0 skipped**；manifest **478/478**、代表性 **8/8**；Task orchestration **11/11**、Quality Agent **17/17**、RAG 合同 **84/84**；Java 定向测试与 Vue build 均通过。当前 Commit 的 Docker 现场 Runner 是 **122 environment_blocked**：Docker Desktop Secrets Engine 内部 socket 残留阻止引擎启动，故未把旧 Commit 的 `122/122` 复用为本轮结论。当前离线验证 Provider 请求为 0。
 
 本候选 **NOT_COMPLETE**：历史 grounding CLI 的 16 次误调用仍标为 `invalidated_offline_run`，不能计入通过率或成本。唯一授权的正式批次 `mall-v3.0.3-portfolio-final-db3860701086` / `portfolio_final-c9b46de42c2d` 在 `main_open_task_closed_loop` 的 `agent_task_create` 因 `scenario_assertion_failure` 停止。Provider 8/8 成功、29,542 Token、Ledger 对账通过，但未形成 Proposal，Java 核验、写入和回查均为 0；其他核心链、主/补充集、Grounding、素材均 `not_executed`，不创建第三批次。gitleaks 本机缺少可执行文件，标记 `environment_blocked`；候选 `8f109ee` CI 双绿，失败证据提交必须再次核对。未修改 README、未合并 `main`、未创建 Tag/Release。
 
