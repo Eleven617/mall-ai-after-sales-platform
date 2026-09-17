@@ -1,10 +1,10 @@
 """Run one audited DeepSeek release batch.
 
-The ``candidate`` phase is the only new live-model entry point for the v3.0.1
-closeout. It keeps the real local showcase and synthetic quality suites in one
-redacted ledger and refuses to start when the reviewed model profile is not
-active. Historical ``showcase``/``final`` phases remain available only to read
-old evidence and must not rewrite the old release lock.
+The historical phases remain for immutable evidence. ``portfolio_a`` and
+``portfolio_b`` are the controlled v3.0.3 entry points: A consumes exactly one
+batch for the three end-to-end live showcase chains; B is allowed exactly once
+after A passes and consumes the final evaluation batch. Both use one release
+lock and a metadata-only shared ledger.
 """
 from __future__ import annotations
 
@@ -446,9 +446,116 @@ def _run_candidate(ledger: dict[str, object], report_dir: Path) -> dict[str, obj
     return {"status": overall, **reports}
 
 
+def _run_portfolio_showcase(ledger: dict[str, object], report_dir: Path) -> dict[str, object]:
+    """Run and reconcile the three real public chains for one paid batch."""
+
+    showcase = run_real_local_showcase(
+        report_dir=report_dir / "showcase",
+        batch_id=str(ledger["batchId"]),
+    )
+    reports: dict[str, object] = {"realLocalShowcase": showcase}
+    if showcase.get("status") != "passed":
+        _sync_process_ledger(ledger)
+        ledger["status"] = "environment_blocked" if showcase.get("status") == "environment_blocked" else "failed"
+        ledger["environmentBlocked"] = 1 if showcase.get("status") == "environment_blocked" else 0
+        ledger["endedAt"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+        return {"status": ledger["status"], **reports}
+
+    if not _sync_process_ledger(ledger):
+        ledger["status"] = "failed"
+        ledger["failureCategory"] = "ledger_mismatch"
+    elif int(ledger.get("providerRequests", 0) or 0) <= 0:
+        ledger["status"] = "failed"
+        ledger["failureCategory"] = "ledger_mismatch"
+    elif int(ledger.get("providerFailures", 0) or 0) > 0:
+        ledger["status"] = "failed"
+        ledger["failureCategory"] = "provider_failure"
+    else:
+        ledger["status"] = "passed"
+    ledger["endedAt"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+    return {"status": ledger["status"], **reports}
+
+
+def _run_portfolio_b(ledger: dict[str, object], report_dir: Path) -> dict[str, object]:
+    """Run the final batch once after a successful live core-chain canary."""
+
+    first = _run_portfolio_showcase(ledger, report_dir)
+    reports: dict[str, object] = dict(first)
+    reports.pop("status", None)
+    if first.get("status") != "passed":
+        return {"status": first.get("status", "failed"), **reports}
+
+    main = run_live_model_agent_evaluation(
+        suite_path=DEFAULT_SUITE_PATH,
+        required_runs=3,
+        stop_on_environment_blocked=True,
+        max_total_seconds=1800.0,
+        timeout_seconds=25.0,
+        max_attempts=1,
+    )
+    reports["main"] = main
+    _merge_ledger_metrics(ledger, [main])
+    if main.get("environmentBlocked") or _budget_exceeded(ledger):
+        ledger["status"] = "environment_blocked"
+        ledger["environmentBlocked"] = max(1, int(ledger.get("environmentBlocked", 0) or 0))
+        return {"status": "environment_blocked", **reports}
+
+    supplemental = run_live_model_agent_evaluation(
+        suite_path=HOLDOUT_SUITE_PATH,
+        required_runs=3,
+        stop_on_environment_blocked=True,
+        max_total_seconds=1800.0,
+        timeout_seconds=25.0,
+        max_attempts=1,
+    )
+    reports["supplemental"] = supplemental
+    _merge_ledger_metrics(ledger, [main, supplemental])
+    if supplemental.get("environmentBlocked") or _budget_exceeded(ledger):
+        ledger["status"] = "environment_blocked"
+        ledger["environmentBlocked"] = max(1, int(ledger.get("environmentBlocked", 0) or 0))
+        return {"status": "environment_blocked", **reports}
+
+    grounding = evaluate_grounded_answer_suite(
+        load_rag2_golden_suite(GROUNDING_SUITE_PATH),
+        mode="dense",
+        timeout_seconds=20.0,
+        max_attempts=1,
+        stop_on_environment_blocked=True,
+    )
+    grounding["model"] = {
+        "provider": "DeepSeek",
+        "model": settings.deepseek_model,
+        "thinkingMode": DEEPSEEK_THINKING_MODE,
+        "reasoningEffort": DEEPSEEK_REASONING_EFFORT,
+        "promptVersion": "rag2_grounding_v1",
+        "skillCatalogVersion": SKILL_CATALOG_VERSION,
+        "runtimeCommit": ledger["runtimeCommit"],
+        "executionBoundary": "synthetic_policy_corpus",
+    }
+    reports["grounding"] = grounding
+    _merge_ledger_metrics(ledger, [main, supplemental, grounding])
+    statuses = [str(main.get("status")), str(supplemental.get("status")), str(grounding.get("status"))]
+    if "environment_blocked" in statuses or _budget_exceeded(ledger):
+        overall = "environment_blocked"
+    elif any(status in {"failed", "quality_failed"} for status in statuses):
+        overall = "failed"
+    else:
+        overall = "passed"
+    ledger["status"] = overall
+    ledger["endedAt"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+    if not _sync_process_ledger(ledger):
+        ledger["status"] = "failed"
+        ledger["failureCategory"] = "ledger_mismatch"
+    return {"status": ledger["status"], **reports}
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--phase", choices=("showcase", "final", "candidate"), required=True)
+    parser.add_argument(
+        "--phase",
+        choices=("showcase", "final", "candidate", "portfolio_a", "portfolio_b"),
+        required=True,
+    )
     parser.add_argument("--release-id", required=True)
     parser.add_argument("--runtime-commit", required=True)
     parser.add_argument("--report", type=Path, required=True)
@@ -464,16 +571,20 @@ def main() -> int:
     else:
         lock_path = args.lock if args.lock.is_absolute() else REPOSITORY_ROOT / args.lock
 
-    # Once a release has consumed its two paid batches, the release id is
-    # permanently closed.  This guard is intentionally checked before any
-    # provider configuration or model call so a later accidental rerun cannot
-    # spend credits or create a third batch.
+    portfolio_phase = args.phase in {"portfolio_a", "portfolio_b"}
+    existing_lock: dict[str, object] | None = None
+    # A portfolio release has exactly two distinct consumed states. A records
+    # its own batch before it can make a request; B may proceed only from a
+    # recorded A success and records its own consumption before calling the
+    # provider. Any other lock state is final.
     if lock_path.is_file():
         try:
-            lock = json.loads(lock_path.read_text(encoding="utf-8"))
+            parsed = json.loads(lock_path.read_text(encoding="utf-8"))
         except (OSError, json.JSONDecodeError):
-            lock = {}
-        if isinstance(lock, dict) and lock.get("releaseId") == args.release_id:
+            parsed = {}
+        if isinstance(parsed, dict):
+            existing_lock = parsed
+        if not portfolio_phase and existing_lock is not None and existing_lock.get("releaseId") == args.release_id:
             print(
                 json.dumps(
                     {"status": "release_locked", "releaseId": args.release_id},
@@ -482,12 +593,26 @@ def main() -> int:
                 file=sys.stderr,
             )
             return 4
+        if portfolio_phase:
+            if existing_lock is None or existing_lock.get("releaseId") != args.release_id:
+                print(json.dumps({"status": "release_locked", "releaseId": args.release_id}, ensure_ascii=False), file=sys.stderr)
+                return 4
+            batches = existing_lock.get("batchIds")
+            if not isinstance(batches, list):
+                print(json.dumps({"status": "release_locked", "releaseId": args.release_id}, ensure_ascii=False), file=sys.stderr)
+                return 4
+            if args.phase == "portfolio_a" or existing_lock.get("status") != "BATCH_A_PASSED" or len(batches) != 1:
+                print(json.dumps({"status": "release_locked", "releaseId": args.release_id}, ensure_ascii=False), file=sys.stderr)
+                return 4
+    elif args.phase == "portfolio_b":
+        print(json.dumps({"status": "release_locked", "releaseId": args.release_id}, ensure_ascii=False), file=sys.stderr)
+        return 4
 
     if settings.deepseek_model != "deepseek-flash":
         print("deepseek release batch refused: reviewed model is not deepseek-flash", file=sys.stderr)
         return 3
 
-    if args.phase == "candidate":
+    if args.phase in {"candidate", "portfolio_a", "portfolio_b"}:
         if not re.fullmatch(r"[0-9a-f]{40}", args.runtime_commit):
             print("deepseek release batch refused: runtime commit must be a full SHA", file=sys.stderr)
             return 3
@@ -495,6 +620,9 @@ def main() -> int:
         if not identity_ok:
             print(f"deepseek release batch refused: {identity_reason}", file=sys.stderr)
             return 3
+    if portfolio_phase and not os.getenv("MALL_RELEASE_LEDGER_PATH"):
+        print("deepseek release batch refused: shared ledger path is missing", file=sys.stderr)
+        return 3
 
     batch_id = f"{args.phase}-{uuid.uuid4().hex[:12]}"
     # The formal entry point binds every required authorization dimension in
@@ -542,13 +670,23 @@ def main() -> int:
         "totalTokens": 0,
     }
     lock_created = False
-    if args.phase == "candidate":
+    if args.phase in {"candidate", "portfolio_a"}:
         try:
+            if args.phase == "portfolio_a":
+                lock_payload["status"] = "BATCH_A_RUNNING"
+                lock_payload["phase"] = args.phase
             _atomic_create_json(lock_path, lock_payload)
             lock_created = True
         except FileExistsError:
             print(json.dumps({"status": "release_locked", "releaseId": args.release_id}, ensure_ascii=False), file=sys.stderr)
             return 4
+    elif args.phase == "portfolio_b" and existing_lock is not None:
+        lock_payload = dict(existing_lock)
+        batch_ids = list(existing_lock.get("batchIds", []))
+        batch_ids.append(batch_id)
+        lock_payload.update({"batchIds": batch_ids, "status": "BATCH_B_RUNNING", "phase": args.phase})
+        _atomic_replace_json(lock_path, lock_payload)
+        lock_created = True
 
     report: dict[str, object]
     try:
@@ -558,6 +696,10 @@ def main() -> int:
             else _run_final(ledger)
             if args.phase == "final"
             else _run_candidate(ledger, args.report.parent / f"{batch_id}-artifacts")
+            if args.phase == "candidate"
+            else _run_portfolio_showcase(ledger, args.report.parent / f"{batch_id}-artifacts")
+            if args.phase == "portfolio_a"
+            else _run_portfolio_b(ledger, args.report.parent / f"{batch_id}-artifacts")
         )
     except KeyboardInterrupt:
         ledger["status"] = "interrupted"
@@ -572,14 +714,14 @@ def main() -> int:
         report = {"status": "failed", "failureCategory": "runner_exception"}
     # Always reconcile before either the report or the immutable lock is
     # written.  A missing host path is a gate failure, never a silent zero.
-    if args.phase in {"candidate", "final", "showcase"}:
+    if args.phase in {"candidate", "final", "showcase", "portfolio_a", "portfolio_b"}:
         if not _sync_process_ledger(ledger):
             ledger["status"] = "failed"
             ledger["failureCategory"] = "ledger_mismatch"
     if isinstance(report, dict):
         report["ledgerMetrics"] = _reconciled_report_metrics(ledger)
     ledger["testRunComplete"] = bool(
-        args.phase == "candidate"
+        args.phase in {"candidate", "portfolio_b"}
         and isinstance(report, dict)
         and all(key in report for key in ("realLocalShowcase", "main", "supplemental", "grounding"))
     )
@@ -604,15 +746,18 @@ def main() -> int:
         )
     )
     if lock_created:
-        lock_payload.update(
-            {
-                "status": "PASSED" if ledger.get("status") == "passed" else "INTERRUPTED" if ledger.get("status") == "interrupted" else "FAILED",
-                "testRunComplete": ledger.get("testRunComplete"),
-                "releaseQualified": ledger.get("releaseQualified"),
-                "requests": ledger.get("requests"),
-                "totalTokens": ledger.get("totalTokens"),
-            }
-        )
+        lock_payload.update({
+            "status": (
+                "BATCH_A_PASSED" if args.phase == "portfolio_a" and ledger.get("status") == "passed"
+                else "PASSED" if args.phase == "portfolio_b" and ledger.get("status") == "passed"
+                else "INTERRUPTED" if ledger.get("status") == "interrupted"
+                else "FAILED"
+            ),
+            "testRunComplete": ledger.get("testRunComplete"),
+            "releaseQualified": ledger.get("releaseQualified"),
+            "requests": ledger.get("requests"),
+            "totalTokens": ledger.get("totalTokens"),
+        })
         _atomic_replace_json(lock_path, lock_payload)
     return 2 if ledger.get("status") == "environment_blocked" else 1 if ledger.get("status") == "failed" else 0
 

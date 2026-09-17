@@ -6,7 +6,7 @@
 
 离线确定性与本机现场：FastAPI 终端 **411 passed + 12 subtests**，JUnit **423 passed/0 failed/0 skipped**；manifest **478/478**、代表性 **8/8**；Task orchestration **11/11**、Quality Agent **17/17**、Dense RAG 52 条检索评测；Java 定向测试、Vue build、Compose 8/8 healthy；现场 Runner **122/122**（24/30/36/32）。新增现场能力链验证了草案修改不写 Java、旧版本 409、当前版本单次写入、人工协同确认前零写入、跨账号 404 和确认后单次创建。当前本机验证 Provider 0。
 
-本候选 **NOT_COMPLETE / `V3_0_3_LIVE_READY=false`**：历史 grounding CLI 的 16 次误调用仍标为 `invalidated_offline_run`，不能计入通过率或成本；本次未调用 Provider。gitleaks 本机缺少可执行文件，标记 `environment_blocked`；提交 `697deab` 的 [`mall-ci`](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/35195018957) 和 [`quality-evaluation`](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/35195018813) 均成功。未修改 README、未合并 `main`、未创建 Tag/Release。
+本候选 **IMPLEMENTATION_READY_FOR_FINAL_VALIDATION**：历史 grounding CLI 的 16 次误调用仍标为 `invalidated_offline_run`，不能计入通过率或成本；当前 Runtime 的正式在线结果为 `not_run_for_current_runtime`，候选调用为 0。gitleaks 本机缺少可执行文件，标记 `environment_blocked`；提交 `697deab` 的 [`mall-ci`](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/35195018957) 和 [`quality-evaluation`](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/35195018813) 均成功。未修改 README、未合并 `main`、未创建 Tag/Release。
 
 证据：[`v3.0.3-capability-completion.md`](evidence/v3.0.3-capability-completion.md)、[`v3.0.3-capability-completion.json`](evidence/v3.0.3-capability-completion.json)。历史提交的远程结果不替代当前 SHA；v3.0.2 的正式 FAILED Lock、Ledger、报告和提交 `0eb964b` 未修改。不能宣称真实模型准确率、生产 SLA、真实支付/仓储/物流/维修履约或模型成本。
 

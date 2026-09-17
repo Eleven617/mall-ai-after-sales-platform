@@ -6,7 +6,7 @@
 
 本机合成现场 Runner **122/122**（Browser 24、Java/MySQL 30、Fault 36、Durable 32，0 failed/0 blocked）；版本化草案与人工协同现场链通过。现场报告 SHA `4b75860a0750cf206421ad0fa160f4eb8e72eeeddfe318cff586727f9532afad`，FastAPI 报告 SHA `d80ce2833305412db6220765df6f509286e0ca9940c04d0101470f80471b7de1`。
 
-本候选 **NOT_COMPLETE / `V3_0_3_LIVE_READY=false`**：历史 grounding CLI 误调用仍作废；本次无 Provider 请求。gitleaks 本机缺失为 `environment_blocked`，提交 `697deab` 的 [`mall-ci`](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/35195018957) 和 [`quality-evaluation`](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/35195018813) 已成功。不得把本次离线验收当成 Grounding 通过、在线批次或模型准确率；v3.0.2 FAILED 历史证据保持不变。
+本候选 **IMPLEMENTATION_READY_FOR_FINAL_VALIDATION**：历史 grounding CLI 误调用仍作废；当前 Runtime 的正式在线结果为 `not_run_for_current_runtime`，候选调用为 0。gitleaks 本机缺失为 `environment_blocked`，提交 `697deab` 的 [`mall-ci`](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/35195018957) 和 [`quality-evaluation`](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/35195018813) 已成功。不得把本次离线验收当成 Grounding 通过、在线批次或模型准确率；v3.0.2 FAILED 历史证据保持不变。
 
 ## 当前权威快照｜v3.0.2 离线候选（2026-09-15）
 

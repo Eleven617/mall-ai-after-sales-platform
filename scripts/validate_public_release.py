@@ -126,7 +126,10 @@ def main() -> int:
     for key in ("schemaVersion", "runtimeCommit", "evidenceCommit", "publicClaims", "prohibitedClaims", "upstreamBoundary"):
         require(key in facts, f"facts missing {key}")
     require(re.fullmatch(r"[0-9a-f]{40}", facts["runtimeCommit"]) is not None, "runtimeCommit must be a full SHA")
-    require(release_status in {"COMPLETE", "NOT_COMPLETE"}, "releaseStatus must be explicit")
+    require(
+        release_status in {"COMPLETE", "NOT_COMPLETE", "IMPLEMENTATION_READY_FOR_FINAL_VALIDATION"},
+        "releaseStatus must be explicit",
+    )
     require(supplemental["independentBlindSet"] is False, "supplemental set must not be declared blind")
     if release_status == "COMPLETE":
         require(main_eval["passed"] == main_eval["executed"] == 72, "main evaluation facts mismatch")
@@ -158,6 +161,12 @@ def main() -> int:
             all(item.get("status") in {"environment_blocked", "passed", "failed", "not_executed"} for item in current["showcase"].get("scenarios", [])),
             "showcase scenario status mismatch",
         )
+        if release_status == "IMPLEMENTATION_READY_FOR_FINAL_VALIDATION":
+            readiness = facts.get("v3_0_3OfflineReadiness", {})
+            require(readiness.get("status") == release_status, "v3.0.3 readiness status mismatch")
+            require(readiness.get("currentCandidateProviderRequests") == 0, "current candidate must not inherit historical provider calls")
+            require(readiness.get("currentLiveEvaluation") == "not_run_for_current_runtime", "current live evaluation state mismatch")
+            require(readiness.get("historicalInvalidatedRun") is True, "historical invalidated run must remain recorded")
     require(tests["java"]["portalCore"] == "12/12", "Java portal core fact mismatch")
     require(tests["java"]["portalCompatibility"] == "2/2", "Java portal compatibility fact mismatch")
     require(tests["java"]["admin"] == "6/6", "Java admin fact mismatch")
@@ -181,21 +190,22 @@ def main() -> int:
     )
     for phrase in forbidden_phrases:
         require(phrase not in readme, f"README contains forbidden public wording: {phrase}")
-    required_fragments = (
-        "DeepSeek",
-        "NOT_COMPLETE",
-        "environment_blocked",
-        "376 passed",
-        "portal 核心 `12/12`",
-        "admin `6/6`",
-        "Spring context `1/1`",
-        "478/478",
-        "MRR `0.948718`",
-        "nDCG@3 `0.962147`",
-    )
-    for fragment in required_fragments:
-        require(fragment in readme, f"README missing fact fragment: {fragment}")
-    require("不是独立盲测集" in readme, "README must disclose supplemental-set boundary")
+    if release_status == "NOT_COMPLETE":
+        required_fragments = (
+            "DeepSeek",
+            "376 passed",
+            "portal 核心 `12/12`",
+            "admin `6/6`",
+            "Spring context `1/1`",
+            "478/478",
+            "MRR `0.948718`",
+            "nDCG@3 `0.962147`",
+        )
+        for fragment in required_fragments:
+            require(fragment in readme, f"README missing fact fragment: {fragment}")
+        require("不是独立盲测集" in readme, "README must disclose supplemental-set boundary")
+    elif release_status == "IMPLEMENTATION_READY_FOR_FINAL_VALIDATION":
+        require("PORTFOLIO_RELEASE_COMPLETE" not in readme, "README must not predeclare release completion")
     require(
         re.search(r"52/52.{0,20}(准确率|全部通过)|(?:准确率|全部通过).{0,20}52/52", readme) is None,
         "README must not present retrieval as a 52/52 accuracy/pass claim",
@@ -261,7 +271,7 @@ def main() -> int:
             require("14/14" not in section and "holdout" not in section.lower(), f"stale wording remains in current document {path}")
             require("365" in section, f"FastAPI 365 is missing in current document {path}")
         else:
-            require("NOT_COMPLETE" in section, f"current release status missing in {path}")
+            require(release_status in section, f"current release status missing in {path}")
             require(
                 "environment_blocked" in section
                 or "Batch 2" in section
