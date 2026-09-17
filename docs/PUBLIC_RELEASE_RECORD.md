@@ -2,9 +2,9 @@
 
 ## 当前权威记录｜v3.0.3 Proposal 确认执行合同（2026-09-17）
 
-候选分支 `codex/v3.0.3-confirmation-contract`，Runtime Freeze `3a0d59080e94848553ac2d981116acf236df3cf6`。本次实现版本化售后草案和人工协同：`create_after_sales_draft` 精确映射到 `commit_after_sales_action`，`open_human_case` 仅在用户确认后映射到内部 `commit_human_case`；确认时由 Runtime 重读事实/hash/归属并生成幂等键，Java 继续负责资格、状态机、事务和最终写入。
+候选分支 `codex/v3.0.3-confirmation-contract`，Runtime Freeze `db3860701086bf9718ac23ef7b272a28bff2083f`。本次实现版本化售后草案和人工协同：`create_after_sales_draft` 精确映射到 `commit_after_sales_action`，`open_human_case` 仅在用户确认后映射到内部 `commit_human_case`；确认时由 Runtime 重读事实/hash/归属并生成幂等键，Java 继续负责资格、状态机、事务和最终写入。
 
-离线确定性与本机现场：FastAPI 终端 **411 passed + 12 subtests**，JUnit **423 passed/0 failed/0 skipped**；manifest **478/478**、代表性 **8/8**；Task orchestration **11/11**、Quality Agent **17/17**、Dense RAG 52 条检索评测；Java 定向测试、Vue build、Compose 8/8 healthy；现场 Runner **122/122**（24/30/36/32）。新增现场能力链验证了草案修改不写 Java、旧版本 409、当前版本单次写入、人工协同确认前零写入、跨账号 404 和确认后单次创建。当前本机验证 Provider 0。
+离线确定性与本机现场：FastAPI 终端 **415 passed + 12 subtests**，JUnit **427 passed/0 failed/0 skipped**；manifest **478/478**、代表性 **8/8**；Task orchestration **11/11**、Quality Agent **17/17**、Dense RAG 52 条检索评测；Java 定向测试、Vue build、Compose 8/8 healthy；现场 Runner **122/122**（24/30/36/32）。新增现场能力链验证了草案修改不写 Java、旧版本 409、当前版本单次写入、人工协同确认前零写入、跨账号 404 和确认后单次创建。当前本机验证 Provider 0。
 
 本候选 **IMPLEMENTATION_READY_FOR_FINAL_VALIDATION**：历史 grounding CLI 的 16 次误调用仍标为 `invalidated_offline_run`，不能计入通过率或成本；当前 Runtime 的正式在线结果为 `not_run_for_current_runtime`，候选调用为 0。gitleaks 本机缺少可执行文件，标记 `environment_blocked`；提交 `697deab` 的 [`mall-ci`](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/35195018957) 和 [`quality-evaluation`](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/35195018813) 均成功。未修改 README、未合并 `main`、未创建 Tag/Release。
 

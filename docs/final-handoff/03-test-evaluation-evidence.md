@@ -2,9 +2,9 @@
 
 ## 当前权威快照｜v3.0.3 Proposal 确认执行合同（2026-09-17）
 
-候选分支 `codex/v3.0.3-confirmation-contract`，Runtime Freeze `3a0d59080e94848553ac2d981116acf236df3cf6`。Proposal-to-Commit 映射、版本化草案、人工协同确认、确认时事实/hash/owner/TTL 重校验和 Runtime 幂等键均有覆盖；FastAPI 终端 **411 passed + 12 subtests**，JUnit **423/423**；manifest **478/478**、代表性 **8/8**；Task 11/11、Quality 17/17、Dense RAG 52 条检索评测；Java 定向测试、Vue build、Compose 8/8 healthy。
+候选分支 `codex/v3.0.3-confirmation-contract`，Runtime Freeze `db3860701086bf9718ac23ef7b272a28bff2083f`。Proposal-to-Commit 映射、版本化草案、人工协同确认、确认时事实/hash/owner/TTL 重校验和 Runtime 幂等键均有覆盖；FastAPI 终端 **415 passed + 12 subtests**，JUnit **427/427**；manifest **478/478**、代表性 **8/8**；Task 11/11、Quality 17/17、Dense RAG 52 条检索评测；Java 定向测试、Vue build、Compose 8/8 healthy。
 
-本机合成现场 Runner **122/122**（Browser 24、Java/MySQL 30、Fault 36、Durable 32，0 failed/0 blocked）；版本化草案与人工协同现场链通过。现场报告 SHA `4b75860a0750cf206421ad0fa160f4eb8e72eeeddfe318cff586727f9532afad`，FastAPI 报告 SHA `d80ce2833305412db6220765df6f509286e0ca9940c04d0101470f80471b7de1`。
+本机合成现场 Runner **122/122**（Browser 24、Java/MySQL 30、Fault 36、Durable 32，0 failed/0 blocked）；版本化草案与人工协同现场链通过。现场报告 SHA `c975374fa6c9f6484063779be62e1cde6be499f5f3f397275f27e89c20c0e6cd`，FastAPI 语义报告 SHA `8698f94d3f13e070cb4ca9a71a8ad1eef024483ec64008918ea86549dd95b3f2`。
 
 本候选 **IMPLEMENTATION_READY_FOR_FINAL_VALIDATION**：历史 grounding CLI 误调用仍作废；当前 Runtime 的正式在线结果为 `not_run_for_current_runtime`，候选调用为 0。gitleaks 本机缺失为 `environment_blocked`，提交 `697deab` 的 [`mall-ci`](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/35195018957) 和 [`quality-evaluation`](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/35195018813) 已成功。不得把本次离线验收当成 Grounding 通过、在线批次或模型准确率；v3.0.2 FAILED 历史证据保持不变。
 

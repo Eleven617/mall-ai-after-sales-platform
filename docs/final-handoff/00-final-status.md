@@ -2,7 +2,7 @@
 
 ## 当前权威快照｜v3.0.3 Proposal 确认执行合同（2026-09-17）
 
-分支 `codex/v3.0.3-confirmation-contract`，Runtime Freeze `3a0d59080e94848553ac2d981116acf236df3cf6`。服务器控制的 Draft-to-Commit 映射、版本化修改、人工协同确认、确认重校验和 Runtime 幂等键已实现；FastAPI JUnit **423/423**（终端 **411 passed + 12 subtests**）、manifest 478/478、代表性 8/8、Task 11/11、Quality 17/17、Java 定向测试、Vue/Compose 均通过。
+分支 `codex/v3.0.3-confirmation-contract`，Runtime Freeze `db3860701086bf9718ac23ef7b272a28bff2083f`。服务器控制的 Draft-to-Commit 映射、版本化修改、人工协同确认、确认重校验和 Runtime 幂等键已实现；FastAPI JUnit **427/427**（终端 **415 passed + 12 subtests**）、manifest 478/478、代表性 8/8、Task 11/11、Quality 17/17、Java 定向测试、Vue/Compose 均通过。
 
 本机合成现场 Runner 为 **122/122**（Browser 24、Java/MySQL 30、Fault 36、Durable 32）；新增两条经 Nginx/FastAPI/Java 的能力链均通过，且本次 Provider 请求为 0。报告与 hash 见 [`v3.0.3-capability-completion.md`](../evidence/v3.0.3-capability-completion.md)。
 

@@ -1,14 +1,14 @@
 {
   "schemaVersion": "mall-fastapi-test-report.v1",
-  "repositoryCommit": "6626bf03c5ac633d0a589ffc15b842ffc683e548",
-  "runtimeCommit": "3a0d59080e94848553ac2d981116acf236df3cf6",
-  "junitSha256": "5478df2b5e9a3983c7fc5a20edbddc5dbd07bd3ef7a35b283932087646c01f7a",
-  "tests": 423,
+  "repositoryCommit": "e70e6d71638aa5dcacdbc7061294b2d57c10e121",
+  "runtimeCommit": "db3860701086bf9718ac23ef7b272a28bff2083f",
+  "junitSha256": "c15ce5591485c5109f84a779db7793cd2c25ace463f15110524fb9cd762887c7",
+  "tests": 427,
   "failures": 0,
   "errors": 0,
   "skipped": 0,
-  "passed": 423,
-  "caseCount": 411,
-  "semanticReportSha256": "d80ce2833305412db6220765df6f509286e0ca9940c04d0101470f80471b7de1",
+  "passed": 427,
+  "caseCount": 415,
+  "semanticReportSha256": "8698f94d3f13e070cb4ca9a71a8ad1eef024483ec64008918ea86549dd95b3f2",
   "exitCode": 0
 }
