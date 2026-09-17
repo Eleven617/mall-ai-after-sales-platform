@@ -6,7 +6,7 @@
 
 当前 Commit 的 Docker 现场 Runner 为 **122 environment_blocked**：Docker Desktop 重启后 Secrets Engine 无法处理内部 `engine.sock` 残留 ReparsePoint，Linux Engine 未能启动，因此浏览器、Java/MySQL、故障和 Durable 的新现场执行均未开始。历史 `122/122` 绑定旧 Commit，已标记 stale，绝不并入本轮。
 
-**Release Gate：`NOT_COMPLETE`。** 旧正式批次 `mall-v3.0.3-portfolio-final-db3860701086`（Batch `portfolio_final-c9b46de42c2d`）保持 FAILED：8 次 Provider 请求均成功、共 29,542 Token，Ledger 已对账，但展示 Runner 当时未处理合法澄清路径。该批次不改写、不重跑。当前候选的 [`quality-evaluation`](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/35230133083) 已成功；[`mall-ci`](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/35230133079) 仅因旧 FastAPI 公开事实为 427、与当前机器报告 429 不一致而失败，证据回填后必须重新验证。未合并 `main`、未更新 README、未创建新在线批次。
+**Release Gate：`NOT_COMPLETE`。** 旧正式批次 `mall-v3.0.3-portfolio-final-db3860701086`（Batch `portfolio_final-c9b46de42c2d`）保持 FAILED：8 次 Provider 请求均成功、共 29,542 Token，Ledger 已对账，但展示 Runner 当时未处理合法澄清路径。该批次不改写、不重跑。公开事实回填后的 [`mall-ci`](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/35231380485) 与 [`quality-evaluation`](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/35231380466) 均成功。未合并 `main`、未更新 README、未创建新在线批次。
 
 v3.0.2 的 FAILED Lock/Ledger/报告和提交 `0eb964b` 保持原样：其准确根因是 Runtime 缺少 Draft-to-Commit 服务器映射，确认时把 Draft Skill 传给只允许 commit Skill 的 Gateway，安全停止且 Java 写入为 0；不能归因于模型随机选错。
 

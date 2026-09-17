@@ -6,7 +6,7 @@
 
 当前 Commit 的本机合成现场 Runner 为 **122 environment_blocked**，因为 Docker Desktop Secrets Engine 的 `engine.sock` 残留使 Linux Engine 无法启动；没有把旧 Commit 的 122/122 复用为当前结果。本轮离线 Provider 请求为 0。
 
-发布门禁 **`NOT_COMPLETE`**：唯一授权的当前 Runtime 批次 `mall-v3.0.3-portfolio-final-db3860701086` / `portfolio_final-c9b46de42c2d` 在第一条核心链 `main_open_task_closed_loop` 的 `agent_task_create` 发生 `scenario_assertion_failure` 后安全停止。Provider 8 请求均成功、Token 29,542、Ledger 已对账；但 Proposal 未形成，Java 资格核验、写入与回查均为 0，余下核心链、主/补充评测、Grounding 和素材均 `not_executed`，不得重跑。候选 `8f109ee` 的 [`mall-ci`](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/35216172369) 与 [`quality-evaluation`](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/35216172446) 已成功；失败证据提交仍需重新核对 CI。未修改 README、未合并 main、未创建 Release。
+发布门禁 **`NOT_COMPLETE`**：唯一授权的旧 Runtime 批次 `mall-v3.0.3-portfolio-final-db3860701086` / `portfolio_final-c9b46de42c2d` 在第一条核心链 `main_open_task_closed_loop` 的 `agent_task_create` 发生 `scenario_assertion_failure` 后安全停止。Provider 8 请求均成功、Token 29,542、Ledger 已对账；但 Proposal 未形成，Java 资格核验、写入与回查均为 0，余下核心链、主/补充评测、Grounding 和素材均 `not_executed`，不得重跑。当前证据提交的 [`mall-ci`](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/35231380485) 与 [`quality-evaluation`](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/35231380466) 均成功。未修改 README、未合并 main、未创建 Release。
 
 ## 当前权威快照｜v3.0.2 唯一正式 DeepSeek 批次（2026-09-16）
 

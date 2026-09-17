@@ -6,7 +6,7 @@
 
 当前 Commit 的现场 Runner 为 **122 environment_blocked**：Docker Desktop Secrets Engine 的内部 `engine.sock` 残留使 Linux Engine 无法启动，因此没有创建本轮现场报告。历史 122/122 已标 stale。FastAPI 语义报告 SHA `6c3fced39b8cf667f6f7880e42b8f79ac70b9ed2cf396109fc2334e72f9025b7`。
 
-本候选 **NOT_COMPLETE**：唯一授权的正式批次 `mall-v3.0.3-portfolio-final-db3860701086` 在 `main_open_task_closed_loop` 的 `agent_task_create` 因 `scenario_assertion_failure` 停止。Provider 8/8 成功、29,542 Token、Ledger 对账通过，却未形成 Proposal，Java 核验/写入/回查均为 0；另两条核心链、主集、补充集、Grounding、素材均 `not_executed`。这不是 `environment_blocked`，且不得重跑。gitleaks 本机缺失仍为 `environment_blocked`；候选 `8f109ee` 的 CI 双绿，失败证据提交需以新 SHA 重新核对。不得把离线验收当成 Grounding 通过、在线批次或模型准确率。
+本候选 **NOT_COMPLETE**：唯一授权的旧正式批次 `mall-v3.0.3-portfolio-final-db3860701086` 在 `main_open_task_closed_loop` 的 `agent_task_create` 因 `scenario_assertion_failure` 停止。Provider 8/8 成功、29,542 Token、Ledger 对账通过，却未形成 Proposal，Java 核验/写入/回查均为 0；另两条核心链、主集、补充集、Grounding、素材均 `not_executed`。这不是 `environment_blocked`，且不得重跑。gitleaks 本机缺失仍为 `environment_blocked`；当前候选 CI 已双绿。不得把离线验收当成 Grounding 通过、在线批次或模型准确率。
 
 ## 当前权威快照｜v3.0.2 离线候选（2026-09-15）
 

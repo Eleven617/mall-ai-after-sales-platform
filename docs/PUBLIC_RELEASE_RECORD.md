@@ -6,7 +6,7 @@
 
 离线确定性：FastAPI 终端 **417 passed + 12 subtests**，JUnit **429 passed/0 failed/0 skipped**；manifest **478/478**、代表性 **8/8**；Task orchestration **11/11**、Quality Agent **17/17**、RAG 合同 **84/84**；Java 定向测试与 Vue build 均通过。当前 Commit 的 Docker 现场 Runner 是 **122 environment_blocked**：Docker Desktop Secrets Engine 内部 socket 残留阻止引擎启动，故未把旧 Commit 的 `122/122` 复用为本轮结论。当前离线验证 Provider 请求为 0。
 
-本候选 **NOT_COMPLETE**：历史 grounding CLI 的 16 次误调用仍标为 `invalidated_offline_run`，不能计入通过率或成本。唯一授权的正式批次 `mall-v3.0.3-portfolio-final-db3860701086` / `portfolio_final-c9b46de42c2d` 在 `main_open_task_closed_loop` 的 `agent_task_create` 因 `scenario_assertion_failure` 停止。Provider 8/8 成功、29,542 Token、Ledger 对账通过，但未形成 Proposal，Java 核验、写入和回查均为 0；其他核心链、主/补充集、Grounding、素材均 `not_executed`，不创建第三批次。gitleaks 本机缺少可执行文件，标记 `environment_blocked`；候选 `8f109ee` CI 双绿，失败证据提交必须再次核对。未修改 README、未合并 `main`、未创建 Tag/Release。
+本候选 **NOT_COMPLETE**：历史 grounding CLI 的 16 次误调用仍标为 `invalidated_offline_run`，不能计入通过率或成本。唯一授权的旧正式批次 `mall-v3.0.3-portfolio-final-db3860701086` / `portfolio_final-c9b46de42c2d` 在 `main_open_task_closed_loop` 的 `agent_task_create` 因 `scenario_assertion_failure` 停止。Provider 8/8 成功、29,542 Token、Ledger 对账通过，但未形成 Proposal，Java 核验、写入和回查均为 0；其他核心链、主/补充集、Grounding、素材均 `not_executed`，不创建第三批次。gitleaks 本机缺少可执行文件，标记 `environment_blocked`；当前候选 CI 已双绿。未修改 README、未合并 `main`、未创建 Tag/Release。
 
 证据：[`v3.0.3-capability-completion.md`](evidence/v3.0.3-capability-completion.md)、[`v3.0.3-capability-completion.json`](evidence/v3.0.3-capability-completion.json)。历史提交的远程结果不替代当前 SHA；v3.0.2 的正式 FAILED Lock、Ledger、报告和提交 `0eb964b` 未修改。不能宣称真实模型准确率、生产 SLA、真实支付/仓储/物流/维修履约或模型成本。
 
