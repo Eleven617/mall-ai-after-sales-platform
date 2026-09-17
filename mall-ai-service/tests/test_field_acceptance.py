@@ -150,3 +150,12 @@ def test_browser_runner_binds_the_disposable_fixture_customer(monkeypatch, tmp_p
 
     assert results == []
     assert observed["username"] == "rotated-synthetic-customer"
+
+
+def test_customer_page_does_not_render_the_authenticated_username() -> None:
+    """Browser evidence must not expose a synthetic or real account identifier."""
+
+    source = (ROOT / "mall-ai-web" / "src" / "App.vue").read_text(encoding="utf-8")
+    assert 'currentMember.value ? "已登录" : "未登录"' in source
+    assert "已登录：${currentMember.value.username}" not in source
+    assert "{{ currentMember.username }}" not in source

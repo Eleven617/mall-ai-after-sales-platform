@@ -219,7 +219,9 @@ class BrowserSession:
     def _login_customer(self) -> None:
         if self.page is None:
             raise RuntimeError("browser_page_unavailable")
-        logged_in_expression = "document.body.innerText.includes(" + json.dumps("已登录：" + self.customer_username) + ")"
+        # Login completion is a UI-state assertion, not an identity echo.  The
+        # public page deliberately does not render a customer username.
+        logged_in_expression = "document.body.innerText.includes(" + json.dumps("已登录") + ")"
         if self.page.evaluate(logged_in_expression):
             self._customer_logged = True
             return

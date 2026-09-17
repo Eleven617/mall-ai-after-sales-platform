@@ -80,7 +80,7 @@ const deletingConversationId = ref("");
 const messages = ref<ChatMessage[]>(welcomeMessages());
 
 const loginStateText = computed(() =>
-  currentMember.value ? `已登录：${currentMember.value.username}` : "未登录",
+  currentMember.value ? "已登录" : "未登录",
 );
 const todaysConversations = computed(() =>
   conversationSummaries.value.filter((item) => isToday(item.updated_at || item.created_at)),
@@ -830,7 +830,7 @@ async function scrollToLatest(): Promise<void> {
         <div v-if="currentMember" class="account-summary">
           <div>
             <p class="settings-title">当前商城账号</p>
-            <p class="settings-description">{{ currentMember.username }}。历史咨询只会保存在当前账号下。</p>
+            <p class="settings-description">历史咨询只会保存在当前账号下。</p>
           </div>
           <button class="secondary-button" type="button" @click="logout">退出登录</button>
         </div>
