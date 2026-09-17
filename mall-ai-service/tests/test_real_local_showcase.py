@@ -43,6 +43,7 @@ def test_showcase_error_is_a_safe_enumerated_projection() -> None:
         "javaEligibility": False,
         "javaCommit": False,
         "statusReadback": False,
+        "taskMetrics": {},
     }
     assert "provider_response_body" not in str(public)
 

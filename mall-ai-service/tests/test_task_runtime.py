@@ -69,6 +69,7 @@ def _observation(
     status: str = "succeeded",
     factuality: str = "verified",
     summary: str = "Java 已核验当前账号的合成订单事实。",
+    failure_code: str | None = None,
 ) -> SkillObservation:
     return SkillObservation(
         status=status,
@@ -77,6 +78,7 @@ def _observation(
         reference=reference,
         source_version="v1",
         factuality=factuality,
+        safe_facts={"failure_code": failure_code} if failure_code else {},
     )
 
 
@@ -836,6 +838,124 @@ def test_missing_application_type_waits_and_same_task_can_resume() -> None:
     )
     assert committed.view.status == "executing"
     assert len(gateway.commits) == 1
+
+
+def test_explicit_cancel_refund_with_insufficient_policy_evidence_forms_conditional_draft() -> None:
+    """Evidence absence stays visible while Java-confirmed submission remains gated."""
+
+    order_reference = "fact-order-conditional-policy"
+    provider = ScriptedRuntimeProvider(
+        decisions=[
+            _decision(
+                name="call_skill",
+                summary="先核验当前账号订单事实。",
+                calls=[SkillCall(skill_id="read_order", arguments={"orderRef": "ref-order-alpha"})],
+            ),
+            _decision(
+                name="call_skill",
+                summary="检索政策证据。",
+                calls=[SkillCall(skill_id="retrieve_policy", arguments={"query": "取消退款"})],
+            ),
+            _decision(
+                name="call_skill",
+                summary="根据已核验事实形成候选方案。",
+                calls=[SkillCall(skill_id="build_service_resolution", arguments={"factRefs": [order_reference]})],
+            ),
+        ]
+    )
+    gateway = RecordingGateway(
+        {
+            "read_order": _observation(reference=order_reference),
+            "retrieve_policy": _observation(
+                kind="policy_evidence",
+                reference="policy-insufficient-contract",
+                status="blocked",
+                factuality="unavailable",
+                summary="当前政策证据不足，不能形成政策结论。",
+                failure_code="insufficient_evidence",
+            ),
+            "build_service_resolution": _observation(
+                kind="resolution_candidate",
+                reference="resolution-conditional-contract",
+                factuality="proposal",
+                summary="已根据订单事实形成候选解决方案。",
+            ),
+            "commit_after_sales_action": _observation(
+                kind="action_result",
+                reference="action-conditional-contract",
+                summary="Java 已返回合成售后提交结果。",
+            ),
+        }
+    )
+    runtime = _runtime(provider, gateway)
+    with patch.object(
+        runtime,
+        "_discover_for_turn",
+        return_value=[
+            get_skill("read_order"),
+            get_skill("retrieve_policy"),
+            get_skill("build_service_resolution"),
+            get_skill("create_after_sales_draft"),
+            get_skill("open_human_case"),
+        ],
+    ):
+        proposed = runtime.create_task(
+            session_id=SESSION_ID,
+            goal="订单号 202601010000000001，我要申请取消退款。",
+            member_id=MEMBER_ID,
+            authorization=AUTHORIZATION,
+        )
+
+    assert proposed.view.status == "ready_to_commit"
+    assert proposed.view.action is not None
+    assert proposed.view.action.application_type == "cancel_refund"
+    assert "insufficient_evidence" in proposed.view.limitation_codes
+    assert "政策证据不足" in proposed.view.action.user_explanation
+    assert "不保证" in proposed.view.action.user_explanation
+    assert gateway.commits == []
+    assert proposed.view.execution_metrics is not None
+    assert proposed.view.execution_metrics.tool_calls == 3
+
+    committed = runtime.confirm_action(
+        task_ref=proposed.view.task_ref,
+        confirmation="confirm",
+        member_id=MEMBER_ID,
+        authorization=AUTHORIZATION,
+    )
+    assert committed.view.status == "executing"
+    assert len(gateway.commits) == 1
+
+
+def test_insufficient_policy_evidence_cannot_guess_application_type_from_policy_like_text() -> None:
+    order_reference = "fact-order-no-type-contract"
+    provider = ScriptedRuntimeProvider(
+        decisions=[
+            _decision(name="call_skill", summary="核验订单事实。", calls=[SkillCall(skill_id="read_order", arguments={"orderRef": "ref-order-alpha"})]),
+            _decision(name="call_skill", summary="读取政策状态。", calls=[SkillCall(skill_id="retrieve_policy", arguments={"query": "售后"})]),
+            _decision(name="call_skill", summary="形成候选方案。", calls=[SkillCall(skill_id="build_service_resolution", arguments={"factRefs": [order_reference]})]),
+            _decision(name="ask_user", summary="需要明确申请类型。", question="请明确选择取消退款、退货退款、换货或维修。"),
+        ]
+    )
+    gateway = RecordingGateway(
+        {
+            "read_order": _observation(reference=order_reference),
+            "retrieve_policy": _observation(kind="policy_evidence", reference="policy-no-type-contract", status="blocked", factuality="unavailable", summary="政策证据不足。", failure_code="insufficient_evidence"),
+            "build_service_resolution": _observation(kind="resolution_candidate", reference="resolution-no-type-contract", factuality="proposal", summary="已形成候选方案。"),
+        }
+    )
+    runtime = _runtime(provider, gateway)
+    with patch.object(runtime, "_discover_for_turn", return_value=[get_skill("read_order"), get_skill("retrieve_policy"), get_skill("build_service_resolution"), get_skill("create_after_sales_draft")]):
+        result = runtime.create_task(
+            session_id=SESSION_ID,
+            goal="帮我处理售后，商品描述里出现取消退款，但我还没有选择申请类型。",
+            member_id=MEMBER_ID,
+            authorization=AUTHORIZATION,
+        )
+
+    assert result.view.status == "waiting_for_user"
+    assert result.view.action is None
+    assert "insufficient_evidence" in result.view.limitation_codes
+    assert gateway.commits == []
 
 
 def test_legacy_proposal_without_executor_mapping_is_safe_block() -> None:

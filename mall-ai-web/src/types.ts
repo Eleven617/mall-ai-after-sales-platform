@@ -72,6 +72,14 @@ export interface AgentTaskContextView {
   fact_reference_retention: number;
 }
 
+/** Aggregate-only persisted task counters; no prompt, raw tool data or identifiers. */
+export interface AgentTaskExecutionMetricsView {
+  model_calls: number;
+  context_model_calls: number;
+  critic_calls: number;
+  tool_calls: number;
+}
+
 export interface AgentTaskPublicView {
   /** Opaque public reference; internal task IDs and action arguments stay server-side. */
   task_ref: string;
@@ -85,6 +93,7 @@ export interface AgentTaskPublicView {
   outcome?: string | null;
   limitation_codes: string[];
   execution_summary?: string | null;
+  execution_metrics?: AgentTaskExecutionMetricsView | null;
   context_summary?: AgentTaskContextView | null;
 }
 

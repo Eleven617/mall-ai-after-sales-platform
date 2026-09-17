@@ -485,6 +485,17 @@ class AgentTaskContextView(BaseModel):
     fact_reference_retention: float = Field(ge=0.0, le=1.0)
 
 
+class AgentTaskExecutionMetricsView(BaseModel):
+    """Safe persisted counters for an auditable public task projection."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    model_calls: int = Field(ge=0)
+    context_model_calls: int = Field(ge=0)
+    critic_calls: int = Field(ge=0)
+    tool_calls: int = Field(ge=0)
+
+
 class AgentTaskPublicView(BaseModel):
     """Customer DTO: no internal IDs, raw facts, messages, prompts or traces."""
 
@@ -499,6 +510,7 @@ class AgentTaskPublicView(BaseModel):
     outcome: str | None = None
     limitation_codes: list[str] = Field(default_factory=list)
     execution_summary: str | None = None
+    execution_metrics: AgentTaskExecutionMetricsView | None = None
     context_summary: AgentTaskContextView | None = None
 
 

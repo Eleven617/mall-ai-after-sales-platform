@@ -27,6 +27,7 @@ from app.schemas.agent_task import (
     AgentTaskContextView,
     AgentTaskContinueRequest,
     AgentTaskEvent,
+    AgentTaskExecutionMetricsView,
     AgentTaskPlanNodeView,
     AgentTaskPublicView,
     AgentTaskStatus,
@@ -798,6 +799,15 @@ class TaskRuntime:
                     )
                     break
                 self._save(bundle)
+                conditional_draft = self._conditional_draft_for_insufficient_policy_evidence(
+                    bundle,
+                    discovered,
+                    transient_input,
+                )
+                if conditional_draft is not None:
+                    self._propose_action(bundle, conditional_draft)
+                    self._save(bundle)
+                    break
                 transient_input = "观察刚刚获得的事实并决定是否需要继续、重规划或结束"
                 continue
             if decision.decision == "spawn_subtask":
@@ -1412,6 +1422,81 @@ class TaskRuntime:
                 bundle.task.limitation_codes.append(code)
         return artifact
 
+    @staticmethod
+    def _explicit_after_sales_type(customer_text: str) -> str | None:
+        """Accept an explicit customer declaration, never a bare keyword.
+
+        This parser is deliberately limited to an action/type declaration in
+        the customer task or continuation. It never reads artifacts, product
+        descriptions or policy summaries, so those sources cannot choose an
+        application type on the customer's behalf.
+        """
+
+        if not isinstance(customer_text, str):
+            return None
+        declarations = (
+            (r"(?:申请|我要|我想|需要|选择|售后类型(?:是|为)?|继续形成)(?:取消退款)", "cancel_refund"),
+            (r"(?:申请|我要|我想|需要|选择|售后类型(?:是|为)?|继续形成)(?:退货退款)", "return_refund"),
+            (r"(?:申请|我要|我想|需要|选择|售后类型(?:是|为)?|继续形成)(?:换货)", "exchange"),
+            (r"(?:申请|我要|我想|需要|选择|售后类型(?:是|为)?|继续形成)(?:维修)", "repair"),
+        )
+        for pattern, application_type in declarations:
+            if re.search(pattern, customer_text):
+                return application_type
+        return None
+
+    def _conditional_draft_for_insufficient_policy_evidence(
+        self,
+        bundle: TaskRecordBundle,
+        discovered: list[SkillDefinition],
+        transient_input: str,
+    ) -> ExecutorDecision | None:
+        """Create only a conditional draft after the declared safe boundary.
+
+        Insufficient policy evidence remains visible and never becomes policy
+        support. A draft is allowed solely when Java has verified the order,
+        the customer explicitly named an application type, and a read-only
+        candidate already exists. Confirmation still routes through the
+        server-selected Java executor and its fresh eligibility check.
+        """
+
+        task = bundle.task
+        if "insufficient_evidence" not in task.limitation_codes:
+            return None
+        if "create_after_sales_draft" not in {skill.skill_id for skill in discovered}:
+            return None
+        application_type = self._explicit_after_sales_type(f"{task.normalized_goal} {transient_input}")
+        if application_type is None:
+            return None
+        order_fact = next(
+            (
+                artifact
+                for artifact in reversed(bundle.artifacts)
+                if artifact.kind == "order_fact"
+                and artifact.factuality == "verified"
+                and artifact.expires_at > self._now()
+            ),
+            None,
+        )
+        has_candidate = any(
+            artifact.kind == "resolution_candidate" and artifact.expires_at > self._now()
+            for artifact in bundle.artifacts
+        )
+        if order_fact is None or not has_candidate:
+            return None
+        return ExecutorDecision(
+            decision="propose_action",
+            reason_summary=(
+                "政策证据不足；已按您明确的售后类型生成有条件待确认草案。"
+                "确认后仍由 Java 重新核验身份、订单状态和售后资格，不保证处理成功。"
+            ),
+            action_skill="create_after_sales_draft",
+            action_arguments={
+                "orderFactRef": order_fact.reference,
+                "applicationType": application_type,
+            },
+        )
+
     def _refresh_context(
         self,
         bundle: TaskRecordBundle,
@@ -1713,6 +1798,12 @@ class TaskRuntime:
             execution_summary=(
                 f"模型调用 {task.model_calls} 次；Skill 调用 {task.tool_calls} 次；"
                 f"上下文整理 {task.context_model_calls} 次；计划版本 {task.plan_version}。"
+            ),
+            execution_metrics=AgentTaskExecutionMetricsView(
+                model_calls=task.model_calls,
+                context_model_calls=task.context_model_calls,
+                critic_calls=task.critic_calls,
+                tool_calls=task.tool_calls,
             ),
             context_summary=context_view,
         )

@@ -79,6 +79,11 @@ SAFE_FAILURE_CODES = {
     "agent_task_create_failed",
     "agent_task_waiting_missing",
     "agent_task_resume_failed",
+    "clarification_not_resumed",
+    "proposal_not_formed_after_clarification",
+    "policy_evidence_insufficient",
+    "task_terminal_state_unexpected",
+    "task_metrics_mismatch",
     "java_fact_transition_failed",
     "duplicate_confirmation_not_idempotent",
     "cross_account_scope_failed",
@@ -105,6 +110,7 @@ class ShowcaseError(RuntimeError):
         java_commit: bool = False,
         status_readback: bool = False,
         http_status_class: str = "none",
+        task_metrics: dict[str, Any] | None = None,
     ) -> None:
         self.failure_code = code if code in SAFE_FAILURE_CODES else "unknown_failure"
         self.scenario = scenario
@@ -116,6 +122,7 @@ class ShowcaseError(RuntimeError):
         self.java_commit = bool(java_commit)
         self.status_readback = bool(status_readback)
         self.http_status_class = http_status_class if http_status_class in {"2xx", "4xx", "5xx", "none"} else "none"
+        self.task_metrics = dict(task_metrics or {})
         super().__init__(self.failure_code)
 
     def for_scenario(self, scenario: str) -> "ShowcaseError":
@@ -136,6 +143,7 @@ class ShowcaseError(RuntimeError):
             "javaEligibility": self.java_eligibility,
             "javaCommit": self.java_commit,
             "statusReadback": self.status_readback,
+            "taskMetrics": self.task_metrics,
         }
 
 
@@ -262,7 +270,7 @@ def run_real_local_showcase(
         and len(frame_groups) == 3
     ) else "failed"
     gif_paths = _build_offline_gifs(frame_groups, report_dir / "gifs") if status == "passed" else []
-    return {
+    report = {
         "status": status,
         "batchId": batch_id,
         "providerMode": provider_mode,
@@ -274,6 +282,8 @@ def run_real_local_showcase(
         "gifPaths": gif_paths,
         "fixture": {"kind": "local_demo_synthetic", "containsRawValuesInReport": False},
     }
+    report.update(_aggregate_showcase_metrics(chain_results))
+    return report
 
 
 def _showcase_failure(
@@ -284,7 +294,7 @@ def _showcase_failure(
     failure: ShowcaseError,
     frame_groups: dict[str, dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
-    return {
+    report = {
         "status": "failed",
         "batchId": batch_id,
         "durationMs": round((time.monotonic() - started) * 1000),
@@ -294,6 +304,22 @@ def _showcase_failure(
         "frameGroups": frame_groups or {},
         "failure": failure.to_public(),
     }
+    report.update(_aggregate_showcase_metrics(chains))
+    return report
+
+
+def _aggregate_showcase_metrics(chains: list[dict[str, Any]]) -> dict[str, Any]:
+    """Keep task-level counters distinct from batch-level Provider ledger data."""
+
+    keys = ("modelCalls", "contextModelCalls", "criticCalls", "toolCalls", "clarificationCount")
+    totals = {key: 0 for key in keys}
+    for item in chains:
+        if not isinstance(item, dict):
+            continue
+        nested = item.get("taskMetrics") if isinstance(item.get("taskMetrics"), dict) else {}
+        for key in keys:
+            totals[key] += int(item.get(key, nested.get(key, 0)) or 0)
+    return totals
 
 
 def _provider_headers() -> dict[str, str]:
@@ -329,17 +355,40 @@ def _agent_closed_loop(
         session_id,
         f"订单号：{order_sn}，申请取消退款，完成售后闭环",
     )
-    if created.get("status") != "ready_to_commit" or not isinstance(created.get("action"), dict):
-        raise ShowcaseError(
-            _task_failure_code(created, fallback="scenario_assertion_failure"),
-            stage="agent_task_create",
-            completed_steps=1,
-            model_called=bool(created.get("limitation_codes")),
-        )
     task_ref = created.get("task_ref")
     if not isinstance(task_ref, str):
-        raise ShowcaseError("closed_loop_proposal_missing", stage="proposal", completed_steps=1)
-    committed = _confirm_agent_task(client, api_base, auth_a, task_ref, "confirm", created)
+        raise ShowcaseError("closed_loop_proposal_missing", stage="agent_task_create")
+    before_events = _list_agent_events(client, api_base, auth_a, task_ref)
+    if created.get("status") == "waiting_for_user":
+        if not created.get("open_question") or isinstance(created.get("action"), dict):
+            raise ShowcaseError("clarification_not_resumed", stage="agent_task_create", completed_steps=1)
+        created = _continue_agent_task(
+            client,
+            api_base,
+            auth_a,
+            task_ref,
+            "继续形成取消退款待确认草案；我理解最终资格仍需 Java 重校验。",
+        )
+        if created.get("task_ref") != task_ref:
+            raise ShowcaseError("clarification_not_resumed", stage="agent_task_continue", completed_steps=2)
+        if created.get("status") == "waiting_for_user":
+            raise ShowcaseError("proposal_not_formed_after_clarification", stage="agent_task_continue", completed_steps=2)
+    if created.get("status") != "ready_to_commit" or not isinstance(created.get("action"), dict):
+        raise ShowcaseError(
+            _task_failure_code(created, fallback="task_terminal_state_unexpected"),
+            stage="agent_task_create",
+            completed_steps=_completed_steps(created),
+            model_called=_model_called(created),
+            task_metrics=_safe_task_metrics(created, before_events),
+        )
+    current_action = created["action"]
+    amended = _amend_agent_task(client, api_base, auth_a, task_ref, current_action, "cancel_refund")
+    if amended.get("status") != "ready_to_commit" or not isinstance(amended.get("action"), dict):
+        raise ShowcaseError("closed_loop_proposal_missing", stage="draft_amendment", completed_steps=_completed_steps(created), proposal_formed=True)
+    stale = _confirm_agent_task_raw(client, api_base, auth_a, task_ref, "confirm", created)
+    if stale.status_code != 409:
+        raise ShowcaseError("stale_proposal_was_submitted", stage="stale_revision", completed_steps=_completed_steps(amended), proposal_formed=True)
+    committed = _confirm_agent_task(client, api_base, auth_a, task_ref, "confirm", amended)
     action = committed.get("action") or {}
     # A committed proposal is intentionally omitted from the public action
     # card.  The task status plus the Java-backed list read establish the
@@ -348,7 +397,7 @@ def _agent_closed_loop(
         raise ShowcaseError(
             "closed_loop_java_submission_missing",
             stage="java_commit",
-            completed_steps=3,
+            completed_steps=_completed_steps(amended) + 1,
             proposal_formed=True,
             java_eligibility=True,
         )
@@ -357,20 +406,20 @@ def _agent_closed_loop(
         raise ShowcaseError(
             "status_readback_missing",
             stage="status_readback",
-            completed_steps=4,
+            completed_steps=_completed_steps(amended) + 2,
             proposal_formed=True,
             java_eligibility=True,
             java_commit=True,
         )
     # A second confirmation must fail closed because the proposal was already
     # consumed; it must not create a second Java application.
-    duplicate = _confirm_agent_task_raw(client, api_base, auth_a, task_ref, "confirm", created)
+    duplicate = _confirm_agent_task_raw(client, api_base, auth_a, task_ref, "confirm", amended)
     duplicate_after = _list_applications(client, api_base, auth_a)
     if duplicate.status_code not in {404, 409} or len(duplicate_after) != len(after):
         raise ShowcaseError(
             "duplicate_confirmation_not_idempotent",
             stage="idempotency",
-            completed_steps=5,
+            completed_steps=_completed_steps(amended) + 3,
             proposal_formed=True,
             java_eligibility=True,
             java_commit=True,
@@ -381,7 +430,7 @@ def _agent_closed_loop(
         raise ShowcaseError(
             "cross_account_scope_failed",
             stage="scope_check",
-            completed_steps=6,
+            completed_steps=_completed_steps(amended) + 4,
             proposal_formed=True,
             java_eligibility=True,
             java_commit=True,
@@ -390,15 +439,17 @@ def _agent_closed_loop(
     return {
         "scenario": "main_open_task_closed_loop",
         "status": "passed",
-        "completedStepCount": 7,
+        "completedStepCount": _completed_steps(amended) + 5,
         "taskContinuity": True,
-        "skillSequence": ["read_order", "java_eligibility", "action_proposal", "java_commit", "status_read"],
+        "draftAmended": True,
+        "oldRevisionHttpStatus": 409,
         "javaRechecked": True,
         "confirmedWrite": True,
         "proposalFormed": True,
         "statusReadback": True,
         "duplicateConfirmationWrites": 0,
         "crossAccountLeakage": 0,
+        **_safe_task_metrics(amended, _list_agent_events(client, api_base, auth_a, task_ref)),
     }
 
 
@@ -553,6 +604,79 @@ def _continue_agent_task(client: httpx.Client, api_base: str, auth: str, task_re
     payload = _json_object(response)
     _assert_task_public(payload)
     return payload
+
+
+def _amend_agent_task(
+    client: httpx.Client,
+    api_base: str,
+    auth: str,
+    task_ref: str,
+    action: dict[str, Any],
+    application_type: str,
+) -> dict[str, Any]:
+    """Exercise the public versioned-draft API before final confirmation."""
+
+    try:
+        response = client.patch(
+            f"{api_base}/agent-tasks/{task_ref}/action",
+            headers={"Authorization": auth},
+            json={
+                "proposal_ref": action.get("proposal_ref"),
+                "revision": action.get("revision"),
+                "application_type": application_type,
+            },
+        )
+    except httpx.TimeoutException as exc:
+        raise ShowcaseError("client_read_timeout", stage="draft_amendment") from exc
+    except httpx.HTTPError as exc:
+        raise ShowcaseError("gateway_timeout", stage="draft_amendment") from exc
+    if response.status_code != 200:
+        raise ShowcaseError(_response_failure_code(response), stage="draft_amendment", http_status_class=_status_class(response.status_code))
+    payload = _json_object(response)
+    _assert_task_public(payload)
+    return payload
+
+
+def _safe_task_metrics(payload: dict[str, Any], events: list[dict[str, Any]]) -> dict[str, Any]:
+    """Project only persisted counters and public artifact/event metadata."""
+
+    metrics = payload.get("execution_metrics")
+    if not isinstance(metrics, dict):
+        raise ShowcaseError("task_metrics_mismatch", stage="task_metrics")
+    required = ("model_calls", "context_model_calls", "critic_calls", "tool_calls")
+    if any(not isinstance(metrics.get(key), int) or int(metrics[key]) < 0 for key in required):
+        raise ShowcaseError("task_metrics_mismatch", stage="task_metrics")
+    artifacts = payload.get("artifacts")
+    if not isinstance(artifacts, list):
+        raise ShowcaseError("task_metrics_mismatch", stage="task_metrics")
+    skill_sequence = [item.get("source_skill") for item in artifacts if isinstance(item, dict) and isinstance(item.get("source_skill"), str)]
+    artifact_kinds = [item.get("kind") for item in artifacts if isinstance(item, dict) and isinstance(item.get("kind"), str)]
+    observed = sum(item.get("event_type") == "skill_observed" for item in events)
+    if observed and metrics["tool_calls"] < observed:
+        raise ShowcaseError("task_metrics_mismatch", stage="task_metrics")
+    return {
+        "modelCalls": metrics["model_calls"],
+        "contextModelCalls": metrics["context_model_calls"],
+        "criticCalls": metrics["critic_calls"],
+        "toolCalls": metrics["tool_calls"],
+        "skillSequence": skill_sequence,
+        "artifactKinds": artifact_kinds,
+        "taskStatusTransitions": [item.get("event_type") for item in events if isinstance(item.get("event_type"), str)],
+        "clarificationCount": sum(item.get("event_type") == "waiting_for_user" for item in events),
+    }
+
+
+def _completed_steps(payload: dict[str, Any]) -> int:
+    """Count completed safe stages from persisted artifacts/proposal state."""
+
+    artifacts = payload.get("artifacts")
+    artifact_count = len(artifacts) if isinstance(artifacts, list) else 0
+    return artifact_count + (1 if isinstance(payload.get("action"), dict) else 0)
+
+
+def _model_called(payload: dict[str, Any]) -> bool:
+    metrics = payload.get("execution_metrics")
+    return isinstance(metrics, dict) and isinstance(metrics.get("model_calls"), int) and metrics["model_calls"] > 0
 
 
 def _confirm_agent_task(client: httpx.Client, api_base: str, auth: str, task_ref: str, confirmation: str, task: dict[str, Any]) -> dict[str, Any]:

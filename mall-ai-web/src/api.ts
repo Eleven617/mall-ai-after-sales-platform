@@ -1033,8 +1033,18 @@ function isAgentTaskPublicView(payload: unknown): payload is AgentTaskPublicView
     && Array.isArray(data.artifacts)
     && Array.isArray(data.limitation_codes)
     && (data.action === undefined || data.action === null || isAgentTaskActionView(data.action))
+    && (data.execution_metrics === undefined || data.execution_metrics === null || isAgentTaskExecutionMetricsView(data.execution_metrics))
     && (data.context_summary === undefined || data.context_summary === null || isAgentTaskContextView(data.context_summary))
   );
+}
+
+function isAgentTaskExecutionMetricsView(payload: unknown): boolean {
+  if (!payload || typeof payload !== "object") return false;
+  const data = payload as Record<string, unknown>;
+  return typeof data.model_calls === "number"
+    && typeof data.context_model_calls === "number"
+    && typeof data.critic_calls === "number"
+    && typeof data.tool_calls === "number";
 }
 
 function isAgentTaskActionView(payload: unknown): boolean {

@@ -170,6 +170,7 @@ function artifactFactualityLabel(value: AgentTaskPublicView["artifacts"][number]
 
 function limitationLabel(code: string): string {
   return {
+    insufficient_evidence: "政策证据不足；草案不代表资格或处理成功，确认时由 Java 重新核验",
     MODEL_UNAVAILABLE: "模型服务暂不可用",
     EVIDENCE_INSUFFICIENT: "当前证据不足，需要补充信息",
     TOOL_UNAVAILABLE: "必要的查询服务暂不可用",
@@ -257,6 +258,7 @@ function actionStatusLabel(status: NonNullable<AgentTaskPublicView["action"]>["c
           <strong>{{ task.action.expected_effect }}</strong>
           <p>{{ task.action.user_explanation }}</p>
           <p v-if="task.action.application_type_label" class="agent-action-detail">当前类型：{{ task.action.application_type_label }} · 版本 {{ task.action.revision }} · 确认前不会写入商城</p>
+          <p v-if="task.limitation_codes.includes('insufficient_evidence')" class="agent-policy-boundary">政策证据不足：此草案仅表达你的申请意向，不代表政策支持或资格通过；确认后仍由 Java 重新核验。</p>
           <ul v-if="task.action.evidence_summaries.length" class="agent-action-evidence"><li v-for="item in task.action.evidence_summaries" :key="item">{{ item }}</li></ul>
           <div v-if="task.action.confirmation_status === 'awaiting_confirmation'" class="agent-action-buttons">
             <select v-model="editTypeByTask[task.task_ref]" aria-label="修改售后类型">
@@ -298,7 +300,8 @@ function actionStatusLabel(status: NonNullable<AgentTaskPublicView["action"]>["c
 .agent-artifact-list li > div { display: grid; gap: 3px; min-width: 0; }
 .agent-artifact-list strong { color: #365a8e; font-size: 12px; }
 .agent-artifact-list span { color: var(--ink-600); line-height: 1.45; }
-.agent-open-question, .agent-outcome, .agent-limitation { margin: 0; padding: 10px 11px; border-radius: 8px; background: #f6f8fb; color: #384b61; line-height: 1.5; }
+.agent-open-question, .agent-outcome, .agent-limitation, .agent-policy-boundary { margin: 0; padding: 10px 11px; border-radius: 8px; background: #f6f8fb; color: #384b61; line-height: 1.5; }
+.agent-policy-boundary { border-left: 3px solid #f59e0b; background: #fffbeb; }
 .agent-open-question { border-left: 3px solid #f59e0b; background: #fffbeb; }
 .agent-outcome { border-left: 3px solid #34d399; background: #f0fdf4; }
 .agent-execution-summary, .agent-context-summary, .agent-task-note { color: var(--ink-600); font-size: .88rem; line-height: 1.55; }
