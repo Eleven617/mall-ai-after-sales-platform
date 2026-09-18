@@ -160,7 +160,7 @@
     }
   ],
   "tests": {
-    "fastapi": {"passed": 424, "failed": 0, "skipped": 0, "warnings": 1, "subtests": 12, "pytestTerminalPassed": 412, "exitCode": 0, "command": "mall-ai-service/.venv/Scripts/python.exe -m pytest -q", "mode": "local_full_regression"},
+    "fastapi": {"passed": 436, "failed": 0, "skipped": 0, "warnings": 1, "subtests": 12, "pytestTerminalPassed": 424, "exitCode": 0, "command": "mall-ai-service/.venv/Scripts/python.exe scripts/run_fastapi_ci_report.py --junitxml=ci-evidence/v3-fastapi-junit.xml --report=ci-evidence/v3-fastapi-report.json", "semanticReportSha256": "a3877fc10e93115ed3af6a502ed54b2338912b31dd3ab6200d32a59ccb017516", "junitSha256": "3e31d80ec54769ffdb208ff8a2fba6951429916300344af072902c0b5d360e1e"},
     "java": {"portalCore": "12/12", "portalCompatibility": "2/2", "portalFull": "14/14", "admin": "6/6", "springContext": "1/1", "exitCode": 0},
     "vue": {"command": "npm run build", "status": "passed", "exitCode": 0},
     "compose": {"configExitCode": 0, "servicesHealthy": "8/8"},
@@ -206,7 +206,7 @@
   "grounding": {"status": "not_executed_after_candidate_failure", "executed": 0, "passed": 0, "failed": 0, "environmentBlocked": 0},
   "currentVerification": {
     "commit": "155c40dec4f95f205972482d519d4807f85aef5d",
-    "fastapi": {"passed": 424, "failed": 0, "warnings": 1, "subtests": 12, "pytestTerminalPassed": 412, "exitCode": 0},
+    "fastapi": {"passed": 436, "failed": 0, "warnings": 1, "subtests": 12, "pytestTerminalPassed": 424, "exitCode": 0},
     "deterministic": {"manifest": "478/478", "representative": "8/8", "exitCode": 0},
     "fieldAcceptance": {"total": "54/122", "failed": 68, "environmentBlocked": 0, "reason": "Docker Desktop backend crashed on internal sailor-ingest.sock/dockerInference reparse points during the current field run; the report records Browser 24/24 and Java/MySQL 30/30 before the fault/recovery stages failed.", "report": "tmp/v304-field-acceptance-final3/field-20260918T055335Z-f86522dd/field-acceptance.json", "reportSha256": "4cec8110aba99fbd5834b4d959439c47310282b8e941d28e30f5d254a4243d", "fixtureSha256": "7573e19271528e904d2eb40cef2765f05d4e5f489f2b35cc1b1359bcd5128759"},
     "deepseek": {"status": "failed", "model": "deepseek-flash", "thinkingMode": "enabled", "reasoningEffort": "high", "batchStatus": "failed", "releaseId": "mall-v3.0.3-portfolio-final-db3860701086", "batchId": "portfolio_final-c9b46de42c2d", "calls": 8, "successfulCalls": 8, "failedCalls": 0, "tokens": 29542, "sideEffects": 0, "ledgerReconciled": true, "failureCode": "scenario_assertion_failure", "failureStage": "agent_task_create", "reason": "唯一授权批次在 main_open_task_closed_loop 未形成 Proposal 后停止；未发生 Java 资格核验、写入或状态回查，且不得重跑。"},
