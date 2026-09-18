@@ -610,6 +610,35 @@ def _run_live_fault_cases(
         "provider_timeout": "mall-ai-service",
         "rag_unavailable": "mall-ai-service",
     }
+    # The fault profile is intentionally isolated from the normal demo
+    # project.  Start it explicitly before stopping individual services;
+    # otherwise ``compose ps`` sees no containers and every fault case is
+    # misclassified as a recovery failure.
+    bootstrap = _run(compose + ["up", "-d"], timeout=600)
+    if bootstrap["code"] != 0 or not _wait_compose_health(compose, "mall-ai-service", timeout=180):
+        detail = _safe_output(bootstrap["stderr"] or bootstrap["stdout"])
+        return [
+            _result(
+                case,
+                runner_id,
+                "isolated-compose-fault.v1",
+                "isolated_compose_fault",
+                "failed",
+                "ENVIRONMENT_DEFECT",
+                commit,
+                manifest_hash,
+                fixture_hash,
+                _now(),
+                [],
+                ["isolated Compose project"],
+                ["tmp/field-acceptance/fault-compose-preflight.txt"],
+                error={"type": "fault_compose_bootstrap_failed", "detail": detail[-300:] or "health check failed"},
+            )
+            for case in cases
+        ]
+    (report_dir / "fault-compose-preflight.txt").write_text(
+        f"exit_code={bootstrap['code']}\nhealthy=true\n", encoding="utf-8"
+    )
     grouped: dict[str, list[dict[str, Any]]] = {}
     for case in cases:
         scenario = str(case.get("fixture", {}).get("scenario", ""))
