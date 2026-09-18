@@ -268,45 +268,48 @@ def _prepare_proposal_fixture(client: httpx.Client, base: str, password: str, in
 
     result_dir = ROOT / "tmp" / "durable-proposal-fixtures"
     result_dir.mkdir(parents=True, exist_ok=True)
-    result_file = result_dir / f"proposal-{index}-{uuid.uuid4().hex[:8]}.json"
-    nonce = uuid.uuid4().hex[:10]
-    env = os.environ.copy()
-    env.update(
-        {
-            "MALL_LIVE_DEMO_PASSWORD": password,
-            "MALL_LIVE_DEMO_RESULT_FILE": str(result_file),
-            "MALL_LIVE_DEMO_USER_A": f"durable_a_{index}_{nonce}",
-            "MALL_LIVE_DEMO_USER_B": f"durable_b_{index}_{nonce}",
-        }
-    )
-    try:
-        process = subprocess.run(
-            [sys.executable, str(SERVICE_ROOT / "scripts" / "bootstrap_live_demo.py")],
-            cwd=SERVICE_ROOT,
-            env=env,
-            text=True,
-            capture_output=True,
-            timeout=240,
-            check=False,
+    last_error: RecoveryCaseError | None = None
+    for _attempt in range(3):
+        result_file = result_dir / f"proposal-{index}-{uuid.uuid4().hex[:8]}.json"
+        nonce = uuid.uuid4().hex[:10]
+        env = os.environ.copy()
+        env.update(
+            {
+                "MALL_LIVE_DEMO_PASSWORD": password,
+                "MALL_LIVE_DEMO_RESULT_FILE": str(result_file),
+                "MALL_LIVE_DEMO_USER_A": f"durable_a_{index}_{nonce}",
+                "MALL_LIVE_DEMO_USER_B": f"durable_b_{index}_{nonce}",
+            }
         )
-        if process.returncode != 0 or not result_file.exists():
-            raise RecoveryCaseError("task_create_failed", "fixture_bootstrap")
-        payload = json.loads(result_file.read_text(encoding="utf-8"))
-        account = payload.get("account_a") if isinstance(payload, dict) else None
-        username = account.get("username") if isinstance(account, dict) else None
-        order = account.get("order_sn") if isinstance(account, dict) else None
-        if not isinstance(username, str) or not username or not isinstance(order, str) or not order:
-            raise RecoveryCaseError("task_create_failed", "fixture_bootstrap")
-        # Login through FastAPI so the remainder of the case uses the exact
-        # same authenticated public path as all other recovery assertions.
-        return _login(client, base, username, password), order
-    except (OSError, subprocess.SubprocessError, ValueError, TypeError) as exc:
-        raise RecoveryCaseError("task_create_failed", "fixture_bootstrap") from exc
-    finally:
         try:
-            result_file.unlink(missing_ok=True)
-        except OSError:
-            pass
+            process = subprocess.run(
+                [sys.executable, str(SERVICE_ROOT / "scripts" / "bootstrap_live_demo.py")],
+                cwd=SERVICE_ROOT,
+                env=env,
+                text=True,
+                capture_output=True,
+                timeout=240,
+                check=False,
+            )
+            if process.returncode != 0 or not result_file.exists():
+                raise RecoveryCaseError("task_create_failed", "fixture_bootstrap")
+            payload = json.loads(result_file.read_text(encoding="utf-8"))
+            account = payload.get("account_a") if isinstance(payload, dict) else None
+            username = account.get("username") if isinstance(account, dict) else None
+            order = account.get("order_sn") if isinstance(account, dict) else None
+            if not isinstance(username, str) or not username or not isinstance(order, str) or not order:
+                raise RecoveryCaseError("task_create_failed", "fixture_bootstrap")
+            # Login through FastAPI so the remainder of the case uses the exact
+            # same authenticated public path as all other recovery assertions.
+            return _login(client, base, username, password), order
+        except (OSError, subprocess.SubprocessError, ValueError, TypeError, RecoveryCaseError) as exc:
+            last_error = exc if isinstance(exc, RecoveryCaseError) else RecoveryCaseError("task_create_failed", "fixture_bootstrap")
+        finally:
+            try:
+                result_file.unlink(missing_ok=True)
+            except OSError:
+                pass
+    raise last_error or RecoveryCaseError("task_create_failed", "fixture_bootstrap")
 
 
 def _run_store_recovery_case(client: httpx.Client, base: str, authorization: str, order_sn: str) -> dict[str, Any]:
