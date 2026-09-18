@@ -1,5 +1,12 @@
 # 当前工作进度记录
 
+## 2026-09-18｜v3.0.4 离线候选证据对齐（当前）
+
+- 当前候选分支：`codex/v3.0.4-eval-contract-alignment`；Runtime Freeze：`267e3b70e73cedb4ff714857a2195d56d4799161`；本轮 Provider **0 calls / 0 tokens**，未创建在线 Release/Lock，README 未修改，`main` 未合并。
+- 离线与本机现场：FastAPI 终端 **432 passed + 12 subtests**（JUnit **444/444**）、manifest **478/478**、代表性 **8/8**、Contract Replay **36/36**、Docker 现场 **122/122**（24/30/36/32），0 failed、0 environmentBlocked。
+- 已定位上一轮当前 SHA 的 `mall-ci` 失败根因：Python 门禁生成机器报告 `444`，事实包仍写 `437`，因此 `public-release` 正确拒绝。已同步事实源、当前证据文档，并将 contract-replay evaluator 与其固定夹具明确列为冻结后的评测专用变更；未放宽业务 Runtime 保护。
+- 下一步：推送本轮证据修复，确认该新 SHA 的 `mall-ci` 与 `quality-evaluation` 双绿；在此之前不调用 DeepSeek。双绿后仍需用户单独授权唯一正式在线批次，成功后才更新 README、生成最终展示素材、合并 `main`。
+
 ## 2026-09-17｜v3.0.3 最终在线批次失败证据收口（当前）
 
 ### 已完成

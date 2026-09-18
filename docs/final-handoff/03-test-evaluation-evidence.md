@@ -2,9 +2,9 @@
 
 ## 当前权威快照｜v3.0.4 离线候选（2026-09-18）
 
-候选分支 `codex/v3.0.4-eval-contract-alignment`，Runtime Freeze `155c40dec4f95f205972482d519d4807f85aef5d`。FastAPI 终端为 **425 passed + 12 subtests**，JUnit **437/437**、0 failed、0 skipped；manifest **478/478**、代表性 **8/8**；Java 定向测试、Vue build 与 Compose config 均通过。
+候选分支 `codex/v3.0.4-eval-contract-alignment`，Runtime Freeze `267e3b70e73cedb4ff714857a2195d56d4799161`。FastAPI 终端为 **432 passed + 12 subtests**，JUnit **444/444**、0 failed、0 skipped；manifest **478/478**、代表性 **8/8**；Java 定向测试、Vue build 与 Compose config 均通过。
 
-当前现场 Runner 从零执行并通过 **122/122**：Browser **24/24**、Java/MySQL **30/30**、Fault Injection **36/36**、Durable Recovery **32/32**，failed=0、environmentBlocked=0。报告 `tmp/v304-field-acceptance-final4/field-20260918T094903Z-71c338a3/field-acceptance.json`，SHA-256 `f40ca9c6333a160ba4487e7019060d7daec8dd61bc540fffe8372aa9921829c4`；Fixture SHA-256 `7573e19271528e904d2eb40cef2765f05d4e5f489f2b35cc1b1359bcd5128759`。Docker 主栈 8/8 healthy，AI Runtime image revision 为该 Freeze。
+当前现场 Runner 从零执行并通过 **122/122**：Browser **24/24**、Java/MySQL **30/30**、Fault Injection **36/36**、Durable Recovery **32/32**，failed=0、environmentBlocked=0。报告 `tmp/v304-field-acceptance-v267-livefault/field-20260918T113619Z-83fcab68/field-acceptance.json`，SHA-256 `4db9cca31a2ab77af02f2ddf9892a933ab75821c431df268ae10e89ecad8b2a9`；Fixture SHA-256 `7573e19271528e904d2eb40cef2765f05d4e5f489f2b35cc1b1359bcd5128759`。Docker 主栈 8/8 healthy，AI Runtime image revision 为该 Freeze。
 
 本候选 **NOT_COMPLETE**：DeepSeek `not_run_by_design`，calls=0、Token=0，未创建在线 Release/Lock。当前 SHA 的 CI 为 `pending_remote_final_sha`；下一步只等待一次单独授权的正式在线批次。确定性与合成现场结果不能表述为 Grounding、真实模型准确率、生产 SLA 或真实用户泛化。
 

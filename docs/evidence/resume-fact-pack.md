@@ -2,9 +2,9 @@
 
 ## 当前事实快照｜v3.0.4 离线候选（2026-09-18）
 
-候选分支 `codex/v3.0.4-eval-contract-alignment`，Runtime Freeze `155c40dec4f95f205972482d519d4807f85aef5d`，发布状态 **NOT_COMPLETE**。FastAPI JUnit **437/437**（425 pytest cases + 12 subtests）；manifest 478/478、代表性 8/8、Java 定向测试、Vue build 与 Compose 配置通过。
+候选分支 `codex/v3.0.4-eval-contract-alignment`，Runtime Freeze `267e3b70e73cedb4ff714857a2195d56d4799161`，发布状态 **NOT_COMPLETE**。FastAPI JUnit **444/444**（432 pytest cases + 12 subtests）；manifest 478/478、代表性 8/8、Java 定向测试、Vue build 与 Compose 配置通过。
 
-当前合成本机现场从零执行 **122/122**：Browser 24/24、Java/MySQL 30/30、Fault 36/36、Durable 32/32，failed=0、environmentBlocked=0。报告 SHA-256 `f40ca9c6333a160ba4487e7019060d7daec8dd61bc540fffe8372aa9921829c4`，Fixture SHA-256 `7573e19271528e904d2eb40cef2765f05d4e5f489f2b35cc1b1359bcd5128759`；范围是 deterministic/offline Docker 现场，不是生产能力。
+当前合成本机现场从零执行 **122/122**：Browser 24/24、Java/MySQL 30/30、Fault 36/36、Durable 32/32，failed=0、environmentBlocked=0。报告 SHA-256 `4db9cca31a2ab77af02f2ddf9892a933ab75821c431df268ae10e89ecad8b2a9`，Fixture SHA-256 `7573e19271528e904d2eb40cef2765f05d4e5f489f2b35cc1b1359bcd5128759`；范围是 deterministic/offline Docker 现场，不是生产能力。
 
 本轮 DeepSeek 为 `not_run_by_design`，calls=0、Token=0。仍不能写成真实模型准确率、生产 SLA、真实外部履约或线上 Release；旧在线失败批次仅保留历史审计，不能与当前结果合并。当前远程 CI 为 `pending_remote_final_sha`。
 
