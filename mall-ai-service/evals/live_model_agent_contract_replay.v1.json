@@ -1,0 +1,21 @@
+{
+  "fixtureVersion": "live-model-agent-contract-replay.v1",
+  "executionKind": "contract_replay",
+  "decisionPolicy": "observations_then_contract_v1",
+  "runtimeCases": [
+    "agent-open-001", "agent-open-002", "agent-open-003", "agent-open-004", "agent-open-005", "agent-open-006",
+    "agent-open-007", "agent-open-008", "agent-open-009", "agent-open-010", "agent-open-011", "agent-open-012",
+    "agent-open-013", "agent-open-014", "agent-open-015", "agent-open-016", "agent-open-017", "agent-open-018",
+    "agent-open-019", "agent-open-020", "agent-open-021", "agent-open-022", "agent-open-023", "agent-open-024"
+  ],
+  "holdoutCases": [
+    "holdout-open-001", "holdout-open-002", "holdout-open-003", "holdout-open-004", "holdout-open-005", "holdout-open-006",
+    "holdout-open-007", "holdout-open-008", "holdout-open-009", "holdout-open-010", "holdout-open-011", "holdout-open-012"
+  ],
+  "safety": {
+    "providerCalls": 0,
+    "providerTokens": 0,
+    "gateway": "SyntheticReadOnlyGateway",
+    "businessWrites": 0
+  }
+}

@@ -25,6 +25,7 @@ from app.schemas.agent_task import ExecutorDecision, SkillCall
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 HOLDOUT_SUITE_PATH = PROJECT_ROOT / "evals" / "live_model_agent_holdout_cases.v2.json"
+REPLAY_FIXTURE_PATH = PROJECT_ROOT / "evals" / "live_model_agent_contract_replay.v1.json"
 REPLAY_VERSION = "v3.0.4-contract-replay.v1"
 
 
@@ -135,6 +136,10 @@ def _provider_factory(case: Mapping[str, Any]):
 
 
 def run_contract_replay(*, report_path: Path | None = None) -> dict[str, Any]:
+    replay_fixture = json.loads(REPLAY_FIXTURE_PATH.read_text(encoding="utf-8"))
+    if replay_fixture.get("executionKind") != "contract_replay":
+        raise ValueError("contract replay fixture execution kind mismatch")
+    expected_ids = set(replay_fixture.get("runtimeCases", [])) | set(replay_fixture.get("holdoutCases", []))
     runtime = run_live_model_agent_evaluation(
         suite_path=DEFAULT_SUITE_PATH,
         required_runs=1,
@@ -152,6 +157,8 @@ def run_contract_replay(*, report_path: Path | None = None) -> dict[str, Any]:
         max_attempts=1,
     )
     cases = [*runtime["cases"], *holdout["cases"]]
+    if {str(item.get("caseId")) for item in cases} != expected_ids:
+        raise ValueError("contract replay fixture case set mismatch")
     payload: dict[str, Any] = {
         "replayVersion": REPLAY_VERSION,
         "executionKind": "contract_replay",
@@ -163,7 +170,7 @@ def run_contract_replay(*, report_path: Path | None = None) -> dict[str, Any]:
         "environmentBlocked": sum(item["status"] == "environment_blocked" for item in cases),
         "providerCalls": 0,
         "providerTokens": 0,
-        "fixtureSha256": hashlib.sha256(json.dumps(cases, ensure_ascii=False, sort_keys=True).encode()).hexdigest(),
+        "fixtureSha256": hashlib.sha256(REPLAY_FIXTURE_PATH.read_bytes()).hexdigest(),
         "cases": cases,
     }
     payload["status"] = "passed" if payload["passed"] == 36 and payload["failed"] == 0 and payload["environmentBlocked"] == 0 else "failed"
