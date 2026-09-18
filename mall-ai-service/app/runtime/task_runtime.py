@@ -1097,11 +1097,25 @@ class TaskRuntime:
                         raise TaskRuntimeError("重规划引用了未知 Skill。", code="unknown_skill")
         if decision.decision == "finish" and not decision.reason_summary:
             raise TaskRuntimeError("完成决策缺少用户可见摘要。", code="finish_summary_missing")
+        if decision.decision == "finish" and self._requires_catalog_comparison(task.normalized_goal):
+            artifact_kinds = {artifact.kind for artifact in bundle.artifacts if artifact.factuality in {"verified", "derived"}}
+            if not {"catalog_fact", "sku_comparison"}.issubset(artifact_kinds):
+                raise TaskRuntimeError(
+                    "商品比较尚未完成候选搜索和规格对比。",
+                    code="catalog_comparison_incomplete",
+                )
         if decision.decision == "finish" and task.limitation_codes:
             raise TaskRuntimeError(
                 "当前任务存在未解决的 Skill 或事实失败，不能宣称完成。",
                 code="finish_after_dependency_failure",
             )
+
+    @staticmethod
+    def _requires_catalog_comparison(goal: str) -> bool:
+        normalized = str(goal or "").lower()
+        return any(token in normalized for token in ("比较商品", "比较两个", "商品候选", "sku", "规格对比")) and any(
+            token in normalized for token in ("比较", "对比", "compare")
+        )
 
     def _validate_skill_arguments(self, skill_id: str, arguments: Mapping[str, Any]) -> None:
         if not isinstance(arguments, Mapping) or len(arguments) > 8:

@@ -23,7 +23,7 @@ from app.services.release_ledger import (
 )
 from scripts import run_deepseek_release_batch as batch_runner
 from scripts.run_deepseek_release_batch import _atomic_create_json, _atomic_replace_json
-from scripts.run_deepseek_release_batch import _sync_process_ledger
+from scripts.run_deepseek_release_batch import _budget_exceeded, _budget_failure_category, _merge_ledger_metrics, _sync_process_ledger
 
 
 class _FakeProviderHandler(BaseHTTPRequestHandler):
@@ -191,6 +191,22 @@ class ReleaseLedgerTests(unittest.TestCase):
             self.assertEqual("PASSED", result_lock["status"])
             self.assertEqual(1, len(result_lock["batchIds"]))
             self.assertEqual("portfolio_final", result_lock["phase"])
+
+    def test_report_zero_metrics_never_overwrite_shared_provider_ledger(self) -> None:
+        ledger = {"requests": 12, "providerRequests": 12, "totalTokens": 80, "environmentBlocked": 0}
+        _merge_ledger_metrics(ledger, [{"llm": {"total_calls": 0, "total_tokens": 0}, "toolCalls": 3}])
+        self.assertEqual(12, ledger["requests"])
+        self.assertEqual(12, ledger["providerRequests"])
+        self.assertEqual(80, ledger["totalTokens"])
+        self.assertEqual(3, ledger["toolCalls"])
+
+    def test_budget_is_classified_before_next_phase_as_budget_exhausted(self) -> None:
+        request_limited = {"requests": 451, "totalTokens": 10}
+        token_limited = {"requests": 10, "totalTokens": 1_100_001}
+        self.assertTrue(_budget_exceeded(request_limited))
+        self.assertTrue(_budget_exceeded(token_limited))
+        self.assertEqual("budget_exhausted", _budget_failure_category(request_limited))
+        self.assertEqual("budget_exhausted", _budget_failure_category(token_limited))
 
 
 if __name__ == "__main__":

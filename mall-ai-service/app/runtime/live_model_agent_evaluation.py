@@ -33,10 +33,15 @@ from app.skills.commerce_gateway import SkillObservation
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
-DEFAULT_SUITE_PATH = PROJECT_ROOT / "evals" / "live_model_agent_runtime_cases.v1.json"
-SUITE_VERSION = "live-model-agent-runtime.v1"
-HOLDOUT_SUITE_VERSION = "live-model-agent-runtime-holdout.v1"
-_MIN_CASES_BY_SUITE_VERSION = {SUITE_VERSION: 24, HOLDOUT_SUITE_VERSION: 12}
+DEFAULT_SUITE_PATH = PROJECT_ROOT / "evals" / "live_model_agent_runtime_cases.v2.json"
+SUITE_VERSION = "live-model-agent-runtime.v2"
+HOLDOUT_SUITE_VERSION = "live-model-agent-runtime-holdout.v2"
+_MIN_CASES_BY_SUITE_VERSION = {
+    "live-model-agent-runtime.v1": 24,
+    SUITE_VERSION: 24,
+    "live-model-agent-runtime-holdout.v1": 12,
+    HOLDOUT_SUITE_VERSION: 12,
+}
 SYNTHETIC_AUTHORIZATION = "Bearer synthetic-agent-evaluation"
 SYNTHETIC_MEMBER_ID = 7001
 _CASE_ID = re.compile(r"^[a-z][a-z0-9_.:-]{2,79}$")
@@ -81,6 +86,10 @@ class CaseRunResult:
     forbidden_side_effects: int
     elapsed_ms: int
     post_checks: dict[str, bool]
+    proposal_skill: str | None = None
+    confirmation_executor_skill: str | None = None
+    proposal_kind: str | None = None
+    business_write_count: int = 0
 
 
 class SyntheticReadOnlyGateway:
@@ -329,6 +338,9 @@ def _run_case(
     )
     terminal_status: str | None = None
     proposal_present = False
+    proposal_skill = None
+    confirmation_executor_skill = None
+    proposal_kind = None
     task_success = False
     clarification_correct = False
     required_coverage = False
@@ -372,6 +384,10 @@ def _run_case(
             code for code in outcome.view.limitation_codes if code in _MODEL_FAILURE_CODES
         )
         proposal_present = outcome.view.action is not None and outcome.view.action.confirmation_status == "awaiting_confirmation"
+        if outcome.view.action is not None:
+            proposal_skill = outcome.view.action.action_skill
+            proposal_kind = "human_case" if proposal_skill == "open_human_case" else "after_sales" if proposal_skill == "create_after_sales_draft" else "other"
+            confirmation_executor_skill = "commit_after_sales_action" if proposal_skill == "create_after_sales_draft" else "open_human_case" if proposal_skill == "open_human_case" else None
         task_success = terminal_status in set(case["expect"].get("terminal_statuses", []))
         clarification_correct = _check_clarification(case, outcome.view)
         required_coverage = _check_required_coverage(case, gateway, observed_skills, successful_observed_skills)
@@ -464,6 +480,10 @@ def _run_case(
         forbidden_side_effects=forbidden_side_effects,
         elapsed_ms=max(0, round((time.monotonic() - started) * 1000)),
         post_checks=post_checks,
+        proposal_skill=proposal_skill,
+        confirmation_executor_skill=confirmation_executor_skill,
+        proposal_kind=proposal_kind,
+        business_write_count=0,
     )
 
 
@@ -508,6 +528,8 @@ def _check_proposal_expectation(case: Mapping[str, Any], proposal_present: bool)
         return proposal_present
     if expected == "forbidden":
         return not proposal_present
+    if expected == "optional":
+        return True
     return True
 
 
@@ -531,8 +553,14 @@ def _contract_failures(
         safe_statuses = set(case["expect"].get("safe_stop_statuses", ["blocked", "waiting_for_user"]))
         if view.status not in safe_statuses:
             failures.append("unsafe_no_evidence_or_failure_continuation")
-        if proposal_present:
+        allowed_proposals = set(case["expect"].get("allowed_proposal_skills", []))
+        if proposal_present and not allowed_proposals:
             failures.append("proposal_after_safe_stop")
+        elif proposal_present and view.action is not None and view.action.action_skill not in allowed_proposals:
+            failures.append("proposal_skill_not_allowed")
+    expected_writes = case["expect"].get("business_write_count")
+    if expected_writes is not None and expected_writes != 0:
+        failures.append("unsupported_nonzero_business_write_contract")
     return failures
 
 
@@ -680,6 +708,10 @@ def _build_report(
             "contextModelCalls": item.context_model_calls,
             "criticCalls": item.critic_calls,
             "proposalPresent": item.proposal_present,
+            "proposalSkill": item.proposal_skill,
+            "confirmationExecutorSkill": item.confirmation_executor_skill,
+            "proposalKind": item.proposal_kind,
+            "businessWriteCount": item.business_write_count,
             "commitCalls": item.commit_calls,
             "taskSuccess": item.task_success,
             "clarificationCorrect": item.clarification_correct,

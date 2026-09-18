@@ -213,6 +213,29 @@ class StructuredOutputGatewayTests(unittest.TestCase):
         self.assertNotIn("untrusted candidate text", correction_message)
         self.assertIn("受限校正", calls[1]["system_prompt"])
 
+    def test_gateway_blocks_after_one_unsuccessful_protocol_correction(self) -> None:
+        calls: list[dict] = []
+
+        def always_invalid(**kwargs):
+            calls.append(kwargs)
+            return {
+                "intent": "query_logistics",
+                "need_tool": "still-invalid",
+                "tool": {"name": "logistics_service", "order_sn": "hidden"},
+            }
+
+        with self.assertRaises(StructuredOutputError) as raised:
+            generate_structured_output(
+                message="查物流",
+                system_prompt="识别意图",
+                response_model=_DecisionContract,
+                json_generator=always_invalid,
+                correction_context={"schema_version": "v1"},
+            )
+        self.assertEqual(2, len(calls))
+        self.assertTrue(raised.exception.correction_attempted)
+        self.assertIn(raised.exception.validation_codes[0], {"correction_schema_invalid", "schema_invalid"})
+
     def test_gateway_does_not_resend_raw_input_when_no_safe_correction_context_exists(self) -> None:
         calls: list[dict] = []
 

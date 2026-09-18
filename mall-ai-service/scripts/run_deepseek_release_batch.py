@@ -51,7 +51,7 @@ from app.services.release_ledger import read_release_events, summarize_release_e
 REPOSITORY_ROOT = SERVICE_ROOT.parent
 RELEASE_LOCK_PATH = REPOSITORY_ROOT / "docs" / "evidence" / "deepseek-release-lock.json"
 DEFAULT_CANDIDATE_LOCK_PATH = REPOSITORY_ROOT / "docs" / "evidence" / "deepseek-release-lock-v3.0.1.json"
-HOLDOUT_SUITE_PATH = SERVICE_ROOT / "evals" / "live_model_agent_holdout_cases.v1.json"
+HOLDOUT_SUITE_PATH = SERVICE_ROOT / "evals" / "live_model_agent_holdout_cases.v2.json"
 GROUNDING_SUITE_PATH = SERVICE_ROOT / "evals" / "rag2_golden_cases.v1.json"
 SHOWCASE_CASES = {
     "main_open_task_closed_loop": "agent-open-020",
@@ -175,34 +175,21 @@ def _finish_ledger(ledger: dict[str, object], report: dict[str, object]) -> None
 
 
 def _merge_ledger_metrics(ledger: dict[str, object], reports: list[dict[str, object]]) -> None:
-    """Aggregate only numeric provider metadata from one unified batch."""
+    """Merge non-provider report counters without overriding the event ledger.
 
-    totals = {
-        "requests": 0,
-        "successfulRequests": 0,
-        "failedRequests": 0,
-        "environmentBlocked": 0,
-        "promptTokens": 0,
-        "completionTokens": 0,
-        "totalTokens": 0,
-        "toolCalls": 0,
-        "networkRetries": 0,
-    }
+    Provider requests and token usage are authoritative only in the shared
+    JSONL event ledger.  A suite report may legitimately contain zero model
+    calls (for example an offline replay) and must never erase live events.
+    """
+    tool_calls = 0
+    environment_blocked = 0
     for report in reports:
-        metric = report.get("llm") or report.get("provider_metrics")
-        if isinstance(metric, dict):
-            totals["requests"] += int(metric.get("total_calls", 0) or 0)
-            totals["successfulRequests"] += int(metric.get("succeeded_calls", 0) or 0)
-            totals["failedRequests"] += int(metric.get("failed_calls", 0) or 0)
-            totals["promptTokens"] += int(metric.get("prompt_tokens", 0) or 0)
-            totals["completionTokens"] += int(metric.get("completion_tokens", 0) or 0)
-            totals["totalTokens"] += int(metric.get("total_tokens", 0) or 0)
-            totals["networkRetries"] += int(metric.get("network_retries", 0) or 0)
-        totals["toolCalls"] += int(report.get("toolCalls", 0) or 0)
-        totals["environmentBlocked"] += int(
+        tool_calls += int(report.get("toolCalls", 0) or 0)
+        environment_blocked += int(
             report.get("environmentBlocked", report.get("environment_blocked_cases", 0)) or 0
         )
-    ledger.update(totals)
+    ledger["toolCalls"] = tool_calls
+    ledger["environmentBlocked"] = environment_blocked
     ledger["endedAt"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
 
 
@@ -343,6 +330,14 @@ def _budget_exceeded(ledger: dict[str, object]) -> bool:
     return int(ledger.get("requests", 0) or 0) > 450 or int(ledger.get("totalTokens", 0) or 0) > 1_100_000
 
 
+def _budget_failure_category(ledger: dict[str, object]) -> str | None:
+    if int(ledger.get("requests", 0) or 0) > 450:
+        return "budget_exhausted"
+    if int(ledger.get("totalTokens", 0) or 0) > 1_100_000:
+        return "budget_exhausted"
+    return None
+
+
 def _run_candidate(ledger: dict[str, object], report_dir: Path) -> dict[str, object]:
     """Run the v3.0.1 batch in one process and one ordered ledger."""
 
@@ -393,10 +388,14 @@ def _run_candidate(ledger: dict[str, object], report_dir: Path) -> dict[str, obj
     )
     reports["main"] = main
     _merge_ledger_metrics(ledger, [main])
-    if main.get("environmentBlocked") or _budget_exceeded(ledger):
+    if main.get("environmentBlocked"):
         ledger["status"] = "environment_blocked"
         ledger["environmentBlocked"] = max(1, int(ledger.get("environmentBlocked", 0) or 0))
         return {"status": "environment_blocked", **reports}
+    if _budget_exceeded(ledger):
+        ledger["status"] = "budget_exhausted"
+        ledger["failureCategory"] = _budget_failure_category(ledger)
+        return {"status": "budget_exhausted", **reports}
 
     supplemental = run_live_model_agent_evaluation(
         suite_path=HOLDOUT_SUITE_PATH,
@@ -408,10 +407,14 @@ def _run_candidate(ledger: dict[str, object], report_dir: Path) -> dict[str, obj
     )
     reports["supplemental"] = supplemental
     _merge_ledger_metrics(ledger, [main, supplemental])
-    if supplemental.get("environmentBlocked") or _budget_exceeded(ledger):
+    if supplemental.get("environmentBlocked"):
         ledger["status"] = "environment_blocked"
         ledger["environmentBlocked"] = max(1, int(ledger.get("environmentBlocked", 0) or 0))
         return {"status": "environment_blocked", **reports}
+    if _budget_exceeded(ledger):
+        ledger["status"] = "budget_exhausted"
+        ledger["failureCategory"] = _budget_failure_category(ledger)
+        return {"status": "budget_exhausted", **reports}
 
     grounding_suite = load_rag2_golden_suite(GROUNDING_SUITE_PATH)
     grounding = evaluate_grounded_answer_suite(
@@ -434,8 +437,11 @@ def _run_candidate(ledger: dict[str, object], report_dir: Path) -> dict[str, obj
     reports["grounding"] = grounding
     _merge_ledger_metrics(ledger, [main, supplemental, grounding])
     statuses = [str(main.get("status")), str(supplemental.get("status")), str(grounding.get("status"))]
-    if "environment_blocked" in statuses or _budget_exceeded(ledger):
+    if "environment_blocked" in statuses:
         overall = "environment_blocked"
+    elif _budget_exceeded(ledger):
+        overall = "budget_exhausted"
+        ledger["failureCategory"] = _budget_failure_category(ledger)
     elif any(status in {"failed", "quality_failed"} for status in statuses):
         overall = "failed"
     else:
@@ -497,10 +503,14 @@ def _run_portfolio_b(ledger: dict[str, object], report_dir: Path) -> dict[str, o
     )
     reports["main"] = main
     _merge_ledger_metrics(ledger, [main])
-    if main.get("environmentBlocked") or _budget_exceeded(ledger):
+    if main.get("environmentBlocked"):
         ledger["status"] = "environment_blocked"
         ledger["environmentBlocked"] = max(1, int(ledger.get("environmentBlocked", 0) or 0))
         return {"status": "environment_blocked", **reports}
+    if _budget_exceeded(ledger):
+        ledger["status"] = "budget_exhausted"
+        ledger["failureCategory"] = _budget_failure_category(ledger)
+        return {"status": "budget_exhausted", **reports}
 
     supplemental = run_live_model_agent_evaluation(
         suite_path=HOLDOUT_SUITE_PATH,
@@ -512,10 +522,14 @@ def _run_portfolio_b(ledger: dict[str, object], report_dir: Path) -> dict[str, o
     )
     reports["supplemental"] = supplemental
     _merge_ledger_metrics(ledger, [main, supplemental])
-    if supplemental.get("environmentBlocked") or _budget_exceeded(ledger):
+    if supplemental.get("environmentBlocked"):
         ledger["status"] = "environment_blocked"
         ledger["environmentBlocked"] = max(1, int(ledger.get("environmentBlocked", 0) or 0))
         return {"status": "environment_blocked", **reports}
+    if _budget_exceeded(ledger):
+        ledger["status"] = "budget_exhausted"
+        ledger["failureCategory"] = _budget_failure_category(ledger)
+        return {"status": "budget_exhausted", **reports}
 
     grounding = evaluate_grounded_answer_suite(
         load_rag2_golden_suite(GROUNDING_SUITE_PATH),
@@ -537,8 +551,11 @@ def _run_portfolio_b(ledger: dict[str, object], report_dir: Path) -> dict[str, o
     reports["grounding"] = grounding
     _merge_ledger_metrics(ledger, [main, supplemental, grounding])
     statuses = [str(main.get("status")), str(supplemental.get("status")), str(grounding.get("status"))]
-    if "environment_blocked" in statuses or _budget_exceeded(ledger):
+    if "environment_blocked" in statuses:
         overall = "environment_blocked"
+    elif _budget_exceeded(ledger):
+        overall = "budget_exhausted"
+        ledger["failureCategory"] = _budget_failure_category(ledger)
     elif any(status in {"failed", "quality_failed"} for status in statuses):
         overall = "failed"
     else:

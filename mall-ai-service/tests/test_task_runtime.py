@@ -595,6 +595,33 @@ def test_runtime_cannot_finish_after_a_failed_fact_skill() -> None:
     assert gateway.commits == []
 
 
+def test_catalog_comparison_cannot_finish_after_search_only() -> None:
+    provider = ScriptedRuntimeProvider(
+        decisions=[
+            _decision(
+                name="call_skill",
+                summary="先搜索合成商品候选。",
+                calls=[SkillCall(skill_id="search_catalog", arguments={"query": "合成耳机"})],
+            ),
+            _decision(name="finish", summary="已完成商品比较。"),
+        ]
+    )
+    gateway = RecordingGateway(
+        {
+            "search_catalog": _observation(kind="catalog_fact", reference="fact-catalog-search"),
+        }
+    )
+    result = _runtime(provider, gateway).create_task(
+        session_id=SESSION_ID,
+        goal="请搜索并比较两个商品候选的公开规格",
+        member_id=MEMBER_ID,
+        authorization=AUTHORIZATION,
+    )
+    assert result.view.status == "blocked"
+    assert "catalog_comparison_incomplete" in result.view.limitation_codes
+    assert [skill for skill, _ in gateway.invocations] == ["search_catalog"]
+
+
 def test_commit_requires_current_verified_order_fact_and_explicit_confirmation() -> None:
     order_reference = "fact-order-abcdefghijklmnopqrstuvwxyz"
     provider = ScriptedRuntimeProvider(
