@@ -35,6 +35,11 @@ from app.runtime.live_model_agent_evaluation import (  # noqa: E402
     run_live_model_agent_evaluation,
 )
 from app.runtime.providers import RUNTIME_PROMPT_VERSION  # noqa: E402
+from app.runtime.live_release_preflight import (  # noqa: E402
+    LiveReleasePreflightError,
+    require_demo_password,
+    verify_local_demo_accounts,
+)
 from run_real_local_showcase import run_real_local_showcase  # noqa: E402
 from app.services.rag2_evaluation import (  # noqa: E402
     evaluate_grounded_answer_suite,
@@ -662,6 +667,23 @@ def main() -> int:
     if portfolio_phase and not os.getenv("MALL_RELEASE_LEDGER_PATH"):
         print("deepseek release batch refused: shared ledger path is missing", file=sys.stderr)
         return 3
+
+    if portfolio_phase:
+        # This gate runs before a batch id, ledger report, or immutable release
+        # lock is created. It only exercises the local Java demo API; it never
+        # constructs a model client or makes a Provider request.
+        try:
+            require_demo_password()
+            verify_local_demo_accounts()
+        except LiveReleasePreflightError as exc:
+            print(
+                json.dumps(
+                    {"status": "preflight_blocked", "failureCode": exc.code},
+                    ensure_ascii=False,
+                ),
+                file=sys.stderr,
+            )
+            return 2
 
     batch_id = f"{args.phase}-{uuid.uuid4().hex[:12]}"
     # The formal entry point binds every required authorization dimension in

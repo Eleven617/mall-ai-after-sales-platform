@@ -189,6 +189,8 @@ class ReleaseLedgerTests(unittest.TestCase):
                 batch_runner, "_runtime_identity", return_value=(True, "ok")
             ), patch.object(batch_runner, "_run_portfolio_b", return_value=completed), patch.object(
                 batch_runner, "_sync_process_ledger", side_effect=sync
+            ), patch.object(batch_runner, "verify_local_demo_accounts", return_value=SimpleNamespace(status="passed", account_count=2)), patch.dict(
+                os.environ, {"MALL_LIVE_DEMO_PASSWORD": "only-for-offline-test-123"}, clear=False
             ), patch.object(
                 sys, "argv", ["runner", "--phase", "portfolio_final", "--release-id", "new-release", "--runtime-commit", "a" * 40, "--report", str(report), "--lock", str(lock)]
             ), patch.dict(os.environ, {"MALL_RELEASE_LEDGER_PATH": str(ledger_path)}, clear=False):

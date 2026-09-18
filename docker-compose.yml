@@ -216,6 +216,9 @@ services:
       MALL_RELEASE_MAX_PROVIDER_HTTP_ATTEMPTS: ${MALL_RELEASE_MAX_PROVIDER_HTTP_ATTEMPTS:-600}
       MALL_RELEASE_MAX_TOTAL_TOKENS: ${MALL_RELEASE_MAX_TOTAL_TOKENS:-1600000}
       MALL_RELEASE_RESERVE_TOKENS: ${MALL_RELEASE_RESERVE_TOKENS:-12000}
+      # The paid-runner preflight and host-side fixture creator use the same
+      # process-only secret name. Runtime code never returns or logs it.
+      MALL_LIVE_DEMO_PASSWORD: ${MALL_LIVE_DEMO_PASSWORD:-}
       MALL_RUNTIME_COMMIT: ${MALL_RUNTIME_COMMIT:-unknown}
       MALL_IMAGE_REVISION: ${MALL_IMAGE_REVISION:-unknown}
       MALL_PROMPT_VERSION: ${MALL_PROMPT_VERSION:-agent_runtime_v3_3}

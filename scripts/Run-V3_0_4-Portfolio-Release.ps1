@@ -45,5 +45,15 @@ if ($Phase -eq 'Preflight') {
     exit 0
 }
 
-# Final is intentionally guarded until a separately authorized online batch.
-throw 'FINAL_ONLINE_BATCH_NOT_AUTHORIZED_IN_OFFLINE_ENTRY'
+# The paid runner has its own fail-closed Python preflight before it creates a
+# batch id, report, ledger entry, or lock.  Keep this PowerShell entry aligned
+# with the same process-only secret name and validate the local Java fixture
+# path here as well.  Neither command constructs a Provider client.
+$password = [Environment]::GetEnvironmentVariable('MALL_LIVE_DEMO_PASSWORD', 'Process')
+if ([string]::IsNullOrWhiteSpace($password) -or $password.Trim().Length -lt 12) {
+    throw 'live_release_preflight_blocked:missing_or_invalid_live_demo_password'
+}
+& .\mall-ai-service\.venv\Scripts\python.exe .\mall-ai-service\scripts\run_live_release_preflight.py
+if ($LASTEXITCODE -ne 0) { throw 'live_release_preflight_blocked:demo_account_preflight_failed' }
+
+throw 'FINAL_ONLINE_BATCH_REQUIRES_EXPLICIT_AUTHORIZATION'
