@@ -1,14 +1,14 @@
 {
   "schemaVersion": "mall-public-release-facts.v4",
-  "generatedAt": "2026-09-17T14:00:00Z",
+  "generatedAt": "2026-09-18T14:25:00Z",
   "releaseStatus": "NOT_COMPLETE",
-  "runtimeCommit": "7159e1c57df5f3dc73ef3ab36f0999bb28e4967b",
-  "evidenceCommit": "7159e1c57df5f3dc73ef3ab36f0999bb28e4967b",
-  "statusReason": "当前 Runtime 已修复政策证据不足时明确售后类型的有条件草案，以及展示 Runner 的合法 waiting_for_user 同任务恢复；全量 FastAPI 与零模型合同均已重跑。Docker Desktop Secrets Engine 的内部 socket 残留导致引擎启动失败，当前 Commit 的 Docker 现场 122 条与新的正式在线批次均未执行。旧正式批次保持 FAILED，未重跑。",
+  "runtimeCommit": "155c40dec4f95f205972482d519d4807f85aef5d",
+  "evidenceCommit": "155c40dec4f95f205972482d519d4807f85aef5d",
+  "statusReason": "v3.0.4 修复了 Durable Recovery proposal fixture 隔离与 fault Compose 预启动；FastAPI、Java、Vue、确定性合同均通过。Docker Desktop 在当前机器因内部 socket 残留崩溃，最新现场报告绑定当前 Commit 但未通过（Browser 24/24、Java/MySQL 30/30、Fault 0/36、Durable 0/32）；未调用 DeepSeek。旧正式批次保持 FAILED，未重跑。",
   "project": {
     "name": "Mall AI After-sales Platform",
     "repository": "https://github.com/Eleven617/mall-ai-after-sales-platform",
-    "branch": "codex/v3.0.3-confirmation-contract",
+    "branch": "codex/v3.0.4-eval-contract-alignment",
     "problem": "可信电商订单、物流、政策与售后协同",
     "roles": ["customer", "operations", "quality_developer", "after_sales_processor"]
   },
@@ -160,7 +160,7 @@
     }
   ],
   "tests": {
-    "fastapi": {"passed": 429, "failed": 0, "skipped": 0, "warnings": 1, "subtests": 12, "pytestTerminalPassed": 417, "exitCode": 0, "command": "mall-ai-service/.venv/Scripts/python.exe scripts/run_fastapi_ci_report.py --junitxml=ci-evidence/v3-fastapi-junit.xml --report=ci-evidence/v3-fastapi-report.json", "semanticReportSha256": "6c3fced39b8cf667f6f7880e42b8f79ac70b9ed2cf396109fc2334e72f9025b7", "junitSha256": "ddd89f18e08a5859810e9e9e71a447f41bf0264138c791ef28893e081a103eb4"},
+    "fastapi": {"passed": 424, "failed": 0, "skipped": 0, "warnings": 1, "subtests": 12, "pytestTerminalPassed": 412, "exitCode": 0, "command": "mall-ai-service/.venv/Scripts/python.exe -m pytest -q", "mode": "local_full_regression"},
     "java": {"portalCore": "12/12", "portalCompatibility": "2/2", "portalFull": "14/14", "admin": "6/6", "springContext": "1/1", "exitCode": 0},
     "vue": {"command": "npm run build", "status": "passed", "exitCode": 0},
     "compose": {"configExitCode": 0, "servicesHealthy": "8/8"},
@@ -205,10 +205,10 @@
   "supplementalEvaluation": {"status": "not_executed_after_candidate_failure", "independentBlindSet": false, "executed": 0, "passed": 0, "failed": 0, "environmentBlocked": 0},
   "grounding": {"status": "not_executed_after_candidate_failure", "executed": 0, "passed": 0, "failed": 0, "environmentBlocked": 0},
   "currentVerification": {
-    "commit": "7159e1c57df5f3dc73ef3ab36f0999bb28e4967b",
-    "fastapi": {"passed": 429, "failed": 0, "warnings": 1, "subtests": 12, "pytestTerminalPassed": 417, "exitCode": 0},
+    "commit": "155c40dec4f95f205972482d519d4807f85aef5d",
+    "fastapi": {"passed": 424, "failed": 0, "warnings": 1, "subtests": 12, "pytestTerminalPassed": 412, "exitCode": 0},
     "deterministic": {"manifest": "478/478", "representative": "8/8", "exitCode": 0},
-    "fieldAcceptance": {"total": "122/122", "failed": 0, "environmentBlocked": 122, "reason": "Docker Desktop Secrets Engine engine.sock residual reparse point prevents engine startup; no current-commit field run was started.", "reportSha256": null, "fixtureSha256": null},
+    "fieldAcceptance": {"total": "54/122", "failed": 68, "environmentBlocked": 0, "reason": "Docker Desktop backend crashed on internal sailor-ingest.sock/dockerInference reparse points during the current field run; the report records Browser 24/24 and Java/MySQL 30/30 before the fault/recovery stages failed.", "report": "tmp/v304-field-acceptance-final3/field-20260918T055335Z-f86522dd/field-acceptance.json", "reportSha256": "4cec8110aba99fbd5834b4d959439c47310282b8e941d28e30f5d254a4243d", "fixtureSha256": "7573e19271528e904d2eb40cef2765f05d4e5f489f2b35cc1b1359bcd5128759"},
     "deepseek": {"status": "failed", "model": "deepseek-flash", "thinkingMode": "enabled", "reasoningEffort": "high", "batchStatus": "failed", "releaseId": "mall-v3.0.3-portfolio-final-db3860701086", "batchId": "portfolio_final-c9b46de42c2d", "calls": 8, "successfulCalls": 8, "failedCalls": 0, "tokens": 29542, "sideEffects": 0, "ledgerReconciled": true, "failureCode": "scenario_assertion_failure", "failureStage": "agent_task_create", "reason": "唯一授权批次在 main_open_task_closed_loop 未形成 Proposal 后停止；未发生 Java 资格核验、写入或状态回查，且不得重跑。"},
     "showcase": {"status": "failed", "scenarios": [{"scenarioId": "main_open_task_closed_loop", "status": "failed", "stage": "agent_task_create", "failureCode": "scenario_assertion_failure", "completedSteps": 1, "proposalFormed": false, "javaWrite": false, "frames": 0}, {"scenarioId": "pause_resume", "status": "not_executed"}, {"scenarioId": "fact_change_handoff", "status": "not_executed"}]}
   },
