@@ -13,6 +13,7 @@ import argparse
 import json
 import os
 import subprocess
+import sys
 import time
 import uuid
 from pathlib import Path
@@ -167,7 +168,7 @@ def _run_case(
     index: int,
 ) -> dict[str, Any]:
     if scenario in {"idempotent_commit", "outbox_duplicate", "cancel_race"}:
-        return _run_proposal_case(client, base, authorization, order_sn, scenario, index)
+        return _run_proposal_case(client, base, authorization, password, order_sn, scenario, index)
     if scenario == "store_unavailable":
         return _run_store_recovery_case(client, base, authorization, order_sn)
 
@@ -206,36 +207,43 @@ def _run_proposal_case(
     client: httpx.Client,
     base: str,
     authorization: str,
+    password: str,
     order_sn: str,
     scenario: str,
     index: int,
 ) -> dict[str, Any]:
+    # Proposal cases deliberately exercise Java state changes.  Reusing the
+    # single read-only recovery fixture would make one confirmed case revoke
+    # eligibility for all later cases, turning a valid isolation defect into a
+    # false failure.  Provision one disposable synthetic account/order for
+    # each proposal case so every case starts from a fresh Java-owned state.
+    proposal_authorization, proposal_order_sn = _prepare_proposal_fixture(client, base, password, index)
     session_id = f"recovery-proposal-{index}-{uuid.uuid4().hex[:8]}"
     created = _create_task(
         client,
         base,
-        authorization,
+        proposal_authorization,
         session_id,
-        f"订单号：{order_sn}，申请取消退款，完成售后闭环",
+        f"订单号：{proposal_order_sn}，申请取消退款，完成售后闭环",
     )
     task_ref = created.get("task_ref")
     if created.get("status") != "ready_to_commit" or not isinstance(task_ref, str):
         raise RecoveryCaseError("proposal_not_ready", "proposal")
-    before = _list_applications(client, base, authorization)
+    before = _list_applications(client, base, proposal_authorization)
     if scenario == "cancel_race":
-        withdrawn = _confirm_raw(client, base, authorization, task_ref, "withdraw", created)
+        withdrawn = _confirm_raw(client, base, proposal_authorization, task_ref, "withdraw", created)
         if withdrawn.status_code != 200:
             raise RecoveryCaseError("withdraw_not_safe", "withdraw")
-        after = _list_applications(client, base, authorization)
+        after = _list_applications(client, base, proposal_authorization)
         if len(after) != len(before):
             raise RecoveryCaseError("withdraw_not_safe", "withdraw_write")
         return {"assertions": ["withdraw_without_java_write", "transaction_gate_released"]}
 
-    confirmed = _confirm_raw(client, base, authorization, task_ref, "confirm", created)
+    confirmed = _confirm_raw(client, base, proposal_authorization, task_ref, "confirm", created)
     if confirmed.status_code != 200:
         raise RecoveryCaseError("task_resume_failed", "confirm")
-    duplicate = _confirm_raw(client, base, authorization, task_ref, "confirm", created)
-    after = _list_applications(client, base, authorization)
+    duplicate = _confirm_raw(client, base, proposal_authorization, task_ref, "confirm", created)
+    after = _list_applications(client, base, proposal_authorization)
     # Depending on whether the Java facade returns its idempotent result or
     # the task gate is already consumed, the second confirmation is 200, 404,
     # or 409.  The hard invariant is that it never creates a second public
@@ -247,6 +255,58 @@ def _run_proposal_case(
             {"duplicateStatusClass": f"{duplicate.status_code // 100}xx", "applicationCountDelta": len(after) - len(before)},
         )
     return {"assertions": ["java_confirmation_boundary", "duplicate_confirmation_no_second_write", "outbox_observation_safe"]}
+
+
+def _prepare_proposal_fixture(client: httpx.Client, base: str, password: str, index: int) -> tuple[str, str]:
+    """Create a disposable Java-owned account/order for one mutating case.
+
+    The bootstrap utility is itself an HTTP-only synthetic fixture creator. It
+    never prints or persists credentials in the recovery report; this helper
+    reads the short-lived result file only long enough to obtain the account
+    and order references needed by the real public APIs.
+    """
+
+    result_dir = ROOT / "tmp" / "durable-proposal-fixtures"
+    result_dir.mkdir(parents=True, exist_ok=True)
+    result_file = result_dir / f"proposal-{index}-{uuid.uuid4().hex[:8]}.json"
+    nonce = uuid.uuid4().hex[:10]
+    env = os.environ.copy()
+    env.update(
+        {
+            "MALL_LIVE_DEMO_PASSWORD": password,
+            "MALL_LIVE_DEMO_RESULT_FILE": str(result_file),
+            "MALL_LIVE_DEMO_USER_A": f"durable_a_{index}_{nonce}",
+            "MALL_LIVE_DEMO_USER_B": f"durable_b_{index}_{nonce}",
+        }
+    )
+    try:
+        process = subprocess.run(
+            [sys.executable, str(SERVICE_ROOT / "scripts" / "bootstrap_live_demo.py")],
+            cwd=SERVICE_ROOT,
+            env=env,
+            text=True,
+            capture_output=True,
+            timeout=240,
+            check=False,
+        )
+        if process.returncode != 0 or not result_file.exists():
+            raise RecoveryCaseError("task_create_failed", "fixture_bootstrap")
+        payload = json.loads(result_file.read_text(encoding="utf-8"))
+        account = payload.get("account_a") if isinstance(payload, dict) else None
+        username = account.get("username") if isinstance(account, dict) else None
+        order = account.get("order_sn") if isinstance(account, dict) else None
+        if not isinstance(username, str) or not username or not isinstance(order, str) or not order:
+            raise RecoveryCaseError("task_create_failed", "fixture_bootstrap")
+        # Login through FastAPI so the remainder of the case uses the exact
+        # same authenticated public path as all other recovery assertions.
+        return _login(client, base, username, password), order
+    except (OSError, subprocess.SubprocessError, ValueError, TypeError) as exc:
+        raise RecoveryCaseError("task_create_failed", "fixture_bootstrap") from exc
+    finally:
+        try:
+            result_file.unlink(missing_ok=True)
+        except OSError:
+            pass
 
 
 def _run_store_recovery_case(client: httpx.Client, base: str, authorization: str, order_sn: str) -> dict[str, Any]:
