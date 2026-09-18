@@ -107,6 +107,15 @@ def verify_fastapi_report(facts: dict[str, object]) -> dict[str, object]:
     return report
 
 
+def fastapi_facts_match(fastapi: dict[str, object], report: dict[str, object]) -> bool:
+    """Compare facts with the generated JUnit sidecar without a fixed total."""
+
+    return (
+        fastapi.get("passed") == report.get("passed")
+        and fastapi.get("failed") == int(report.get("failures", 0)) + int(report.get("errors", 0))
+    )
+
+
 def main() -> int:
     require(FACTS_PATH.is_file(), "current-release-facts.json is missing")
     try:
@@ -134,7 +143,10 @@ def main() -> int:
     if release_status == "COMPLETE":
         require(main_eval["passed"] == main_eval["executed"] == 72, "main evaluation facts mismatch")
         require(supplemental["passed"] == supplemental["executed"] == 36, "supplemental evaluation facts mismatch")
-        require(tests["fastapi"]["passed"] == 365 and tests["fastapi"]["failed"] == 0, "FastAPI facts mismatch")
+        # The current JUnit sidecar is the authority for this count.  A test
+        # suite legitimately grows; release validation must reject a stale
+        # facts file, not require a source-code edit for a new test total.
+        require(fastapi_facts_match(tests["fastapi"], fastapi_report_value), "FastAPI facts mismatch")
         require(field["total"] == "122/122" and field["failed"] == field["environmentBlocked"] == 0, "field facts mismatch")
     else:
         current = facts.get("currentVerification", {})
@@ -161,7 +173,7 @@ def main() -> int:
             require(bool(current.get("deepseek", {}).get("batchId")), "failed DeepSeek batch must record batchId")
             require(current.get("deepseek", {}).get("ledgerReconciled") is True, "failed DeepSeek batch ledger must reconcile")
         showcase_status = current.get("showcase", {}).get("status")
-        require(showcase_status in {"environment_blocked", "passed", "failed"}, "showcase status must be explicit")
+        require(showcase_status in {"environment_blocked", "passed", "failed", "not_executed"}, "showcase status must be explicit")
         require(
             all(item.get("status") in {"environment_blocked", "passed", "failed", "not_executed"} for item in current["showcase"].get("scenarios", [])),
             "showcase scenario status mismatch",
@@ -277,13 +289,14 @@ def main() -> int:
         if release_status == "COMPLETE":
             require("72/72" in section and "36/36" in section and "122/122" in section, f"current claims incomplete in {path}")
             require("14/14" not in section and "holdout" not in section.lower(), f"stale wording remains in current document {path}")
-            require("365" in section, f"FastAPI 365 is missing in current document {path}")
+            require(str(tests["fastapi"]["passed"]) in section, f"current FastAPI count is missing in {path}")
         else:
             require(release_status in section, f"current release status missing in {path}")
             require(
                 "environment_blocked" in section
                 or "Batch 2" in section
-                or "not_executed" in section,
+                or "not_executed" in section
+                or "not_run_by_design" in section,
                 f"current incomplete boundary missing in {path}",
             )
             require(str(tests["fastapi"]["passed"]) in section, f"current FastAPI count is missing in {path}")

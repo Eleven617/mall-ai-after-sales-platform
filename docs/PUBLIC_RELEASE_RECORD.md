@@ -1,14 +1,12 @@
 # 公开发布记录
 
-## 当前权威记录｜v3.0.3 Proposal 确认执行合同（2026-09-17）
+## 当前权威记录｜v3.0.4 离线候选（2026-09-18）
 
-候选分支 `codex/v3.0.3-confirmation-contract`，Runtime Freeze `7159e1c57df5f3dc73ef3ab36f0999bb28e4967b`。本次修复使明确售后类型在政策证据不足、订单事实已核验时只形成受限待确认草案，并支持合法 `waiting_for_user → 同任务恢复`；确认时由 Runtime 重读事实/hash/归属并生成幂等键，Java 继续负责资格、状态机、事务和最终写入。
+候选分支 `codex/v3.0.4-eval-contract-alignment`，Runtime Freeze `155c40dec4f95f205972482d519d4807f85aef5d`。Java 继续是事实、资格、状态机、幂等、事务和最终写入的唯一权威；本轮没有变更 Runtime、README、main 或在线 Release/Lock。
 
-离线确定性：FastAPI 终端 **417 passed + 12 subtests**，JUnit **429 passed/0 failed/0 skipped**；manifest **478/478**、代表性 **8/8**；Task orchestration **11/11**、Quality Agent **17/17**、RAG 合同 **84/84**；Java 定向测试与 Vue build 均通过。当前 Commit 的 Docker 现场 Runner 是 **122 environment_blocked**：Docker Desktop Secrets Engine 内部 socket 残留阻止引擎启动，故未把旧 Commit 的 `122/122` 复用为本轮结论。当前离线验证 Provider 请求为 0。
+离线确定性：FastAPI JUnit **437/437**（425 pytest cases + 12 subtests，0 failed、0 skipped）；manifest **478/478**、代表性 **8/8**；Java 定向测试、Vue build 与 Compose config 均通过。当前 Docker 现场 Runner 从零通过 **122/122**：Browser 24/24、Java/MySQL 30/30、Fault 36/36、Durable 32/32，failed=0、environmentBlocked=0。现场报告 `tmp/v304-field-acceptance-final4/field-20260918T094903Z-71c338a3/field-acceptance.json`，SHA-256 `f40ca9c6333a160ba4487e7019060d7daec8dd61bc540fffe8372aa9921829c4`；Fixture SHA-256 `7573e19271528e904d2eb40cef2765f05d4e5f489f2b35cc1b1359bcd5128759`。Docker 主栈 8/8 healthy，image revision 与 Freeze 一致。
 
-本候选 **NOT_COMPLETE**：历史 grounding CLI 的 16 次误调用仍标为 `invalidated_offline_run`，不能计入通过率或成本。唯一授权的旧正式批次 `mall-v3.0.3-portfolio-final-db3860701086` / `portfolio_final-c9b46de42c2d` 在 `main_open_task_closed_loop` 的 `agent_task_create` 因 `scenario_assertion_failure` 停止。Provider 8/8 成功、29,542 Token、Ledger 对账通过，但未形成 Proposal，Java 核验、写入和回查均为 0；其他核心链、主/补充集、Grounding、素材均 `not_executed`，不创建第三批次。gitleaks 本机缺少可执行文件，标记 `environment_blocked`；当前候选 CI 已双绿。未修改 README、未合并 `main`、未创建 Tag/Release。
-
-证据：[`v3.0.3-capability-completion.md`](evidence/v3.0.3-capability-completion.md)、[`v3.0.3-capability-completion.json`](evidence/v3.0.3-capability-completion.json)。历史提交的远程结果不替代当前 SHA；v3.0.2 的正式 FAILED Lock、Ledger、报告和提交 `0eb964b` 未修改。不能宣称真实模型准确率、生产 SLA、真实支付/仓储/物流/维修履约或模型成本。
+本候选 **NOT_COMPLETE**：DeepSeek `not_run_by_design`，calls=0、Token=0；当前 SHA 的 CI 为 `pending_remote_final_sha`。下一步仅为一次单独授权的正式在线批次。旧失败 Release、Ledger、Lock 与历史章节均原样保留，且不能把本轮离线结果表述为真实模型准确率、生产 SLA、真实支付/仓储/物流/维修履约或模型成本。
 
 ## 当前权威记录｜v3.0.2 唯一正式 DeepSeek 批次（2026-09-16）
 

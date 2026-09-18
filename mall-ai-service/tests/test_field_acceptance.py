@@ -159,3 +159,22 @@ def test_customer_page_does_not_render_the_authenticated_username() -> None:
     assert 'currentMember.value ? "已登录" : "未登录"' in source
     assert "已登录：${currentMember.value.username}" not in source
     assert "{{ currentMember.username }}" not in source
+
+
+def test_public_release_validator_accepts_a_dynamic_fastapi_total() -> None:
+    """A green report growth must not require a new hard-coded gate value."""
+
+    validator_path = ROOT / "scripts" / "validate_public_release.py"
+    spec = importlib.util.spec_from_file_location("public_release_validator_test", validator_path)
+    assert spec and spec.loader
+    validator = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(validator)
+
+    assert validator.fastapi_facts_match(
+        {"passed": 437, "failed": 0},
+        {"passed": 437, "failures": 0, "errors": 0},
+    )
+    assert not validator.fastapi_facts_match(
+        {"passed": 436, "failed": 0},
+        {"passed": 437, "failures": 0, "errors": 0},
+    )

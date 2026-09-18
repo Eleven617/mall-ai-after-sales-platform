@@ -1,14 +1,12 @@
 # Mall v3.0 Release Gate 复核
 
-## 当前权威结论｜v3.0.3 Proposal 确认执行合同（2026-09-17）
+## 当前权威结论｜v3.0.4 离线候选（2026-09-18）
 
-当前冻结提交为 `7159e1c57df5f3dc73ef3ab36f0999bb28e4967b`。本轮修复了“明确售后类型 + 已核验订单 + 政策证据不足”时的有条件草案，并让展示 Runner 支持合法 `waiting_for_user → 同任务恢复`；确认时仍重校验 owner/TTL/hash/事实，并由 Runtime 生成幂等键。FastAPI 终端 **417 passed + 12 subtests**（JUnit **429/429**），manifest **478/478**、代表性 **8/8**，Task orchestration **11/11**、Quality Agent **17/17**、RAG 质量合同 **84/84** 均已运行，外部 Provider 请求为 **0**。
+候选分支 `codex/v3.0.4-eval-contract-alignment`，Runtime Freeze `155c40dec4f95f205972482d519d4807f85aef5d`。FastAPI 为 **437/437**（425 pytest cases + 12 subtests，0 failed、0 skipped）；manifest **478/478**、代表性 **8/8**；Java portal/admin、Vue build 和 Compose 配置均通过。
 
-当前 Commit 的 Docker 现场 Runner 为 **122 environment_blocked**：Docker Desktop 重启后 Secrets Engine 无法处理内部 `engine.sock` 残留 ReparsePoint，Linux Engine 未能启动，因此浏览器、Java/MySQL、故障和 Durable 的新现场执行均未开始。历史 `122/122` 绑定旧 Commit，已标记 stale，绝不并入本轮。
+当前一次性现场报告从 `0/122` 执行并通过：Browser **24/24**、Java/MySQL **30/30**、Fault **36/36**、Durable Recovery **32/32**，failed **0**、environmentBlocked **0**。报告 `tmp/v304-field-acceptance-final4/field-20260918T094903Z-71c338a3/field-acceptance.json`，SHA-256 `f40ca9c6333a160ba4487e7019060d7daec8dd61bc540fffe8372aa9921829c4`；合成 Fixture SHA-256 `7573e19271528e904d2eb40cef2765f05d4e5f489f2b35cc1b1359bcd5128759`。Docker 主栈 8/8 healthy，AI Runtime image revision 与 Freeze 一致。
 
-**Release Gate：`NOT_COMPLETE`。** 旧正式批次 `mall-v3.0.3-portfolio-final-db3860701086`（Batch `portfolio_final-c9b46de42c2d`）保持 FAILED：8 次 Provider 请求均成功、共 29,542 Token，Ledger 已对账，但展示 Runner 当时未处理合法澄清路径。该批次不改写、不重跑。公开事实回填后的 [`mall-ci`](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/35231380485) 与 [`quality-evaluation`](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/35231380466) 均成功。未合并 `main`、未更新 README、未创建新在线批次。
-
-v3.0.2 的 FAILED Lock/Ledger/报告和提交 `0eb964b` 保持原样：其准确根因是 Runtime 缺少 Draft-to-Commit 服务器映射，确认时把 Draft Skill 传给只允许 commit Skill 的 Gateway，安全停止且 Java 写入为 0；不能归因于模型随机选错。
+**Release Gate：`NOT_COMPLETE`。** 本轮 DeepSeek 为 `not_run_by_design`，calls **0**、Token **0**；未创建 Release/Lock、未修改 README、未合并 `main`。下一步仅是单独授权的一次正式在线批次。旧失败 Release、Ledger 与 Lock 均保留为历史证据，不计入当前离线结果；当前 SHA 的远程 CI 状态为 `pending_remote_final_sha`。
 
 ## 当前权威结论｜v3.0.2 唯一正式 DeepSeek 批次（2026-09-16）
 

@@ -1,12 +1,12 @@
 # Mall AI 售后平台｜简历事实包
 
-## 当前事实快照｜v3.0.3 Proposal 确认执行合同（2026-09-17）
+## 当前事实快照｜v3.0.4 离线候选（2026-09-18）
 
-当前候选分支 `codex/v3.0.3-confirmation-contract`，Runtime Freeze `7159e1c57df5f3dc73ef3ab36f0999bb28e4967b`，发布状态 **NOT_COMPLETE**。本轮修复明确售后类型在政策证据不足时的有条件草案，以及合法澄清后的同任务恢复；FastAPI 终端 **417 passed + 12 subtests**（JUnit **429/429**）、manifest 478/478、Java 定向测试和 Vue build 均通过。
+候选分支 `codex/v3.0.4-eval-contract-alignment`，Runtime Freeze `155c40dec4f95f205972482d519d4807f85aef5d`，发布状态 **NOT_COMPLETE**。FastAPI JUnit **437/437**（425 pytest cases + 12 subtests）；manifest 478/478、代表性 8/8、Java 定向测试、Vue build 与 Compose 配置通过。
 
-当前 Commit 的 Docker 现场层为 **environment_blocked（122 条未启动）**：Docker Desktop Secrets Engine 的内部 socket 残留阻止 Linux Engine 启动。历史 `122/122` 只适用于旧 Commit，不能用于当前简历或发布结论。本轮新增离线验证的外部 Provider 请求为 0。
+当前合成本机现场从零执行 **122/122**：Browser 24/24、Java/MySQL 30/30、Fault 36/36、Durable 32/32，failed=0、environmentBlocked=0。报告 SHA-256 `f40ca9c6333a160ba4487e7019060d7daec8dd61bc540fffe8372aa9921829c4`，Fixture SHA-256 `7573e19271528e904d2eb40cef2765f05d4e5f489f2b35cc1b1359bcd5128759`；范围是 deterministic/offline Docker 现场，不是生产能力。
 
-注意：历史 grounding CLI 的 16 次 DeepSeek 调用仍标记 `invalidated_offline_run`，不能计入模型通过率。唯一授权的当前在线批次在首条核心链 `agent_task_create` 发生 `scenario_assertion_failure` 后停止：8 次 Provider 请求成功、29,542 Token、Ledger 已对账，但 Proposal/Java 写入为 0，主集、补充集、Grounding、素材均 `not_executed`。因此不能把本轮写成真实模型准确率、生产 SLA、真实外部履约或在线发布；本失败不是 `environment_blocked`。
+本轮 DeepSeek 为 `not_run_by_design`，calls=0、Token=0。仍不能写成真实模型准确率、生产 SLA、真实外部履约或线上 Release；旧在线失败批次仅保留历史审计，不能与当前结果合并。当前远程 CI 为 `pending_remote_final_sha`。
 
 ## 当前事实快照｜v3.0.2 离线候选（2026-09-15）
 
