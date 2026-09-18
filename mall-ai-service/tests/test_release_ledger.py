@@ -6,6 +6,7 @@ import json
 import os
 import sys
 import threading
+from concurrent.futures import ThreadPoolExecutor
 import unittest
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -13,10 +14,16 @@ from types import SimpleNamespace
 from tempfile import TemporaryDirectory
 from unittest.mock import patch
 
+import httpx
+
 from app.services.llm_observability import capture_llm_metrics
 from app.services.llm_service import LLMServiceError, generate_text
 from app.services.provider_guard import provider_access_context
 from app.services.release_ledger import (
+    ReleaseLedgerBudgetError,
+    ReleaseLedgerIntegrityError,
+    reserve_provider_attempt,
+    settle_provider_attempt,
     read_release_events,
     release_ledger_context,
     summarize_release_events,
@@ -201,12 +208,131 @@ class ReleaseLedgerTests(unittest.TestCase):
         self.assertEqual(3, ledger["toolCalls"])
 
     def test_budget_is_classified_before_next_phase_as_budget_exhausted(self) -> None:
-        request_limited = {"requests": 451, "totalTokens": 10}
-        token_limited = {"requests": 10, "totalTokens": 1_100_001}
+        request_limited = {"providerHttpAttempts": 601, "totalTokens": 10}
+        token_limited = {"providerHttpAttempts": 10, "totalTokens": 1_600_001}
         self.assertTrue(_budget_exceeded(request_limited))
         self.assertTrue(_budget_exceeded(token_limited))
         self.assertEqual("budget_exhausted", _budget_failure_category(request_limited))
         self.assertEqual("budget_exhausted", _budget_failure_category(token_limited))
+
+    def test_reservation_allows_six_hundred_then_denies_before_network(self) -> None:
+        with TemporaryDirectory() as directory:
+            ledger = Path(directory) / "ledger.jsonl"
+            ledger.touch()
+            budget = {
+                "MALL_RELEASE_MAX_PROVIDER_HTTP_ATTEMPTS": "600",
+                "MALL_RELEASE_MAX_TOTAL_TOKENS": "9000000",
+                "MALL_RELEASE_RESERVE_TOKENS": "12000",
+            }
+            with patch.dict(os.environ, budget, clear=False), release_ledger_context(batch_id="budget-600", path=ledger):
+                reservations = [reserve_provider_attempt() for _ in range(600)]
+                self.assertTrue(all(reservations))
+                with self.assertRaises(ReleaseLedgerBudgetError):
+                    reserve_provider_attempt()
+            summary = summarize_release_events(read_release_events(ledger, batch_id="budget-600"))
+            self.assertEqual(600, summary["providerHttpAttempts"])
+            self.assertEqual(0, summary["providerRequests"])
+            self.assertEqual(1, summary["deniedBeforeNetwork"])
+
+    def test_token_reservation_allows_equal_limit_and_denies_over_limit(self) -> None:
+        with TemporaryDirectory() as directory:
+            ledger = Path(directory) / "ledger.jsonl"
+            ledger.touch()
+            budget = {
+                "MALL_RELEASE_MAX_PROVIDER_HTTP_ATTEMPTS": "10",
+                "MALL_RELEASE_MAX_TOTAL_TOKENS": "24000",
+                "MALL_RELEASE_RESERVE_TOKENS": "12000",
+            }
+            with patch.dict(os.environ, budget, clear=False), release_ledger_context(batch_id="budget-token", path=ledger):
+                first = reserve_provider_attempt()
+                second = reserve_provider_attempt()
+                with self.assertRaises(ReleaseLedgerBudgetError):
+                    reserve_provider_attempt()
+                settle_provider_attempt(first)
+                settle_provider_attempt(second)
+
+    def test_malformed_active_ledger_fails_closed(self) -> None:
+        with TemporaryDirectory() as directory:
+            ledger = Path(directory) / "ledger.jsonl"
+            ledger.write_text("not-json\n", encoding="utf-8")
+            with patch.dict(os.environ, {"MALL_RELEASE_MAX_PROVIDER_HTTP_ATTEMPTS": "600"}, clear=False), release_ledger_context(batch_id="malformed", path=ledger):
+                with self.assertRaises(ReleaseLedgerIntegrityError):
+                    reserve_provider_attempt()
+
+    def test_concurrent_reservations_never_exceed_shared_limit(self) -> None:
+        with TemporaryDirectory() as directory:
+            ledger = Path(directory) / "ledger.jsonl"
+            ledger.touch()
+            budget = {
+                "MALL_RELEASE_MAX_PROVIDER_HTTP_ATTEMPTS": "8",
+                "MALL_RELEASE_MAX_TOTAL_TOKENS": "96000",
+                "MALL_RELEASE_RESERVE_TOKENS": "12000",
+            }
+
+            def reserve_once(index: int) -> bool:
+                with release_ledger_context(batch_id="concurrent", path=ledger, source=f"test{index}"):
+                    try:
+                        return reserve_provider_attempt() is not None
+                    except ReleaseLedgerBudgetError:
+                        return False
+
+            with patch.dict(os.environ, budget, clear=False), ThreadPoolExecutor(max_workers=16) as pool:
+                results = list(pool.map(reserve_once, range(16)))
+            self.assertEqual(8, sum(results))
+            summary = summarize_release_events(read_release_events(ledger, batch_id="concurrent"))
+            self.assertEqual(8, summary["providerHttpAttempts"])
+
+    def test_budget_denial_does_not_open_http_socket(self) -> None:
+        with TemporaryDirectory() as directory:
+            ledger = Path(directory) / "ledger.jsonl"
+            ledger.touch()
+            budget = {
+                "MALL_RELEASE_MAX_PROVIDER_HTTP_ATTEMPTS": "1",
+                "MALL_RELEASE_MAX_TOTAL_TOKENS": "120000",
+                "MALL_RELEASE_RESERVE_TOKENS": "12000",
+            }
+            fake_settings = SimpleNamespace(
+                deepseek_api_key="fixture-only",
+                deepseek_model="deepseek-flash",
+                deepseek_base_url="http://127.0.0.1:1",
+                deepseek_timeout_seconds=1.0,
+            )
+            with patch.dict(os.environ, budget, clear=False), patch("app.services.llm_service.settings", fake_settings), release_ledger_context(batch_id="denied", path=ledger), provider_access_context(
+                mode="mock", release_id="fixture-release", batch_id="denied", ledger_path=str(ledger), runtime_commit="a" * 40, authorized=True, allow_mock=True
+            ), patch("app.services.llm_service.httpx.post") as post:
+                reserve_provider_attempt()
+                with self.assertRaisesRegex(LLMServiceError, "budget exhausted") as caught:
+                    generate_text("fixture input")
+            self.assertEqual("budget_exhausted", caught.exception.category)
+            post.assert_not_called()
+            summary = summarize_release_events(read_release_events(ledger, batch_id="denied"))
+            self.assertEqual(0, summary["providerRequests"])
+            self.assertEqual(1, summary["deniedBeforeNetwork"])
+
+    def test_each_retry_reserves_an_actual_http_attempt(self) -> None:
+        with TemporaryDirectory() as directory:
+            ledger = Path(directory) / "ledger.jsonl"
+            ledger.touch()
+            budget = {
+                "MALL_RELEASE_MAX_PROVIDER_HTTP_ATTEMPTS": "2",
+                "MALL_RELEASE_MAX_TOTAL_TOKENS": "24000",
+                "MALL_RELEASE_RESERVE_TOKENS": "12000",
+            }
+            fake_settings = SimpleNamespace(
+                deepseek_api_key="fixture-only",
+                deepseek_model="deepseek-flash",
+                deepseek_base_url="http://127.0.0.1:1",
+                deepseek_timeout_seconds=1.0,
+            )
+            response = httpx.Response(200, request=httpx.Request("POST", "http://127.0.0.1:1/v1/chat/completions"), json={"choices": [{"message": {"content": "synthetic answer"}}], "usage": {"prompt_tokens": 3, "completion_tokens": 2, "total_tokens": 5}})
+            with patch.dict(os.environ, budget, clear=False), patch("app.services.llm_service.settings", fake_settings), patch("app.services.llm_service.time.sleep"), release_ledger_context(batch_id="retry", path=ledger), provider_access_context(
+                mode="mock", release_id="fixture-release", batch_id="retry", ledger_path=str(ledger), runtime_commit="a" * 40, authorized=True, allow_mock=True
+            ), patch("app.services.llm_service.httpx.post", side_effect=[httpx.ConnectError("fixture"), response]) as post:
+                self.assertEqual("synthetic answer", generate_text("fixture input"))
+            self.assertEqual(2, post.call_count)
+            summary = summarize_release_events(read_release_events(ledger, batch_id="retry"))
+            self.assertEqual(2, summary["providerHttpAttempts"])
+            self.assertEqual(1, summary["providerRequests"])
 
 
 if __name__ == "__main__":

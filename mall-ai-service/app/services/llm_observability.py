@@ -30,8 +30,10 @@ _ALLOWED_FAILURE_CLASSES = {
     "invalid_response",
     "unknown",
     "provider_guard",
+    "budget_exhausted",
+    "ledger_malformed",
 }
-_ALLOWED_LEDGER_EVENT_TYPES = {"provider_request", "test"}
+_ALLOWED_LEDGER_EVENT_TYPES = {"provider_request", "budget_denied", "test"}
 
 
 @dataclass(frozen=True)
@@ -138,6 +140,7 @@ def record_llm_metric(
     provider_request_id_hash: str | None = None,
     protocol_correction: bool = False,
     ledger_event_type: str = "provider_request",
+    write_ledger: bool = True,
 ) -> None:
     """Emit a validated number-only event to the checkpoint-local sink."""
     metric = LLMCallMetric(
@@ -161,6 +164,8 @@ def record_llm_metric(
         protocol_correction=bool(protocol_correction),
     )
     _sink_var.get().emit(metric)
+    if not write_ledger:
+        return
     append_release_event(
         event_type=(
             ledger_event_type

@@ -99,6 +99,7 @@ def main() -> int:
     cases_by_category = _index_cases(manifest)
     results: list[CaseResult] = []
     preflight = _preflight()
+    runtime_identity, provider_usage = _runtime_provenance()
     evidence: dict[str, Any] = {
         "runId": run_id,
         "suiteVersion": manifest.get("suiteVersion"),
@@ -109,6 +110,8 @@ def main() -> int:
         "runnerVersion": "field-acceptance.v1",
         "executionContract": "registered manifest cases are not evidence until a case result exists",
         "preflight": preflight,
+        "runtimeIdentity": runtime_identity,
+        "providerUsage": provider_usage,
         "fixture": {
             "version": "local-demo-synthetic.v1" if fixture_hash else None,
             "sha256": fixture_hash or None,
@@ -298,6 +301,52 @@ def _preflight() -> dict[str, Any]:
             if item["code"] != 0
         ],
     }
+
+
+def _runtime_provenance() -> tuple[dict[str, Any], dict[str, Any]]:
+    """Read runtime identity and current scoped ledger without trusting docs."""
+
+    identity: dict[str, Any] = {
+        "runtimeCommit": "unavailable",
+        "healthRuntimeCommit": "unavailable",
+        "imageRevision": "unavailable",
+        "dockerLabelRevision": "unavailable",
+        "providerMode": "unavailable",
+    }
+    try:
+        response = httpx.get("http://127.0.0.1:8000/health/version", timeout=5, trust_env=False)
+        payload = response.json() if response.status_code == 200 else {}
+        if isinstance(payload, dict):
+            identity["healthRuntimeCommit"] = payload.get("runtimeCommit", "unavailable")
+            identity["imageRevision"] = payload.get("imageRevision", "unavailable")
+            identity["providerMode"] = payload.get("providerMode", "unavailable")
+            identity["runtimeCommit"] = payload.get("runtimeCommit", "unavailable")
+    except (httpx.HTTPError, ValueError, TypeError):
+        pass
+    inspect = _run(["docker", "inspect", "--format", "{{ index .Config.Labels \"org.opencontainers.image.revision\" }}", "mall-ai-demo-mall-ai-service-1"], timeout=20)
+    if inspect["code"] == 0 and inspect["stdout"].strip():
+        identity["dockerLabelRevision"] = inspect["stdout"].strip()
+    usage = {
+        "externalProviderRequests": 0,
+        "providerHttpAttempts": 0,
+        "externalProviderTokens": 0,
+        "ledgerReconciled": True,
+    }
+    ledger_path = os.getenv("MALL_RELEASE_LEDGER_PATH")
+    batch_id = os.getenv("MALL_RELEASE_BATCH_ID")
+    if ledger_path and batch_id:
+        try:
+            from app.services.release_ledger import read_release_events, summarize_release_events
+
+            summary = summarize_release_events(read_release_events(ledger_path, batch_id=batch_id))
+            usage.update(
+                externalProviderRequests=summary["providerRequests"],
+                providerHttpAttempts=summary["providerHttpAttempts"],
+                externalProviderTokens=summary["totalTokens"],
+            )
+        except Exception:
+            usage["ledgerReconciled"] = False
+    return identity, usage
 
 
 def _run(command: list[str], *, timeout: int, cwd: Path = ROOT) -> dict[str, Any]:

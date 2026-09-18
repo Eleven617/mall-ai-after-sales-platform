@@ -61,3 +61,20 @@ def test_runner_can_replay_a_contract_case_without_calling_a_provider() -> None:
     assert report["model"]["thinkingMode"] == "enabled"
     assert report["model"]["reasoningEffort"] == "high"
     assert len(report["model"]["runtimeCommit"]) == 40
+
+
+def test_replay_proposal_uses_server_confirmation_executor_mapping() -> None:
+    from app.runtime.contract_replay_evaluation import _provider_factory
+
+    report = run_live_model_agent_evaluation(
+        suite_path=DEFAULT_SUITE_PATH,
+        case_ids={"agent-open-020"},
+        required_runs=1,
+        max_total_seconds=30,
+        provider_factory=_provider_factory,
+    )
+    row = report["cases"][0]
+    assert row["status"] == "passed"
+    assert row["proposalSkill"] == "create_after_sales_draft"
+    assert row["confirmationExecutorSkill"] == "commit_after_sales_action"
+    assert row["businessWriteCount"] == 0

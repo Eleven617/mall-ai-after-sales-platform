@@ -318,6 +318,7 @@ def _run_case(
     provider_kind = str(fixture.get("execution_kind", "live_model"))
     if provider_factory is not None:
         provider = provider_factory(case)
+        provider_kind = "fault_injected" if isinstance(fixture.get("provider_fault"), str) else "contract_replay"
     elif isinstance(fixture.get("provider_fault"), str):
         provider = FaultInjectedProvider(str(fixture["provider_fault"]))
         provider_kind = "fault_injected"
@@ -387,7 +388,11 @@ def _run_case(
         if outcome.view.action is not None:
             proposal_skill = outcome.view.action.action_skill
             proposal_kind = "human_case" if proposal_skill == "open_human_case" else "after_sales" if proposal_skill == "create_after_sales_draft" else "other"
-            confirmation_executor_skill = "commit_after_sales_action" if proposal_skill == "create_after_sales_draft" else "open_human_case" if proposal_skill == "open_human_case" else None
+            if task_ref in store._items:  # noqa: SLF001 - evidence-only, server-owned proposal projection
+                proposal = store._items[task_ref].action_proposal  # noqa: SLF001
+                confirmation_executor_skill = (
+                    proposal.confirmation_executor_skill_id if proposal is not None else None
+                )
         task_success = terminal_status in set(case["expect"].get("terminal_statuses", []))
         clarification_correct = _check_clarification(case, outcome.view)
         required_coverage = _check_required_coverage(case, gateway, observed_skills, successful_observed_skills)

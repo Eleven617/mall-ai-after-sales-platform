@@ -20,6 +20,12 @@ from app.services.llm_observability import (
     record_llm_metric,
 )
 from app.services.provider_guard import ProviderGuardError, assert_provider_request_allowed
+from app.services.release_ledger import (
+    ReleaseLedgerBudgetError,
+    ReleaseLedgerIntegrityError,
+    reserve_provider_attempt,
+    settle_provider_attempt,
+)
 from app.services.reliability_service import (
     DependencyCircuitOpen,
     reliability_governor,
@@ -248,6 +254,7 @@ def _request_json(
             attempts=attempts,
             failure_class=exc.category,
             provider_request_id_hash=exc.request_id_hash or provider_request_id_hash,
+            write_ledger=exc.category != "budget_exhausted",
         )
         if exc.category != "circuit_open":
             reliability_governor.record_dependency_failure(
@@ -292,7 +299,23 @@ def _post_with_retry(
         timeout_seconds = min(timeout_seconds, policy.timeout_seconds)
 
     for attempt in range(1, max_attempts + 1):
+        reservation_id: str | None = None
+        last_error = None
         try:
+            try:
+                reservation_id = reserve_provider_attempt(operation="llm")
+            except ReleaseLedgerBudgetError as exc:
+                raise LLMServiceError(
+                    "Provider request budget exhausted before network access",
+                    category="budget_exhausted",
+                    attempts=attempt - 1,
+                ) from exc
+            except ReleaseLedgerIntegrityError as exc:
+                raise LLMServiceError(
+                    "Release ledger cannot be reconciled before network access",
+                    category="ledger_malformed",
+                    attempts=attempt - 1,
+                ) from exc
             response = httpx.post(
                 url,
                 headers=headers,
@@ -313,6 +336,8 @@ def _post_with_retry(
             error_category = (
                 "rate_limited" if response.status_code == 429 else "provider_unavailable"
             )
+        except LLMServiceError:
+            raise
         except httpx.TimeoutException as exc:
             last_error = exc
             error_category = "timeout"
@@ -326,6 +351,11 @@ def _post_with_retry(
         except httpx.HTTPError as exc:
             last_error = exc
             error_category = "network"
+        finally:
+            settle_provider_attempt(
+                reservation_id,
+                outcome="succeeded" if last_error is None else "failed",
+            )
 
         if attempt < max_attempts:
             time.sleep(1 + attempt)

@@ -45,7 +45,13 @@ from app.services.llm_service import (  # noqa: E402
     DEEPSEEK_THINKING_MODE,
 )
 from app.skills.catalog import SKILL_CATALOG_VERSION  # noqa: E402
-from app.services.release_ledger import read_release_events, summarize_release_events  # noqa: E402
+from app.services.release_ledger import (  # noqa: E402
+    DEFAULT_MAX_PROVIDER_HTTP_ATTEMPTS,
+    DEFAULT_MAX_TOTAL_TOKENS,
+    DEFAULT_RESERVE_TOKENS,
+    read_release_events,
+    summarize_release_events,
+)
 
 
 REPOSITORY_ROOT = SERVICE_ROOT.parent
@@ -135,6 +141,8 @@ def _base_ledger(*, batch_id: str, release_id: str, phase: str, command: str) ->
         "skillCatalogVersion": SKILL_CATALOG_VERSION,
         "requests": 0,
         "providerRequests": 0,
+        "logicalProviderRequests": 0,
+        "providerHttpAttempts": 0,
         "successfulRequests": 0,
         "failedRequests": 0,
         "providerFailures": 0,
@@ -147,6 +155,7 @@ def _base_ledger(*, batch_id: str, release_id: str, phase: str, command: str) ->
         "reasoningTokens": None,
         "completionTokens": 0,
         "totalTokens": 0,
+        "deniedBeforeNetwork": 0,
         "toolCalls": 0,
         "exitCode": None,
     }
@@ -203,6 +212,8 @@ def _sync_process_ledger(ledger: dict[str, object]) -> bool:
         return False
     summary = summarize_release_events(read_release_events(path, batch_id=str(ledger["batchId"])))
     ledger["providerRequests"] = summary["providerRequests"]
+    ledger["logicalProviderRequests"] = summary["logicalProviderRequests"]
+    ledger["providerHttpAttempts"] = summary["providerHttpAttempts"]
     ledger["requests"] = summary["providerRequests"]
     ledger["successfulRequests"] = summary["providerSuccesses"]
     ledger["failedRequests"] = summary["providerFailures"]
@@ -214,6 +225,7 @@ def _sync_process_ledger(ledger: dict[str, object]) -> bool:
     ledger["totalTokens"] = summary["totalTokens"]
     ledger["networkRetries"] = summary["networkRetries"]
     ledger["protocolCorrections"] = summary["protocolCorrections"]
+    ledger["deniedBeforeNetwork"] = summary["deniedBeforeNetwork"]
     ledger["ledgerReconciled"] = True
     return True
 
@@ -223,11 +235,14 @@ def _reconciled_report_metrics(ledger: dict[str, object]) -> dict[str, object]:
 
     return {
         "providerRequests": int(ledger.get("providerRequests", 0) or 0),
+        "logicalProviderRequests": int(ledger.get("logicalProviderRequests", 0) or 0),
+        "providerHttpAttempts": int(ledger.get("providerHttpAttempts", 0) or 0),
         "successfulRequests": int(ledger.get("successfulRequests", 0) or 0),
         "failedRequests": int(ledger.get("failedRequests", 0) or 0),
         "promptTokens": int(ledger.get("promptTokens", 0) or 0),
         "completionTokens": int(ledger.get("completionTokens", 0) or 0),
         "totalTokens": int(ledger.get("totalTokens", 0) or 0),
+        "deniedBeforeNetwork": int(ledger.get("deniedBeforeNetwork", 0) or 0),
         "ledgerReconciled": ledger.get("ledgerReconciled") is True,
     }
 
@@ -327,13 +342,15 @@ def _run_final(ledger: dict[str, object]) -> dict[str, object]:
 
 
 def _budget_exceeded(ledger: dict[str, object]) -> bool:
-    return int(ledger.get("requests", 0) or 0) > 450 or int(ledger.get("totalTokens", 0) or 0) > 1_100_000
+    return (
+        int(ledger.get("providerHttpAttempts", ledger.get("requests", 0)) or 0)
+        > DEFAULT_MAX_PROVIDER_HTTP_ATTEMPTS
+        or int(ledger.get("totalTokens", 0) or 0) > DEFAULT_MAX_TOTAL_TOKENS
+    )
 
 
 def _budget_failure_category(ledger: dict[str, object]) -> str | None:
-    if int(ledger.get("requests", 0) or 0) > 450:
-        return "budget_exhausted"
-    if int(ledger.get("totalTokens", 0) or 0) > 1_100_000:
+    if _budget_exceeded(ledger):
         return "budget_exhausted"
     return None
 
