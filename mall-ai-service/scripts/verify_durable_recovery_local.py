@@ -273,6 +273,10 @@ def _prepare_proposal_fixture(client: httpx.Client, base: str, password: str, in
         result_file = result_dir / f"proposal-{index}-{uuid.uuid4().hex[:8]}.json"
         nonce = uuid.uuid4().hex[:10]
         env = os.environ.copy()
+        # Product 33 is a seeded local-demo SKU with ample stock. Durable cases
+        # create disposable orders repeatedly; selecting it explicitly prevents
+        # prior synthetic runs from exhausting the lower-stock default SKU.
+        env.setdefault("MALL_LIVE_DEMO_PRODUCT_ID", "33")
         env.update(
             {
                 "MALL_LIVE_DEMO_PASSWORD": password,
