@@ -4,7 +4,8 @@ param(
     [Parameter(Mandatory=$true)][ValidatePattern('^[0-9a-f]{40}$')][string]$RuntimeCommit,
     [Parameter(Mandatory=$true)][ValidatePattern('^mall-v3\.0\.4-[a-z0-9._-]+$')][string]$ReleaseId,
     [string]$ReplayReport = 'tmp/v304-contract-replay/replay.json',
-    [string]$FieldReportDir = 'tmp/v304-field-acceptance-final'
+    [string]$FieldReportDir = 'tmp/v304-field-acceptance-final',
+    [string]$FieldReport = ''
 )
 
 $ErrorActionPreference = 'Stop'
@@ -32,8 +33,12 @@ if ($Phase -eq 'Preflight') {
     if ($LASTEXITCODE -ne 0) { throw 'contract_replay_failed' }
     $payload = Get-Content -Raw $ReplayReport | ConvertFrom-Json
     if ($payload.passed -ne 36 -or $payload.failed -ne 0 -or $payload.environmentBlocked -ne 0 -or $payload.providerCalls -ne 0 -or $payload.providerTokens -ne 0) { throw 'contract_replay_gate_failed' }
-    & .\mall-ai-service\.venv\Scripts\python.exe .\mall-ai-service\scripts\verify_field_acceptance.py --report-dir $FieldReportDir
-    if ($LASTEXITCODE -ne 0) { throw 'field_acceptance_failed' }
+    if ([string]::IsNullOrWhiteSpace($FieldReport)) {
+        throw 'field_report_required_for_preflight'
+    }
+    $field = Get-Content -Raw -LiteralPath $FieldReport | ConvertFrom-Json
+    if ($field.testedCodeCommit -ne $RuntimeCommit -or $field.releaseGate.passed -ne $true -or $field.caseCount -ne 122) { throw 'field_acceptance_provenance_or_gate_failed' }
+    if ($field.providerUsage.externalProviderRequests -ne 0 -or $field.providerUsage.externalProviderTokens -ne 0) { throw 'field_acceptance_provider_usage_nonzero' }
     Write-Output "V3_0_4_PREFLIGHT_PASSED runtime=$RuntimeCommit replay=36/36 phase=$Phase releaseId=$ReleaseId"
     exit 0
 }
