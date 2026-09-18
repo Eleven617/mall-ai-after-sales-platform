@@ -1,6 +1,6 @@
 {
   "schemaVersion": "resume-fact-pack.v3",
-  "generatedAt": "2026-09-17T11:35:17Z",
+  "generatedAt": "2026-09-19T00:10:00Z",
   "releaseStatus": "NOT_COMPLETE",
   "project": {
     "name": "Mall AI After-sales Platform",
@@ -10,8 +10,8 @@
     "upstream": "macrozheng/mall 二次开发，Apache-2.0 归属见 UPSTREAM.md 和 NOTICE"
   },
   "revision": {
-    "testedCodeCommit": "db3860701086bf9718ac23ef7b272a28bff2083f",
-    "branch": "codex/v3.0.3-confirmation-contract",
+    "testedCodeCommit": "3c4c3a5ae9fac944350b6710322fd9d5223eccde",
+    "branch": "codex/v3.0.4-eval-contract-alignment",
     "remote": "https://github.com/Eleven617/mall-ai-after-sales-platform.git",
     "workspaceAtEvidenceStart": "clean_except_ignored_tmp",
     "remoteCi": {"status": "pending_remote_failure_evidence_sha", "commit": "8f109eefa6ab57794277c3f3cfa50a539043aaeb", "note": "候选 8f109ee 的两条 CI 已成功；失败证据提交后须按新 SHA 重新核对，历史 success 不替代新 SHA。"}
@@ -30,16 +30,16 @@
   "agentCapabilities": {
     "openTask": ["goal understanding", "bounded Skill selection", "read-only multi-step investigation", "Context projection", "proposal/resume", "safe stop"],
     "liveSynthetic": {"releaseId": "mall-v3.0.3-portfolio-final-db3860701086", "batchId": "portfolio_final-c9b46de42c2d", "status": "failed", "providerRequests": 8, "providerSuccess": 8, "providerFailure": 0, "totalTokens": 29542, "ledgerReconciled": true, "completedCoreChains": "0/3", "blocker": "main_open_task_closed_loop agent_task_create scenario_assertion_failure; proposal not formed; no rerun"},
-    "fieldAcceptance": {"status": "passed_local_synthetic", "browser": "24/24", "javaMysql": "30/30", "fault": "36/36", "durableRecovery": "32/32", "total": "122/122", "environmentBlocked": 0}
+    "fieldAcceptance": {"status": "blocked_missing_live_demo_password", "browser": "not_run_current_commit", "javaMysql": "not_run_current_commit", "fault": "not_run_current_commit", "durableRecovery": "not_run_current_commit", "total": "122 registered; 0 executed", "environmentBlocked": 122}
   },
   "techStack": ["Java", "Spring Boot", "FastAPI", "LangGraph", "Vue 3", "Redis", "MySQL", "MongoDB", "RabbitMQ", "RAG", "MCP", "AgentOps", "Eval"],
   "tests": {
-    "fastapi": {"passed": 427, "failed": 0, "warnings": 1, "subtests": 12, "exitCode": 0},
+    "fastapi": {"passed": 449, "failed": 0, "warnings": 1, "subtests": 12, "pytestTerminalPassed": 437, "exitCode": 0},
     "v3": {"deterministic": "478/478", "representative": "8/8", "exitCode": 0},
     "java": {"portalCore": "12/12", "portalCompatibility": "2/2", "admin": "6/6", "springContext": "1/1", "exitCode": 0},
     "web": "npm run build passed",
     "grounding": {"status": "not_executed_after_batch2_stop", "cases": null, "checks": null, "environmentBlocked": null},
-    "field": {"status": "passed_local_synthetic", "total": "122/122", "environmentBlocked": 0, "reportSha256": "c975374fa6c9f6484063779be62e1cde6be499f5f3f397275f27e89c20c0e6cd", "fixtureSha256": "46626a529ec5939f20cb920501d8386583cd4c15db929b54ea9d93a6d1025c6d"}
+    "field": {"status": "blocked_missing_live_demo_password", "total": "122 registered; 0 executed", "environmentBlocked": 122, "reportSha256": null, "fixtureSha256": null}
   },
   "metrics": {
     "authorizedBatchReport": "tmp/portfolio-final-release-mall-v3.0.3-portfolio-final-db3860701086/final-after-batch-a-failure.json",

@@ -1,5 +1,12 @@
 # 当前工作进度记录
 
+## 2026-09-19｜v3.0.4 正式在线入口预检修复（当前）
+
+- Runtime 候选：`3c4c3a5ae9fac944350b6710322fd9d5223eccde`。修复了上一正式批次在首个 Provider 请求前因宿主 Runner 缺少 `MALL_LIVE_DEMO_PASSWORD` 而阻塞的问题：同一进程级变量在 Python Runner、PowerShell 和 Compose 中统一；正式 Runner 在生成 Batch ID、Release Lock、Ledger 或报告之前，经本地 Java 合成账号创建/登录进行 fail-closed 预检。
+- 本轮没有 DeepSeek 或其他外部模型调用：Provider requests=0、Token=0；没有新 Release、Batch、Ledger、Lock 或在线报告。旧 `mall-v3.0.4-portfolio-final-267e3b70` FAILED Lock、报告与空 Ledger 未修改。
+- 离线结果：预检专项 18 tests passed；FastAPI JUnit 449/449（437 pytest cases + 12 subtests）；manifest 478/478、代表性 8/8、Contract Replay 36/36、Java portal 12/12、admin 6/6、Vue build、Compose 8/8 healthy、public-release validator 均通过。
+- 当前主机的 Process/User/Machine 均未配置 `MALL_LIVE_DEMO_PASSWORD`。按安全约束未猜测或生成密码，因此当前 Runtime 122 条现场未重跑，状态 `BLOCKED_MISSING_LIVE_DEMO_PASSWORD`；旧 Runtime 的 122/122 不并入。下一步是用户在准备正式验收的同一 PowerShell 中安全设置该变量，然后先运行无模型预检；此后才可单独授权新正式在线批次。
+
 ## 2026-09-18｜v3.0.4 离线候选证据对齐（当前）
 
 - 当前候选分支：`codex/v3.0.4-eval-contract-alignment`；Runtime Freeze：`267e3b70e73cedb4ff714857a2195d56d4799161`；本轮 Provider **0 calls / 0 tokens**，未创建在线 Release/Lock，README 未修改，`main` 未合并。

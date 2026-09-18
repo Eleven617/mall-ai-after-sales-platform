@@ -1,5 +1,11 @@
 # Mall AI 售后平台｜简历事实包
 
+## 当前事实快照｜v3.0.4 在线入口预检修复（2026-09-19）
+
+候选 Runtime `3c4c3a5ae9fac944350b6710322fd9d5223eccde`，发布状态 **NOT_COMPLETE**。正式在线 Runner 在创建任何 Release、Batch、Ledger、Lock 或报告之前，先检查进程级 `MALL_LIVE_DEMO_PASSWORD`，再通过本地 Java API 验证合成账号创建/登录；Python、PowerShell 和 Compose 使用同一变量名，Secret 不写入公开工件。
+
+FastAPI JUnit **449/449**（437 pytest cases + 12 subtests），0 failed、0 skipped；预检回归 **5/5**，manifest **478/478**、代表性 **8/8**、Java 定向测试、Vue build 与 Compose 健康检查均通过。本机目前未配置演示账号 Secret，故当前 Runtime 的现场 122 条是 `environment_blocked`，历史 122/122 deterministic/offline 结果不并入。Provider requests=0、Token=0；没有新在线 Release 或第二批次。
+
 ## 当前事实快照｜v3.0.4 离线候选（2026-09-18）
 
 候选分支 `codex/v3.0.4-eval-contract-alignment`，Runtime Freeze `267e3b70e73cedb4ff714857a2195d56d4799161`，发布状态 **NOT_COMPLETE**。FastAPI JUnit **444/444**（432 pytest cases + 12 subtests）；manifest 478/478、代表性 8/8、Java 定向测试、Vue build 与 Compose 配置通过。

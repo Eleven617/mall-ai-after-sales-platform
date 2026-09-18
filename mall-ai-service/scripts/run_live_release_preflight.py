@@ -6,7 +6,12 @@ runtime preflight module; this script never prints its value.
 from __future__ import annotations
 
 import json
+from pathlib import Path
 import sys
+
+SERVICE_ROOT = Path(__file__).resolve().parents[1]
+if str(SERVICE_ROOT) not in sys.path:
+    sys.path.insert(0, str(SERVICE_ROOT))
 
 from app.runtime.live_release_preflight import (
     LiveReleasePreflightError,

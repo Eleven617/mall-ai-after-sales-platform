@@ -1,5 +1,13 @@
 # Mall v3.0 Release Gate 复核
 
+## 当前权威结论｜v3.0.4 在线入口预检修复（2026-09-19）
+
+Runtime 候选 `3c4c3a5ae9fac944350b6710322fd9d5223eccde` 在创建任何新 Release、Batch、Ledger、Lock 或报告之前，新增了 fail-closed 的 `MALL_LIVE_DEMO_PASSWORD` 检查与本地 Java 合成账号登录预检。宿主 Python Runner、PowerShell 入口与 Compose 容器均使用同一变量名；密码值不会进入 Git、报告、账本、Trace、日志或错误文本。
+
+本机当前未设置该进程 Secret，因此状态为 **`BLOCKED_MISSING_LIVE_DEMO_PASSWORD`**，而非新的在线批次失败。Provider 请求 **0**、Token **0**；旧 `mall-v3.0.4-portfolio-final-267e3b70` FAILED Lock、报告与空 Ledger 均未改写。新的 FastAPI 机器报告为 **449/449**（437 pytest cases + 12 subtests）；预检契约测试通过 **5/5**。此前 Runtime 的 122/122 为历史 deterministic/offline 现场结果，因 Runtime 变更不可并入当前候选。
+
+要继续，所有者仅需在发起验收的 PowerShell 中安全设置 `MALL_LIVE_DEMO_PASSWORD`，随后先运行无模型预检。设置动作本身不创建 Release，也不调用 Provider；本阶段 Release Gate 仍为 **`NOT_COMPLETE`**。
+
 ## 当前权威结论｜v3.0.4 离线候选（2026-09-18）
 
 候选分支 `codex/v3.0.4-eval-contract-alignment`，Runtime Freeze `267e3b70e73cedb4ff714857a2195d56d4799161`。FastAPI 为 **444/444**（432 pytest cases + 12 subtests，0 failed、0 skipped）；manifest **478/478**、代表性 **8/8**；Java portal/admin、Vue build 和 Compose 配置均通过。

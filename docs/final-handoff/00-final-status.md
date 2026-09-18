@@ -1,5 +1,11 @@
 # Mall v3.0 最终交付状态
 
+## 当前权威快照｜v3.0.4 在线入口预检修复（2026-09-19）
+
+候选 Runtime `3c4c3a5ae9fac944350b6710322fd9d5223eccde` 已将 `MALL_LIVE_DEMO_PASSWORD` 的宿主 Runner、PowerShell 与 Compose 路径统一，并在生成在线 Batch、Release Lock、报告或账本事件前执行本地 Java 合成账号预检。预检缺失或无效时 fail-closed，且不创建在线批次工件、不调用 Provider。
+
+本机未配置该 Secret，故本阶段为 **`BLOCKED_MISSING_LIVE_DEMO_PASSWORD`**：Provider requests=0、Token=0。历史失败 Lock/Report/Ledger 保持原样；当前 Runtime 的现场 122 条尚未重新执行，旧 122/122 不能并入。FastAPI 机器报告为 449/449（437 pytest cases + 12 subtests），Release 仍为 **`NOT_COMPLETE`**。
+
 ## 当前权威快照｜v3.0.4 离线候选（2026-09-18）
 
 分支 `codex/v3.0.4-eval-contract-alignment`，Runtime Freeze `267e3b70e73cedb4ff714857a2195d56d4799161`。FastAPI JUnit **444/444**（432 pytest cases + 12 subtests），manifest 478/478、代表性 8/8、Java 定向测试、Vue build 与 Compose 配置均通过。

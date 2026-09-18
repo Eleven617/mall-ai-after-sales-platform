@@ -1,5 +1,11 @@
 # 测试、评测与现场证据
 
+## 当前权威快照｜v3.0.4 在线入口预检修复（2026-09-19）
+
+当前 Runtime 候选 `3c4c3a5ae9fac944350b6710322fd9d5223eccde` 的正式在线入口新增无模型预检：检查进程级 `MALL_LIVE_DEMO_PASSWORD`，并仅通过本地 Java API 创建/登录合成账号；预检通过前不会创建 Release/Batch、Ledger、Lock 或报告。
+
+FastAPI 为 **449/449**（437 pytest cases + 12 subtests），预检回归 **5/5**；manifest 478/478、代表性 8/8、Java 定向测试、Vue build 和 Compose 健康检查通过。本机未设置 Secret，当前 Runtime 的 122 条现场执行为 `environment_blocked`，历史 122/122 不能合并。Provider requests=0、Token=0，发布状态 **NOT_COMPLETE**。
+
 ## 当前权威快照｜v3.0.4 离线候选（2026-09-18）
 
 候选分支 `codex/v3.0.4-eval-contract-alignment`，Runtime Freeze `267e3b70e73cedb4ff714857a2195d56d4799161`。FastAPI 终端为 **432 passed + 12 subtests**，JUnit **444/444**、0 failed、0 skipped；manifest **478/478**、代表性 **8/8**；Java 定向测试、Vue build 与 Compose config 均通过。
@@ -90,3 +96,13 @@
 ## 历史与限制
 
 旧 Fixture 产生的阻断报告是 superseded；旧 Commit 的现场结果是 stale。历史 Build 21 曾出现等待任务缺失的独立重跑失败，已保留为运行时波动，不被隐藏。没有真实支付/仓储/物流/维修系统、生产告警、生产 SLA 或真实客户数据。
+# v3.0.4 在线入口预检修复（2026-09-19）
+
+当前 Runtime 候选 `3c4c3a5ae9fac944350b6710322fd9d5223eccde` 新增了无模型的正式在线入口预检。它先检查进程级 `MALL_LIVE_DEMO_PASSWORD`，再仅通过本地 Java API 创建/登录合成账号；只有预检成功，正式 Runner 才能生成 Release/Batch、Ledger、Lock 或调用 Provider。
+
+- 预检回归：5/5；覆盖缺失 Secret fail-closed、Fake Java 合成账号预检、失败不创建 Lock/报告/账本、Secret 不进入错误文本、PowerShell/Compose/Python 变量名一致。
+- FastAPI：JUnit 449/449（437 pytest cases + 12 subtests），0 failed、0 skipped；exit 0。
+- Provider：0 requests，0 Token；没有新 Release、Batch、Ledger、Lock 或在线报告。
+- 现场 122：当前 Runtime 尚未运行。此前 122/122 是旧 Runtime 的 deterministic/offline 报告，不计入本候选；本机缺失 Secret 时状态为 `BLOCKED_MISSING_LIVE_DEMO_PASSWORD`。
+
+历史失败证据保持不变。本文件以下章节是历史审计记录，不能与上面的当前统计合并。

@@ -1,5 +1,11 @@
 # 公开发布记录
 
+## 当前权威记录｜v3.0.4 在线入口预检修复（2026-09-19）
+
+当前候选 Runtime 为 `3c4c3a5ae9fac944350b6710322fd9d5223eccde`。正式在线入口现在在任何 Release ID、Batch ID、Ledger、Lock 或报告创建之前，验证 Runner 进程的 `MALL_LIVE_DEMO_PASSWORD`，并经本地 Java API 创建/登录两条合成账号路径。变量名在 Python Runner、PowerShell 入口和 Compose 容器一致；Secret 只存在于进程环境，不写入公开工件。
+
+当前主机未设置 Secret，因此状态为 **`BLOCKED_MISSING_LIVE_DEMO_PASSWORD`**，并非在线模型失败：Provider 请求和 Token 均为 0。历史 v3.0.4 FAILED Lock、报告和空 Ledger 已保留；未创建第二个在线批次，未改 README、未合并 main。新的 FastAPI JUnit 为 449/449；旧 Runtime 的 122/122 deterministic/offline 现场报告已标为 stale，不能代表当前 Runtime。
+
 ## 当前权威记录｜v3.0.4 离线候选（2026-09-18）
 
 候选分支 `codex/v3.0.4-eval-contract-alignment`，Runtime Freeze `267e3b70e73cedb4ff714857a2195d56d4799161`。Java 继续是事实、资格、状态机、幂等、事务和最终写入的唯一权威；本轮没有变更 Runtime、README、main 或在线 Release/Lock。
