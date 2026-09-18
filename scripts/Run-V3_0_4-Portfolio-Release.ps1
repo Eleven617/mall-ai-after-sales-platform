@@ -16,7 +16,8 @@ $branch = (git branch --show-current).Trim()
 if ($branch -ne $expectedBranch) { throw "branch_mismatch:$branch" }
 $head = (git rev-parse HEAD).Trim()
 if ((git status --porcelain) -ne '') { throw 'worktree_not_clean' }
-if ((git merge-base --is-ancestor $RuntimeCommit $head); $LASTEXITCODE -ne 0) { throw 'runtime_commit_not_ancestor' }
+git merge-base --is-ancestor $RuntimeCommit $head | Out-Null
+if ($LASTEXITCODE -ne 0) { throw 'runtime_commit_not_ancestor' }
 
 docker info --format '{{.ServerVersion}}' | Out-Null
 docker compose config --quiet
