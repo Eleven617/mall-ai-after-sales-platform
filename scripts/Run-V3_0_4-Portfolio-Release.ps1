@@ -15,7 +15,8 @@ $expectedBranch = 'codex/v3.0.4-eval-contract-alignment'
 $branch = (git branch --show-current).Trim()
 if ($branch -ne $expectedBranch) { throw "branch_mismatch:$branch" }
 $head = (git rev-parse HEAD).Trim()
-if ((git status --porcelain) -ne '') { throw 'worktree_not_clean' }
+$status = (git status --porcelain | Out-String).Trim()
+if ($status -ne '') { throw 'worktree_not_clean' }
 git merge-base --is-ancestor $RuntimeCommit $head | Out-Null
 if ($LASTEXITCODE -ne 0) { throw 'runtime_commit_not_ancestor' }
 
