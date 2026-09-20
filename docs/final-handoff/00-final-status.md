@@ -1,5 +1,11 @@
 # Mall v3.0 最终交付状态
 
+## 当前权威快照｜v3.0.4 离线现场复核（2026-09-20）
+
+执行 HEAD `1efaa22311e41d92816c5f08188a59ff7ca66806`，Runtime Freeze/image revision `3c4c3a5ae9fac944350b6710322fd9d5223eccde`。Docker Compose 8/8 healthy；deterministic Fake Provider 现场从 0/122 完整通过（Browser 24、Java/MySQL 30、Fault 36、Durable Recovery 32），外部 Provider 请求与 Token 均为 0。报告 `tmp/v304-field-acceptance-122/field-20260920T053042Z-14d730d7/field-acceptance.json`，Report SHA `3aa1613e07ae89fbf11ad51cd6ed33e0860304040c49abb7a5c03b35adfefe1f`，Fixture SHA `7b7616e3ba0f6939a7bcc7d381b3c3b7b35d2b443c2056b218cdefc7f17486a9`。
+
+发布状态仍为 **NOT_COMPLETE**：这次只完成离线工程验证，未调用 DeepSeek、未创建在线 Release/Lock、未合并 main，也不能把合成现场结果扩大为真实模型质量。
+
 ## 当前权威快照｜v3.0.4 在线入口预检修复（2026-09-20）
 
 候选 Runtime `3c4c3a5ae9fac944350b6710322fd9d5223eccde` 已将 `MALL_LIVE_DEMO_PASSWORD` 的宿主 Runner、PowerShell 与 Compose 路径统一，并在生成在线 Batch、Release Lock、报告或账本事件前执行本地 Java 合成账号预检。预检缺失或无效时 fail-closed，且不创建在线批次工件、不调用 Provider。

@@ -1,5 +1,13 @@
 # Mall v3.0 Release Gate 复核
 
+## 当前权威结论｜v3.0.4 离线现场复核（2026-09-20）
+
+候选分支 `codex/v3.0.4-eval-contract-alignment` 的执行 HEAD 为 `1efaa22311e41d92816c5f08188a59ff7ca66806`；运行时冻结与镜像 revision 为 `3c4c3a5ae9fac944350b6710322fd9d5223eccde`。Docker Desktop/Compose 主栈 8/8 healthy，现场 Runner 使用仓库内 deterministic Fake Provider，从 0/122 完整执行并通过：Browser 24/24、Java/MySQL 30/30、Fault 36/36、Durable Recovery 32/32。
+
+报告：`tmp/v304-field-acceptance-122/field-20260920T053042Z-14d730d7/field-acceptance.json`；Report SHA-256 `3aa1613e07ae89fbf11ad51cd6ed33e0860304040c49abb7a5c03b35adfefe1f`；Fixture SHA-256 `7b7616e3ba0f6939a7bcc7d381b3c3b7b35d2b443c2056b218cdefc7f17486a9`。本轮 externalProviderRequests=0、externalProviderTokens=0；主栈已恢复 offline 模式，独立 fault Compose 项目已按项目名清理且未删除卷。
+
+**Release Gate：`NOT_COMPLETE`。** 离线工程验证已完成，但本轮没有启动 DeepSeek 正式在线批次、没有创建新 Release/Lock、没有合并 `main`；122/122 不能表述为真实模型效果或生产能力。历史失败 Lock/Ledger/报告保持原样。
+
 ## 当前权威结论｜v3.0.4 在线入口预检修复（2026-09-19）
 
 Runtime 候选 `3c4c3a5ae9fac944350b6710322fd9d5223eccde` 在创建任何新 Release、Batch、Ledger、Lock 或报告之前，新增了 fail-closed 的 `MALL_LIVE_DEMO_PASSWORD` 检查与本地 Java 合成账号登录预检。宿主 Python Runner、PowerShell 入口与 Compose 容器均使用同一变量名；密码值不会进入 Git、报告、账本、Trace、日志或错误文本。

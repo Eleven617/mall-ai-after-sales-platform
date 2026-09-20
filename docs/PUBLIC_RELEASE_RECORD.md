@@ -1,5 +1,11 @@
 # 公开发布记录
 
+## 当前权威记录｜v3.0.4 离线现场复核（2026-09-20）
+
+候选执行 HEAD `1efaa22311e41d92816c5f08188a59ff7ca66806`，Runtime Freeze/image revision `3c4c3a5ae9fac944350b6710322fd9d5223eccde`。Docker Compose 8/8 healthy；现场 Runner 在 deterministic/offline 范围从 0/122 通过：Browser 24/24、Java/MySQL 30/30、Fault 36/36、Durable Recovery 32/32。报告 SHA `3aa1613e07ae89fbf11ad51cd6ed33e0860304040c49abb7a5c03b35adfefe1f`，Fixture SHA `7b7616e3ba0f6939a7bcc7d381b3c3b7b35d2b443c2056b218cdefc7f17486a9`，external Provider requests/tokens `0/0`。
+
+当前 Release Gate **NOT_COMPLETE**：本轮未启动 DeepSeek 正式批次，未创建新在线 Release/Lock，未合并 main。122/122 是本地合成 deterministic 现场证据，不是模型准确率或生产 SLA；历史失败证据保持不变。
+
 ## 当前权威记录｜v3.0.4 在线入口预检修复（2026-09-19）
 
 当前候选 Runtime 为 `3c4c3a5ae9fac944350b6710322fd9d5223eccde`。正式在线入口现在在任何 Release ID、Batch ID、Ledger、Lock 或报告创建之前，验证 Runner 进程的 `MALL_LIVE_DEMO_PASSWORD`，并经本地 Java API 创建/登录两条合成账号路径。变量名在 Python Runner、PowerShell 入口和 Compose 容器一致；Secret 只存在于进程环境，不写入公开工件。
