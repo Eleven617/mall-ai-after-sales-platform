@@ -9,7 +9,7 @@
 
 ## 30 秒了解项目
 
-> 当前展示状态：`NOT_COMPLETE`。本候选正在完成正式在线批次前的环境收口：入口已支持进程内临时合成密码、Java 账号预检、共享 Ledger、预算和单批次锁。当前这次收口没有新的 Provider 请求；Docker/Java 现场和真实模型闭环必须在可用的本机环境中重新执行，不能把历史报告或 deterministic 结果冒充当前在线结果。
+> 当前展示状态：`READY_FOR_ONE_FINAL_LIVE_BATCH`。候选分支已完成本地离线工程验证：FastAPI JUnit `450/450`、manifest `478/478`、contract replay `36/36`、当前 Docker 现场 `122/122`（Browser 24、Java/MySQL 30、Fault 36、Durable Recovery 32），候选 SHA 的 `mall-ci` 与 `quality-evaluation` 均成功。以上均使用合成数据和 deterministic/replay 运行，不能冒充真实模型质量；真实 DeepSeek 批次尚未执行。
 
 ### 为什么不是普通聊天机器人
 
@@ -32,7 +32,7 @@ flowchart LR
   R --> W[Vue 安全公开 DTO]
 ```
 
-### 一个核心 Agent，两个辅助 AI 能力
+### 三个产品 Agent
 
 | 能力 | 面向角色 | 主要输入/输出 | 写入边界 |
 | --- | --- | --- | --- |
@@ -50,7 +50,7 @@ MCP 只读工具、人工售后工作台和 LangGraph 确定性节点是能力�
 2. 等待输入 → 暂停保留 → 政策岔开 → 同一任务恢复；
 3. 事实版本变化 → 旧结果失效 → 重新核验 → 新方案或人工交接。
 
-无模型 deterministic/replay 运行只证明受控 Runtime 合同、Proposal/确认边界和 Java 权威写入路径；它不证明真实模型的自然语言泛化。正式在线批次会在同一批次内录制素材，失败时保留脱敏阶段、状态和根因，不重试单个 Case。录制入口仍支持无模型 dry-run：[`scripts/Capture-PublicShowcase.ps1 -DryRun`](scripts/Capture-PublicShowcase.ps1)。
+无模型 deterministic/replay 运行只证明受控 Runtime 合同、Proposal/确认边界和 Java 权威写入路径；它不证明真实模型的自然语言泛化。正式在线批次若执行，将在同一批次内录制素材；失败时保留脱敏阶段、状态和根因，不重试单个 Case。录制入口仍支持无模型 dry-run：[`scripts/Capture-PublicShowcase.ps1 -DryRun`](scripts/Capture-PublicShowcase.ps1)。
 
 ## 架构与代码入口
 
@@ -68,11 +68,11 @@ MCP 只读工具、人工售后工作台和 LangGraph 确定性节点是能力�
 
 - 当前候选收口的 FastAPI JUnit 为 `450 passed`（438 pytest cases + 12 subtests），exit `0`；
 - v3 deterministic 发布合同为 `478/478`，代表性 Runtime 为 `8/8`；本轮 contract replay 为 `36/36`，Provider `0`；这些都不是浏览器 E2E 或真实模型效果；
-- Java 定向测试、Vue build、8 服务 Compose 和四类现场 Runner 需要 Docker/Java 可执行环境，本次收口未把环境阻塞伪装成通过；
-- Java portal 核心 `12/12`、admin `6/6`、Spring context `1/1` 的历史定向结果保留在证据包中；
+- Java portal 核心 `12/12`、admin `6/6`、Vue production build、8 服务 Compose 和四类现场 Runner 均已在当前候选环境验证通过；
+- 当前现场 `122/122` 是本地 Docker、Chrome、Java/MySQL 和合成 Fixture 的 deterministic/offline 证据，不是 DeepSeek 任务完成率；
 - RAG Dense、Hybrid、Hybrid+Rerank 的 52 条版本化合成政策 Case 指标只说明检索排序质量，不是答案准确率；
 - 历史 supplemental evaluation set 不是独立盲测集，旧结果只作为开发期审计，不能外推到真实用户；
-- 真实模型主集、补充集、Grounding 和在线展示素材必须绑定新的正式批次报告；历史报告与当前提交不一致时标记为 stale。
+- 真实模型主集、补充集、Grounding 和在线展示素材尚未执行，必须绑定唯一正式批次报告；历史报告与当前提交不一致时标记为 stale。
 
 历史失败、根因和修复过程见 [evaluation-evolution](docs/evidence/evaluation-evolution.md) 与 [failure matrix](docs/evidence/final-agent-failure-matrix.md)。当前数字的唯一事实源是 [`current-release-facts.json`](docs/evidence/current-release-facts.json)，并由 [`validate_public_release.py`](scripts/validate_public_release.py) 在 CI 中校验。
 
