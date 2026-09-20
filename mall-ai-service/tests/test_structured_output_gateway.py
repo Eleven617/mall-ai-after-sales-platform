@@ -303,6 +303,29 @@ class StructuredOutputGatewayTests(unittest.TestCase):
         self.assertNotIn("private customer message", str(diagnostics))
         self.assertNotIn("hidden", str(diagnostics))
 
+    def test_gateway_classifies_shape_errors_and_keeps_only_safe_paths(self) -> None:
+        def malformed(**_kwargs):
+            return {
+                "intent": "not_a_declared_intent",
+                "need_tool": True,
+                "tool": {"name": "logistics_service", "order_sn": "hidden"},
+                "debug": "must not be retained",
+            }
+
+        with self.assertRaises(StructuredOutputError) as raised:
+            generate_structured_output(
+                message="private input",
+                system_prompt="识别意图",
+                response_model=_DecisionContract,
+                json_generator=malformed,
+            )
+
+        diagnostics = raised.exception.diagnostics
+        self.assertTrue(set(diagnostics["schema_error_kinds"]).issubset(
+            {"missing_field", "extra_field", "enum_value", "union_conflict", "scalar_type", "schema_invalid"}
+        ))
+        self.assertTrue(all("hidden" not in path for path in diagnostics["error_paths"]))
+
     def test_json_object_mode_adds_provider_request_flag(self) -> None:
         captured: dict = {}
 

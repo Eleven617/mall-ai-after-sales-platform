@@ -24,7 +24,7 @@ from app.schemas.agent_task import ExecutorDecision, SkillCall
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
-HOLDOUT_SUITE_PATH = PROJECT_ROOT / "evals" / "live_model_agent_holdout_cases.v2.json"
+HOLDOUT_SUITE_PATH = PROJECT_ROOT / "evals" / "live_model_agent_holdout_cases.v3.json"
 REPLAY_FIXTURE_PATH = PROJECT_ROOT / "evals" / "live_model_agent_contract_replay.v1.json"
 REPLAY_VERSION = "v3.0.4-contract-replay.v1"
 

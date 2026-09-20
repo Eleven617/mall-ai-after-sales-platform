@@ -1,6 +1,8 @@
 """Contract tests for the explicit open-task Agent evaluation runner."""
 from __future__ import annotations
 
+import json
+
 from app.runtime.live_model_agent_evaluation import (
     DEFAULT_SUITE_PATH,
     load_live_agent_suite,
@@ -17,6 +19,36 @@ def test_open_task_suite_has_unique_hashed_cases() -> None:
     assert len(cases) >= 24
     assert len({case["caseId"] for case in cases}) == len(cases)
     assert all(len(case["fixtureHash"]) == 64 for case in cases)
+
+
+def test_holdout_v3_allows_required_resolution_read_without_mutating_v2() -> None:
+    from app.runtime.contract_replay_evaluation import HOLDOUT_SUITE_PATH
+
+    suite = load_live_agent_suite(HOLDOUT_SUITE_PATH)
+    by_id = {case["caseId"]: case for case in suite["cases"]}
+    assert suite["suiteVersion"] == "live-model-agent-runtime-holdout.v3"
+    assert "build_service_resolution" in by_id["holdout-open-011"]["expect"]["allowed_skills"]
+    assert "build_service_resolution" in by_id["holdout-open-012"]["expect"]["allowed_skills"]
+    original = json.loads(
+        (HOLDOUT_SUITE_PATH.parent / "live_model_agent_holdout_cases.v2.json").read_text(encoding="utf-8")
+    )
+    original_by_id = {case["caseId"]: case for case in original["cases"]}
+    assert "build_service_resolution" not in original_by_id["holdout-open-011"]["expect"]["allowed_skills"]
+
+
+def test_unlisted_skill_remains_an_irrelevant_call_failure() -> None:
+    from app.runtime.live_model_agent_evaluation import _contract_failures
+
+    class View:
+        status = "completed"
+        action = None
+
+    class Gateway:
+        invocations = ["read_order", "unreviewed_read"]
+        commits = []
+
+    case = {"expect": {"allowed_skills": ["read_order"], "proposal": "forbidden"}}
+    assert _contract_failures(case, View(), Gateway(), proposal_present=False) == ["irrelevant_skill_call"]
 
 
 def test_fault_injected_model_case_proves_safe_stop_without_environment_claim() -> None:

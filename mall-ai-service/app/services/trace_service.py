@@ -101,6 +101,8 @@ _SAFE_DETAIL_KEYS = {
     "correction_attempted",
     "correction_result",
     "validation_codes",
+    "schema_error_kinds",
+    "error_paths",
 }
 _SAFE_TOOL_NAMES = {
     "order_service",
@@ -453,7 +455,7 @@ def _sanitize_details(details: dict[str, Any]) -> dict[str, Any]:
         elif key == "provider_request_id_hash":
             if value is None or (isinstance(value, str) and _SAFE_REFERENCE_PATTERN.fullmatch(value)):
                 safe_details[key] = value
-        elif key in {"pydantic_error_types", "validation_codes"}:
+        elif key in {"pydantic_error_types", "validation_codes", "schema_error_kinds", "error_paths"}:
             if isinstance(value, (list, tuple)) and len(value) <= 8:
                 items = [
                     item

@@ -25,6 +25,12 @@ _BEARER_PREFIX = re.compile(r"(?i)bearer\s+[A-Za-z0-9._-]+")
 _CONTROL_CHARACTERS = re.compile(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]")
 _WHITESPACE = re.compile(r"\s+")
 
+# The published policy describes refund timing, not moving a refund into a
+# different account or cashing out a pay-on-delivery order.
+_UNSUPPORTED_PAYMENT_ROUTE = re.compile(
+    r"(?:到货付款|货到付款|现金支付).*(?:提现|转入(?:其他)?账户|取现)"
+)
+
 
 def project_policy_query(value: str) -> str:
     """Return the bounded text allowed into local policy retrieval.
@@ -44,4 +50,6 @@ def project_policy_query(value: str) -> str:
     query = _MAINLAND_PHONE.sub("[已移除手机号]", query)
     query = _ORDER_LIKE_NUMBER.sub("[已移除订单号]", query)
     query = _WHITESPACE.sub(" ", query).strip()
+    if _UNSUPPORTED_PAYMENT_ROUTE.search(query):
+        return ""
     return query[:MAX_POLICY_QUERY_CHARS]

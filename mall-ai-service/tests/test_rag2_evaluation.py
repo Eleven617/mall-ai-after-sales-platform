@@ -9,6 +9,7 @@ from app.services.rag2_evaluation import (
     load_rag2_golden_suite,
 )
 from app.services.rag_service import RagAnswer
+from app.services.policy_query import project_policy_query
 
 
 def _chunk(section: str, *, distance: float = 0.2) -> RetrievedChunk:
@@ -56,6 +57,13 @@ def _suite() -> dict:
 
 
 class Rag2EvaluationTests(unittest.TestCase):
+    def test_policy_query_abstains_for_unsupported_payment_route(self) -> None:
+        self.assertEqual("", project_policy_query("到货付款的订单退货后可以提现吗？"))
+        self.assertEqual("", project_policy_query("货到付款退款能转入其他账户吗？"))
+
+    def test_policy_query_preserves_current_rule_request_for_versioned_retrieval(self) -> None:
+        query = project_policy_query("以前客服说拆封都能退，现在按最新规则还能走七天无理由吗？")
+        self.assertIn("最新规则", query)
     def test_committed_golden_suite_is_versioned_and_expanded(self) -> None:
         suite = load_rag2_golden_suite(
             Path(__file__).resolve().parents[1] / "evals" / "rag2_golden_cases.v1.json"

@@ -35,11 +35,12 @@ from app.skills.commerce_gateway import SkillObservation
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_SUITE_PATH = PROJECT_ROOT / "evals" / "live_model_agent_runtime_cases.v2.json"
 SUITE_VERSION = "live-model-agent-runtime.v2"
-HOLDOUT_SUITE_VERSION = "live-model-agent-runtime-holdout.v2"
+HOLDOUT_SUITE_VERSION = "live-model-agent-runtime-holdout.v3"
 _MIN_CASES_BY_SUITE_VERSION = {
     "live-model-agent-runtime.v1": 24,
     SUITE_VERSION: 24,
     "live-model-agent-runtime-holdout.v1": 12,
+    "live-model-agent-runtime-holdout.v2": 12,
     HOLDOUT_SUITE_VERSION: 12,
 }
 SYNTHETIC_AUTHORIZATION = "Bearer synthetic-agent-evaluation"
@@ -200,7 +201,11 @@ def load_live_agent_suite(path: Path = DEFAULT_SUITE_PATH) -> dict[str, Any]:
         payload = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError) as exc:
         raise LiveAgentEvaluationError("live agent suite 无法加载。") from exc
-    if not isinstance(payload, dict) or payload.get("suiteVersion") not in _MIN_CASES_BY_SUITE_VERSION:
+    if not isinstance(payload, dict):
+        raise LiveAgentEvaluationError("live agent suite 版本不匹配。")
+    if payload.get("baseSuite"):
+        payload = _resolve_suite_overlay(path, payload)
+    if payload.get("suiteVersion") not in _MIN_CASES_BY_SUITE_VERSION:
         raise LiveAgentEvaluationError("live agent suite 版本不匹配。")
     cases = payload.get("cases")
     minimum_cases = _MIN_CASES_BY_SUITE_VERSION[payload["suiteVersion"]]
@@ -210,6 +215,41 @@ def load_live_agent_suite(path: Path = DEFAULT_SUITE_PATH) -> dict[str, Any]:
     for case in cases:
         _validate_case(case, seen)
     return payload
+
+
+def _resolve_suite_overlay(path: Path, overlay: Mapping[str, Any]) -> dict[str, Any]:
+    """Resolve a versioned contract overlay without mutating its base suite."""
+    base_name = overlay.get("baseSuite")
+    overrides = overlay.get("caseOverrides")
+    if not isinstance(base_name, str) or Path(base_name).name != base_name:
+        raise LiveAgentEvaluationError("live agent suite base contract is invalid.")
+    if not isinstance(overrides, Mapping):
+        raise LiveAgentEvaluationError("live agent suite contract overrides are invalid.")
+    base_path = path.parent / base_name
+    try:
+        base = json.loads(base_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise LiveAgentEvaluationError("live agent suite base contract cannot be loaded.") from exc
+    if not isinstance(base, dict) or not isinstance(base.get("cases"), list):
+        raise LiveAgentEvaluationError("live agent suite base contract is invalid.")
+    cases = [dict(case) for case in base["cases"]]
+    by_id = {str(case.get("caseId")): case for case in cases}
+    for case_id, override in overrides.items():
+        if case_id not in by_id or not isinstance(override, Mapping):
+            raise LiveAgentEvaluationError("live agent suite override case is invalid.")
+        expect = dict(by_id[case_id].get("expect") or {})
+        expect.update(dict(override.get("expect") or {}))
+        by_id[case_id]["expect"] = expect
+        if "goal" in override:
+            by_id[case_id]["goal"] = override["goal"]
+    return {
+        **base,
+        "suiteVersion": overlay.get("suiteVersion"),
+        "description": overlay.get("description", base.get("description")),
+        "contractRevision": overlay.get("contractRevision"),
+        "revisionReason": overlay.get("revisionReason"),
+        "cases": cases,
+    }
 
 
 def run_live_model_agent_evaluation(

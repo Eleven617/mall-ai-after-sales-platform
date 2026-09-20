@@ -62,7 +62,7 @@ from app.services.release_ledger import (  # noqa: E402
 REPOSITORY_ROOT = SERVICE_ROOT.parent
 RELEASE_LOCK_PATH = REPOSITORY_ROOT / "docs" / "evidence" / "deepseek-release-lock.json"
 DEFAULT_CANDIDATE_LOCK_PATH = REPOSITORY_ROOT / "docs" / "evidence" / "deepseek-release-lock-v3.0.1.json"
-HOLDOUT_SUITE_PATH = SERVICE_ROOT / "evals" / "live_model_agent_holdout_cases.v2.json"
+HOLDOUT_SUITE_PATH = SERVICE_ROOT / "evals" / "live_model_agent_holdout_cases.v3.json"
 GROUNDING_SUITE_PATH = SERVICE_ROOT / "evals" / "rag2_golden_cases.v1.json"
 SHOWCASE_CASES = {
     "main_open_task_closed_loop": "agent-open-020",

@@ -194,13 +194,14 @@ def generate_structured_output_with_correction(
             {
                 "failure_stage": "schema_validate",
                 "pydantic_error_types": _pydantic_error_types(exc),
+                **_schema_diagnostics(exc),
             }
         )
         first_codes = _normalise_validation_codes(
             getattr(exc, "validation_codes", ()) or ("schema_invalid",)
         )
     except (TypeError, ValueError):
-        first_diagnostics["failure_stage"] = "json_parse"
+        first_diagnostics.update({"failure_stage": "json_parse", "schema_error_kinds": ["json_parse"]})
         first_codes = _normalise_validation_codes(
             ("schema_invalid",)
         )
@@ -276,6 +277,7 @@ def generate_structured_output_with_correction(
                 "failure_stage": "schema_validate",
                 "correction_result": "failed",
                 "pydantic_error_types": _pydantic_error_types(exc),
+                **_schema_diagnostics(exc),
             },
         ) from exc
     except (TypeError, ValueError) as exc:
@@ -286,6 +288,7 @@ def generate_structured_output_with_correction(
             diagnostics={
                 "failure_stage": "json_parse",
                 "correction_result": "failed",
+                "schema_error_kinds": ["json_parse"],
             },
         ) from exc
 
@@ -336,6 +339,34 @@ def _pydantic_error_types(error: ValidationError) -> list[str]:
     return list(dict.fromkeys(result))
 
 
+def _schema_diagnostics(error: ValidationError) -> dict[str, list[str]]:
+    """Classify shape failures without retaining values or raw model output."""
+    kinds: list[str] = []
+    paths: list[str] = []
+    for item in error.errors()[:8]:
+        error_type = str(item.get("type") or "schema_invalid")
+        loc = item.get("loc") or ()
+        safe_loc = ".".join(str(part) for part in loc if isinstance(part, (str, int)))
+        if safe_loc and re.fullmatch(r"[a-zA-Z0-9_.-]{1,96}", safe_loc):
+            paths.append(safe_loc)
+        if error_type in {"missing", "missing_argument", "missing_keyword_only_argument"}:
+            kinds.append("missing_field")
+        elif error_type in {"extra_forbidden", "extra"}:
+            kinds.append("extra_field")
+        elif error_type in {"literal_error", "enum"}:
+            kinds.append("enum_value")
+        elif "union" in error_type:
+            kinds.append("union_conflict")
+        elif "type" in error_type or error_type in {"bool_parsing", "int_parsing", "string_type"}:
+            kinds.append("scalar_type")
+        else:
+            kinds.append("schema_invalid")
+    return {
+        "schema_error_kinds": list(dict.fromkeys(kinds))[:4] or ["schema_invalid"],
+        "error_paths": list(dict.fromkeys(paths))[:8],
+    }
+
+
 def _safe_diagnostics(
     diagnostics: Mapping[str, Any] | None,
     *,
@@ -352,6 +383,8 @@ def _safe_diagnostics(
         "finish_reason",
         "provider_request_id_hash",
         "correction_result",
+        "schema_error_kinds",
+        "error_paths",
     }
     source = diagnostics if isinstance(diagnostics, Mapping) else {}
     output: dict[str, Any] = {
@@ -374,6 +407,12 @@ def _safe_diagnostics(
                 output[key] = [
                     item for item in value[:8]
                     if isinstance(item, str) and _SAFE_VALIDATION_CODE.fullmatch(item)
+                ]
+        elif key in {"schema_error_kinds", "error_paths"}:
+            if isinstance(value, (list, tuple)):
+                output[key] = [
+                    item for item in value[:8]
+                    if isinstance(item, str) and re.fullmatch(r"[a-zA-Z0-9_.-]{1,96}", item)
                 ]
     return output
 

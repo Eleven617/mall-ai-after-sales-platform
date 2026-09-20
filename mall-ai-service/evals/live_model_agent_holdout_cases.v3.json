@@ -1,0 +1,19 @@
+{
+  "suiteVersion": "live-model-agent-runtime-holdout.v3",
+  "description": "Versioned contract overlay for the synthetic holdout; v2 remains immutable.",
+  "baseSuite": "live_model_agent_holdout_cases.v2.json",
+  "contractRevision": "holdout-contract-2026-09-20-build-resolution-v1",
+  "revisionReason": "The reviewed fixtures for the two confirmation-bound cases contain build_service_resolution as a necessary read-only observation. The v2 allow-list omitted it and misclassified a legitimate call as irrelevant_skill_call. Proposal expiry, idempotency, permission and no-write checks remain unchanged.",
+  "caseOverrides": {
+    "holdout-open-011": {
+      "expect": {
+        "allowed_skills": ["read_order", "build_service_resolution", "create_after_sales_draft", "commit_after_sales_action"]
+      }
+    },
+    "holdout-open-012": {
+      "expect": {
+        "allowed_skills": ["read_order", "build_service_resolution", "create_after_sales_draft", "commit_after_sales_action"]
+      }
+    }
+  }
+}
