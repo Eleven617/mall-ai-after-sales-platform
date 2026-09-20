@@ -9,7 +9,7 @@
 
 ## 30 秒了解项目
 
-> 当前展示状态：`NOT_COMPLETE`。历史 `v3.0-deepseek-flash-final` 两批次和失败锁保持不变；本候选 `v3.0.1` 在真实本地展示阶段返回脱敏 `ShowcaseError` 后停止（0 provider requests、0 tokens），主集/补充集/Grounding 和新素材未执行。没有用 mock 冒充真实模型结果。
+> 当前展示状态：`NOT_COMPLETE`。本候选正在完成正式在线批次前的环境收口：入口已支持进程内临时合成密码、Java 账号预检、共享 Ledger、预算和单批次锁。当前这次收口没有新的 Provider 请求；Docker/Java 现场和真实模型闭环必须在可用的本机环境中重新执行，不能把历史报告或 deterministic 结果冒充当前在线结果。
 
 ### 为什么不是普通聊天机器人
 
@@ -44,13 +44,13 @@ MCP 只读工具、人工售后工作台和 LangGraph 确定性节点是能力�
 
 ## 三条展示链路（当前复核状态）
 
-计划中的三条真实链路是：
+产品设计和 deterministic/replay 入口覆盖三条链路：
 
 1. 开放目标 → 多步事实/政策调查 → 候选 → 用户确认 → Java 重校验/写入 → 状态回查；
 2. 等待输入 → 暂停保留 → 政策岔开 → 同一任务恢复；
 3. 事实版本变化 → 旧结果失效 → 重新核验 → 新方案或人工交接。
 
-Batch 1/2 的三条合成 Runtime 场景结果为 2/3 通过、1/3 失败；Batch 2 的失败案例是 `agent-open-001` 的 clarification mismatch，按规则停止，未执行主集、补充集、Grounding，也没有生成最终 GIF。这不是浏览器录制，也没有宣称 Java 真实写入。录制入口仍支持无模型 dry-run：[`scripts/Capture-PublicShowcase.ps1 -DryRun`](scripts/Capture-PublicShowcase.ps1)。
+无模型 deterministic/replay 运行只证明受控 Runtime 合同、Proposal/确认边界和 Java 权威写入路径；它不证明真实模型的自然语言泛化。正式在线批次会在同一批次内录制素材，失败时保留脱敏阶段、状态和根因，不重试单个 Case。录制入口仍支持无模型 dry-run：[`scripts/Capture-PublicShowcase.ps1 -DryRun`](scripts/Capture-PublicShowcase.ps1)。
 
 ## 架构与代码入口
 
@@ -66,11 +66,13 @@ Batch 1/2 的三条合成 Runtime 场景结果为 2/3 通过、1/3 失败；Batc
 
 结果按套件独立统计，不相加，也不外推为生产 SLA 或真实用户泛化：
 
-- 当前冻结提交 FastAPI：`376 passed`、12 个子断言；Java portal 核心 `12/12`、兼容性 `2/2`、admin `6/6`、Spring context `1/1`；现场 Browser `24/24`、Java/MySQL `30/30`、Fault `36/36`；
-- 历史补充评测集（supplemental evaluation set）参与过开发期回归，不是独立盲测集；其旧 `36/36` 结果已因 Runtime 提交变化标为 stale；
-- RAG：Dense、Hybrid、Hybrid+Rerank 分别在 52 条版本化合成政策 Case 上评测；Dense 当前 MRR `0.948718`、nDCG@3 `0.962147`，作为默认方案；这些是检索指标，不是答案准确率；
-- deterministic 合同：`478/478`，代表性 Runtime `8/8`，不是 E2E；
-- Vue production build 通过；两个允许批次的最终展示场景为 `2/3 passed, 1/3 failed`，`environment_blocked=0`；不能把历史主集 `72`、补充集 `36`、Grounding 或现场 `122` 当作当前结果。
+- 当前候选收口的 FastAPI JUnit 为 `450 passed`（438 pytest cases + 12 subtests），exit `0`；
+- v3 deterministic 发布合同为 `478/478`，代表性 Runtime 为 `8/8`；本轮 contract replay 为 `36/36`，Provider `0`；这些都不是浏览器 E2E 或真实模型效果；
+- Java 定向测试、Vue build、8 服务 Compose 和四类现场 Runner 需要 Docker/Java 可执行环境，本次收口未把环境阻塞伪装成通过；
+- Java portal 核心 `12/12`、admin `6/6`、Spring context `1/1` 的历史定向结果保留在证据包中；
+- RAG Dense、Hybrid、Hybrid+Rerank 的 52 条版本化合成政策 Case 指标只说明检索排序质量，不是答案准确率；
+- 历史 supplemental evaluation set 不是独立盲测集，旧结果只作为开发期审计，不能外推到真实用户；
+- 真实模型主集、补充集、Grounding 和在线展示素材必须绑定新的正式批次报告；历史报告与当前提交不一致时标记为 stale。
 
 历史失败、根因和修复过程见 [evaluation-evolution](docs/evidence/evaluation-evolution.md) 与 [failure matrix](docs/evidence/final-agent-failure-matrix.md)。当前数字的唯一事实源是 [`current-release-facts.json`](docs/evidence/current-release-facts.json)，并由 [`validate_public_release.py`](scripts/validate_public_release.py) 在 CI 中校验。
 

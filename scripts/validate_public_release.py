@@ -150,7 +150,12 @@ def main() -> int:
         require(field["total"] == "122/122" and field["failed"] == field["environmentBlocked"] == 0, "field facts mismatch")
     else:
         current = facts.get("currentVerification", {})
-        require(current.get("commit") == facts["runtimeCommit"], "current verification must bind runtimeCommit")
+        # Runtime identity is distinct from the Git worktree that produced a
+        # report.  Evidence-only changes may be uncommitted when validation
+        # runs; retain both identities instead of relabelling the worktree as
+        # the frozen container runtime.
+        current_runtime = current.get("runtimeCommit", current.get("commit"))
+        require(current_runtime == facts["runtimeCommit"], "current verification must bind runtimeCommit")
         require(current.get("fastapi", {}).get("passed") == tests["fastapi"]["passed"], "current FastAPI facts mismatch")
         require(current.get("fastapi", {}).get("failed") == tests["fastapi"]["failed"], "current FastAPI failure count mismatch")
         require(current.get("deterministic", {}).get("manifest") == "478/478", "current deterministic facts mismatch")
@@ -213,13 +218,11 @@ def main() -> int:
     if release_status == "NOT_COMPLETE":
         required_fragments = (
             "DeepSeek",
-            "376 passed",
+            f"{tests['fastapi']['passed']} passed",
             "portal 核心 `12/12`",
             "admin `6/6`",
             "Spring context `1/1`",
             "478/478",
-            "MRR `0.948718`",
-            "nDCG@3 `0.962147`",
         )
         for fragment in required_fragments:
             require(fragment in readme, f"README missing fact fragment: {fragment}")

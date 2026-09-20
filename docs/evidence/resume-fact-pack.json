@@ -30,16 +30,16 @@
   "agentCapabilities": {
     "openTask": ["goal understanding", "bounded Skill selection", "read-only multi-step investigation", "Context projection", "proposal/resume", "safe stop"],
     "liveSynthetic": {"releaseId": "mall-v3.0.3-portfolio-final-db3860701086", "batchId": "portfolio_final-c9b46de42c2d", "status": "failed", "providerRequests": 8, "providerSuccess": 8, "providerFailure": 0, "totalTokens": 29542, "ledgerReconciled": true, "completedCoreChains": "0/3", "blocker": "main_open_task_closed_loop agent_task_create scenario_assertion_failure; proposal not formed; no rerun"},
-    "fieldAcceptance": {"status": "blocked_missing_live_demo_password", "browser": "not_run_current_commit", "javaMysql": "not_run_current_commit", "fault": "not_run_current_commit", "durableRecovery": "not_run_current_commit", "total": "122 registered; 0 executed", "environmentBlocked": 122}
+    "fieldAcceptance": {"status": "environment_blocked_docker_java", "browser": "not_run_current_commit", "javaMysql": "not_run_current_commit", "fault": "not_run_current_commit", "durableRecovery": "not_run_current_commit", "total": "122 registered; 0 executed", "environmentBlocked": 122}
   },
   "techStack": ["Java", "Spring Boot", "FastAPI", "LangGraph", "Vue 3", "Redis", "MySQL", "MongoDB", "RabbitMQ", "RAG", "MCP", "AgentOps", "Eval"],
   "tests": {
-    "fastapi": {"passed": 449, "failed": 0, "warnings": 1, "subtests": 12, "pytestTerminalPassed": 437, "exitCode": 0},
+    "fastapi": {"passed": 450, "failed": 0, "warnings": 1, "subtests": 12, "pytestTerminalPassed": 438, "exitCode": 0},
     "v3": {"deterministic": "478/478", "representative": "8/8", "exitCode": 0},
     "java": {"portalCore": "12/12", "portalCompatibility": "2/2", "admin": "6/6", "springContext": "1/1", "exitCode": 0},
     "web": "npm run build passed",
     "grounding": {"status": "not_executed_after_batch2_stop", "cases": null, "checks": null, "environmentBlocked": null},
-    "field": {"status": "blocked_missing_live_demo_password", "total": "122 registered; 0 executed", "environmentBlocked": 122, "reportSha256": null, "fixtureSha256": null}
+    "field": {"status": "environment_blocked_docker_java", "total": "122 registered; 0 executed", "environmentBlocked": 122, "reportSha256": null, "fixtureSha256": null}
   },
   "metrics": {
     "authorizedBatchReport": "tmp/portfolio-final-release-mall-v3.0.3-portfolio-final-db3860701086/final-after-batch-a-failure.json",

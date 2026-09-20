@@ -84,3 +84,15 @@ def test_environment_name_is_consistent_across_runner_compose_and_powershell() -
     ]
     for source in sources:
         assert PASSWORD_ENV_NAME in source.read_text(encoding="utf-8")
+
+
+def test_v304_final_entry_is_a_real_single_batch_path_with_ephemeral_password() -> None:
+    root = Path(__file__).resolve().parents[2]
+    content = (root / "scripts" / "Run-V3_0_4-Portfolio-Release.ps1").read_text(encoding="utf-8")
+    assert "New-TemporaryDemoPassword" in content
+    assert "MALL_FIELD_FIXTURE_PASSWORD" in content
+    assert "run_live_release_preflight.py" in content
+    assert "run_deepseek_release_batch.py" in content
+    assert "FINAL_ONLINE_BATCH_REQUIRES_EXPLICIT_AUTHORIZATION" not in content
+    assert "MALL_RELEASE_LEDGER_PATH" in content
+    assert "deepseek-release-lock-$ReleaseId.json" in content

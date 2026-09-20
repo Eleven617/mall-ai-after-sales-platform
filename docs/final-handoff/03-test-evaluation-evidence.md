@@ -2,9 +2,9 @@
 
 ## 当前权威快照｜v3.0.4 在线入口预检修复（2026-09-19）
 
-当前 Runtime 候选 `3c4c3a5ae9fac944350b6710322fd9d5223eccde` 的正式在线入口新增无模型预检：检查进程级 `MALL_LIVE_DEMO_PASSWORD`，并仅通过本地 Java API 创建/登录合成账号；预检通过前不会创建 Release/Batch、Ledger、Lock 或报告。
+当前 Runtime 候选 `3c4c3a5ae9fac944350b6710322fd9d5223eccde` 的正式在线入口新增无模型预检：检查进程级 `MALL_LIVE_DEMO_PASSWORD`（缺失时仅在进程内生成临时合成密码），并仅通过本地 Java API 创建/登录合成账号；预检通过前不会创建 Release/Batch、Ledger、Lock 或报告。
 
-FastAPI 为 **449/449**（437 pytest cases + 12 subtests），预检回归 **5/5**；manifest 478/478、代表性 8/8、Java 定向测试、Vue build 和 Compose 健康检查通过。本机未设置 Secret，当前 Runtime 的 122 条现场执行为 `environment_blocked`，历史 122/122 不能合并。Provider requests=0、Token=0，发布状态 **NOT_COMPLETE**。
+FastAPI 为 **450/450**（438 pytest cases + 12 subtests），预检回归 **19/19**；manifest 478/478、代表性 8/8。本轮 Docker/Java 现场因执行环境权限阻塞，当前 Runtime 的现场结果未启动，历史 122/122 不能合并。Provider requests=0、Token=0，发布状态 **NOT_COMPLETE**。
 
 ## 当前权威快照｜v3.0.4 离线候选（2026-09-18）
 
@@ -100,9 +100,9 @@ FastAPI 为 **449/449**（437 pytest cases + 12 subtests），预检回归 **5/5
 
 当前 Runtime 候选 `3c4c3a5ae9fac944350b6710322fd9d5223eccde` 新增了无模型的正式在线入口预检。它先检查进程级 `MALL_LIVE_DEMO_PASSWORD`，再仅通过本地 Java API 创建/登录合成账号；只有预检成功，正式 Runner 才能生成 Release/Batch、Ledger、Lock 或调用 Provider。
 
-- 预检回归：5/5；覆盖缺失 Secret fail-closed、Fake Java 合成账号预检、失败不创建 Lock/报告/账本、Secret 不进入错误文本、PowerShell/Compose/Python 变量名一致。
-- FastAPI：JUnit 449/449（437 pytest cases + 12 subtests），0 failed、0 skipped；exit 0。
+- 预检回归：19/19；覆盖缺失 Secret fail-closed、Fake Java 合成账号预检、失败不创建 Lock/报告/账本、Secret 不进入错误文本、PowerShell/Compose/Python 变量名一致，以及正式单批次入口合同。
+- FastAPI：JUnit 450/450（438 pytest cases + 12 subtests），0 failed、0 skipped；exit 0。
 - Provider：0 requests，0 Token；没有新 Release、Batch、Ledger、Lock 或在线报告。
-- 现场 122：当前 Runtime 尚未运行。此前 122/122 是旧 Runtime 的 deterministic/offline 报告，不计入本候选；本机缺失 Secret 时状态为 `BLOCKED_MISSING_LIVE_DEMO_PASSWORD`。
+- 现场 122：当前 Runtime 尚未运行。此前 122/122 是旧 Runtime 的 deterministic/offline 报告，不计入本候选；本机 Docker CLI/Engine 与 Java 端点拒绝访问，状态为 `ENVIRONMENT_BLOCKED_DOCKER_JAVA`。
 
 历史失败证据保持不变。本文件以下章节是历史审计记录，不能与上面的当前统计合并。

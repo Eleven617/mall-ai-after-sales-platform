@@ -4,7 +4,7 @@
 
 候选 Runtime `3c4c3a5ae9fac944350b6710322fd9d5223eccde`，发布状态 **NOT_COMPLETE**。正式在线 Runner 在创建任何 Release、Batch、Ledger、Lock 或报告之前，先检查进程级 `MALL_LIVE_DEMO_PASSWORD`，再通过本地 Java API 验证合成账号创建/登录；Python、PowerShell 和 Compose 使用同一变量名，Secret 不写入公开工件。
 
-FastAPI JUnit **449/449**（437 pytest cases + 12 subtests），0 failed、0 skipped；预检回归 **5/5**，manifest **478/478**、代表性 **8/8**、Java 定向测试、Vue build 与 Compose 健康检查均通过。本机目前未配置演示账号 Secret，故当前 Runtime 的现场 122 条是 `environment_blocked`，历史 122/122 deterministic/offline 结果不并入。Provider requests=0、Token=0；没有新在线 Release 或第二批次。
+FastAPI JUnit **450/450**（438 pytest cases + 12 subtests），0 failed、0 skipped；预检回归 **19/19**，manifest **478/478**、代表性 **8/8**。本轮 Docker/Java 现场因执行环境权限阻塞，未启动在线批次；历史 122/122 deterministic/offline 结果不并入。Provider requests=0、Token=0；没有新在线 Release 或第二批次。
 
 ## 当前事实快照｜v3.0.4 离线候选（2026-09-18）
 

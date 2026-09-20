@@ -1,10 +1,12 @@
 # Mall v3.0 最终交付状态
 
-## 当前权威快照｜v3.0.4 在线入口预检修复（2026-09-19）
+## 当前权威快照｜v3.0.4 在线入口预检修复（2026-09-20）
 
 候选 Runtime `3c4c3a5ae9fac944350b6710322fd9d5223eccde` 已将 `MALL_LIVE_DEMO_PASSWORD` 的宿主 Runner、PowerShell 与 Compose 路径统一，并在生成在线 Batch、Release Lock、报告或账本事件前执行本地 Java 合成账号预检。预检缺失或无效时 fail-closed，且不创建在线批次工件、不调用 Provider。
 
-本机未配置该 Secret，故本阶段为 **`BLOCKED_MISSING_LIVE_DEMO_PASSWORD`**：Provider requests=0、Token=0。历史失败 Lock/Report/Ledger 保持原样；当前 Runtime 的现场 122 条尚未重新执行，旧 122/122 不能并入。FastAPI 机器报告为 449/449（437 pytest cases + 12 subtests），Release 仍为 **`NOT_COMPLETE`**。
+本轮验证执行基线为 Git `d6387bca9c99da33db7c8d3e49e9389187098868` 加未提交工作区；它与冻结 Runtime 身份分开记录，不能被称为已提交候选或当前镜像现场证据。
+
+入口在缺少用户级 Secret 时会为本次进程生成随机临时合成密码；本轮未能进入该预检，因为 Docker CLI/Engine 与 Java 端点在当前 Windows 会话拒绝访问，故状态为 **`ENVIRONMENT_BLOCKED_DOCKER_JAVA`**：Provider requests=0、Token=0。历史失败 Lock/Report/Ledger 保持原样；当前 Runtime 的现场 122 条尚未重新执行，旧 122/122 不能并入。FastAPI 机器报告为 450/450（438 pytest cases + 12 subtests），Release 仍为 **`NOT_COMPLETE`**。
 
 ## 当前权威快照｜v3.0.4 离线候选（2026-09-18）
 

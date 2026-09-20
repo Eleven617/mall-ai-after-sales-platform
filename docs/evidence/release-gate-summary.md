@@ -4,9 +4,9 @@
 
 Runtime 候选 `3c4c3a5ae9fac944350b6710322fd9d5223eccde` 在创建任何新 Release、Batch、Ledger、Lock 或报告之前，新增了 fail-closed 的 `MALL_LIVE_DEMO_PASSWORD` 检查与本地 Java 合成账号登录预检。宿主 Python Runner、PowerShell 入口与 Compose 容器均使用同一变量名；密码值不会进入 Git、报告、账本、Trace、日志或错误文本。
 
-本机当前未设置该进程 Secret，因此状态为 **`BLOCKED_MISSING_LIVE_DEMO_PASSWORD`**，而非新的在线批次失败。Provider 请求 **0**、Token **0**；旧 `mall-v3.0.4-portfolio-final-267e3b70` FAILED Lock、报告与空 Ledger 均未改写。新的 FastAPI 机器报告为 **449/449**（437 pytest cases + 12 subtests）；预检契约测试通过 **5/5**。此前 Runtime 的 122/122 为历史 deterministic/offline 现场结果，因 Runtime 变更不可并入当前候选。
+本次入口收口已支持进程内生成随机临时合成密码，并通过 Java 账号预检；密码不会写入仓库、报告、Ledger、Trace 或日志。当前 Docker CLI/Java 现场在本机执行环境被拒绝访问，故没有启动在线批次。Provider 请求 **0**、Token **0**；旧 `mall-v3.0.4-portfolio-final-267e3b70` FAILED Lock、报告与空 Ledger 均未改写。新的 FastAPI 机器报告为 **450/450**（438 pytest cases + 12 subtests）；预检契约测试通过 **19/19**。此前 Runtime 的 122/122 为历史 deterministic/offline 现场结果，因 Runtime 变更不可并入当前候选。
 
-要继续，所有者仅需在发起验收的 PowerShell 中安全设置 `MALL_LIVE_DEMO_PASSWORD`，随后先运行无模型预检。设置动作本身不创建 Release，也不调用 Provider；本阶段 Release Gate 仍为 **`NOT_COMPLETE`**。
+要继续，需在具备 Docker Desktop、Java 和本地 Compose 权限的 Windows PowerShell 中运行正式入口；入口会在进程内生成临时密码并先做无模型 Java 预检。预检失败不创建 Release/Lock，也不调用 Provider；本阶段 Release Gate 仍为 **`NOT_COMPLETE`**。
 
 ## 当前权威结论｜v3.0.4 离线候选（2026-09-18）
 
