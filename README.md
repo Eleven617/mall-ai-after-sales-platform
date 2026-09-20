@@ -9,7 +9,7 @@
 
 ## 30 秒了解项目
 
-> 当前展示状态：`NOT_COMPLETE`。候选分支已完成本地离线工程验证：FastAPI JUnit `450/450`、manifest `478/478`、contract replay `36/36`、当前 Docker 现场 `122/122`（Browser 24、Java/MySQL 30、Fault 36、Durable Recovery 32），候选 SHA 的 `mall-ci` 与 `quality-evaluation` 均成功。唯一正式 DeepSeek Batch 在第一条核心链的 `agent_task_create` 安全停止，未形成 Proposal 或 Java 写入，因而没有重试、没有第二批次、没有合并 `main`。离线结果不能冒充真实模型质量。
+> 当前展示状态：`NOT_COMPLETE`。候选分支已完成本地离线工程验证：FastAPI JUnit `455/455`、manifest `478/478`、contract replay `36/36`、当前 Docker 现场 `122/122`（Browser 24、Java/MySQL 30、Fault 36、Durable Recovery 32）。新候选 SHA 推送后的 `mall-ci` 与 `quality-evaluation` 需单独复核；最近一次正式模型评测在 Provider 网络前因 Ledger 初始化失败而作废（`invalidated_before_provider_network`）；`task_terminal_state_unexpected` 只是 Runner 表象，不是模型能力失败。没有重试、没有第二批次、没有合并 `main`。
 
 ### 为什么不是普通聊天机器人
 
@@ -66,7 +66,7 @@ MCP 只读工具、人工售后工作台和 LangGraph 确定性节点是能力�
 
 结果按套件独立统计，不相加，也不外推为生产 SLA 或真实用户泛化：
 
-- 当前候选收口的 FastAPI JUnit 为 `450 passed`（438 pytest cases + 12 subtests），exit `0`；
+- 当前候选收口的 FastAPI JUnit 为 `455 passed`（443 pytest cases + 12 subtests），exit `0`；
 - v3 deterministic 发布合同为 `478/478`，代表性 Runtime 为 `8/8`；本轮 contract replay 为 `36/36`，Provider `0`；这些都不是浏览器 E2E 或真实模型效果；
 - Java portal 核心 `12/12`、admin `6/6`、Spring context `1/1`、Vue production build、8 服务 Compose 和四类现场 Runner 均已在当前候选环境验证通过；
 - 当前现场 `122/122` 是本地 Docker、Chrome、Java/MySQL 和合成 Fixture 的 deterministic/offline 证据，不是 DeepSeek 任务完成率；

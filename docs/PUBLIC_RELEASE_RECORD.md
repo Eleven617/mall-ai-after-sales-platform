@@ -2,9 +2,9 @@
 
 ## 当前权威记录｜v3.0.4 唯一正式在线批次（2026-09-20）
 
-候选 Runtime `3c4c3a5ae9fac944350b6710322fd9d5223eccde` 的唯一正式在线 Release `mall-v3.0.4-portfolio-final-3c4c3a5a` 已结束且锁定为 FAILED。无模型 Java 合成账号预检通过；Batch `portfolio_final-3d7b9340d60d` 在首条 `main_open_task_closed_loop` 的 `agent_task_create` 停止，失败码 `task_terminal_state_unexpected`，状态为 `task_created -> task_blocked`。Proposal/工具调用/Java 资格核验/最终写入/状态回查均为 0。
+候选 Runtime `3c4c3a5ae9fac944350b6710322fd9d5223eccde` 的唯一正式在线 Release `mall-v3.0.4-portfolio-final-3c4c3a5a` 已结束且在 Provider 网络前因 Ledger 初始化缺陷作废。公开根因分类为 `release_infrastructure_failure`；Batch `portfolio_final-3d7b9340d60d` 的 `task_terminal_state_unexpected` 仅为 Runner 表象。逻辑 Provider 请求 1、实际 HTTP attempts 0、Token 0；Proposal/工具调用/Java 资格核验/最终写入/状态回查均为 0。
 
-共享 Ledger 对账为 Provider 逻辑请求 1、失败 1、Token 0、HTTP attempts 0。在线报告、Ledger 与 Lock 均为不可变本地审计工件；主评测、补充评测、Grounding、其余展示链与最终 live 素材没有执行，也没有重试。**Release Gate 为 `NOT_COMPLETE`**，本记录不得用于宣称在线模型任务成功、生产能力或已发布作品集。
+共享 Ledger 对账为 Provider 逻辑请求 1、失败 1、Token 0、HTTP attempts 0。在线报告、Ledger 与 Lock 均为不可变本地审计工件；主评测、补充评测、Grounding、其余展示链与最终 live 素材没有执行，也没有重试。当前 FastAPI JUnit **455/455**。**Release Gate 为 `NOT_COMPLETE`**，本记录不得用于宣称在线模型任务成功、生产能力或已发布作品集。
 
 ## 当前权威记录｜v3.0.4 离线现场复核（2026-09-20）
 

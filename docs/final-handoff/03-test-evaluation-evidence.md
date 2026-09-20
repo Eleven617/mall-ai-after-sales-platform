@@ -2,9 +2,9 @@
 
 ## 当前权威快照｜v3.0.4 唯一正式在线批次（2026-09-20）
 
-无模型预检和当前离线门禁通过后，唯一正式 Batch `portfolio_final-3d7b9340d60d` 仅执行了首条核心展示链。它在 `agent_task_create` 收到模型调用后的安全终态 `task_blocked`，失败码 `task_terminal_state_unexpected`；Proposal、Skill/Tool 调用、Java 资格核验、最终写入和状态回查均为 0。Provider 逻辑请求 1、失败 1、Token 0；共享 Ledger 对账通过。主集、补充集、Grounding、另两条展示链和 live 素材全部 `not_executed`，没有单 Case 重试。
+无模型预检和当前离线门禁通过后，唯一正式 Batch `portfolio_final-3d7b9340d60d` 在 Provider 网络前因 Ledger 初始化缺陷作废；根因分类为 `release_infrastructure_failure`，`task_terminal_state_unexpected` 仅为 Runner 表象。逻辑 Provider 请求 1、实际 HTTP attempts 0、Token 0；Proposal、Skill/Tool 调用、Java 资格核验、最终写入和状态回查均为 0。主集、补充集、Grounding、另两条展示链和 live 素材全部 `not_executed`，没有单 Case 重试。
 
-当前 Release 为 **NOT_COMPLETE**。FastAPI 450/450、manifest 478/478、contract replay 36/36 和现场 122/122 是本地合成 deterministic/offline 工程证据，不能写为真实模型准确率或生产能力。
+当前 Release 为 **NOT_COMPLETE**。FastAPI **455/455**、manifest 478/478、contract replay 36/36 和现场 122/122 是本地合成 deterministic/offline 工程证据，不能写为真实模型准确率或生产能力。
 
 ## 当前权威快照｜v3.0.4 在线入口预检修复（2026-09-19）
 

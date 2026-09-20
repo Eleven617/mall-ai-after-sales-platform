@@ -3,9 +3,9 @@
   "generatedAt": "2026-09-20T15:48:00+08:00",
   "releaseStatus": "NOT_COMPLETE",
   "runtimeCommit": "3c4c3a5ae9fac944350b6710322fd9d5223eccde",
-  "evidenceCommit": "83b98efa90dbad5f065219caadd41487cbae0c15",
+  "evidenceCommit": "c5e49dbdaf596bbd44b24ea4de3970cd64a91987",
   "evidenceState": "current candidate evidence; runtime freeze, execution head and online batch are recorded separately",
-  "statusReason": "v3.0.4 当前候选已完成离线工程验证并执行唯一正式 DeepSeek 批次。批次在首个核心链 agent_task_create 阶段安全停止：task_created -> task_blocked，Proposal 未形成、Java 写入 0；Provider 逻辑请求 1、失败 1、Token 0，Ledger 已对账。不得重试或创建第二批次，Release Gate 保持 NOT_COMPLETE。",
+  "statusReason": "v3.0.4 当前候选已完成离线工程验证；唯一正式 DeepSeek 批次在 Provider 网络前因 Ledger 初始化缺陷作废，公开根因分类为 release_infrastructure_failure，实际 HTTP attempts=0、Token=0。不得重试或创建第二批次，Release Gate 保持 NOT_COMPLETE。",
   "project": {
     "name": "Mall AI After-sales Platform",
     "repository": "https://github.com/Eleven617/mall-ai-after-sales-platform",
@@ -183,7 +183,7 @@
     }
   ],
   "tests": {
-    "fastapi": {"passed": 450, "failed": 0, "skipped": 0, "warnings": 1, "subtests": 12, "pytestTerminalPassed": 438, "exitCode": 0, "command": "mall-ai-service/.venv/Scripts/python.exe scripts/run_fastapi_ci_report.py --junitxml=ci-evidence/v3-fastapi-junit.xml --report=ci-evidence/v3-fastapi-report.json", "semanticReportSha256": "209eb04a8901b294c6071bd0a0b0511fd933ef12df0df9d80c2738c083014ff6", "junitSha256": "6903c974ac9edc9648c031732e043a825b4d29611b0691d17b05b839c3ad013c"},
+    "fastapi": {"passed": 455, "failed": 0, "skipped": 0, "warnings": 1, "subtests": 12, "pytestTerminalPassed": 443, "exitCode": 0, "command": "mall-ai-service/.venv/Scripts/python.exe scripts/run_fastapi_ci_report.py --junitxml=ci-evidence/v3-fastapi-junit.xml --report=ci-evidence/v3-fastapi-report.json", "semanticReportSha256": "258a3a2a3e4ad19e85d62e9f9507a3edda5498432e2dd5caedc306f4c0064f21", "junitSha256": "c112a672af886534701b32d0b255123206ec820c06e0c2ac40af561f108f38b2"},
     "java": {"portalCore": "12/12", "portalCompatibility": "2/2", "portalFull": "14/14", "admin": "6/6", "springContext": "1/1", "exitCode": 0},
     "vue": {"command": "npm run build", "status": "passed", "exitCode": 0},
     "compose": {"configExitCode": 0, "servicesHealthy": "8/8"},
@@ -232,11 +232,11 @@
     "runtimeCommit": "3c4c3a5ae9fac944350b6710322fd9d5223eccde",
     "executionHead": "1efaa22311e41d92816c5f08188a59ff7ca66806",
     "executionState": "committed evidence; Runtime Freeze is recorded separately from execution HEAD",
-    "fastapi": {"passed": 450, "failed": 0, "warnings": 1, "subtests": 12, "pytestTerminalPassed": 438, "exitCode": 0},
+    "fastapi": {"passed": 455, "failed": 0, "warnings": 1, "subtests": 12, "pytestTerminalPassed": 443, "exitCode": 0},
     "deterministic": {"manifest": "478/478", "representative": "8/8", "exitCode": 0},
     "fieldAcceptance": {"status": "passed_offline_deterministic", "total": "122/122", "failed": 0, "environmentBlocked": 0, "reason": "Current Docker Compose field runner completed all four categories with the Runtime Freeze image and deterministic Fake Provider; this is synthetic/offline evidence, not live-model quality.", "report": "tmp/v304-field-acceptance-122/field-20260920T053042Z-14d730d7/field-acceptance.json", "reportSha256": "3aa1613e07ae89fbf11ad51cd6ed33e0860304040c49abb7a5c03b35adfefe1f", "fixtureSha256": "7b7616e3ba0f6939a7bcc7d381b3c3b7b35d2b443c2056b218cdefc7f17486a9", "imageRevision": "3c4c3a5ae9fac944350b6710322fd9d5223eccde", "providerMode": "deterministic", "externalProviderRequests": 0},
-    "deepseek": {"status": "failed", "model": "deepseek-flash", "thinkingMode": "enabled", "reasoningEffort": "high", "batchStatus": "failed", "releaseId": "mall-v3.0.4-portfolio-final-3c4c3a5a", "batchId": "portfolio_final-3d7b9340d60d", "calls": 1, "successfulCalls": 0, "failedCalls": 1, "tokens": 0, "providerHttpAttempts": 0, "ledgerReconciled": true, "report": "tmp/v304-portfolio-final-mall-v3.0.4-portfolio-final-3c4c3a5a/report.json", "reportSha256": "d3508d1f485e77944ad3db62dfe7fc8298b83746ce9ad1bec86d23b5e8f1521c", "lock": "docs/evidence/deepseek-release-lock-mall-v3.0.4-portfolio-final-3c4c3a5a.json", "lockSha256": "d9b65d14c1ae4c8b8be135b4a1d4bdb96cdde764e2f0988721714462ed91313c", "ledger": "tmp/release-ledger-mall-v3.0.4-portfolio-final-3c4c3a5a/ledger.jsonl", "ledgerSha256": "cd3ea9cb26a1e32764e8888f26302a8e4eaac16d587197ff06cec925c71fe10b", "failureStage": "agent_task_create", "failureCode": "task_terminal_state_unexpected", "taskStatusTransitions": ["task_created", "task_blocked"], "proposalFormed": false, "javaEligibility": false, "javaCommit": false, "statusReadback": false, "toolCalls": 0, "reason": "The single authorized batch stopped after its first model request; no retry or second batch was started."},
-    "showcase": {"status": "failed", "scenarios": [{"scenarioId": "main_open_task_closed_loop", "status": "failed", "stage": "agent_task_create", "failureCode": "task_terminal_state_unexpected"}, {"scenarioId": "pause_resume", "status": "not_executed"}, {"scenarioId": "fact_change_handoff", "status": "not_executed"}]}
+    "deepseek": {"status": "failed", "model": "deepseek-flash", "thinkingMode": "enabled", "reasoningEffort": "high", "batchStatus": "invalidated_before_provider_network", "releaseId": "mall-v3.0.4-portfolio-final-3c4c3a5a", "batchId": "portfolio_final-3d7b9340d60d", "calls": 1, "logicalProviderRequests": 1, "modelCalled": true, "successfulCalls": 0, "failedCalls": 1, "tokens": 0, "providerHttpAttempts": 0, "modelHttpAttempted": false, "ledgerReconciled": true, "failureCategory": "release_infrastructure_failure", "releaseLedgerFailureClass": "ledger_malformed", "report": "tmp/v304-portfolio-final-mall-v3.0.4-portfolio-final-3c4c3a5a/report.json", "reportSha256": "d3508d1f485e77944ad3db62dfe7fc8298b83746ce9ad1bec86d23b5e8f1521c", "lock": "docs/evidence/deepseek-release-lock-mall-v3.0.4-portfolio-final-3c4c3a5a.json", "lockSha256": "d9b65d14c1ae4c8b8be135b4a1d4bdb96cdde764e2f0988721714462ed91313c", "ledger": "tmp/release-ledger-mall-v3.0.4-portfolio-final-3c4c3a5a/ledger.jsonl", "failureStage": "agent_task_create", "failureCode": "release_infrastructure_failure", "surfaceFailureCode": "task_terminal_state_unexpected", "taskStatusTransitions": ["task_created", "task_blocked"], "proposalFormed": false, "javaEligibility": false, "javaCommit": false, "statusReadback": false, "toolCalls": 0, "rootCause": "Ledger initialization defect before provider network; task_terminal_state_unexpected is a runner surface symptom", "reason": "The batch was invalidated before any provider HTTP attempt. No retry or second batch was started."},
+    "showcase": {"status": "failed", "scenarios": [{"scenarioId": "main_open_task_closed_loop", "status": "failed", "stage": "agent_task_create", "failureCode": "release_infrastructure_failure", "surfaceFailureCode": "task_terminal_state_unexpected"}, {"scenarioId": "pause_resume", "status": "not_executed"}, {"scenarioId": "fact_change_handoff", "status": "not_executed"}]}
   },
   "v3_0_4LivePreflightRepair": {
     "status": "ONLINE_BATCH_FAILED_NOT_COMPLETE",
@@ -254,7 +254,7 @@
   },
   "v3_0_4AuthorizedFinalBatch": {"status": "failed", "releaseId": "mall-v3.0.4-portfolio-final-3c4c3a5a", "batchId": "portfolio_final-3d7b9340d60d", "failureStage": "agent_task_create", "failureCode": "task_terminal_state_unexpected", "taskStatusTransitions": ["task_created", "task_blocked"], "proposalFormed": false, "toolCalls": 0, "javaEligibility": false, "javaCommit": false, "statusReadback": false, "providerRequests": 1, "successfulRequests": 0, "failedRequests": 1, "totalTokens": 0, "ledgerReconciled": true, "report": "tmp/v304-portfolio-final-mall-v3.0.4-portfolio-final-3c4c3a5a/report.json", "reportSha256": "d3508d1f485e77944ad3db62dfe7fc8298b83746ce9ad1bec86d23b5e8f1521c", "lock": "docs/evidence/deepseek-release-lock-mall-v3.0.4-portfolio-final-3c4c3a5a.json", "lockSha256": "d9b65d14c1ae4c8b8be135b4a1d4bdb96cdde764e2f0988721714462ed91313c", "ledger": "tmp/release-ledger-mall-v3.0.4-portfolio-final-3c4c3a5a/ledger.jsonl", "ledgerSha256": "cd3ea9cb26a1e32764e8888f26302a8e4eaac16d587197ff06cec925c71fe10b", "mainSupplementalGrounding": "not_executed", "assets": "not_generated", "releaseQualified": false},
   "releaseLedger": {"path": "tmp/release-ledger-mall-v3.0.3-portfolio-final-db3860701086/ledger.jsonl", "releaseId": "mall-v3.0.3-portfolio-final-db3860701086", "batchId": "portfolio_final-c9b46de42c2d", "providerRequests": 8, "successfulRequests": 8, "failedRequests": 0, "totalTokens": 29542, "ledgerReconciled": true, "sha256": "814cdcf09a3e9d37b6450bfbacbe7ff65915a76c378a07f60dfd3a8725087b18", "v3_0_3UnplannedProviderRequests": 16, "v3_0_3UnplannedProviderTokens": 14553},
-  "ci": {"status": "passed", "scope": "v3.0.4 online failure evidence candidate", "testedCommit": "bac4d985c1d1690c26bc362cafac16878f096875", "mallCi": "https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/35498444007", "qualityEvaluation": "https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/35498444046", "mallCiConclusion": "success", "qualityEvaluationConclusion": "success", "previousRemoteRunsStale": true},
+  "ci": {"status": "pending_remote_final_sha", "scope": "v3.0.4 Ledger initialization repair candidate", "testedCommit": "c5e49dbdaf596bbd44b24ea4de3970cd64a91987", "mallCi": null, "qualityEvaluation": null, "mallCiConclusion": "pending", "qualityEvaluationConclusion": "pending", "previousRemoteRunsStale": true},
   "publicValidator": {"command": "python scripts/validate_public_release.py", "exitCode": 0, "status": "dynamic_report", "reason": "读取当前 FastAPI JUnit/sidecar，不再硬编码历史测试数量。"},
   "claims": {
     "testRunComplete": true,
@@ -267,7 +267,7 @@
     "unplannedProviderRun": {"requests": 16, "tokens": 14553, "formalRelease": false}
   },
   "publicClaims": [
-    "当前 Runtime 的 FastAPI 机器报告为 450 passed、0 failed、0 skipped（终端 438 passed + 12 subtests）；v3 deterministic 为 478/478、代表性 Runtime 为 8/8。",
+    "当前 Runtime 的 FastAPI 机器报告为 455 passed、0 failed、0 skipped（终端 443 passed + 12 subtests）；v3 deterministic 为 478/478、代表性 Runtime 为 8/8。",
     "当前 Runtime 的本地合成现场从 0/122 完整执行并通过：Browser 24、Java/MySQL 30、Fault 36、Durable Recovery 32；报告与 Fixture SHA 已绑定，外部 Provider 请求 0。该结果是 deterministic/offline 证据，不是实时 DeepSeek 质量。",
     "v3.0.3 慢网关现场经公共 Nginx 运行 76.156 秒并返回 201/ready_to_commit，Provider 请求 0、Java 写入 0；唯一正式在线批次的 8 次 Provider 调用均成功且账本对账，但第一核心链未形成 Proposal 后安全停止。",
     "Java mall2 仍是身份、归属、资格、状态、幂等、事务、Outbox 和最终写入权威。"

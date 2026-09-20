@@ -78,13 +78,23 @@ if ([string]::IsNullOrWhiteSpace($password) -or $password.Trim().Length -lt 12) 
 [Environment]::SetEnvironmentVariable('MALL_RELEASE_BATCH_ID', '', 'Process')
 $ledgerDirectory = Join-Path $root "tmp\release-ledger-$ReleaseId"
 $ledgerPath = Join-Path $ledgerDirectory 'ledger.jsonl'
-New-Item -ItemType Directory -Force -Path $ledgerDirectory | Out-Null
+$lockPath = Join-Path $root "docs\evidence\deepseek-release-lock-$ReleaseId.json"
 [Environment]::SetEnvironmentVariable('MALL_RELEASE_LEDGER_HOST_PATH', $ledgerDirectory, 'Process')
 [Environment]::SetEnvironmentVariable('MALL_RELEASE_LEDGER_CONTAINER_PATH', '/app/release-ledger/ledger.jsonl', 'Process')
 [Environment]::SetEnvironmentVariable('MALL_RELEASE_LEDGER_PATH', $ledgerPath, 'Process')
 [Environment]::SetEnvironmentVariable('MALL_RUNTIME_COMMIT', $RuntimeCommit, 'Process')
 [Environment]::SetEnvironmentVariable('MALL_IMAGE_REVISION', $RuntimeCommit, 'Process')
 try {
+    # Release-entry ownership: create exactly one new empty JSONL atomically.
+    # Runtime reservation remains fail-closed when a mount or path is wrong.
+    & .\mall-ai-service\.venv\Scripts\python.exe .\mall-ai-service\scripts\release_entry_contract.py `
+        --ledger-directory $ledgerDirectory --ledger-path $ledgerPath --lock-path $lockPath `
+        --container-ledger-path '/app/release-ledger/ledger.jsonl'
+    if ($LASTEXITCODE -ne 0) { throw 'release_entry_preflight_blocked:ledger_initialization_failed' }
+    $composeConfig = docker compose config
+    if ($LASTEXITCODE -ne 0 -or $composeConfig -notmatch '/app/release-ledger') {
+        throw 'release_entry_preflight_blocked:ledger_mount_missing'
+    }
     # Recreate only the AI service so the same process-only authorization,
     # live mode, runtime identity, and host/container ledger path are present
     # in the service that the paid runner calls. Named data volumes remain
@@ -103,11 +113,14 @@ try {
     if ($null -eq $liveVersion -or $liveVersion.runtimeCommit -ne $RuntimeCommit -or $liveVersion.imageRevision -ne $RuntimeCommit -or $liveVersion.providerMode -ne 'live') {
         throw 'live_release_preflight_blocked:runtime_identity_mismatch'
     }
+    # Confirm the bind-mounted ledger is readable and writable from inside the
+    # exact runtime container before any Batch/Lock/provider work begins.
+    & docker compose exec -T mall-ai-service python -c "from pathlib import Path; p=Path('/app/release-ledger/ledger.jsonl'); f=p.open('r+b'); f.read(0); f.close(); assert p.stat().st_size == 0"
+    if ($LASTEXITCODE -ne 0) { throw 'release_entry_preflight_blocked:ledger_container_not_readwrite' }
     & .\mall-ai-service\.venv\Scripts\python.exe .\mall-ai-service\scripts\run_live_release_preflight.py
     if ($LASTEXITCODE -ne 0) { throw 'live_release_preflight_blocked:demo_account_preflight_failed' }
 
     $reportPath = Join-Path $root "tmp\v304-portfolio-final-$ReleaseId\report.json"
-    $lockPath = Join-Path $root "docs\evidence\deepseek-release-lock-$ReleaseId.json"
     & .\mall-ai-service\.venv\Scripts\python.exe .\mall-ai-service\scripts\run_deepseek_release_batch.py `
         --phase portfolio_final --release-id $ReleaseId --runtime-commit $RuntimeCommit `
         --report $reportPath --lock $lockPath

@@ -1,12 +1,18 @@
 # Mall v3.0 Release Gate 复核
 
+## 当前权威结论｜v3.0.4 在线入口 Ledger 缺陷校准（2026-09-20）
+
+已确认失败根因为正式入口只创建 Ledger 目录、没有原子创建空 `ledger.jsonl`；`reserve_provider_attempt()` 因 Ledger 缺失在网络前 fail-closed。该批次应标记为 `invalidated_before_provider_network` / `release_infrastructure_failure`：`providerHttpAttempts=0`、成功请求 0、Token 0。报告中的 `task_terminal_state_unexpected` 仅是 Runner 表象，不是模型质量或 Agent 业务失败。旧 Report/Ledger/Lock 未修改；本轮没有新的外部 Provider 请求。
+
+入口已改为在创建 Batch/Lock 前原子创建全新的空 JSONL，并拒绝复用已有 Ledger/Lock 或错误容器路径；`release_ledger.py` 的缺失文件 fail-closed 行为保留。Fake Provider 演练证明首次 reservation/settlement 可对账（HTTP attempts 1、Provider requests 1、Token 5），不触发 DeepSeek。
+
 ## 当前权威结论｜v3.0.4 唯一正式在线批次（2026-09-20）
 
 Runtime Freeze `3c4c3a5ae9fac944350b6710322fd9d5223eccde` 的唯一正式 Release `mall-v3.0.4-portfolio-final-3c4c3a5a` 已执行。无模型预检先通过两条本地 Java 合成账号创建/登录；随后 Batch `portfolio_final-3d7b9340d60d` 在首条展示链 `main_open_task_closed_loop` 的 `agent_task_create` 阶段停止，安全失败码 `task_terminal_state_unexpected`。状态转换为 `task_created -> task_blocked`，Proposal 未形成，工具调用 0，Java 资格核验/最终写入/状态回查均为 0。
 
 共享 Ledger 对账：Provider 逻辑请求 1、失败 1、Token 0、HTTP attempts 0；不是网关、Docker 或 Java 环境错误。批次报告 SHA-256 `d3508d1f485e77944ad3db62dfe7fc8298b83746ce9ad1bec86d23b5e8f1521c`，Ledger SHA-256 `cd3ea9cb26a1e32764e8888f26302a8e4eaac16d587197ff06cec925c71fe10b`，不可变 Lock SHA-256 `d9b65d14c1ae4c8b8be135b4a1d4bdb96cdde764e2f0988721714462ed91313c`。主集、补充集、Grounding、另外两条展示链和最终在线素材均未执行；本轮不重试、不创建第二批次。
 
-**Release Gate：`NOT_COMPLETE`。** 当前离线工程验证仍有效（FastAPI 450/450、现场 122/122），但该在线核心链失败，不能合并 `main` 或宣称真实模型质量/作品集发布完成。
+**Release Gate：`NOT_COMPLETE`。** 当前离线工程验证仍有效（FastAPI 455/455、现场 122/122），但该在线核心链失败，不能合并 `main` 或宣称真实模型质量/作品集发布完成。
 
 ## 当前权威结论｜v3.0.4 离线现场复核（2026-09-20）
 

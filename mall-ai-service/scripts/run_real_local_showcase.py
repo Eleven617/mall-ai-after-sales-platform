@@ -34,6 +34,7 @@ from app.services.release_ledger import (
     append_release_event,
     read_release_events,
     release_ledger_context,
+    summarize_release_events,
 )
 
 
@@ -84,6 +85,7 @@ SAFE_FAILURE_CODES = {
     "policy_evidence_insufficient",
     "task_terminal_state_unexpected",
     "task_metrics_mismatch",
+    "release_infrastructure_failure",
     "java_fact_transition_failed",
     "duplicate_confirmation_not_idempotent",
     "cross_account_scope_failed",
@@ -294,6 +296,21 @@ def _showcase_failure(
     failure: ShowcaseError,
     frame_groups: dict[str, dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
+    ledger_events = read_release_events(
+        os.getenv("MALL_RELEASE_LEDGER_PATH", ""),
+        batch_id=batch_id,
+    ) if os.getenv("MALL_RELEASE_LEDGER_PATH") else []
+    provider_usage = summarize_release_events(ledger_events)
+    malformed_before_network = any(
+        item.get("eventType") == "provider_request"
+        and item.get("failureClass") == "ledger_malformed"
+        for item in ledger_events
+    ) and provider_usage.get("providerHttpAttempts", 0) == 0
+    if malformed_before_network:
+        failure.failure_code = "release_infrastructure_failure"
+        failure.task_metrics["rootFailureClass"] = "release_infrastructure_failure"
+        failure.task_metrics["ledgerFailureClass"] = "ledger_malformed"
+        failure.task_metrics["providerHttpAttempts"] = 0
     report = {
         "status": "failed",
         "batchId": batch_id,
@@ -303,6 +320,14 @@ def _showcase_failure(
         "browserFrameCount": len(frames),
         "frameGroups": frame_groups or {},
         "failure": failure.to_public(),
+        "providerUsage": {
+            "logicalProviderRequests": provider_usage.get("logicalProviderRequests", 0),
+            "providerHttpAttempts": provider_usage.get("providerHttpAttempts", 0),
+            "providerSuccesses": provider_usage.get("providerSuccesses", 0),
+            "providerFailures": provider_usage.get("providerFailures", 0),
+            "totalTokens": provider_usage.get("totalTokens", 0),
+            "ledgerReconciled": True,
+        },
     }
     report.update(_aggregate_showcase_metrics(chains))
     return report
@@ -735,6 +760,8 @@ def _task_failure_code(payload: dict[str, Any], *, fallback: str) -> str:
     codes = payload.get("limitation_codes")
     if isinstance(codes, list):
         for code in codes:
+            if code in {"ledger_malformed", "release_infrastructure_failure"}:
+                return "release_infrastructure_failure"
             if code == "runtime_deadline_exceeded":
                 return "runtime_deadline_exceeded"
             if code in {"model_timeout", "provider_timeout"}:

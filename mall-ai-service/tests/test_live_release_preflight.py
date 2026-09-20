@@ -95,4 +95,9 @@ def test_v304_final_entry_is_a_real_single_batch_path_with_ephemeral_password() 
     assert "run_deepseek_release_batch.py" in content
     assert "FINAL_ONLINE_BATCH_REQUIRES_EXPLICIT_AUTHORIZATION" not in content
     assert "MALL_RELEASE_LEDGER_PATH" in content
+    assert "release_entry_contract.py" in content
+    assert "ledger_initialization_failed" in content
+    assert "ledger_mount_missing" in content
+    assert "ledger_container_not_readwrite" in content
+    assert "docker compose exec -T mall-ai-service" in content
     assert "deepseek-release-lock-$ReleaseId.json" in content

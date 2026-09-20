@@ -2,9 +2,9 @@
 
 ## 当前权威快照｜v3.0.4 唯一正式在线批次（2026-09-20）
 
-Release `mall-v3.0.4-portfolio-final-3c4c3a5a` 的唯一 Batch `portfolio_final-3d7b9340d60d` 已在 Java 合成账号预检通过后执行。首条核心链在 `agent_task_create` 安全停止：`task_created -> task_blocked`，`task_terminal_state_unexpected`；Proposal、工具调用、Java 资格核验、最终写入和状态回查均为 0。Provider 逻辑请求 1、失败 1、Token 0，Ledger 已对账。主集、补充集、Grounding、其他两条核心链和 live 素材均 `not_executed`，不重试、不创建第二批次。
+Release `mall-v3.0.4-portfolio-final-3c4c3a5a` 的唯一 Batch `portfolio_final-3d7b9340d60d` 已在 Java 合成账号预检通过后执行，但在 Provider 网络前因 Ledger 初始化缺陷作废。公开根因分类为 `release_infrastructure_failure`；`task_terminal_state_unexpected` 仅是 Runner 表象。逻辑 Provider 请求 1、实际 HTTP attempts 0、Token 0，Ledger 已对账；Proposal、工具调用、Java 资格核验、最终写入和状态回查均为 0。主集、补充集、Grounding、其他两条核心链和 live 素材均 `not_executed`，不重试、不创建第二批次。
 
-发布状态为 **NOT_COMPLETE**：当前离线工程验证和 122/122 合成现场仍有效，但真实模型核心闭环未通过，不能合并 `main` 或称作品集发布完成。
+发布状态为 **NOT_COMPLETE**：当前 FastAPI JUnit **455/455**、离线工程验证和 122/122 合成现场仍有效，但真实模型评测尚未执行，不能合并 `main` 或称作品集发布完成。
 
 ## 当前权威快照｜v3.0.4 离线现场复核（2026-09-20）
 

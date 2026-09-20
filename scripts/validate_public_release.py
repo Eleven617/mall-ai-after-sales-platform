@@ -171,7 +171,10 @@ def main() -> int:
             require(current.get("deepseek", {}).get("batchStatus") == "passed", "current DeepSeek batch status mismatch")
         else:
             require(current.get("deepseek", {}).get("model") == "deepseek-flash", "current DeepSeek model mismatch")
-            require(current.get("deepseek", {}).get("batchStatus") == "failed", "current DeepSeek failure status mismatch")
+            require(
+                current.get("deepseek", {}).get("batchStatus") in {"failed", "invalidated_before_provider_network"},
+                "current DeepSeek failure status mismatch",
+            )
             require(current.get("deepseek", {}).get("calls", 0) > 0, "failed DeepSeek batch must record calls")
             # A provider can reject or terminate a request before returning
             # usage metadata.  The immutable ledger must still expose the
