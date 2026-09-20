@@ -91,8 +91,9 @@ try {
         --ledger-directory $ledgerDirectory --ledger-path $ledgerPath --lock-path $lockPath `
         --container-ledger-path '/app/release-ledger/ledger.jsonl'
     if ($LASTEXITCODE -ne 0) { throw 'release_entry_preflight_blocked:ledger_initialization_failed' }
-    $composeConfig = docker compose config
-    if ($LASTEXITCODE -ne 0 -or $composeConfig -notmatch '/app/release-ledger') {
+    $composeConfig = @(docker compose config)
+    $composeConfigText = $composeConfig -join "`n"
+    if ($LASTEXITCODE -ne 0 -or $composeConfigText -notmatch '/app/release-ledger') {
         throw 'release_entry_preflight_blocked:ledger_mount_missing'
     }
     # Recreate only the AI service so the same process-only authorization,
