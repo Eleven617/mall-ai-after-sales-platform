@@ -1,5 +1,11 @@
 # 测试、评测与现场证据
 
+## 当前权威快照｜v3.0.4 唯一正式在线批次（2026-09-20）
+
+无模型预检和当前离线门禁通过后，唯一正式 Batch `portfolio_final-3d7b9340d60d` 仅执行了首条核心展示链。它在 `agent_task_create` 收到模型调用后的安全终态 `task_blocked`，失败码 `task_terminal_state_unexpected`；Proposal、Skill/Tool 调用、Java 资格核验、最终写入和状态回查均为 0。Provider 逻辑请求 1、失败 1、Token 0；共享 Ledger 对账通过。主集、补充集、Grounding、另两条展示链和 live 素材全部 `not_executed`，没有单 Case 重试。
+
+当前 Release 为 **NOT_COMPLETE**。FastAPI 450/450、manifest 478/478、contract replay 36/36 和现场 122/122 是本地合成 deterministic/offline 工程证据，不能写为真实模型准确率或生产能力。
+
 ## 当前权威快照｜v3.0.4 在线入口预检修复（2026-09-19）
 
 当前 Runtime 候选 `3c4c3a5ae9fac944350b6710322fd9d5223eccde` 的正式在线入口新增无模型预检：检查进程级 `MALL_LIVE_DEMO_PASSWORD`（缺失时仅在进程内生成临时合成密码），并仅通过本地 Java API 创建/登录合成账号；预检通过前不会创建 Release/Batch、Ledger、Lock 或报告。

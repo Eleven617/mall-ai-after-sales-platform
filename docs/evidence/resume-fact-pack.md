@@ -1,5 +1,11 @@
 # Mall AI 售后平台｜简历事实包
 
+## 当前事实快照｜v3.0.4 唯一正式在线批次（2026-09-20）
+
+当前候选 Runtime `3c4c3a5ae9fac944350b6710322fd9d5223eccde` 已完成离线工程验证，但唯一正式在线 Batch `portfolio_final-3d7b9340d60d` 在首个核心链的 `agent_task_create` 安全停止，失败码 `task_terminal_state_unexpected`。状态转换 `task_created -> task_blocked`；未形成 Proposal，Java 写入为 0。Provider 逻辑请求 1、失败 1、Token 0，Ledger 对账通过；主集、补充集、Grounding 和其余在线链路未执行。
+
+因此当前只能如实表述本地合成 deterministic/offline 验证（FastAPI 450/450、现场 122/122）和受控写入边界；不能写真实模型成功率、线上 SLA 或作品集已发布。发布状态 **NOT_COMPLETE**，不得重试本批次或创建第二批次。
+
 ## 当前事实快照｜v3.0.4 在线入口预检修复（2026-09-19）
 
 候选 Runtime `3c4c3a5ae9fac944350b6710322fd9d5223eccde`，发布状态 **NOT_COMPLETE**。正式在线 Runner 在创建任何 Release、Batch、Ledger、Lock 或报告之前，先检查进程级 `MALL_LIVE_DEMO_PASSWORD`，再通过本地 Java API 验证合成账号创建/登录；Python、PowerShell 和 Compose 使用同一变量名，Secret 不写入公开工件。

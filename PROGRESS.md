@@ -1,5 +1,13 @@
 # 当前工作进度记录
 
+## 2026-09-20｜v3.0.4 唯一正式在线批次（当前）
+
+- Runtime Freeze `3c4c3a5ae9fac944350b6710322fd9d5223eccde`；候选在批次前已完成 FastAPI JUnit 450/450、manifest 478/478、contract replay 36/36、Java portal 12/12、admin 6/6、Vue build、Compose 8/8 healthy 和本地合成现场 122/122。
+- 无模型预检通过：从用户级进程环境取得演示 Secret 但未读取/输出其值，经 Java 创建并登录两条一次性合成账号；预检未创建 Lock 或 Provider 请求。
+- 唯一正式 Release `mall-v3.0.4-portfolio-final-3c4c3a5a` / Batch `portfolio_final-3d7b9340d60d` 在首条核心展示链的 `agent_task_create` 失败：`task_created -> task_blocked`，`task_terminal_state_unexpected`。Proposal 未形成，Tool Calls 0，Java 资格核验、写入和状态回查均为 0。
+- Provider 逻辑请求 1、失败 1、Token 0、HTTP attempts 0；共享 Ledger 对账通过。主集、补充集、Grounding、另两条展示链和 live 素材未执行。失败 Lock、报告和 Ledger 均保留，不重试、不创建第二批次。
+- 主 Compose 已恢复 offline，8/8 healthy。Release Gate `NOT_COMPLETE`；不得合并 main，也不得将 deterministic/offline 122/122 描述为真实模型效果。
+
 ## 2026-09-19｜v3.0.4 正式在线入口预检修复（当前）
 
 - Runtime 候选：`3c4c3a5ae9fac944350b6710322fd9d5223eccde`。修复了上一正式批次在首个 Provider 请求前因宿主 Runner 缺少 `MALL_LIVE_DEMO_PASSWORD` 而阻塞的问题：同一进程级变量在 Python Runner、PowerShell 和 Compose 中统一；正式 Runner 在生成 Batch ID、Release Lock、Ledger 或报告之前，经本地 Java 合成账号创建/登录进行 fail-closed 预检。

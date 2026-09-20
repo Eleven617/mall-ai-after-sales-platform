@@ -1,5 +1,13 @@
 # Mall v3.0 Release Gate 复核
 
+## 当前权威结论｜v3.0.4 唯一正式在线批次（2026-09-20）
+
+Runtime Freeze `3c4c3a5ae9fac944350b6710322fd9d5223eccde` 的唯一正式 Release `mall-v3.0.4-portfolio-final-3c4c3a5a` 已执行。无模型预检先通过两条本地 Java 合成账号创建/登录；随后 Batch `portfolio_final-3d7b9340d60d` 在首条展示链 `main_open_task_closed_loop` 的 `agent_task_create` 阶段停止，安全失败码 `task_terminal_state_unexpected`。状态转换为 `task_created -> task_blocked`，Proposal 未形成，工具调用 0，Java 资格核验/最终写入/状态回查均为 0。
+
+共享 Ledger 对账：Provider 逻辑请求 1、失败 1、Token 0、HTTP attempts 0；不是网关、Docker 或 Java 环境错误。批次报告 SHA-256 `d3508d1f485e77944ad3db62dfe7fc8298b83746ce9ad1bec86d23b5e8f1521c`，Ledger SHA-256 `cd3ea9cb26a1e32764e8888f26302a8e4eaac16d587197ff06cec925c71fe10b`，不可变 Lock SHA-256 `d9b65d14c1ae4c8b8be135b4a1d4bdb96cdde764e2f0988721714462ed91313c`。主集、补充集、Grounding、另外两条展示链和最终在线素材均未执行；本轮不重试、不创建第二批次。
+
+**Release Gate：`NOT_COMPLETE`。** 当前离线工程验证仍有效（FastAPI 450/450、现场 122/122），但该在线核心链失败，不能合并 `main` 或宣称真实模型质量/作品集发布完成。
+
 ## 当前权威结论｜v3.0.4 离线现场复核（2026-09-20）
 
 候选分支 `codex/v3.0.4-eval-contract-alignment` 的执行 HEAD 为 `1efaa22311e41d92816c5f08188a59ff7ca66806`；运行时冻结与镜像 revision 为 `3c4c3a5ae9fac944350b6710322fd9d5223eccde`。Docker Desktop/Compose 主栈 8/8 healthy，现场 Runner 使用仓库内 deterministic Fake Provider，从 0/122 完整执行并通过：Browser 24/24、Java/MySQL 30/30、Fault 36/36、Durable Recovery 32/32。

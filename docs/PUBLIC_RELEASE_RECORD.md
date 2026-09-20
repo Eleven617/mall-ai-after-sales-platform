@@ -1,5 +1,11 @@
 # 公开发布记录
 
+## 当前权威记录｜v3.0.4 唯一正式在线批次（2026-09-20）
+
+候选 Runtime `3c4c3a5ae9fac944350b6710322fd9d5223eccde` 的唯一正式在线 Release `mall-v3.0.4-portfolio-final-3c4c3a5a` 已结束且锁定为 FAILED。无模型 Java 合成账号预检通过；Batch `portfolio_final-3d7b9340d60d` 在首条 `main_open_task_closed_loop` 的 `agent_task_create` 停止，失败码 `task_terminal_state_unexpected`，状态为 `task_created -> task_blocked`。Proposal/工具调用/Java 资格核验/最终写入/状态回查均为 0。
+
+共享 Ledger 对账为 Provider 逻辑请求 1、失败 1、Token 0、HTTP attempts 0。在线报告、Ledger 与 Lock 均为不可变本地审计工件；主评测、补充评测、Grounding、其余展示链与最终 live 素材没有执行，也没有重试。**Release Gate 为 `NOT_COMPLETE`**，本记录不得用于宣称在线模型任务成功、生产能力或已发布作品集。
+
 ## 当前权威记录｜v3.0.4 离线现场复核（2026-09-20）
 
 候选执行 HEAD `1efaa22311e41d92816c5f08188a59ff7ca66806`，Runtime Freeze/image revision `3c4c3a5ae9fac944350b6710322fd9d5223eccde`。Docker Compose 8/8 healthy；现场 Runner 在 deterministic/offline 范围从 0/122 通过：Browser 24/24、Java/MySQL 30/30、Fault 36/36、Durable Recovery 32/32。报告 SHA `3aa1613e07ae89fbf11ad51cd6ed33e0860304040c49abb7a5c03b35adfefe1f`，Fixture SHA `7b7616e3ba0f6939a7bcc7d381b3c3b7b35d2b443c2056b218cdefc7f17486a9`，external Provider requests/tokens `0/0`。

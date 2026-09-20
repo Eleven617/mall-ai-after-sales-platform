@@ -9,7 +9,7 @@
 
 ## 30 秒了解项目
 
-> 当前展示状态：`READY_FOR_ONE_FINAL_LIVE_BATCH`。候选分支已完成本地离线工程验证：FastAPI JUnit `450/450`、manifest `478/478`、contract replay `36/36`、当前 Docker 现场 `122/122`（Browser 24、Java/MySQL 30、Fault 36、Durable Recovery 32），候选 SHA 的 `mall-ci` 与 `quality-evaluation` 均成功。以上均使用合成数据和 deterministic/replay 运行，不能冒充真实模型质量；真实 DeepSeek 批次尚未执行。
+> 当前展示状态：`NOT_COMPLETE`。候选分支已完成本地离线工程验证：FastAPI JUnit `450/450`、manifest `478/478`、contract replay `36/36`、当前 Docker 现场 `122/122`（Browser 24、Java/MySQL 30、Fault 36、Durable Recovery 32），候选 SHA 的 `mall-ci` 与 `quality-evaluation` 均成功。唯一正式 DeepSeek Batch 在第一条核心链的 `agent_task_create` 安全停止，未形成 Proposal 或 Java 写入，因而没有重试、没有第二批次、没有合并 `main`。离线结果不能冒充真实模型质量。
 
 ### 为什么不是普通聊天机器人
 
@@ -50,7 +50,7 @@ MCP 只读工具、人工售后工作台和 LangGraph 确定性节点是能力�
 2. 等待输入 → 暂停保留 → 政策岔开 → 同一任务恢复；
 3. 事实版本变化 → 旧结果失效 → 重新核验 → 新方案或人工交接。
 
-无模型 deterministic/replay 运行只证明受控 Runtime 合同、Proposal/确认边界和 Java 权威写入路径；它不证明真实模型的自然语言泛化。正式在线批次若执行，将在同一批次内录制素材；失败时保留脱敏阶段、状态和根因，不重试单个 Case。录制入口仍支持无模型 dry-run：[`scripts/Capture-PublicShowcase.ps1 -DryRun`](scripts/Capture-PublicShowcase.ps1)。
+无模型 deterministic/replay 运行只证明受控 Runtime 合同、Proposal/确认边界和 Java 权威写入路径；它不证明真实模型的自然语言泛化。本次唯一正式批次已在第一条核心链失败后锁定，主集、补充集、Grounding、其他两条链和 live 素材均未执行，且不会重试。录制入口仍支持无模型 dry-run：[`scripts/Capture-PublicShowcase.ps1 -DryRun`](scripts/Capture-PublicShowcase.ps1)。
 
 ## 架构与代码入口
 
@@ -68,7 +68,7 @@ MCP 只读工具、人工售后工作台和 LangGraph 确定性节点是能力�
 
 - 当前候选收口的 FastAPI JUnit 为 `450 passed`（438 pytest cases + 12 subtests），exit `0`；
 - v3 deterministic 发布合同为 `478/478`，代表性 Runtime 为 `8/8`；本轮 contract replay 为 `36/36`，Provider `0`；这些都不是浏览器 E2E 或真实模型效果；
-- Java portal 核心 `12/12`、admin `6/6`、Vue production build、8 服务 Compose 和四类现场 Runner 均已在当前候选环境验证通过；
+- Java portal 核心 `12/12`、admin `6/6`、Spring context `1/1`、Vue production build、8 服务 Compose 和四类现场 Runner 均已在当前候选环境验证通过；
 - 当前现场 `122/122` 是本地 Docker、Chrome、Java/MySQL 和合成 Fixture 的 deterministic/offline 证据，不是 DeepSeek 任务完成率；
 - RAG Dense、Hybrid、Hybrid+Rerank 的 52 条版本化合成政策 Case 指标只说明检索排序质量，不是答案准确率；
 - 历史 supplemental evaluation set 不是独立盲测集，旧结果只作为开发期审计，不能外推到真实用户；

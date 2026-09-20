@@ -173,7 +173,15 @@ def main() -> int:
             require(current.get("deepseek", {}).get("model") == "deepseek-flash", "current DeepSeek model mismatch")
             require(current.get("deepseek", {}).get("batchStatus") == "failed", "current DeepSeek failure status mismatch")
             require(current.get("deepseek", {}).get("calls", 0) > 0, "failed DeepSeek batch must record calls")
-            require(current.get("deepseek", {}).get("tokens", 0) > 0, "failed DeepSeek batch must record tokens")
+            # A provider can reject or terminate a request before returning
+            # usage metadata.  The immutable ledger must still expose the
+            # observed (possibly zero) token count rather than fabricating a
+            # positive value to satisfy this public evidence check.
+            require(
+                isinstance(current.get("deepseek", {}).get("tokens"), int)
+                and current.get("deepseek", {}).get("tokens") >= 0,
+                "failed DeepSeek batch must record a non-negative token count",
+            )
             require(bool(current.get("deepseek", {}).get("releaseId")), "failed DeepSeek batch must record releaseId")
             require(bool(current.get("deepseek", {}).get("batchId")), "failed DeepSeek batch must record batchId")
             require(current.get("deepseek", {}).get("ledgerReconciled") is True, "failed DeepSeek batch ledger must reconcile")

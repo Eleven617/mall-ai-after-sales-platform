@@ -1,11 +1,11 @@
 {
   "schemaVersion": "mall-public-release-facts.v4",
-  "generatedAt": "2026-09-20T13:40:00+08:00",
+  "generatedAt": "2026-09-20T15:48:00+08:00",
   "releaseStatus": "NOT_COMPLETE",
   "runtimeCommit": "3c4c3a5ae9fac944350b6710322fd9d5223eccde",
-  "evidenceCommit": "1efaa22311e41d92816c5f08188a59ff7ca66806",
-  "evidenceState": "workspace verification; execution HEAD and Runtime Freeze are recorded separately",
-  "statusReason": "v3.0.4 离线现场已在 Docker Desktop 恢复后从 0/122 完整执行：Browser 24、Java/MySQL 30、Fault 36、Durable Recovery 32，全部通过。运行镜像为 Runtime Freeze，Provider 使用仓库内 deterministic Fake Provider，外部 Provider 请求 0；正式 DeepSeek 批次仍未启动，Release Gate 保持 NOT_COMPLETE。",
+  "evidenceCommit": "83b98efa90dbad5f065219caadd41487cbae0c15",
+  "evidenceState": "current candidate evidence; runtime freeze, execution head and online batch are recorded separately",
+  "statusReason": "v3.0.4 当前候选已完成离线工程验证并执行唯一正式 DeepSeek 批次。批次在首个核心链 agent_task_create 阶段安全停止：task_created -> task_blocked，Proposal 未形成、Java 写入 0；Provider 逻辑请求 1、失败 1、Token 0，Ledger 已对账。不得重试或创建第二批次，Release Gate 保持 NOT_COMPLETE。",
   "project": {
     "name": "Mall AI After-sales Platform",
     "repository": "https://github.com/Eleven617/mall-ai-after-sales-platform",
@@ -198,16 +198,16 @@
       "testedCodeCommit": "3c4c3a5ae9fac944350b6710322fd9d5223eccde",
       "total": "122/122",
       "failed": 0,
-      "environmentBlocked": 122,
-      "browser": "not_run_current_commit",
-      "javaMysql": "not_run_current_commit",
-      "faultInjection": "not_run_current_commit",
-      "durableRecovery": "not_run_current_commit",
-      "mode": "blocked before fixture creation by Docker/Java CLI permissions; historical deterministic/offline report is stale",
-      "report": null,
-      "reportSha256": null,
-      "fixtureSha256": null,
-      "reason": "Fresh current-commit field execution is blocked before fixture creation because Docker CLI execution is denied and the Java endpoint is unavailable. The historical 122/122 report remains separately recorded and is not merged."
+      "environmentBlocked": 0,
+      "browser": "24/24",
+      "javaMysql": "30/30",
+      "faultInjection": "36/36",
+      "durableRecovery": "32/32",
+      "mode": "current Docker Compose field runner with deterministic Fake Provider and synthetic fixture",
+      "report": "tmp/v304-field-acceptance-122/field-20260920T053042Z-14d730d7/field-acceptance.json",
+      "reportSha256": "3aa1613e07ae89fbf11ad51cd6ed33e0860304040c49abb7a5c03b35adfefe1f",
+      "fixtureSha256": "7b7616e3ba0f6939a7bcc7d381b3c3b7b35d2b443c2056b218cdefc7f17486a9",
+      "reason": "Current field execution completed from 0/122 with the Runtime Freeze image. This is deterministic/offline synthetic evidence, not live-model quality."
     }
   },
   "showcase": {
@@ -235,11 +235,11 @@
     "fastapi": {"passed": 450, "failed": 0, "warnings": 1, "subtests": 12, "pytestTerminalPassed": 438, "exitCode": 0},
     "deterministic": {"manifest": "478/478", "representative": "8/8", "exitCode": 0},
     "fieldAcceptance": {"status": "passed_offline_deterministic", "total": "122/122", "failed": 0, "environmentBlocked": 0, "reason": "Current Docker Compose field runner completed all four categories with the Runtime Freeze image and deterministic Fake Provider; this is synthetic/offline evidence, not live-model quality.", "report": "tmp/v304-field-acceptance-122/field-20260920T053042Z-14d730d7/field-acceptance.json", "reportSha256": "3aa1613e07ae89fbf11ad51cd6ed33e0860304040c49abb7a5c03b35adfefe1f", "fixtureSha256": "7b7616e3ba0f6939a7bcc7d381b3c3b7b35d2b443c2056b218cdefc7f17486a9", "imageRevision": "3c4c3a5ae9fac944350b6710322fd9d5223eccde", "providerMode": "deterministic", "externalProviderRequests": 0},
-    "deepseek": {"status": "not_run_by_design", "model": "deepseek-flash", "thinkingMode": "enabled", "reasoningEffort": "high", "batchStatus": "not_run", "calls": 0, "successfulCalls": 0, "failedCalls": 0, "tokens": 0, "sideEffects": 0, "reason": "No Provider call was authorized in this environment-only repair. Docker Engine and the Java endpoint were unavailable, so the live preflight and formal batch were not started; no release, batch, ledger, lock, report, or Provider request was created."},
-    "showcase": {"status": "not_executed", "scenarios": [{"scenarioId": "main_open_task_closed_loop", "status": "not_executed"}, {"scenarioId": "pause_resume", "status": "not_executed"}, {"scenarioId": "fact_change_handoff", "status": "not_executed"}]}
+    "deepseek": {"status": "failed", "model": "deepseek-flash", "thinkingMode": "enabled", "reasoningEffort": "high", "batchStatus": "failed", "releaseId": "mall-v3.0.4-portfolio-final-3c4c3a5a", "batchId": "portfolio_final-3d7b9340d60d", "calls": 1, "successfulCalls": 0, "failedCalls": 1, "tokens": 0, "providerHttpAttempts": 0, "ledgerReconciled": true, "report": "tmp/v304-portfolio-final-mall-v3.0.4-portfolio-final-3c4c3a5a/report.json", "reportSha256": "d3508d1f485e77944ad3db62dfe7fc8298b83746ce9ad1bec86d23b5e8f1521c", "lock": "docs/evidence/deepseek-release-lock-mall-v3.0.4-portfolio-final-3c4c3a5a.json", "lockSha256": "d9b65d14c1ae4c8b8be135b4a1d4bdb96cdde764e2f0988721714462ed91313c", "ledger": "tmp/release-ledger-mall-v3.0.4-portfolio-final-3c4c3a5a/ledger.jsonl", "ledgerSha256": "cd3ea9cb26a1e32764e8888f26302a8e4eaac16d587197ff06cec925c71fe10b", "failureStage": "agent_task_create", "failureCode": "task_terminal_state_unexpected", "taskStatusTransitions": ["task_created", "task_blocked"], "proposalFormed": false, "javaEligibility": false, "javaCommit": false, "statusReadback": false, "toolCalls": 0, "reason": "The single authorized batch stopped after its first model request; no retry or second batch was started."},
+    "showcase": {"status": "failed", "scenarios": [{"scenarioId": "main_open_task_closed_loop", "status": "failed", "stage": "agent_task_create", "failureCode": "task_terminal_state_unexpected"}, {"scenarioId": "pause_resume", "status": "not_executed"}, {"scenarioId": "fact_change_handoff", "status": "not_executed"}]}
   },
   "v3_0_4LivePreflightRepair": {
-    "status": "READY_FOR_ONE_FINAL_LIVE_BATCH",
+    "status": "ONLINE_BATCH_FAILED_NOT_COMPLETE",
     "runtimeCommit": "3c4c3a5ae9fac944350b6710322fd9d5223eccde",
     "environmentVariable": "MALL_LIVE_DEMO_PASSWORD",
     "providerRequests": 0,
@@ -250,8 +250,9 @@
     "preflightTests": "19/19",
     "preflightTestCommand": "mall-ai-service/.venv/Scripts/python.exe -m pytest -q tests/test_live_release_preflight.py tests/test_release_ledger.py tests/test_bootstrap_live_demo.py",
     "preflightTestExitCode": 0,
-    "requiredUserAction": "No environment repair remains for the offline gate. A separate explicit authorization is still required before any DeepSeek call; this evidence does not authorize or create an online Release/Lock."
+    "requiredUserAction": "Environment preflight itself passed; the separate authorized online batch failed and is recorded below. Do not retry it or create a second Release."
   },
+  "v3_0_4AuthorizedFinalBatch": {"status": "failed", "releaseId": "mall-v3.0.4-portfolio-final-3c4c3a5a", "batchId": "portfolio_final-3d7b9340d60d", "failureStage": "agent_task_create", "failureCode": "task_terminal_state_unexpected", "taskStatusTransitions": ["task_created", "task_blocked"], "proposalFormed": false, "toolCalls": 0, "javaEligibility": false, "javaCommit": false, "statusReadback": false, "providerRequests": 1, "successfulRequests": 0, "failedRequests": 1, "totalTokens": 0, "ledgerReconciled": true, "report": "tmp/v304-portfolio-final-mall-v3.0.4-portfolio-final-3c4c3a5a/report.json", "reportSha256": "d3508d1f485e77944ad3db62dfe7fc8298b83746ce9ad1bec86d23b5e8f1521c", "lock": "docs/evidence/deepseek-release-lock-mall-v3.0.4-portfolio-final-3c4c3a5a.json", "lockSha256": "d9b65d14c1ae4c8b8be135b4a1d4bdb96cdde764e2f0988721714462ed91313c", "ledger": "tmp/release-ledger-mall-v3.0.4-portfolio-final-3c4c3a5a/ledger.jsonl", "ledgerSha256": "cd3ea9cb26a1e32764e8888f26302a8e4eaac16d587197ff06cec925c71fe10b", "mainSupplementalGrounding": "not_executed", "assets": "not_generated", "releaseQualified": false},
   "releaseLedger": {"path": "tmp/release-ledger-mall-v3.0.3-portfolio-final-db3860701086/ledger.jsonl", "releaseId": "mall-v3.0.3-portfolio-final-db3860701086", "batchId": "portfolio_final-c9b46de42c2d", "providerRequests": 8, "successfulRequests": 8, "failedRequests": 0, "totalTokens": 29542, "ledgerReconciled": true, "sha256": "814cdcf09a3e9d37b6450bfbacbe7ff65915a76c378a07f60dfd3a8725087b18", "v3_0_3UnplannedProviderRequests": 16, "v3_0_3UnplannedProviderTokens": 14553},
   "ci": {"status": "pending_remote_final_sha", "scope": "v3.0.4 evidence-only candidate update", "testedCommit": null, "mallCi": null, "qualityEvaluation": null, "mallCiConclusion": "pending", "qualityEvaluationConclusion": "pending", "previousRemoteRunsStale": true},
   "publicValidator": {"command": "python scripts/validate_public_release.py", "exitCode": 0, "status": "dynamic_report", "reason": "读取当前 FastAPI JUnit/sidecar，不再硬编码历史测试数量。"},
