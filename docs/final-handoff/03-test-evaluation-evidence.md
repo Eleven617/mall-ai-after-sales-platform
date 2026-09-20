@@ -1,5 +1,9 @@
 # 测试、评测与现场证据
 
+## 当前候选快照｜v3.0.4 contract-alignment offline repair（2026-09-20）
+
+执行 HEAD `a95ae6e79643eb922dd45a76d6aa7a8936d73c15`。FastAPI JUnit **460/460**（448 pytest cases + 12 subtests），manifest **478/478**、representative **8/8**、holdout v3 semantic audit `0`、contract replay **36/36**；本轮外部 Provider requests **0**。历史 Docker 122/122 报告绑定修订前 Runtime，当前候选未冒充新现场通过；最小在线复测尚未执行，发布状态 **NOT_COMPLETE**。
+
 ## 当前权威快照｜v3.0.4 唯一正式在线批次（2026-09-20）
 
 无模型预检和当前离线门禁通过后，唯一正式 Batch `portfolio_final-3d7b9340d60d` 在 Provider 网络前因 Ledger 初始化缺陷作废；根因分类为 `release_infrastructure_failure`，`task_terminal_state_unexpected` 仅为 Runner 表象。逻辑 Provider 请求 1、实际 HTTP attempts 0、Token 0；Proposal、Skill/Tool 调用、Java 资格核验、最终写入和状态回查均为 0。主集、补充集、Grounding、另两条展示链和 live 素材全部 `not_executed`，没有单 Case 重试。

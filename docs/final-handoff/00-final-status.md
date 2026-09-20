@@ -1,5 +1,9 @@
 # Mall v3.0 最终交付状态
 
+## 当前候选快照｜v3.0.4 contract-alignment offline repair（2026-09-20）
+
+候选 HEAD `a95ae6e79643eb922dd45a76d6aa7a8936d73c15`，状态 **NOT_COMPLETE**。FastAPI JUnit **460/460**（448 pytest cases + 12 subtests），holdout v3 语义审计为 0，contract replay **36/36**，本轮 Provider requests **0**。本轮未启动在线复测、未创建新 Release/Lock、未合并 main；历史在线失败证据不可变。
+
 ## 当前权威快照｜v3.0.4 唯一正式在线批次（2026-09-20）
 
 Release `mall-v3.0.4-portfolio-final-3c4c3a5a` 的唯一 Batch `portfolio_final-3d7b9340d60d` 已在 Java 合成账号预检通过后执行，但在 Provider 网络前因 Ledger 初始化缺陷作废。公开根因分类为 `release_infrastructure_failure`；`task_terminal_state_unexpected` 仅是 Runner 表象。逻辑 Provider 请求 1、实际 HTTP attempts 0、Token 0，Ledger 已对账；Proposal、工具调用、Java 资格核验、最终写入和状态回查均为 0。主集、补充集、Grounding、其他两条核心链和 live 素材均 `not_executed`，不重试、不创建第二批次。

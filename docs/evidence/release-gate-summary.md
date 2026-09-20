@@ -1,5 +1,9 @@
 # Mall v3.0 Release Gate 复核
 
+## 当前候选｜v3.0.4 contract-alignment offline repair（2026-09-20）
+
+候选分支 `codex/v3.0.4-eval-contract-alignment`，执行 HEAD `a95ae6e79643eb922dd45a76d6aa7a8936d73c15`。FastAPI JUnit **460/460**（448 pytest cases + 12 subtests），holdout 合同 v3 语义审计 `semanticAuditErrors=0`，contract replay `36/36`，Provider requests **0**。本候选只完成离线合同、协议诊断和 Grounding 适用性加固，尚未进行最小在线复测；Release Gate **NOT_COMPLETE**。旧在线 Report/Ledger/Lock 保持不变。
+
 ## 当前权威结论｜v3.0.4 在线入口 Ledger 缺陷校准（2026-09-20）
 
 已确认失败根因为正式入口只创建 Ledger 目录、没有原子创建空 `ledger.jsonl`；`reserve_provider_attempt()` 因 Ledger 缺失在网络前 fail-closed。该批次应标记为 `invalidated_before_provider_network` / `release_infrastructure_failure`：`providerHttpAttempts=0`、成功请求 0、Token 0。报告中的 `task_terminal_state_unexpected` 仅是 Runner 表象，不是模型质量或 Agent 业务失败。旧 Report/Ledger/Lock 未修改；本轮没有新的外部 Provider 请求。

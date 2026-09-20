@@ -2,10 +2,10 @@
   "schemaVersion": "mall-public-release-facts.v4",
   "generatedAt": "2026-09-20T15:48:00+08:00",
   "releaseStatus": "NOT_COMPLETE",
-  "runtimeCommit": "3c4c3a5ae9fac944350b6710322fd9d5223eccde",
+  "runtimeCommit": "a95ae6e79643eb922dd45a76d6aa7a8936d73c15",
   "evidenceCommit": "c5e49dbdaf596bbd44b24ea4de3970cd64a91987",
   "evidenceState": "current candidate evidence; runtime freeze, execution head and online batch are recorded separately",
-  "statusReason": "v3.0.4 当前候选已完成离线工程验证；唯一正式 DeepSeek 批次在 Provider 网络前因 Ledger 初始化缺陷作废，公开根因分类为 release_infrastructure_failure，实际 HTTP attempts=0、Token=0。不得重试或创建第二批次，Release Gate 保持 NOT_COMPLETE。",
+  "statusReason": "v3.0.4 当前候选完成合同修订、结构化诊断和 Grounding 适用性加固；历史唯一正式 DeepSeek 批次在 Provider 网络前因 Ledger 初始化缺陷作废，公开根因分类为 release_infrastructure_failure，实际 HTTP attempts=0、Token=0。本候选尚未在线复测，Release Gate 保持 NOT_COMPLETE。",
   "project": {
     "name": "Mall AI After-sales Platform",
     "repository": "https://github.com/Eleven617/mall-ai-after-sales-platform",
@@ -183,7 +183,7 @@
     }
   ],
   "tests": {
-    "fastapi": {"passed": 455, "failed": 0, "skipped": 0, "warnings": 1, "subtests": 12, "pytestTerminalPassed": 443, "exitCode": 0, "command": "mall-ai-service/.venv/Scripts/python.exe scripts/run_fastapi_ci_report.py --junitxml=ci-evidence/v3-fastapi-junit.xml --report=ci-evidence/v3-fastapi-report.json", "semanticReportSha256": "258a3a2a3e4ad19e85d62e9f9507a3edda5498432e2dd5caedc306f4c0064f21", "junitSha256": "c112a672af886534701b32d0b255123206ec820c06e0c2ac40af561f108f38b2"},
+    "fastapi": {"passed": 460, "failed": 0, "skipped": 0, "warnings": 1, "subtests": 12, "pytestTerminalPassed": 448, "exitCode": 0, "command": "mall-ai-service/.venv/Scripts/python.exe scripts/run_fastapi_ci_report.py --junitxml=ci-evidence/v3-fastapi-junit.xml --report=ci-evidence/v3-fastapi-report.json", "semanticReportSha256": "e0b97bc1129b386e90f9e57a3227235d9a826ba3a92e5ce7faebec2fbb4534f6", "junitSha256": "d6bdd72767b4fbaaf9a06c44ca16d3b0da8e092033d7d07c711037ff2be77007"},
     "java": {"portalCore": "12/12", "portalCompatibility": "2/2", "portalFull": "14/14", "admin": "6/6", "springContext": "1/1", "exitCode": 0},
     "vue": {"command": "npm run build", "status": "passed", "exitCode": 0},
     "compose": {"configExitCode": 0, "servicesHealthy": "8/8"},
@@ -229,14 +229,14 @@
   "supplementalEvaluation": {"status": "not_executed_after_candidate_failure", "independentBlindSet": false, "executed": 0, "passed": 0, "failed": 0, "environmentBlocked": 0},
   "grounding": {"status": "not_executed_after_candidate_failure", "executed": 0, "passed": 0, "failed": 0, "environmentBlocked": 0},
   "currentVerification": {
-    "runtimeCommit": "3c4c3a5ae9fac944350b6710322fd9d5223eccde",
-    "executionHead": "1efaa22311e41d92816c5f08188a59ff7ca66806",
-    "executionState": "committed evidence; Runtime Freeze is recorded separately from execution HEAD",
-    "fastapi": {"passed": 455, "failed": 0, "warnings": 1, "subtests": 12, "pytestTerminalPassed": 443, "exitCode": 0},
+    "runtimeCommit": "a95ae6e79643eb922dd45a76d6aa7a8936d73c15",
+    "executionHead": "a95ae6e79643eb922dd45a76d6aa7a8936d73c15",
+    "executionState": "offline candidate after versioned holdout contract and grounding applicability fixes; online retest not run",
+    "fastapi": {"passed": 460, "failed": 0, "warnings": 1, "subtests": 12, "pytestTerminalPassed": 448, "exitCode": 0},
     "deterministic": {"manifest": "478/478", "representative": "8/8", "exitCode": 0},
-    "fieldAcceptance": {"status": "passed_offline_deterministic", "total": "122/122", "failed": 0, "environmentBlocked": 0, "reason": "Current Docker Compose field runner completed all four categories with the Runtime Freeze image and deterministic Fake Provider; this is synthetic/offline evidence, not live-model quality.", "report": "tmp/v304-field-acceptance-122/field-20260920T053042Z-14d730d7/field-acceptance.json", "reportSha256": "3aa1613e07ae89fbf11ad51cd6ed33e0860304040c49abb7a5c03b35adfefe1f", "fixtureSha256": "7b7616e3ba0f6939a7bcc7d381b3c3b7b35d2b443c2056b218cdefc7f17486a9", "imageRevision": "3c4c3a5ae9fac944350b6710322fd9d5223eccde", "providerMode": "deterministic", "externalProviderRequests": 0},
-    "deepseek": {"status": "failed", "model": "deepseek-flash", "thinkingMode": "enabled", "reasoningEffort": "high", "batchStatus": "invalidated_before_provider_network", "releaseId": "mall-v3.0.4-portfolio-final-3c4c3a5a", "batchId": "portfolio_final-3d7b9340d60d", "calls": 1, "logicalProviderRequests": 1, "modelCalled": true, "successfulCalls": 0, "failedCalls": 1, "tokens": 0, "providerHttpAttempts": 0, "modelHttpAttempted": false, "ledgerReconciled": true, "failureCategory": "release_infrastructure_failure", "releaseLedgerFailureClass": "ledger_malformed", "report": "tmp/v304-portfolio-final-mall-v3.0.4-portfolio-final-3c4c3a5a/report.json", "reportSha256": "d3508d1f485e77944ad3db62dfe7fc8298b83746ce9ad1bec86d23b5e8f1521c", "lock": "docs/evidence/deepseek-release-lock-mall-v3.0.4-portfolio-final-3c4c3a5a.json", "lockSha256": "d9b65d14c1ae4c8b8be135b4a1d4bdb96cdde764e2f0988721714462ed91313c", "ledger": "tmp/release-ledger-mall-v3.0.4-portfolio-final-3c4c3a5a/ledger.jsonl", "failureStage": "agent_task_create", "failureCode": "release_infrastructure_failure", "surfaceFailureCode": "task_terminal_state_unexpected", "taskStatusTransitions": ["task_created", "task_blocked"], "proposalFormed": false, "javaEligibility": false, "javaCommit": false, "statusReadback": false, "toolCalls": 0, "rootCause": "Ledger initialization defect before provider network; task_terminal_state_unexpected is a runner surface symptom", "reason": "The batch was invalidated before any provider HTTP attempt. No retry or second batch was started."},
-    "showcase": {"status": "failed", "scenarios": [{"scenarioId": "main_open_task_closed_loop", "status": "failed", "stage": "agent_task_create", "failureCode": "release_infrastructure_failure", "surfaceFailureCode": "task_terminal_state_unexpected"}, {"scenarioId": "pause_resume", "status": "not_executed"}, {"scenarioId": "fact_change_handoff", "status": "not_executed"}]}
+    "fieldAcceptance": {"status": "historical_passed_stale_after_runtime_change", "total": "122/122", "failed": 0, "environmentBlocked": 0, "reason": "The retained 122/122 Docker field report predates the current Runtime/prompt/evaluation changes and is not claimed as current-candidate evidence.", "report": "tmp/v304-field-acceptance-122/field-20260920T053042Z-14d730d7/field-acceptance.json", "reportSha256": "3aa1613e07ae89fbf11ad51cd6ed33e0860304040c49abb7a5c03b35adfefe1f", "fixtureSha256": "7b7616e3ba0f6939a7bcc7d381b3c3b7b35d2b443c2056b218cdefc7f17486a9", "imageRevision": "3c4c3a5ae9fac944350b6710322fd9d5223eccde", "providerMode": "deterministic", "externalProviderRequests": 0},
+    "deepseek": {"status": "not_run_by_design", "model": "deepseek-flash", "thinkingMode": "enabled", "reasoningEffort": "high", "batchStatus": "not_run", "calls": 0, "logicalProviderRequests": 0, "modelCalled": false, "successfulCalls": 0, "failedCalls": 0, "tokens": 0, "providerHttpAttempts": 0, "modelHttpAttempted": false, "ledgerReconciled": true, "reason": "No online retest was run for this candidate; the historical invalidated batch remains in v3_0_4LivePreflightRepair."},
+    "showcase": {"status": "not_executed", "scenarios": [{"scenarioId": "main_open_task_closed_loop", "status": "not_executed"}, {"scenarioId": "pause_resume", "status": "not_executed"}, {"scenarioId": "fact_change_handoff", "status": "not_executed"}]}
   },
   "v3_0_4LivePreflightRepair": {
     "status": "ONLINE_BATCH_FAILED_NOT_COMPLETE",

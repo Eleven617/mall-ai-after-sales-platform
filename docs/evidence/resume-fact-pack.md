@@ -1,5 +1,9 @@
 # Mall AI 售后平台｜简历事实包
 
+## 当前候选事实｜v3.0.4 contract-alignment offline repair（2026-09-20）
+
+候选 HEAD `a95ae6e79643eb922dd45a76d6aa7a8936d73c15`，发布状态 **NOT_COMPLETE**。本轮完成 holdout 合同 v3 版本化（必要只读 `build_service_resolution` 不再误报）、结构化输出安全错误分类和政策适用性边界；FastAPI JUnit **460/460**（448 pytest cases + 12 subtests）、contract replay **36/36**、Provider requests **0**。历史在线评测与旧失败证据保持原样；当前候选尚未在线复测，不能写成真实模型质量或作品集发布完成。
+
 ## 当前事实快照｜v3.0.4 唯一正式在线批次（2026-09-20）
 
 当前候选 Runtime `3c4c3a5ae9fac944350b6710322fd9d5223eccde` 已完成离线工程验证，但唯一正式在线 Batch `portfolio_final-3d7b9340d60d` 在 Provider 网络前因 Ledger 初始化缺陷作废；公开根因分类为 `release_infrastructure_failure`，`task_terminal_state_unexpected` 仅为 Runner 表象。状态转换 `task_created -> task_blocked`；未形成 Proposal，Java 写入为 0。逻辑 Provider 请求 1、实际 HTTP attempts 0、Token 0，Ledger 对账通过；主集、补充集、Grounding 和其余在线链路未执行。

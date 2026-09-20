@@ -1,5 +1,9 @@
 # 公开发布记录
 
+## 当前候选记录｜v3.0.4 contract-alignment offline repair（2026-09-20）
+
+候选分支 `codex/v3.0.4-eval-contract-alignment`，HEAD `a95ae6e79643eb922dd45a76d6aa7a8936d73c15`。FastAPI JUnit **460/460**（448 pytest cases + 12 subtests）、manifest **478/478**、representative **8/8**、contract replay **36/36**、holdout v3 semantic audit `0`；外部 Provider requests **0**。本轮完成离线合同与 Grounding 适用性修复，未启动在线复测，Release Gate **NOT_COMPLETE**，未合并 main。旧在线 Report/Ledger/Lock 保留原样。
+
 ## 当前权威记录｜v3.0.4 唯一正式在线批次（2026-09-20）
 
 候选 Runtime `3c4c3a5ae9fac944350b6710322fd9d5223eccde` 的唯一正式在线 Release `mall-v3.0.4-portfolio-final-3c4c3a5a` 已结束且在 Provider 网络前因 Ledger 初始化缺陷作废。公开根因分类为 `release_infrastructure_failure`；Batch `portfolio_final-3d7b9340d60d` 的 `task_terminal_state_unexpected` 仅为 Runner 表象。逻辑 Provider 请求 1、实际 HTTP attempts 0、Token 0；Proposal/工具调用/Java 资格核验/最终写入/状态回查均为 0。
