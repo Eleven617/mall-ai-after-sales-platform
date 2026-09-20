@@ -2,7 +2,7 @@
 
 ## 当前候选事实｜v3.0.4 contract-alignment offline repair（2026-09-20）
 
-候选 HEAD `a95ae6e79643eb922dd45a76d6aa7a8936d73c15`，发布状态 **NOT_COMPLETE**。本轮完成 holdout 合同 v3 版本化（必要只读 `build_service_resolution` 不再误报）、结构化输出安全错误分类和政策适用性边界；FastAPI JUnit **460/460**（448 pytest cases + 12 subtests）、contract replay **36/36**、Provider requests **0**。历史在线评测与旧失败证据保持原样；当前候选尚未在线复测，不能写成真实模型质量或作品集发布完成。
+候选 HEAD `a95ae6e79643eb922dd45a76d6aa7a8936d73c15`，发布状态 **NOT_COMPLETE**。本轮完成 holdout 合同 v3 版本化（必要只读 `build_service_resolution` 不再误报）、结构化输出安全错误分类和政策适用性边界；FastAPI JUnit **460/460**（448 pytest cases + 12 subtests）、contract replay **36/36**、Provider requests **0**；该 SHA 的 `mall-ci` 与 `quality-evaluation` 均成功。历史在线评测与旧失败证据保持原样；当前候选尚未在线复测，不能写成真实模型质量或作品集发布完成。
 
 ## 当前事实快照｜v3.0.4 唯一正式在线批次（2026-09-20）
 

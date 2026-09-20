@@ -2,7 +2,7 @@
 
 ## 当前候选快照｜v3.0.4 contract-alignment offline repair（2026-09-20）
 
-执行 HEAD `a95ae6e79643eb922dd45a76d6aa7a8936d73c15`。FastAPI JUnit **460/460**（448 pytest cases + 12 subtests），manifest **478/478**、representative **8/8**、holdout v3 semantic audit `0`、contract replay **36/36**；本轮外部 Provider requests **0**。历史 Docker 122/122 报告绑定修订前 Runtime，当前候选未冒充新现场通过；最小在线复测尚未执行，发布状态 **NOT_COMPLETE**。
+执行 HEAD `a95ae6e79643eb922dd45a76d6aa7a8936d73c15`。FastAPI JUnit **460/460**（448 pytest cases + 12 subtests），manifest **478/478**、representative **8/8**、holdout v3 semantic audit `0`、contract replay **36/36**；本轮外部 Provider requests **0**，该 SHA 的 `mall-ci` 与 `quality-evaluation` 均成功。历史 Docker 122/122 报告绑定修订前 Runtime，当前候选未冒充新现场通过；最小在线复测尚未执行，发布状态 **NOT_COMPLETE**。
 
 ## 当前权威快照｜v3.0.4 唯一正式在线批次（2026-09-20）
 

@@ -9,7 +9,7 @@
 
 ## 30 秒了解项目
 
-> 当前展示状态：`NOT_COMPLETE`。当前候选已完成本地离线合同验证：FastAPI JUnit `460/460`（448 pytest cases + 12 subtests）、manifest `478/478`、contract replay `36/36`、holdout 合同 v3 语义审计 `0`。保留的 Docker 现场 `122/122` 属于运行时/提示词修订前的历史 deterministic 证据，当前候选未重新执行现场。最近一次正式批次在 Provider 网络前因 Ledger 初始化缺陷作废（`invalidated_before_provider_network`）；`task_terminal_state_unexpected` 只是 Runner 表象，不是模型能力失败。历史在线评测结果与当前候选分开记录；本候选没有启动在线复测、没有第二批次、没有合并 `main`。
+> 当前展示状态：`NOT_COMPLETE`。当前候选已完成本地离线合同验证：FastAPI JUnit `460/460`（448 pytest cases + 12 subtests）、manifest `478/478`、contract replay `36/36`、holdout 合同 v3 语义审计 `0`。候选 SHA `95f6041` 的 [`mall-ci`](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/35511412046) 与 [`quality-evaluation`](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/35511412051) 均成功。保留的 Docker 现场 `122/122` 属于运行时/提示词修订前的历史 deterministic 证据，当前候选未重新执行现场。最近一次正式批次在 Provider 网络前因 Ledger 初始化缺陷作废（`invalidated_before_provider_network`）；`task_terminal_state_unexpected` 只是 Runner 表象，不是模型能力失败。历史在线评测结果与当前候选分开记录；本候选没有启动在线复测、没有第二批次、没有合并 `main`。
 
 ### 为什么不是普通聊天机器人
 
