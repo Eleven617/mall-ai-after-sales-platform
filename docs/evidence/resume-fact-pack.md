@@ -2,7 +2,7 @@
 
 ## 当前候选事实｜v3.0.4 最小在线复测前冻结（2026-09-21）
 
-Runtime `78c7dd5c0156d7d4b18df75b0df6221b6b2b4df4`，发布状态 **NOT_COMPLETE**。本轮完成决策终态互斥合同、Prompt v3.4、Grounding 最小充分来源与 Durable Java/Redis 恢复屏障；FastAPI JUnit **471/471**（455 pytest cases + 16 subtests）、manifest **478/478**、contract replay **36/36**、当前镜像现场 **122/122**，Provider requests/tokens 均为 0。报告 SHA-256 `b03b6cee49951b301e13dc38531834cb65e210df0d351f6d659c74bd55cf18ec`。当前 SHA 的远程 CI pending，最小在线复测 `not_run_by_design`；历史在线评测与旧失败证据保持原样。
+Runtime `78c7dd5c0156d7d4b18df75b0df6221b6b2b4df4`，发布状态 **NOT_COMPLETE**。本轮完成决策终态互斥合同、Prompt v3.4、Grounding 最小充分来源与 Durable Java/Redis 恢复屏障；FastAPI JUnit **473/473**（457 pytest cases + 16 subtests）、manifest **478/478**、contract replay **36/36**、当前镜像现场 **122/122**，Provider requests/tokens 均为 0。报告 SHA-256 `b03b6cee49951b301e13dc38531834cb65e210df0d351f6d659c74bd55cf18ec`。当前 SHA 的远程 CI pending，最小在线复测 `not_run_by_design`；历史在线评测与旧失败证据保持原样。
 
 ## 当前事实快照｜v3.0.4 唯一正式在线批次（2026-09-20）
 

@@ -1,9 +1,9 @@
 {
   "schemaVersion": "mall-public-release-facts.v4",
-  "generatedAt": "2026-09-21T16:21:14+08:00",
+  "generatedAt": "2026-09-21T17:02:00+08:00",
   "releaseStatus": "NOT_COMPLETE",
   "runtimeCommit": "78c7dd5c0156d7d4b18df75b0df6221b6b2b4df4",
-  "evidenceCommit": "78c7dd5c0156d7d4b18df75b0df6221b6b2b4df4",
+  "evidenceCommit": "2ec1de88e235de57cebefcaa266db9a02c6e8502",
   "evidenceState": "current candidate evidence; runtime freeze, execution head and online batch are recorded separately",
   "statusReason": "v3.0.4 当前 Runtime 完成决策终态合同、Grounding 适用性和 Durable 恢复屏障加固；FastAPI、deterministic/replay 与当前镜像现场 122 条均通过且外部 Provider 为 0。历史在线证据保持不可变；当前 Runtime 尚未执行已授权的最小在线复测，Release Gate 保持 NOT_COMPLETE。",
   "project": {
@@ -183,7 +183,7 @@
     }
   ],
   "tests": {
-    "fastapi": {"passed": 471, "failed": 0, "skipped": 0, "warnings": 1, "subtests": 16, "pytestTerminalPassed": 455, "exitCode": 0, "command": "mall-ai-service/.venv/Scripts/python.exe scripts/run_fastapi_ci_report.py --junitxml=ci-evidence/v3-fastapi-junit.xml --report=ci-evidence/v3-fastapi-report.json", "semanticReportSha256": "34e315778cbdc68f9fcd035ace31d5cd38dce373159ef53e21b45c5ceb5b7166", "junitSha256": "88e0ea1aa81ce2be2f1b04052d8c4dc95f8e829c5e2b38d6291952770493bab1"},
+    "fastapi": {"passed": 473, "failed": 0, "skipped": 0, "warnings": 1, "subtests": 16, "pytestTerminalPassed": 457, "exitCode": 0, "command": "mall-ai-service/.venv/Scripts/python.exe scripts/run_fastapi_ci_report.py --junitxml=ci-evidence/v3-fastapi-junit.xml --report=ci-evidence/v3-fastapi-report.json", "semanticReportSha256": "92c7a70d87f0cccfa211ecd4510cb2e0293f7a892caac98854e2f65566d4099d", "junitSha256": "3718b7a8e9c0ff9ce5c42576607130edbbf8ef0574060de8255976dc43d5ae17"},
     "java": {"portalCore": "12/12", "portalCompatibility": "2/2", "portalFull": "14/14", "admin": "6/6", "springContext": "1/1", "exitCode": 0},
     "vue": {"command": "npm run build", "status": "passed", "exitCode": 0},
     "compose": {"configExitCode": 0, "servicesHealthy": "8/8"},
@@ -230,9 +230,9 @@
   "grounding": {"status": "not_executed_after_candidate_failure", "executed": 0, "passed": 0, "failed": 0, "environmentBlocked": 0},
   "currentVerification": {
     "runtimeCommit": "78c7dd5c0156d7d4b18df75b0df6221b6b2b4df4",
-    "executionHead": "78c7dd5c0156d7d4b18df75b0df6221b6b2b4df4",
+    "executionHead": "2ec1de88e235de57cebefcaa266db9a02c6e8502",
     "executionState": "offline candidate after decision-state, grounding applicability and durable dependency recovery fixes; minimal online retest not run",
-    "fastapi": {"passed": 471, "failed": 0, "warnings": 1, "subtests": 16, "pytestTerminalPassed": 455, "exitCode": 0},
+    "fastapi": {"passed": 473, "failed": 0, "warnings": 1, "subtests": 16, "pytestTerminalPassed": 457, "exitCode": 0},
     "deterministic": {"manifest": "478/478", "representative": "8/8", "exitCode": 0},
     "fieldAcceptance": {"status": "passed", "total": "122/122", "failed": 0, "environmentBlocked": 0, "reason": "Current Runtime and image completed one unspliced Docker field run from 0/122 with deterministic provider.", "report": "tmp/v304-field-acceptance-78c7dd5/field-20260921T081500Z-e650ac28/field-acceptance.json", "reportSha256": "b03b6cee49951b301e13dc38531834cb65e210df0d351f6d659c74bd55cf18ec", "fixtureSha256": "7b7616e3ba0f6939a7bcc7d381b3c3b7b35d2b443c2056b218cdefc7f17486a9", "imageRevision": "78c7dd5c0156d7d4b18df75b0df6221b6b2b4df4", "providerMode": "deterministic", "externalProviderRequests": 0},
     "deepseek": {"status": "not_run_by_design", "model": "deepseek-flash", "thinkingMode": "enabled", "reasoningEffort": "high", "batchStatus": "not_run", "calls": 0, "logicalProviderRequests": 0, "modelCalled": false, "successfulCalls": 0, "failedCalls": 0, "tokens": 0, "providerHttpAttempts": 0, "modelHttpAttempted": false, "ledgerReconciled": true, "reason": "No online retest was run for this candidate; the historical invalidated batch remains in v3_0_4LivePreflightRepair."},
@@ -267,7 +267,7 @@
     "unplannedProviderRun": {"requests": 16, "tokens": 14553, "formalRelease": false}
   },
   "publicClaims": [
-    "当前 Runtime 的 FastAPI 机器报告为 471 passed、0 failed、0 skipped（455 pytest cases + 16 subtests）；v3 deterministic 为 478/478、代表性 Runtime 为 8/8。",
+    "当前 Runtime 的 FastAPI 机器报告为 473 passed、0 failed、0 skipped（457 pytest cases + 16 subtests）；v3 deterministic 为 478/478、代表性 Runtime 为 8/8。",
     "当前 Runtime 的本地合成现场从 0/122 完整执行并通过：Browser 24、Java/MySQL 30、Fault 36、Durable Recovery 32；报告与 Fixture SHA 已绑定，外部 Provider 请求 0。该结果是 deterministic/offline 证据，不是实时 DeepSeek 质量。",
     "v3.0.3 慢网关现场经公共 Nginx 运行 76.156 秒并返回 201/ready_to_commit，Provider 请求 0、Java 写入 0；唯一正式在线批次的 8 次 Provider 调用均成功且账本对账，但第一核心链未形成 Proposal 后安全停止。",
     "Java mall2 仍是身份、归属、资格、状态、幂等、事务、Outbox 和最终写入权威。"

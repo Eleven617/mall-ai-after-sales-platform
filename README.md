@@ -9,7 +9,7 @@
 
 ## 30 秒了解项目
 
-> 当前展示状态：`NOT_COMPLETE`。Runtime `78c7dd5c0156d7d4b18df75b0df6221b6b2b4df4` 已通过 FastAPI JUnit `471/471`（`471 passed`，即 455 pytest cases + 16 subtests）、manifest `478/478`、contract replay `36/36` 和当前镜像现场 `122/122`；本轮外部 Provider requests/tokens 为 0。当前 SHA 的远程 CI 尚待执行，最小在线复测 `not_run_by_design`，因此没有合并 `main`。历史在线评测和失败工件保持不可变，不能把 deterministic 现场写成真实模型效果。
+> 当前展示状态：`NOT_COMPLETE`。Runtime `78c7dd5c0156d7d4b18df75b0df6221b6b2b4df4` 已通过 FastAPI JUnit `473/473`（`473 passed`，即 457 pytest cases + 16 subtests）、manifest `478/478`、contract replay `36/36` 和当前镜像现场 `122/122`；本轮外部 Provider requests/tokens 为 0。当前 SHA 的远程 CI 尚待执行，最小在线复测 `not_run_by_design`，因此没有合并 `main`。历史在线评测和失败工件保持不可变，不能把 deterministic 现场写成真实模型效果。
 
 ### 为什么不是普通聊天机器人
 

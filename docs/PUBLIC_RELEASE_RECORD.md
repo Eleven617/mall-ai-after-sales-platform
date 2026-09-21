@@ -2,7 +2,7 @@
 
 ## 当前候选记录｜v3.0.4 最小在线复测前冻结（2026-09-21）
 
-候选分支 `codex/v3.0.4-eval-contract-alignment`，Runtime `78c7dd5c0156d7d4b18df75b0df6221b6b2b4df4`。FastAPI JUnit **471/471**（455 pytest cases + 16 subtests）、manifest **478/478**、representative **8/8**、contract replay **36/36**；当前镜像现场 **122/122**（24+30+36+32），报告 SHA-256 `b03b6cee49951b301e13dc38531834cb65e210df0d351f6d659c74bd55cf18ec`。外部 Provider requests/tokens 为 0，当前 SHA 远程 CI pending，最小在线复测 `not_run_by_design`；Release Gate **NOT_COMPLETE**，未合并 main，旧在线 Report/Ledger/Lock 保留原样。
+候选分支 `codex/v3.0.4-eval-contract-alignment`，Runtime `78c7dd5c0156d7d4b18df75b0df6221b6b2b4df4`。FastAPI JUnit **473/473**（457 pytest cases + 16 subtests）、manifest **478/478**、representative **8/8**、contract replay **36/36**；当前镜像现场 **122/122**（24+30+36+32），报告 SHA-256 `b03b6cee49951b301e13dc38531834cb65e210df0d351f6d659c74bd55cf18ec`。外部 Provider requests/tokens 为 0，当前 SHA 远程 CI pending，最小在线复测 `not_run_by_design`；Release Gate **NOT_COMPLETE**，未合并 main，旧在线 Report/Ledger/Lock 保留原样。
 
 ## 当前权威记录｜v3.0.4 唯一正式在线批次（2026-09-20）
 
