@@ -1,5 +1,11 @@
 # 测试、评测与现场证据
 
+## 当前候选快照｜v3.0.4 离线收口（2026-09-21）
+
+Runtime/image `8ff255aeff320b5f3800aa05bfacefec975a684a`：FastAPI **483/483**（467 cases + 16 subtests）、manifest **478/478**、representative **8/8**、contract replay **36/36**。同一镜像从 0/122 完整现场通过 Browser 24、Java/MySQL 30、隔离 Compose Fault 36、Durable Recovery 32；failed=0、environmentBlocked=0，报告 SHA-256 `7156497d23080a7aac6a7d4183949b7d11c41ec8c9ae8799e53722773b26a64c`，Fixture SHA-256 `7b7616e3ba0f6939a7bcc7d381b3c3b7b35d2b443c2056b218cdefc7f17486a9`。
+
+确定性展示链 **3/3**、12 帧，报告 SHA-256 `07638edf7377bec1d510fd4580874231bf6342b7cbeef84b4253f1db8187e1d0`；Provider requests/tokens 为 0。历史在线批次和真实模型指标保持原样，当前候选尚未在线复测，Release Gate **NOT_COMPLETE**。
+
 ## 当前候选快照｜v3.0.4 最小在线复测取证（2026-09-21）
 
 Release `mall-v3.0.4-minimal-retest-78c7dd5-20260921` / Batch `minimal_retest-d551e9d01402` 已执行，状态 **NOT_COMPLETE**：逻辑请求/HTTP attempts 21/21、成功 19、网络失败 2、Token 73,833，reservation/settlement 21/21、Ledger reconciled。三条展示链业务断言通过，但目标及对照评测 11 Case 全部 `not_executed`；素材跨场景复用了 evidence/handoff/status 帧，不是可发布证据。

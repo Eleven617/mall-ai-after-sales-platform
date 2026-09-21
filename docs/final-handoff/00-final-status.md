@@ -1,5 +1,11 @@
 # Mall v3.0 最终交付状态
 
+## 当前状态｜v3.0.4 离线收口候选（2026-09-21）
+
+**NOT_COMPLETE**。Runtime/image `8ff255aeff320b5f3800aa05bfacefec975a684a` 已通过 FastAPI **483/483**（467 cases + 16 subtests）、manifest **478/478**、representative **8/8**、contract replay **36/36** 和一次未拼接现场 **122/122**；主 Compose 8/8 healthy，外部 Provider requests/tokens 为 0。确定性三条展示链 3/3，任务绑定的关键状态帧已验证为不同内容。
+
+历史在线最小复测仍为 FAILED（21 attempts、19 成功、2 次 network 失败、73,833 tokens，11 个目标/对照未执行）。当前候选尚未在线复测，未创建新在线 Release/Lock、未合并 main；历史 Report/Ledger/Lock 未修改。
+
 ## 当前状态｜v3.0.4 最小在线复测后（2026-09-21）
 
 **NOT_COMPLETE**。最小复测不是“未启动”：Release `mall-v3.0.4-minimal-retest-78c7dd5-20260921` 共发生 21 次 Provider HTTP attempts、19 成功、2 次网络失败、73,833 tokens，Ledger 对账完成。展示链业务断言 3/3 通过，但目标评测 11 Case 全部 `not_executed`；现有素材因跨场景重复帧无效。

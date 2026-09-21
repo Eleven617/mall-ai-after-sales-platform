@@ -1,5 +1,11 @@
 # 公开发布记录
 
+## 当前候选记录｜v3.0.4 离线收口（2026-09-21）
+
+Release Gate **NOT_COMPLETE**。Runtime/image `8ff255aeff320b5f3800aa05bfacefec975a684a` 的 FastAPI **483/483**（467 cases + 16 subtests）、manifest **478/478**、representative **8/8**、contract replay **36/36** 均通过。主 Compose 8/8 healthy；当前镜像完整现场 **122/122**（Browser 24、Java/MySQL 30、隔离 Fault 36、Durable 32），报告 SHA-256 `7156497d23080a7aac6a7d4183949b7d11c41ec8c9ae8799e53722773b26a64c`，Fixture SHA-256 `7b7616e3ba0f6939a7bcc7d381b3c3b7b35d2b443c2056b218cdefc7f17486a9`。
+
+确定性展示链 3/3、12 帧，关键状态卡跨场景不重复；本轮外部 Provider requests/tokens 为 0。历史最小在线复测仍为 FAILED（21 attempts、73,833 tokens），其 Report/Ledger/Lock 不变；当前候选尚未在线复测、未创建新在线 Release/Lock、未合并 main。
+
 ## 当前候选记录｜v3.0.4 最小在线复测取证（2026-09-21）
 
 Release Gate **NOT_COMPLETE**。Release `mall-v3.0.4-minimal-retest-78c7dd5-20260921` / Batch `minimal_retest-d551e9d01402` 已真实启动：Provider 21 次逻辑请求和 HTTP attempts，19 成功、2 次网络失败，Token 73,833，Ledger 完整对账。三条展示链业务断言通过；11 个目标/对照 Case 均 `not_executed`。12 张 PNG 与 3 个 GIF 虽非空，但同阶段帧跨场景重复，不能作为最终素材。

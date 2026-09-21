@@ -1,5 +1,11 @@
 # Mall AI 售后平台｜简历事实包
 
+## 当前候选｜v3.0.4 离线收口（2026-09-21）
+
+Runtime/image `8ff255aeff320b5f3800aa05bfacefec975a684a`：FastAPI **483/483**（467 cases + 16 subtests）、manifest **478/478**、representative **8/8**、contract replay **36/36**；主 Compose **8/8 healthy**，当前镜像完整现场 **122/122**（24 + 30 + 36 + 32），failed=0、environmentBlocked=0。确定性展示链 **3/3**、12 帧，关键任务卡跨场景不重复；本轮外部 Provider requests/tokens 为 0。
+
+状态仍为 **NOT_COMPLETE**：历史最小在线复测的 21 attempts、73,833 tokens 与 FAILED Report/Ledger/Lock 保持不变；当前候选尚未在线复测，CI 等待当前证据提交。离线结果不得表述为真实模型效果，未合并 `main`。
+
 ## 当前事实｜v3.0.4 最小在线复测（2026-09-21）
 
 状态为 **NOT_COMPLETE**。最小在线复测真实消耗 21 次 HTTP attempts、73,833 tokens，19 成功、2 次 `network` 失败并完成 Ledger 对账。三条真实展示链的业务断言通过；预定 11 个目标/对照 Case 因批次 Provider failure 全部 `not_executed`。现有 GIF/PNG 因跨场景重复帧不作为公开素材。

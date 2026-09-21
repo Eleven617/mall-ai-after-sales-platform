@@ -9,7 +9,7 @@
 
 ## 30 秒了解项目
 
-> 当前展示状态：`NOT_COMPLETE`。最小在线复测已真实启动：21 次 Provider HTTP attempts，19 成功、2 次网络失败，共 73,833 tokens；三条展示链的业务断言通过，但 11 个目标/对照评测均未执行，录制素材还发现跨场景重复帧，因此不能作为最终发布证据。当前修复 Runtime `e1df8c4266f676330cb4c581a0c105dab10932a7` 的 FastAPI JUnit 为 `477/477`（`477 passed`，即 461 pytest cases + 16 subtests），manifest `478/478`、contract replay `36/36`；旧现场 `122/122` 仍只绑定 `78c7dd5`，没有被重标为当前 Runtime。历史 Report、Ledger 和 Lock 保持不可变，未合并 `main`。
+> 当前展示状态：`NOT_COMPLETE`。Runtime `8ff255aeff320b5f3800aa05bfacefec975a684a` 已通过 FastAPI JUnit `483/483`（467 cases + 16 subtests）、manifest `478/478`、representative `8/8`、contract replay `36/36` 和当前镜像现场 `122/122`；确定性三条展示链 `3/3`，任务绑定关键帧已修复，外部 Provider 调用为 0。历史最小在线复测真实消耗 21 次 HTTP attempts、73,833 tokens 后失败，11 个目标/对照未执行；当前候选尚未在线复测，历史 Report、Ledger 和 Lock 保持不可变，未合并 `main`。
 
 ### 为什么不是普通聊天机器人
 
@@ -66,10 +66,10 @@ MCP 只读工具、人工售后工作台和 LangGraph 确定性节点是能力�
 
 结果按套件独立统计，不相加，也不外推为生产 SLA 或真实用户泛化：
 
-- 当前候选收口的 FastAPI JUnit 为 `460 passed`（448 pytest cases + 12 subtests），exit `0`；
+- 当前候选收口的 FastAPI JUnit 为 `483 passed`（467 pytest cases + 16 subtests），exit `0`；
 - v3 deterministic 发布合同为 `478/478`，代表性 Runtime 为 `8/8`；本轮 contract replay 为 `36/36`，Provider `0`；这些都不是浏览器 E2E 或真实模型效果；
 - Java portal 核心 `12/12`、admin `6/6`、Spring context `1/1`、Vue production build、8 服务 Compose 和四类现场 Runner 均已在当前候选环境验证通过；
-- 当前现场 `122/122` 是绑定 Runtime `78c7dd5c` 的本地 Docker、Chrome、Java/MySQL、隔离故障 Compose 与合成 Fixture deterministic 证据，不代表真实模型效果或生产 SLA；
+- 当前现场 `122/122` 绑定 Runtime/image `8ff255ae`，来自本地 Docker、Chrome、Java/MySQL、隔离故障 Compose 与合成 Fixture deterministic 证据，不代表真实模型效果或生产 SLA；
 - RAG Dense、Hybrid、Hybrid+Rerank 的 52 条版本化合成政策 Case 指标只说明检索排序质量，不是答案准确率；
 - 历史 supplemental evaluation set 不是独立盲测集，旧结果只作为开发期审计，不能外推到真实用户；
 - 真实模型主集、补充集、Grounding 已在历史批次执行并单独披露；当前候选尚未进行新的在线复测，历史报告与当前提交不一致时标记为 stale。
