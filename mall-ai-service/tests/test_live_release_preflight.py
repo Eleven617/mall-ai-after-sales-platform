@@ -101,3 +101,8 @@ def test_v304_final_entry_is_a_real_single_batch_path_with_ephemeral_password() 
     assert "ledger_container_not_readwrite" in content
     assert "docker compose exec -T mall-ai-service" in content
     assert "deepseek-release-lock-$ReleaseId.json" in content
+    assert "--phase minimal_retest" in content
+    assert "Get-BoundedReleaseLimit $previousMaxAttempts 80" in content
+    assert "Get-BoundedReleaseLimit $previousMaxTokens 200000" in content
+    assert "GetEnvironmentVariable('MALL_LIVE_DEMO_PASSWORD', 'User')" in content
+    assert "docker compose up -d --no-deps --force-recreate mall-ai-service" in content

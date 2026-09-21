@@ -1,0 +1,28 @@
+{
+  "schemaVersion": "v304-minimal-live-retest.v1",
+  "description": "Single-run replacement validation for the reviewed v3.0.4 behavior and grounding changes.",
+  "requiredRuns": 1,
+  "maxAttemptsPerRequest": 1,
+  "budget": {
+    "maxProviderHttpAttempts": 80,
+    "maxTotalTokens": 200000,
+    "reserveTokens": 12000
+  },
+  "suites": {
+    "main": {
+      "targetCaseIds": ["agent-open-003", "agent-open-006", "agent-open-010"],
+      "controlCaseIds": ["agent-open-005"]
+    },
+    "supplemental": {
+      "targetCaseIds": ["holdout-open-011", "holdout-open-012"],
+      "controlCaseIds": ["holdout-open-010"]
+    },
+    "grounding": {
+      "targetCaseIds": ["rag2-042", "rag2-043", "rag2-045"],
+      "controlCaseIds": ["rag2-044"]
+    }
+  },
+  "showcaseCaseIds": ["agent-open-020", "agent-open-001", "agent-open-021"],
+  "expectedEvaluationCases": 11,
+  "expectedShowcaseChains": 3
+}

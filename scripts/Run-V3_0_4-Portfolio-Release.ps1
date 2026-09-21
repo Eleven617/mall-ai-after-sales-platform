@@ -62,9 +62,24 @@ function New-TemporaryDemoPassword {
     return ('LocalSynthetic-' + $encoded)
 }
 
+function Get-BoundedReleaseLimit {
+    param([string]$CurrentValue, [long]$Ceiling)
+    $parsed = 0L
+    if ([long]::TryParse($CurrentValue, [ref]$parsed) -and $parsed -gt 0 -and $parsed -lt $Ceiling) {
+        return $parsed.ToString()
+    }
+    return $Ceiling.ToString()
+}
+
 $previousPassword = [Environment]::GetEnvironmentVariable('MALL_LIVE_DEMO_PASSWORD', 'Process')
 $previousFixturePassword = [Environment]::GetEnvironmentVariable('MALL_FIELD_FIXTURE_PASSWORD', 'Process')
+$previousMaxAttempts = [Environment]::GetEnvironmentVariable('MALL_RELEASE_MAX_PROVIDER_HTTP_ATTEMPTS', 'Process')
+$previousMaxTokens = [Environment]::GetEnvironmentVariable('MALL_RELEASE_MAX_TOTAL_TOKENS', 'Process')
+$previousReserveTokens = [Environment]::GetEnvironmentVariable('MALL_RELEASE_RESERVE_TOKENS', 'Process')
 $password = $previousPassword
+if ([string]::IsNullOrWhiteSpace($password) -or $password.Trim().Length -lt 12) {
+    $password = [Environment]::GetEnvironmentVariable('MALL_LIVE_DEMO_PASSWORD', 'User')
+}
 if ([string]::IsNullOrWhiteSpace($password) -or $password.Trim().Length -lt 12) {
     $password = New-TemporaryDemoPassword
 }
@@ -84,7 +99,18 @@ $lockPath = Join-Path $root "docs\evidence\deepseek-release-lock-$ReleaseId.json
 [Environment]::SetEnvironmentVariable('MALL_RELEASE_LEDGER_PATH', $ledgerPath, 'Process')
 [Environment]::SetEnvironmentVariable('MALL_RUNTIME_COMMIT', $RuntimeCommit, 'Process')
 [Environment]::SetEnvironmentVariable('MALL_IMAGE_REVISION', $RuntimeCommit, 'Process')
+[Environment]::SetEnvironmentVariable('MALL_RELEASE_MAX_PROVIDER_HTTP_ATTEMPTS', (Get-BoundedReleaseLimit $previousMaxAttempts 80), 'Process')
+[Environment]::SetEnvironmentVariable('MALL_RELEASE_MAX_TOTAL_TOKENS', (Get-BoundedReleaseLimit $previousMaxTokens 200000), 'Process')
+[Environment]::SetEnvironmentVariable('MALL_RELEASE_RESERVE_TOKENS', '12000', 'Process')
+$runnerExitCode = 1
 try {
+    Push-Location .\mall-ai-service
+    try {
+        & .\.venv\Scripts\python.exe -c "from app.config import settings; raise SystemExit(0 if settings.deepseek_api_key else 2)"
+        if ($LASTEXITCODE -ne 0) { throw 'live_release_preflight_blocked:missing_provider_configuration' }
+    } finally {
+        Pop-Location
+    }
     # Release-entry ownership: create exactly one new empty JSONL atomically.
     # Runtime reservation remains fail-closed when a mount or path is wrong.
     & .\mall-ai-service\.venv\Scripts\python.exe .\mall-ai-service\scripts\release_entry_contract.py `
@@ -121,15 +147,20 @@ try {
     & .\mall-ai-service\.venv\Scripts\python.exe .\mall-ai-service\scripts\run_live_release_preflight.py
     if ($LASTEXITCODE -ne 0) { throw 'live_release_preflight_blocked:demo_account_preflight_failed' }
 
-    $reportPath = Join-Path $root "tmp\v304-portfolio-final-$ReleaseId\report.json"
+    $reportPath = Join-Path $root "tmp\v304-minimal-retest-$ReleaseId\report.json"
     & .\mall-ai-service\.venv\Scripts\python.exe .\mall-ai-service\scripts\run_deepseek_release_batch.py `
-        --phase portfolio_final --release-id $ReleaseId --runtime-commit $RuntimeCommit `
+        --phase minimal_retest --release-id $ReleaseId --runtime-commit $RuntimeCommit `
         --report $reportPath --lock $lockPath
-    exit $LASTEXITCODE
+    $runnerExitCode = $LASTEXITCODE
 }
 finally {
     if ($null -eq $previousPassword) { Remove-Item Env:MALL_LIVE_DEMO_PASSWORD -ErrorAction SilentlyContinue } else { [Environment]::SetEnvironmentVariable('MALL_LIVE_DEMO_PASSWORD', $previousPassword, 'Process') }
     if ($null -eq $previousFixturePassword) { Remove-Item Env:MALL_FIELD_FIXTURE_PASSWORD -ErrorAction SilentlyContinue } else { [Environment]::SetEnvironmentVariable('MALL_FIELD_FIXTURE_PASSWORD', $previousFixturePassword, 'Process') }
+    if ($null -eq $previousMaxAttempts) { Remove-Item Env:MALL_RELEASE_MAX_PROVIDER_HTTP_ATTEMPTS -ErrorAction SilentlyContinue } else { [Environment]::SetEnvironmentVariable('MALL_RELEASE_MAX_PROVIDER_HTTP_ATTEMPTS', $previousMaxAttempts, 'Process') }
+    if ($null -eq $previousMaxTokens) { Remove-Item Env:MALL_RELEASE_MAX_TOTAL_TOKENS -ErrorAction SilentlyContinue } else { [Environment]::SetEnvironmentVariable('MALL_RELEASE_MAX_TOTAL_TOKENS', $previousMaxTokens, 'Process') }
+    if ($null -eq $previousReserveTokens) { Remove-Item Env:MALL_RELEASE_RESERVE_TOKENS -ErrorAction SilentlyContinue } else { [Environment]::SetEnvironmentVariable('MALL_RELEASE_RESERVE_TOKENS', $previousReserveTokens, 'Process') }
     Remove-Item Env:MALL_JAVA_BASE_URL,Env:MALL_DEMO_WEB_BASE_URL,Env:MALL_RUNTIME_PROVIDER_MODE,Env:MALL_PROVIDER_LIVE_AUTH,Env:MALL_RELEASE_ID,Env:MALL_RELEASE_BATCH_ID,Env:MALL_RELEASE_LEDGER_HOST_PATH,Env:MALL_RELEASE_LEDGER_CONTAINER_PATH,Env:MALL_RELEASE_LEDGER_PATH,Env:MALL_RUNTIME_COMMIT,Env:MALL_IMAGE_REVISION -ErrorAction SilentlyContinue
     $password = $null
+    & docker compose up -d --no-deps --force-recreate mall-ai-service | Out-Null
 }
+exit $runnerExitCode

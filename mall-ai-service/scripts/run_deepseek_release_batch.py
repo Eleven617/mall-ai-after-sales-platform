@@ -64,6 +64,7 @@ RELEASE_LOCK_PATH = REPOSITORY_ROOT / "docs" / "evidence" / "deepseek-release-lo
 DEFAULT_CANDIDATE_LOCK_PATH = REPOSITORY_ROOT / "docs" / "evidence" / "deepseek-release-lock-v3.0.1.json"
 HOLDOUT_SUITE_PATH = SERVICE_ROOT / "evals" / "live_model_agent_holdout_cases.v3.json"
 GROUNDING_SUITE_PATH = SERVICE_ROOT / "evals" / "rag2_golden_cases.v1.json"
+MINIMAL_RETEST_PLAN_PATH = SERVICE_ROOT / "evals" / "v304_minimal_live_retest.v1.json"
 SHOWCASE_CASES = {
     "main_open_task_closed_loop": "agent-open-020",
     "clarify_pause_resume": "agent-open-001",
@@ -129,6 +130,51 @@ def _sha256(path: Path) -> str:
         for block in iter(lambda: handle.read(1024 * 1024), b""):
             digest.update(block)
     return digest.hexdigest()
+
+
+def _load_minimal_retest_plan(path: Path = MINIMAL_RETEST_PLAN_PATH) -> dict[str, object]:
+    """Load the reviewed bounded scope without embedding test answers in code."""
+
+    try:
+        plan = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise ValueError("minimal retest plan is unavailable") from exc
+    if not isinstance(plan, dict) or plan.get("schemaVersion") != "v304-minimal-live-retest.v1":
+        raise ValueError("minimal retest plan version is invalid")
+    suites = plan.get("suites")
+    if not isinstance(suites, dict) or set(suites) != {"main", "supplemental", "grounding"}:
+        raise ValueError("minimal retest suites are invalid")
+    selected: list[str] = []
+    for suite_name in ("main", "supplemental", "grounding"):
+        suite = suites.get(suite_name)
+        if not isinstance(suite, dict):
+            raise ValueError("minimal retest suite is invalid")
+        targets = suite.get("targetCaseIds")
+        controls = suite.get("controlCaseIds")
+        if not isinstance(targets, list) or not isinstance(controls, list):
+            raise ValueError("minimal retest case selection is invalid")
+        if not targets or len(controls) != 1 or not all(isinstance(item, str) and item for item in targets + controls):
+            raise ValueError("minimal retest case selection is invalid")
+        selected.extend(targets + controls)
+    if len(selected) != len(set(selected)) or len(selected) != int(plan.get("expectedEvaluationCases", -1)):
+        raise ValueError("minimal retest case count is invalid")
+    showcase = plan.get("showcaseCaseIds")
+    if (
+        not isinstance(showcase, list)
+        or set(showcase) != set(SHOWCASE_CASES.values())
+        or len(showcase) != int(plan.get("expectedShowcaseChains", -1))
+    ):
+        raise ValueError("minimal retest showcase scope is invalid")
+    if plan.get("requiredRuns") != 1 or plan.get("maxAttemptsPerRequest") != 1:
+        raise ValueError("minimal retest retry contract is invalid")
+    budget = plan.get("budget")
+    if not isinstance(budget, dict) or budget != {
+        "maxProviderHttpAttempts": 80,
+        "maxTotalTokens": 200_000,
+        "reserveTokens": 12_000,
+    }:
+        raise ValueError("minimal retest budget is invalid")
+    return plan
 
 
 def _base_ledger(*, batch_id: str, release_id: str, phase: str, command: str) -> dict[str, object]:
@@ -347,10 +393,15 @@ def _run_final(ledger: dict[str, object]) -> dict[str, object]:
 
 
 def _budget_exceeded(ledger: dict[str, object]) -> bool:
+    try:
+        max_attempts = int(os.getenv("MALL_RELEASE_MAX_PROVIDER_HTTP_ATTEMPTS", str(DEFAULT_MAX_PROVIDER_HTTP_ATTEMPTS)))
+        max_tokens = int(os.getenv("MALL_RELEASE_MAX_TOTAL_TOKENS", str(DEFAULT_MAX_TOTAL_TOKENS)))
+    except ValueError:
+        return True
     return (
         int(ledger.get("providerHttpAttempts", ledger.get("requests", 0)) or 0)
-        > DEFAULT_MAX_PROVIDER_HTTP_ATTEMPTS
-        or int(ledger.get("totalTokens", 0) or 0) > DEFAULT_MAX_TOTAL_TOKENS
+        > max_attempts
+        or int(ledger.get("totalTokens", 0) or 0) > max_tokens
     )
 
 
@@ -590,11 +641,106 @@ def _run_portfolio_b(ledger: dict[str, object], report_dir: Path) -> dict[str, o
     return {"status": ledger["status"], **reports}
 
 
+def _run_minimal_retest(ledger: dict[str, object], report_dir: Path) -> dict[str, object]:
+    """Run the reviewed 11-case retest and three live chains exactly once."""
+
+    plan = _load_minimal_retest_plan()
+    suites = plan["suites"]
+    assert isinstance(suites, dict)
+    first = _run_portfolio_showcase(ledger, report_dir)
+    reports: dict[str, object] = dict(first)
+    reports.pop("status", None)
+    reports["retestPlan"] = {
+        "schemaVersion": plan["schemaVersion"],
+        "sha256": _sha256(MINIMAL_RETEST_PLAN_PATH),
+        "evaluationCases": plan["expectedEvaluationCases"],
+        "showcaseChains": plan["expectedShowcaseChains"],
+        "requiredRuns": plan["requiredRuns"],
+    }
+    if first.get("status") != "passed":
+        return {"status": first.get("status", "failed"), **reports}
+
+    selected_reports: list[dict[str, object]] = []
+    for report_name, suite_path in (("main", DEFAULT_SUITE_PATH), ("supplemental", HOLDOUT_SUITE_PATH)):
+        selection = suites[report_name]
+        assert isinstance(selection, dict)
+        case_ids = set(selection["targetCaseIds"] + selection["controlCaseIds"])
+        report = run_live_model_agent_evaluation(
+            suite_path=suite_path,
+            case_ids=case_ids,
+            required_runs=1,
+            stop_on_environment_blocked=True,
+            max_total_seconds=600.0,
+            timeout_seconds=25.0,
+            max_attempts=1,
+        )
+        reports[report_name] = report
+        if report.get("uniqueCases") != len(case_ids) or report.get("requiredRunsPerCase") != 1:
+            ledger["status"] = "failed"
+            ledger["failureCategory"] = "release_scope_mismatch"
+            return {"status": "failed", "failureCategory": "release_scope_mismatch", **reports}
+        selected_reports.append(report)
+        _merge_ledger_metrics(ledger, selected_reports)
+        if report.get("environmentBlocked"):
+            ledger["status"] = "environment_blocked"
+            ledger["environmentBlocked"] = max(1, int(ledger.get("environmentBlocked", 0) or 0))
+            return {"status": "environment_blocked", **reports}
+        if not _sync_process_ledger(ledger):
+            ledger["status"] = "failed"
+            ledger["failureCategory"] = "ledger_mismatch"
+            return {"status": "failed", "failureCategory": "ledger_mismatch", **reports}
+        if _budget_exceeded(ledger):
+            ledger["status"] = "budget_exhausted"
+            ledger["failureCategory"] = "budget_exhausted"
+            return {"status": "budget_exhausted", **reports}
+
+    grounding_selection = suites["grounding"]
+    assert isinstance(grounding_selection, dict)
+    grounding = evaluate_grounded_answer_suite(
+        load_rag2_golden_suite(GROUNDING_SUITE_PATH),
+        mode="dense",
+        case_ids=set(grounding_selection["targetCaseIds"] + grounding_selection["controlCaseIds"]),
+        timeout_seconds=20.0,
+        max_attempts=1,
+        stop_on_environment_blocked=True,
+    )
+    grounding["model"] = {
+        "provider": "DeepSeek",
+        "model": settings.deepseek_model,
+        "thinkingMode": DEEPSEEK_THINKING_MODE,
+        "reasoningEffort": DEEPSEEK_REASONING_EFFORT,
+        "promptVersion": "rag2_grounding_v1",
+        "skillCatalogVersion": SKILL_CATALOG_VERSION,
+        "runtimeCommit": ledger["runtimeCommit"],
+        "executionBoundary": "synthetic_policy_corpus",
+    }
+    reports["grounding"] = grounding
+    selected_reports.append(grounding)
+    _merge_ledger_metrics(ledger, selected_reports)
+    if not _sync_process_ledger(ledger):
+        ledger["status"] = "failed"
+        ledger["failureCategory"] = "ledger_mismatch"
+        return {"status": "failed", "failureCategory": "ledger_mismatch", **reports}
+    statuses = {str(report.get("status")) for report in selected_reports}
+    if "environment_blocked" in statuses:
+        overall = "environment_blocked"
+    elif _budget_exceeded(ledger):
+        overall = "budget_exhausted"
+        ledger["failureCategory"] = "budget_exhausted"
+    elif statuses & {"failed", "quality_failed"}:
+        overall = "failed"
+    else:
+        overall = "passed"
+    ledger["status"] = overall
+    ledger["endedAt"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+    return {"status": overall, **reports}
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "--phase",
-        choices=("showcase", "final", "candidate", "portfolio_a", "portfolio_b", "portfolio_final"),
+        choices=("showcase", "final", "candidate", "portfolio_a", "portfolio_b", "portfolio_final", "minimal_retest"),
         required=True,
     )
     parser.add_argument("--release-id", required=True)
@@ -612,7 +758,7 @@ def main() -> int:
     else:
         lock_path = args.lock if args.lock.is_absolute() else REPOSITORY_ROOT / args.lock
 
-    portfolio_phase = args.phase in {"portfolio_a", "portfolio_b", "portfolio_final"}
+    portfolio_phase = args.phase in {"portfolio_a", "portfolio_b", "portfolio_final", "minimal_retest"}
     existing_lock: dict[str, object] | None = None
     # A portfolio release has exactly two distinct consumed states. A records
     # its own batch before it can make a request; B may proceed only from a
@@ -645,7 +791,7 @@ def main() -> int:
             if args.phase == "portfolio_final":
                 print(json.dumps({"status": "release_locked", "releaseId": args.release_id}, ensure_ascii=False), file=sys.stderr)
                 return 4
-            if args.phase == "portfolio_a" or existing_lock.get("status") != "BATCH_A_PASSED" or len(batches) != 1:
+            if args.phase in {"portfolio_a", "minimal_retest"} or existing_lock.get("status") != "BATCH_A_PASSED" or len(batches) != 1:
                 print(json.dumps({"status": "release_locked", "releaseId": args.release_id}, ensure_ascii=False), file=sys.stderr)
                 return 4
     elif args.phase == "portfolio_b":
@@ -656,7 +802,7 @@ def main() -> int:
         print("deepseek release batch refused: reviewed model is not deepseek-flash", file=sys.stderr)
         return 3
 
-    if args.phase in {"candidate", "portfolio_a", "portfolio_b", "portfolio_final"}:
+    if args.phase in {"candidate", "portfolio_a", "portfolio_b", "portfolio_final", "minimal_retest"}:
         if not re.fullmatch(r"[0-9a-f]{40}", args.runtime_commit):
             print("deepseek release batch refused: runtime commit must be a full SHA", file=sys.stderr)
             return 3
@@ -684,6 +830,10 @@ def main() -> int:
                 file=sys.stderr,
             )
             return 2
+
+    if portfolio_phase and not settings.deepseek_api_key:
+        print(json.dumps({"status": "preflight_blocked", "failureCode": "missing_provider_configuration"}), file=sys.stderr)
+        return 2
 
     batch_id = f"{args.phase}-{uuid.uuid4().hex[:12]}"
     # The formal entry point binds every required authorization dimension in
@@ -731,13 +881,16 @@ def main() -> int:
         "totalTokens": 0,
     }
     lock_created = False
-    if args.phase in {"candidate", "portfolio_a", "portfolio_final"}:
+    if args.phase in {"candidate", "portfolio_a", "portfolio_final", "minimal_retest"}:
         try:
             if args.phase == "portfolio_a":
                 lock_payload["status"] = "BATCH_A_RUNNING"
                 lock_payload["phase"] = args.phase
             elif args.phase == "portfolio_final":
                 lock_payload["status"] = "FINAL_RUNNING"
+                lock_payload["phase"] = args.phase
+            elif args.phase == "minimal_retest":
+                lock_payload["status"] = "MINIMAL_RETEST_RUNNING"
                 lock_payload["phase"] = args.phase
             _atomic_create_json(lock_path, lock_payload)
             lock_created = True
@@ -763,6 +916,8 @@ def main() -> int:
             if args.phase == "candidate"
             else _run_portfolio_showcase(ledger, args.report.parent / f"{batch_id}-artifacts")
             if args.phase == "portfolio_a"
+            else _run_minimal_retest(ledger, args.report.parent / f"{batch_id}-artifacts")
+            if args.phase == "minimal_retest"
             else _run_portfolio_b(ledger, args.report.parent / f"{batch_id}-artifacts")
         )
     except KeyboardInterrupt:
@@ -783,14 +938,14 @@ def main() -> int:
         ledger["status"] = report["status"]
     # Always reconcile before either the report or the immutable lock is
     # written.  A missing host path is a gate failure, never a silent zero.
-    if args.phase in {"candidate", "final", "showcase", "portfolio_a", "portfolio_b", "portfolio_final"}:
+    if args.phase in {"candidate", "final", "showcase", "portfolio_a", "portfolio_b", "portfolio_final", "minimal_retest"}:
         if not _sync_process_ledger(ledger):
             ledger["status"] = "failed"
             ledger["failureCategory"] = "ledger_mismatch"
     if isinstance(report, dict):
         report["ledgerMetrics"] = _reconciled_report_metrics(ledger)
     ledger["testRunComplete"] = bool(
-        args.phase in {"candidate", "portfolio_b", "portfolio_final"}
+        args.phase in {"candidate", "portfolio_b", "portfolio_final", "minimal_retest"}
         and isinstance(report, dict)
         and all(key in report for key in ("realLocalShowcase", "main", "supplemental", "grounding"))
     )
@@ -818,7 +973,7 @@ def main() -> int:
         lock_payload.update({
             "status": (
                 "BATCH_A_PASSED" if args.phase == "portfolio_a" and ledger.get("status") == "passed"
-                else "PASSED" if args.phase in {"portfolio_b", "portfolio_final"} and ledger.get("status") == "passed"
+                else "PASSED" if args.phase in {"portfolio_b", "portfolio_final", "minimal_retest"} and ledger.get("status") == "passed"
                 else "INTERRUPTED" if ledger.get("status") == "interrupted"
                 else "FAILED"
             ),
@@ -828,7 +983,7 @@ def main() -> int:
             "totalTokens": ledger.get("totalTokens"),
         })
         _atomic_replace_json(lock_path, lock_payload)
-    return 2 if ledger.get("status") == "environment_blocked" else 1 if ledger.get("status") == "failed" else 0
+    return 0 if ledger.get("status") == "passed" else 2 if ledger.get("status") == "environment_blocked" else 1
 
 
 if __name__ == "__main__":

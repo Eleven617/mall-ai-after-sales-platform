@@ -30,7 +30,13 @@ from app.services.release_ledger import (
 )
 from scripts import run_deepseek_release_batch as batch_runner
 from scripts.run_deepseek_release_batch import _atomic_create_json, _atomic_replace_json
-from scripts.run_deepseek_release_batch import _budget_exceeded, _budget_failure_category, _merge_ledger_metrics, _sync_process_ledger
+from scripts.run_deepseek_release_batch import (
+    _budget_exceeded,
+    _budget_failure_category,
+    _load_minimal_retest_plan,
+    _merge_ledger_metrics,
+    _sync_process_ledger,
+)
 
 
 class _FakeProviderHandler(BaseHTTPRequestHandler):
@@ -60,6 +66,67 @@ class _FakeProviderHandler(BaseHTTPRequestHandler):
 
 
 class ReleaseLedgerTests(unittest.TestCase):
+    def test_minimal_retest_plan_is_single_run_and_strictly_bounded(self) -> None:
+        plan = _load_minimal_retest_plan()
+        self.assertEqual(1, plan["requiredRuns"])
+        self.assertEqual(1, plan["maxAttemptsPerRequest"])
+        self.assertEqual(11, plan["expectedEvaluationCases"])
+        self.assertEqual(3, plan["expectedShowcaseChains"])
+        self.assertEqual(80, plan["budget"]["maxProviderHttpAttempts"])
+        self.assertEqual(200_000, plan["budget"]["maxTotalTokens"])
+
+    def test_minimal_retest_executes_only_reviewed_cases_once(self) -> None:
+        agent_reports = [
+            {"status": "passed", "failed": 0, "environmentBlocked": 0, "toolCalls": 2, "uniqueCases": 4, "requiredRunsPerCase": 1},
+            {"status": "passed", "failed": 0, "environmentBlocked": 0, "toolCalls": 2, "uniqueCases": 3, "requiredRunsPerCase": 1},
+        ]
+        grounding_report = {
+            "status": "passed",
+            "quality_failed_cases": 0,
+            "environment_blocked_cases": 0,
+        }
+        ledger: dict[str, object] = {"batchId": "minimal-fixture", "runtimeCommit": "a" * 40}
+        with TemporaryDirectory() as directory, patch.object(
+            batch_runner,
+            "_run_portfolio_showcase",
+            return_value={"status": "passed", "realLocalShowcase": {"status": "passed"}},
+        ), patch.object(
+            batch_runner,
+            "run_live_model_agent_evaluation",
+            side_effect=agent_reports,
+        ) as agent_run, patch.object(
+            batch_runner,
+            "load_rag2_golden_suite",
+            return_value={"schema_version": "1", "suite_version": "fixture", "cases": [], "injection_fixtures": []},
+        ), patch.object(
+            batch_runner,
+            "evaluate_grounded_answer_suite",
+            return_value=grounding_report,
+        ) as grounding_run, patch.object(
+            batch_runner, "_sync_process_ledger", return_value=True
+        ), patch.object(batch_runner, "_budget_exceeded", return_value=False):
+            result = batch_runner._run_minimal_retest(ledger, Path(directory))
+
+        self.assertEqual("passed", result["status"])
+        self.assertEqual(2, agent_run.call_count)
+        main_args = agent_run.call_args_list[0].kwargs
+        supplemental_args = agent_run.call_args_list[1].kwargs
+        self.assertEqual(
+            {"agent-open-003", "agent-open-005", "agent-open-006", "agent-open-010"},
+            main_args["case_ids"],
+        )
+        self.assertEqual(
+            {"holdout-open-010", "holdout-open-011", "holdout-open-012"},
+            supplemental_args["case_ids"],
+        )
+        self.assertEqual(1, main_args["required_runs"])
+        self.assertEqual(1, supplemental_args["required_runs"])
+        self.assertEqual(
+            {"rag2-042", "rag2-043", "rag2-044", "rag2-045"},
+            grounding_run.call_args.kwargs["case_ids"],
+        )
+        self.assertEqual(1, grounding_run.call_args.kwargs["max_attempts"])
+
     def test_release_lock_create_is_exclusive_and_final_update_is_atomic(self) -> None:
         with TemporaryDirectory() as directory:
             lock = Path(directory) / "deepseek-release-lock-v3.0.1-final-test.json"
