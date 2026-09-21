@@ -1,5 +1,11 @@
 # 测试、评测与现场证据
 
+## 当前候选快照｜v3.0.4 最小在线复测取证（2026-09-21）
+
+Release `mall-v3.0.4-minimal-retest-78c7dd5-20260921` / Batch `minimal_retest-d551e9d01402` 已执行，状态 **NOT_COMPLETE**：逻辑请求/HTTP attempts 21/21、成功 19、网络失败 2、Token 73,833，reservation/settlement 21/21、Ledger reconciled。三条展示链业务断言通过，但目标及对照评测 11 Case 全部 `not_executed`；素材跨场景复用了 evidence/handoff/status 帧，不是可发布证据。
+
+离线修复 Runtime `e1df8c4266f676330cb4c581a0c105dab10932a7` 的 FastAPI JUnit **477/477**（461 cases + 16 subtests），manifest **478/478**、representative **8/8**、contract replay **36/36**。旧现场 **122/122** 绑定 `78c7dd5`，不绑定新 Runtime。本轮新增 Provider 请求/Token 为 0/0；详情见 `docs/evidence/v3.0.4-minimal-retest-forensic-analysis.md`。
+
 ## 当前候选快照｜v3.0.4 最小在线复测前冻结（2026-09-21）
 
 Runtime `78c7dd5c0156d7d4b18df75b0df6221b6b2b4df4`，执行 HEAD `2ec1de88e235de57cebefcaa266db9a02c6e8502`。FastAPI JUnit **473/473**（457 pytest cases + 16 subtests），manifest **478/478**、representative **8/8**、contract replay **36/36**，语义审计为 0。当前镜像现场从零通过 **122/122**，failed=0、environmentBlocked=0；报告 `tmp/v304-field-acceptance-78c7dd5/field-20260921T081500Z-e650ac28/field-acceptance.json`，SHA-256 `b03b6cee49951b301e13dc38531834cb65e210df0d351f6d659c74bd55cf18ec`。本轮外部 Provider requests/tokens 为 0，当前 SHA 远程 CI pending，最小在线复测 `not_run_by_design`，发布状态 **NOT_COMPLETE**。

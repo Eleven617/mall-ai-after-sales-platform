@@ -1,5 +1,11 @@
 # Mall v3.0 最终交付状态
 
+## 当前状态｜v3.0.4 最小在线复测后（2026-09-21）
+
+**NOT_COMPLETE**。最小复测不是“未启动”：Release `mall-v3.0.4-minimal-retest-78c7dd5-20260921` 共发生 21 次 Provider HTTP attempts、19 成功、2 次网络失败、73,833 tokens，Ledger 对账完成。展示链业务断言 3/3 通过，但目标评测 11 Case 全部 `not_executed`；现有素材因跨场景重复帧无效。
+
+当前离线修复 Runtime `e1df8c4266f676330cb4c581a0c105dab10932a7` 的 FastAPI 为 **477/477**，manifest 478/478、representative 8/8、contract replay 36/36。本轮 Provider 请求 0。旧现场 122/122 只适用于 `78c7dd5`，当前 Runtime 尚无新的现场绑定；未合并 main，历史工件保持不可变。
+
 ## 当前候选快照｜v3.0.4 最小在线复测前冻结（2026-09-21）
 
 Runtime `78c7dd5c0156d7d4b18df75b0df6221b6b2b4df4`，状态 **NOT_COMPLETE**。FastAPI JUnit **473/473**（457 pytest cases + 16 subtests），manifest **478/478**、representative **8/8**、contract replay **36/36**；当前镜像的 Browser 24、Java/MySQL 30、Fault 36、Durable 32 合计 **122/122**，Provider requests/tokens 为 0。当前 SHA 的远程 CI pending，最小在线复测 `not_run_by_design`；未创建新 Release/Lock、未合并 main，历史在线失败证据不可变。

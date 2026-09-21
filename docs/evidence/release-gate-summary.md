@@ -1,5 +1,11 @@
 # Mall v3.0 Release Gate 复核
 
+## 当前权威快照｜v3.0.4 最小在线复测取证与离线修复（2026-09-21）
+
+Release Gate：**NOT_COMPLETE**。Release `mall-v3.0.4-minimal-retest-78c7dd5-20260921` / Batch `minimal_retest-d551e9d01402` 已真实运行：Provider 逻辑请求/HTTP attempts `21/21`，成功 `19`、网络失败 `2`、Token `73,833`，Ledger 完整对账。三条展示链业务断言 `3/3` 通过，但 11 个目标/对照评测均 `not_executed`，素材存在跨场景重复帧，不能发布。
+
+离线修复 Runtime `e1df8c4266f676330cb4c581a0c105dab10932a7` 的 FastAPI JUnit **477/477**（461 cases + 16 subtests）、manifest **478/478**、representative **8/8**、contract replay **36/36**。旧现场 **122/122** 只绑定 Runtime/image `78c7dd5`，不冒充当前 Runtime 验证。本轮新增外部 Provider 请求为 0；历史 Report/Ledger/Lock 未修改。
+
 ## 当前候选｜v3.0.4 最小在线复测前冻结（2026-09-21）
 
 候选分支 `codex/v3.0.4-eval-contract-alignment`，Runtime `78c7dd5c0156d7d4b18df75b0df6221b6b2b4df4`。FastAPI JUnit **473/473**（457 pytest cases + 16 subtests），manifest **478/478**、representative **8/8**、contract replay **36/36**，三套 Agent Suite 语义审计均为 0。当前镜像现场从零通过 **122/122**：Browser 24、Java/MySQL 30、Fault 36、Durable 32；报告 SHA-256 `b03b6cee49951b301e13dc38531834cb65e210df0d351f6d659c74bd55cf18ec`，Fixture SHA-256 `7b7616e3ba0f6939a7bcc7d381b3c3b7b35d2b443c2056b218cdefc7f17486a9`。本轮 Provider requests/tokens 均为 0；当前 SHA 的远程 CI 尚未执行，最小在线复测 `not_run_by_design`，Release Gate **NOT_COMPLETE**。旧在线 Report/Ledger/Lock 保持不变。

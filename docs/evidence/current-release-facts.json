@@ -1,11 +1,11 @@
 {
   "schemaVersion": "mall-public-release-facts.v4",
-  "generatedAt": "2026-09-21T17:02:00+08:00",
+  "generatedAt": "2026-09-21T20:30:00+08:00",
   "releaseStatus": "NOT_COMPLETE",
-  "runtimeCommit": "78c7dd5c0156d7d4b18df75b0df6221b6b2b4df4",
-  "evidenceCommit": "2ec1de88e235de57cebefcaa266db9a02c6e8502",
+  "runtimeCommit": "e1df8c4266f676330cb4c581a0c105dab10932a7",
+  "evidenceCommit": "e1df8c4266f676330cb4c581a0c105dab10932a7",
   "evidenceState": "current candidate evidence; runtime freeze, execution head and online batch are recorded separately",
-  "statusReason": "v3.0.4 当前 Runtime 完成决策终态合同、Grounding 适用性和 Durable 恢复屏障加固；FastAPI、deterministic/replay 与当前镜像现场 122 条均通过且外部 Provider 为 0。历史在线证据保持不可变；当前 Runtime 尚未执行已授权的最小在线复测，Release Gate 保持 NOT_COMPLETE。",
+  "statusReason": "v3.0.4 最小在线复测已真实启动：21 次逻辑请求和 HTTP attempts，19 成功、2 次 network 失败，共 73833 tokens。三条展示链业务断言通过，但目标评测 11 Case 未执行，且录制帧存在跨场景复用，批次保持 FAILED/NOT_COMPLETE。当前 Runtime 仅修复安全归因、故障停止和素材真实性校验；没有新增外部 Provider 调用。",
   "project": {
     "name": "Mall AI After-sales Platform",
     "repository": "https://github.com/Eleven617/mall-ai-after-sales-platform",
@@ -24,7 +24,7 @@
     "publicProjection": "safe DTO only; no prompt, raw tool result, RAG text, token or internal identifiers"
   },
   "v3_0_4CurrentFieldAcceptance": {
-    "status": "passed_offline_deterministic",
+    "status": "passed_offline_deterministic_stale_after_runtime_change",
     "runtimeCommit": "78c7dd5c0156d7d4b18df75b0df6221b6b2b4df4",
     "executionHead": "78c7dd5c0156d7d4b18df75b0df6221b6b2b4df4",
     "imageRevision": "78c7dd5c0156d7d4b18df75b0df6221b6b2b4df4",
@@ -43,7 +43,7 @@
     "externalProviderRequests": 0,
     "externalProviderTokens": 0,
     "composeHealthy": "8/8",
-    "scope": "本地合成数据与 deterministic Fake Provider；不能扩写为真实模型质量或生产能力"
+    "scope": "绑定旧 Runtime 78c7dd5 的本地合成 deterministic 证据；当前 Runtime e1df8c4 修改了请求中间件与 Runner，不能把该 122/122 重标为当前验证"
   },
   "readiness": {
     "scope": "v3.0.2 historical readiness; do not use for v3.0.3 gate",
@@ -183,7 +183,7 @@
     }
   ],
   "tests": {
-    "fastapi": {"passed": 473, "failed": 0, "skipped": 0, "warnings": 1, "subtests": 16, "pytestTerminalPassed": 457, "exitCode": 0, "command": "mall-ai-service/.venv/Scripts/python.exe scripts/run_fastapi_ci_report.py --junitxml=ci-evidence/v3-fastapi-junit.xml --report=ci-evidence/v3-fastapi-report.json", "semanticReportSha256": "92c7a70d87f0cccfa211ecd4510cb2e0293f7a892caac98854e2f65566d4099d", "junitSha256": "3718b7a8e9c0ff9ce5c42576607130edbbf8ef0574060de8255976dc43d5ae17"},
+    "fastapi": {"passed": 477, "failed": 0, "skipped": 0, "warnings": 1, "subtests": 16, "pytestTerminalPassed": 461, "exitCode": 0, "command": "mall-ai-service/.venv/Scripts/python.exe scripts/run_fastapi_ci_report.py --junitxml=ci-evidence/v3-fastapi-junit.xml --report=ci-evidence/v3-fastapi-report.json", "semanticReportSha256": "0a2f5663f1c7dda46bbb7f44eebd734cbab6a784534bf1a3b769f2d51ff60588", "junitSha256": "79db9313d02a5cd756877eff72b8a90895535d5d462f432fc040c1e55beef965"},
     "java": {"portalCore": "12/12", "portalCompatibility": "2/2", "portalFull": "14/14", "admin": "6/6", "springContext": "1/1", "exitCode": 0},
     "vue": {"command": "npm run build", "status": "passed", "exitCode": 0},
     "compose": {"configExitCode": 0, "servicesHealthy": "8/8"},
@@ -229,15 +229,16 @@
   "supplementalEvaluation": {"status": "not_executed_after_candidate_failure", "independentBlindSet": false, "executed": 0, "passed": 0, "failed": 0, "environmentBlocked": 0},
   "grounding": {"status": "not_executed_after_candidate_failure", "executed": 0, "passed": 0, "failed": 0, "environmentBlocked": 0},
   "currentVerification": {
-    "runtimeCommit": "78c7dd5c0156d7d4b18df75b0df6221b6b2b4df4",
-    "executionHead": "2ec1de88e235de57cebefcaa266db9a02c6e8502",
-    "executionState": "offline candidate after decision-state, grounding applicability and durable dependency recovery fixes; minimal online retest not run",
-    "fastapi": {"passed": 473, "failed": 0, "warnings": 1, "subtests": 16, "pytestTerminalPassed": 457, "exitCode": 0},
+    "runtimeCommit": "e1df8c4266f676330cb4c581a0c105dab10932a7",
+    "executionHead": "e1df8c4266f676330cb4c581a0c105dab10932a7",
+    "executionState": "post-batch offline repair: safe Provider role/scenario attribution, immediate Provider-failure stop, and cross-scenario frame uniqueness validation",
+    "fastapi": {"passed": 477, "failed": 0, "warnings": 1, "subtests": 16, "pytestTerminalPassed": 461, "exitCode": 0},
     "deterministic": {"manifest": "478/478", "representative": "8/8", "exitCode": 0},
-    "fieldAcceptance": {"status": "passed", "total": "122/122", "failed": 0, "environmentBlocked": 0, "reason": "Current Runtime and image completed one unspliced Docker field run from 0/122 with deterministic provider.", "report": "tmp/v304-field-acceptance-78c7dd5/field-20260921T081500Z-e650ac28/field-acceptance.json", "reportSha256": "b03b6cee49951b301e13dc38531834cb65e210df0d351f6d659c74bd55cf18ec", "fixtureSha256": "7b7616e3ba0f6939a7bcc7d381b3c3b7b35d2b443c2056b218cdefc7f17486a9", "imageRevision": "78c7dd5c0156d7d4b18df75b0df6221b6b2b4df4", "providerMode": "deterministic", "externalProviderRequests": 0},
-    "deepseek": {"status": "not_run_by_design", "model": "deepseek-flash", "thinkingMode": "enabled", "reasoningEffort": "high", "batchStatus": "not_run", "calls": 0, "logicalProviderRequests": 0, "modelCalled": false, "successfulCalls": 0, "failedCalls": 0, "tokens": 0, "providerHttpAttempts": 0, "modelHttpAttempted": false, "ledgerReconciled": true, "reason": "No online retest was run for this candidate; the historical invalidated batch remains in v3_0_4LivePreflightRepair."},
-    "showcase": {"status": "not_executed", "scenarios": [{"scenarioId": "main_open_task_closed_loop", "status": "not_executed"}, {"scenarioId": "pause_resume", "status": "not_executed"}, {"scenarioId": "fact_change_handoff", "status": "not_executed"}]}
+    "fieldAcceptance": {"status": "stale_after_runtime_change", "total": "122/122", "failed": 0, "environmentBlocked": 0, "reason": "The unspliced deterministic field run remains valid only for Runtime/image 78c7dd5; it is not relabelled as e1df8c4 evidence.", "report": "tmp/v304-field-acceptance-78c7dd5/field-20260921T081500Z-e650ac28/field-acceptance.json", "reportSha256": "b03b6cee49951b301e13dc38531834cb65e210df0d351f6d659c74bd55cf18ec", "fixtureSha256": "7b7616e3ba0f6939a7bcc7d381b3c3b7b35d2b443c2056b218cdefc7f17486a9", "imageRevision": "78c7dd5c0156d7d4b18df75b0df6221b6b2b4df4", "providerMode": "deterministic", "externalProviderRequests": 0},
+    "deepseek": {"status": "failed", "model": "deepseek-flash", "thinkingMode": "enabled", "reasoningEffort": "high", "batchStatus": "failed", "releaseId": "mall-v3.0.4-minimal-retest-78c7dd5-20260921", "batchId": "minimal_retest-d551e9d01402", "calls": 21, "logicalProviderRequests": 21, "modelCalled": true, "successfulCalls": 19, "failedCalls": 2, "tokens": 73833, "providerHttpAttempts": 21, "modelHttpAttempted": true, "ledgerReconciled": true, "failureCategory": "provider_failure", "reason": "Two one-attempt network failures occurred during showcase execution; all 11 targeted/control evaluation cases remained not_executed."},
+    "showcase": {"status": "failed", "businessAssertions": "3/3 passed", "assetStatus": "invalid_cross_scenario_frame_reuse", "scenarios": [{"scenarioId": "main_open_task_closed_loop", "status": "passed"}, {"scenarioId": "clarify_pause_resume", "status": "passed"}, {"scenarioId": "fact_change_replan", "status": "passed"}]}
   },
+  "v3_0_4MinimalRetest": {"status": "FAILED", "runtimeCommit": "78c7dd5c0156d7d4b18df75b0df6221b6b2b4df4", "executionHead": "a63d50d357296e5e9b1c9f23226992c9b6e8bf8d", "releaseId": "mall-v3.0.4-minimal-retest-78c7dd5-20260921", "batchId": "minimal_retest-d551e9d01402", "promptVersion": "agent_runtime_v3_4", "skillCatalogVersion": "skill_catalog_v3_1", "logicalProviderRequests": 21, "providerHttpAttempts": 21, "successfulRequests": 19, "failedRequests": 2, "promptTokens": 44666, "completionTokens": 29167, "totalTokens": 73833, "reservations": 21, "settlements": 21, "unresolvedReservations": 0, "budgetDenials": 0, "ledgerReconciled": true, "failureCategory": "provider_failure", "showcaseBusinessAssertions": "3/3 passed", "targetedEvaluation": "0/11 executed", "assets": "invalid_cross_scenario_frame_reuse", "report": "tmp/v304-minimal-retest-mall-v3.0.4-minimal-retest-78c7dd5-20260921/report.json", "reportSha256": "7793e790771003ea2e51375e1c899e6d2fd26176a4388f9a20d375b846b3305d", "ledger": "tmp/release-ledger-mall-v3.0.4-minimal-retest-78c7dd5-20260921/ledger.jsonl", "ledgerSha256": "44e2c38b186ed23a47d0bbc5596e36456c71a16dcfb612fc5ce22f1aee67777f", "lock": "docs/evidence/deepseek-release-lock-mall-v3.0.4-minimal-retest-78c7dd5-20260921.json", "lockSha256": "a359808bdab972dfda69e4b214eca437b0e5c1cc3ca53e3bf2789cd84a168a1e"},
   "v3_0_4LivePreflightRepair": {
     "status": "ONLINE_BATCH_FAILED_NOT_COMPLETE",
     "runtimeCommit": "3c4c3a5ae9fac944350b6710322fd9d5223eccde",

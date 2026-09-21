@@ -1,5 +1,11 @@
 # Mall AI 售后平台｜简历事实包
 
+## 当前事实｜v3.0.4 最小在线复测（2026-09-21）
+
+状态为 **NOT_COMPLETE**。最小在线复测真实消耗 21 次 HTTP attempts、73,833 tokens，19 成功、2 次 `network` 失败并完成 Ledger 对账。三条真实展示链的业务断言通过；预定 11 个目标/对照 Case 因批次 Provider failure 全部 `not_executed`。现有 GIF/PNG 因跨场景重复帧不作为公开素材。
+
+后续离线修复 Runtime `e1df8c4266f676330cb4c581a0c105dab10932a7`：FastAPI **477/477**，manifest **478/478**，representative **8/8**，contract replay **36/36**。旧 **122/122** 现场证据仍绑定 `78c7dd5`。本轮外部模型调用 0，未合并 main。
+
 ## 当前候选事实｜v3.0.4 最小在线复测前冻结（2026-09-21）
 
 Runtime `78c7dd5c0156d7d4b18df75b0df6221b6b2b4df4`，发布状态 **NOT_COMPLETE**。本轮完成决策终态互斥合同、Prompt v3.4、Grounding 最小充分来源与 Durable Java/Redis 恢复屏障；FastAPI JUnit **473/473**（457 pytest cases + 16 subtests）、manifest **478/478**、contract replay **36/36**、当前镜像现场 **122/122**，Provider requests/tokens 均为 0。报告 SHA-256 `b03b6cee49951b301e13dc38531834cb65e210df0d351f6d659c74bd55cf18ec`。当前 SHA 的远程 CI pending，最小在线复测 `not_run_by_design`；历史在线评测与旧失败证据保持原样。
