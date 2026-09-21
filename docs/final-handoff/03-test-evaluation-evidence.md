@@ -1,8 +1,8 @@
 # 测试、评测与现场证据
 
-## 当前候选快照｜v3.0.4 contract-alignment offline repair（2026-09-20）
+## 当前候选快照｜v3.0.4 最小在线复测前冻结（2026-09-21）
 
-执行 HEAD `a95ae6e79643eb922dd45a76d6aa7a8936d73c15`。FastAPI JUnit **460/460**（448 pytest cases + 12 subtests），manifest **478/478**、representative **8/8**、holdout v3 semantic audit `0`、contract replay **36/36**；本轮外部 Provider requests **0**，该 SHA 的 `mall-ci` 与 `quality-evaluation` 均成功。历史 Docker 122/122 报告绑定修订前 Runtime，当前候选未冒充新现场通过；最小在线复测尚未执行，发布状态 **NOT_COMPLETE**。
+Runtime/执行 HEAD `78c7dd5c0156d7d4b18df75b0df6221b6b2b4df4`。FastAPI JUnit **471/471**（455 pytest cases + 16 subtests），manifest **478/478**、representative **8/8**、contract replay **36/36**，语义审计为 0。当前镜像现场从零通过 **122/122**，failed=0、environmentBlocked=0；报告 `tmp/v304-field-acceptance-78c7dd5/field-20260921T081500Z-e650ac28/field-acceptance.json`，SHA-256 `b03b6cee49951b301e13dc38531834cb65e210df0d351f6d659c74bd55cf18ec`。本轮外部 Provider requests/tokens 为 0，当前 SHA 远程 CI pending，最小在线复测 `not_run_by_design`，发布状态 **NOT_COMPLETE**。
 
 ## 当前权威快照｜v3.0.4 唯一正式在线批次（2026-09-20）
 

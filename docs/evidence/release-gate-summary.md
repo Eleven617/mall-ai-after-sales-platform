@@ -1,8 +1,8 @@
 # Mall v3.0 Release Gate 复核
 
-## 当前候选｜v3.0.4 contract-alignment offline repair（2026-09-20）
+## 当前候选｜v3.0.4 最小在线复测前冻结（2026-09-21）
 
-候选分支 `codex/v3.0.4-eval-contract-alignment`，执行 HEAD `a95ae6e79643eb922dd45a76d6aa7a8936d73c15`。FastAPI JUnit **460/460**（448 pytest cases + 12 subtests），holdout 合同 v3 语义审计 `semanticAuditErrors=0`，contract replay `36/36`，Provider requests **0**。该 SHA 的 [`mall-ci`](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/35511412046) 与 [`quality-evaluation`](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/35511412051) 均成功。本候选只完成离线合同、协议诊断和 Grounding 适用性加固，尚未进行最小在线复测；Release Gate **NOT_COMPLETE**。旧在线 Report/Ledger/Lock 保持不变。
+候选分支 `codex/v3.0.4-eval-contract-alignment`，Runtime `78c7dd5c0156d7d4b18df75b0df6221b6b2b4df4`。FastAPI JUnit **471/471**（455 pytest cases + 16 subtests），manifest **478/478**、representative **8/8**、contract replay **36/36**，三套 Agent Suite 语义审计均为 0。当前镜像现场从零通过 **122/122**：Browser 24、Java/MySQL 30、Fault 36、Durable 32；报告 SHA-256 `b03b6cee49951b301e13dc38531834cb65e210df0d351f6d659c74bd55cf18ec`，Fixture SHA-256 `7b7616e3ba0f6939a7bcc7d381b3c3b7b35d2b443c2056b218cdefc7f17486a9`。本轮 Provider requests/tokens 均为 0；当前 SHA 的远程 CI 尚未执行，最小在线复测 `not_run_by_design`，Release Gate **NOT_COMPLETE**。旧在线 Report/Ledger/Lock 保持不变。
 
 ## 当前权威结论｜v3.0.4 在线入口 Ledger 缺陷校准（2026-09-20）
 

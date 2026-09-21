@@ -1,8 +1,8 @@
 # 公开发布记录
 
-## 当前候选记录｜v3.0.4 contract-alignment offline repair（2026-09-20）
+## 当前候选记录｜v3.0.4 最小在线复测前冻结（2026-09-21）
 
-候选分支 `codex/v3.0.4-eval-contract-alignment`，HEAD `a95ae6e79643eb922dd45a76d6aa7a8936d73c15`。FastAPI JUnit **460/460**（448 pytest cases + 12 subtests）、manifest **478/478**、representative **8/8**、contract replay **36/36**、holdout v3 semantic audit `0`；外部 Provider requests **0**，该 SHA 的 `mall-ci` 与 `quality-evaluation` 均成功。本轮完成离线合同与 Grounding 适用性修复，未启动在线复测，Release Gate **NOT_COMPLETE**，未合并 main。旧在线 Report/Ledger/Lock 保留原样。
+候选分支 `codex/v3.0.4-eval-contract-alignment`，Runtime `78c7dd5c0156d7d4b18df75b0df6221b6b2b4df4`。FastAPI JUnit **471/471**（455 pytest cases + 16 subtests）、manifest **478/478**、representative **8/8**、contract replay **36/36**；当前镜像现场 **122/122**（24+30+36+32），报告 SHA-256 `b03b6cee49951b301e13dc38531834cb65e210df0d351f6d659c74bd55cf18ec`。外部 Provider requests/tokens 为 0，当前 SHA 远程 CI pending，最小在线复测 `not_run_by_design`；Release Gate **NOT_COMPLETE**，未合并 main，旧在线 Report/Ledger/Lock 保留原样。
 
 ## 当前权威记录｜v3.0.4 唯一正式在线批次（2026-09-20）
 

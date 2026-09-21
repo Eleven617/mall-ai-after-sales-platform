@@ -9,7 +9,7 @@
 
 ## 30 秒了解项目
 
-> 当前展示状态：`NOT_COMPLETE`。当前候选已完成本地离线合同验证：FastAPI JUnit `460/460`（448 pytest cases + 12 subtests）、manifest `478/478`、contract replay `36/36`、holdout 合同 v3 语义审计 `0`。候选 SHA `95f6041` 的 [`mall-ci`](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/35511412046) 与 [`quality-evaluation`](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/35511412051) 均成功。保留的 Docker 现场 `122/122` 属于运行时/提示词修订前的历史 deterministic 证据，当前候选未重新执行现场。最近一次正式批次在 Provider 网络前因 Ledger 初始化缺陷作废（`invalidated_before_provider_network`）；`task_terminal_state_unexpected` 只是 Runner 表象，不是模型能力失败。历史在线评测结果与当前候选分开记录；本候选没有启动在线复测、没有第二批次、没有合并 `main`。
+> 当前展示状态：`NOT_COMPLETE`。Runtime `78c7dd5c0156d7d4b18df75b0df6221b6b2b4df4` 已通过 FastAPI JUnit `471/471`（`471 passed`，即 455 pytest cases + 16 subtests）、manifest `478/478`、contract replay `36/36` 和当前镜像现场 `122/122`；本轮外部 Provider requests/tokens 为 0。当前 SHA 的远程 CI 尚待执行，最小在线复测 `not_run_by_design`，因此没有合并 `main`。历史在线评测和失败工件保持不可变，不能把 deterministic 现场写成真实模型效果。
 
 ### 为什么不是普通聊天机器人
 
@@ -69,7 +69,7 @@ MCP 只读工具、人工售后工作台和 LangGraph 确定性节点是能力�
 - 当前候选收口的 FastAPI JUnit 为 `460 passed`（448 pytest cases + 12 subtests），exit `0`；
 - v3 deterministic 发布合同为 `478/478`，代表性 Runtime 为 `8/8`；本轮 contract replay 为 `36/36`，Provider `0`；这些都不是浏览器 E2E 或真实模型效果；
 - Java portal 核心 `12/12`、admin `6/6`、Spring context `1/1`、Vue production build、8 服务 Compose 和四类现场 Runner 均已在当前候选环境验证通过；
-- 保留的现场 `122/122` 是本地 Docker、Chrome、Java/MySQL 和合成 Fixture 的 deterministic/offline 历史证据，绑定修订前 Runtime；当前候选未将其冒充为新版本现场结果；
+- 当前现场 `122/122` 是绑定 Runtime `78c7dd5c` 的本地 Docker、Chrome、Java/MySQL、隔离故障 Compose 与合成 Fixture deterministic 证据，不代表真实模型效果或生产 SLA；
 - RAG Dense、Hybrid、Hybrid+Rerank 的 52 条版本化合成政策 Case 指标只说明检索排序质量，不是答案准确率；
 - 历史 supplemental evaluation set 不是独立盲测集，旧结果只作为开发期审计，不能外推到真实用户；
 - 真实模型主集、补充集、Grounding 已在历史批次执行并单独披露；当前候选尚未进行新的在线复测，历史报告与当前提交不一致时标记为 stale。

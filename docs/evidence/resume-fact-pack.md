@@ -1,8 +1,8 @@
 # Mall AI 售后平台｜简历事实包
 
-## 当前候选事实｜v3.0.4 contract-alignment offline repair（2026-09-20）
+## 当前候选事实｜v3.0.4 最小在线复测前冻结（2026-09-21）
 
-候选 HEAD `a95ae6e79643eb922dd45a76d6aa7a8936d73c15`，发布状态 **NOT_COMPLETE**。本轮完成 holdout 合同 v3 版本化（必要只读 `build_service_resolution` 不再误报）、结构化输出安全错误分类和政策适用性边界；FastAPI JUnit **460/460**（448 pytest cases + 12 subtests）、contract replay **36/36**、Provider requests **0**；该 SHA 的 `mall-ci` 与 `quality-evaluation` 均成功。历史在线评测与旧失败证据保持原样；当前候选尚未在线复测，不能写成真实模型质量或作品集发布完成。
+Runtime `78c7dd5c0156d7d4b18df75b0df6221b6b2b4df4`，发布状态 **NOT_COMPLETE**。本轮完成决策终态互斥合同、Prompt v3.4、Grounding 最小充分来源与 Durable Java/Redis 恢复屏障；FastAPI JUnit **471/471**（455 pytest cases + 16 subtests）、manifest **478/478**、contract replay **36/36**、当前镜像现场 **122/122**，Provider requests/tokens 均为 0。报告 SHA-256 `b03b6cee49951b301e13dc38531834cb65e210df0d351f6d659c74bd55cf18ec`。当前 SHA 的远程 CI pending，最小在线复测 `not_run_by_design`；历史在线评测与旧失败证据保持原样。
 
 ## 当前事实快照｜v3.0.4 唯一正式在线批次（2026-09-20）
 

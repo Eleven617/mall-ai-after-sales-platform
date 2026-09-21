@@ -1,11 +1,11 @@
 {
   "schemaVersion": "mall-public-release-facts.v4",
-  "generatedAt": "2026-09-20T15:48:00+08:00",
+  "generatedAt": "2026-09-21T16:21:14+08:00",
   "releaseStatus": "NOT_COMPLETE",
-  "runtimeCommit": "a95ae6e79643eb922dd45a76d6aa7a8936d73c15",
-  "evidenceCommit": "c5e49dbdaf596bbd44b24ea4de3970cd64a91987",
+  "runtimeCommit": "78c7dd5c0156d7d4b18df75b0df6221b6b2b4df4",
+  "evidenceCommit": "78c7dd5c0156d7d4b18df75b0df6221b6b2b4df4",
   "evidenceState": "current candidate evidence; runtime freeze, execution head and online batch are recorded separately",
-  "statusReason": "v3.0.4 当前候选完成合同修订、结构化诊断和 Grounding 适用性加固；历史唯一正式 DeepSeek 批次在 Provider 网络前因 Ledger 初始化缺陷作废，公开根因分类为 release_infrastructure_failure，实际 HTTP attempts=0、Token=0。本候选尚未在线复测，Release Gate 保持 NOT_COMPLETE。",
+  "statusReason": "v3.0.4 当前 Runtime 完成决策终态合同、Grounding 适用性和 Durable 恢复屏障加固；FastAPI、deterministic/replay 与当前镜像现场 122 条均通过且外部 Provider 为 0。历史在线证据保持不可变；当前 Runtime 尚未执行已授权的最小在线复测，Release Gate 保持 NOT_COMPLETE。",
   "project": {
     "name": "Mall AI After-sales Platform",
     "repository": "https://github.com/Eleven617/mall-ai-after-sales-platform",
@@ -18,19 +18,19 @@
     "model": "deepseek-flash",
     "thinkingMode": "enabled",
     "reasoningEffort": "high",
-    "promptVersion": "agent_runtime_v3_3",
+    "promptVersion": "agent_runtime_v3_4",
     "skillCatalogVersion": "skill_catalog_v3_1",
     "javaAuthority": "mall2 owns JWT, ownership, qualification, state, idempotency, transaction and final write",
     "publicProjection": "safe DTO only; no prompt, raw tool result, RAG text, token or internal identifiers"
   },
   "v3_0_4CurrentFieldAcceptance": {
     "status": "passed_offline_deterministic",
-    "runtimeCommit": "3c4c3a5ae9fac944350b6710322fd9d5223eccde",
-    "executionHead": "1efaa22311e41d92816c5f08188a59ff7ca66806",
-    "imageRevision": "3c4c3a5ae9fac944350b6710322fd9d5223eccde",
+    "runtimeCommit": "78c7dd5c0156d7d4b18df75b0df6221b6b2b4df4",
+    "executionHead": "78c7dd5c0156d7d4b18df75b0df6221b6b2b4df4",
+    "imageRevision": "78c7dd5c0156d7d4b18df75b0df6221b6b2b4df4",
     "providerMode": "deterministic",
-    "report": "tmp/v304-field-acceptance-122/field-20260920T053042Z-14d730d7/field-acceptance.json",
-    "reportSha256": "3aa1613e07ae89fbf11ad51cd6ed33e0860304040c49abb7a5c03b35adfefe1f",
+    "report": "tmp/v304-field-acceptance-78c7dd5/field-20260921T081500Z-e650ac28/field-acceptance.json",
+    "reportSha256": "b03b6cee49951b301e13dc38531834cb65e210df0d351f6d659c74bd55cf18ec",
     "fixture": "tmp/v304-field-fixture-current.json",
     "fixtureSha256": "7b7616e3ba0f6939a7bcc7d381b3c3b7b35d2b443c2056b218cdefc7f17486a9",
     "browser": "24/24",
@@ -183,7 +183,7 @@
     }
   ],
   "tests": {
-    "fastapi": {"passed": 460, "failed": 0, "skipped": 0, "warnings": 1, "subtests": 12, "pytestTerminalPassed": 448, "exitCode": 0, "command": "mall-ai-service/.venv/Scripts/python.exe scripts/run_fastapi_ci_report.py --junitxml=ci-evidence/v3-fastapi-junit.xml --report=ci-evidence/v3-fastapi-report.json", "semanticReportSha256": "e0b97bc1129b386e90f9e57a3227235d9a826ba3a92e5ce7faebec2fbb4534f6", "junitSha256": "d6bdd72767b4fbaaf9a06c44ca16d3b0da8e092033d7d07c711037ff2be77007"},
+    "fastapi": {"passed": 471, "failed": 0, "skipped": 0, "warnings": 1, "subtests": 16, "pytestTerminalPassed": 455, "exitCode": 0, "command": "mall-ai-service/.venv/Scripts/python.exe scripts/run_fastapi_ci_report.py --junitxml=ci-evidence/v3-fastapi-junit.xml --report=ci-evidence/v3-fastapi-report.json", "semanticReportSha256": "34e315778cbdc68f9fcd035ace31d5cd38dce373159ef53e21b45c5ceb5b7166", "junitSha256": "88e0ea1aa81ce2be2f1b04052d8c4dc95f8e829c5e2b38d6291952770493bab1"},
     "java": {"portalCore": "12/12", "portalCompatibility": "2/2", "portalFull": "14/14", "admin": "6/6", "springContext": "1/1", "exitCode": 0},
     "vue": {"command": "npm run build", "status": "passed", "exitCode": 0},
     "compose": {"configExitCode": 0, "servicesHealthy": "8/8"},
@@ -194,8 +194,8 @@
     "ragContracts": {"total": 21, "passed": 21, "failed": 0},
     "groundingContracts": {"total": 12, "passed": 12, "failed": 0, "mode": "deterministic contract; no external Provider", "command": "mall-ai-service/.venv/Scripts/python.exe -m pytest -q tests/test_rag_grounding_evaluation.py tests/test_rag_evidence_verifier.py", "exitCode": 0},
     "fieldAcceptance": {
-      "status": "environment_blocked",
-      "testedCodeCommit": "3c4c3a5ae9fac944350b6710322fd9d5223eccde",
+      "status": "passed",
+      "testedCodeCommit": "78c7dd5c0156d7d4b18df75b0df6221b6b2b4df4",
       "total": "122/122",
       "failed": 0,
       "environmentBlocked": 0,
@@ -204,8 +204,8 @@
       "faultInjection": "36/36",
       "durableRecovery": "32/32",
       "mode": "current Docker Compose field runner with deterministic Fake Provider and synthetic fixture",
-      "report": "tmp/v304-field-acceptance-122/field-20260920T053042Z-14d730d7/field-acceptance.json",
-      "reportSha256": "3aa1613e07ae89fbf11ad51cd6ed33e0860304040c49abb7a5c03b35adfefe1f",
+      "report": "tmp/v304-field-acceptance-78c7dd5/field-20260921T081500Z-e650ac28/field-acceptance.json",
+      "reportSha256": "b03b6cee49951b301e13dc38531834cb65e210df0d351f6d659c74bd55cf18ec",
       "fixtureSha256": "7b7616e3ba0f6939a7bcc7d381b3c3b7b35d2b443c2056b218cdefc7f17486a9",
       "reason": "Current field execution completed from 0/122 with the Runtime Freeze image. This is deterministic/offline synthetic evidence, not live-model quality."
     }
@@ -229,12 +229,12 @@
   "supplementalEvaluation": {"status": "not_executed_after_candidate_failure", "independentBlindSet": false, "executed": 0, "passed": 0, "failed": 0, "environmentBlocked": 0},
   "grounding": {"status": "not_executed_after_candidate_failure", "executed": 0, "passed": 0, "failed": 0, "environmentBlocked": 0},
   "currentVerification": {
-    "runtimeCommit": "a95ae6e79643eb922dd45a76d6aa7a8936d73c15",
-    "executionHead": "a95ae6e79643eb922dd45a76d6aa7a8936d73c15",
-    "executionState": "offline candidate after versioned holdout contract and grounding applicability fixes; online retest not run",
-    "fastapi": {"passed": 460, "failed": 0, "warnings": 1, "subtests": 12, "pytestTerminalPassed": 448, "exitCode": 0},
+    "runtimeCommit": "78c7dd5c0156d7d4b18df75b0df6221b6b2b4df4",
+    "executionHead": "78c7dd5c0156d7d4b18df75b0df6221b6b2b4df4",
+    "executionState": "offline candidate after decision-state, grounding applicability and durable dependency recovery fixes; minimal online retest not run",
+    "fastapi": {"passed": 471, "failed": 0, "warnings": 1, "subtests": 16, "pytestTerminalPassed": 455, "exitCode": 0},
     "deterministic": {"manifest": "478/478", "representative": "8/8", "exitCode": 0},
-    "fieldAcceptance": {"status": "historical_passed_stale_after_runtime_change", "total": "122/122", "failed": 0, "environmentBlocked": 0, "reason": "The retained 122/122 Docker field report predates the current Runtime/prompt/evaluation changes and is not claimed as current-candidate evidence.", "report": "tmp/v304-field-acceptance-122/field-20260920T053042Z-14d730d7/field-acceptance.json", "reportSha256": "3aa1613e07ae89fbf11ad51cd6ed33e0860304040c49abb7a5c03b35adfefe1f", "fixtureSha256": "7b7616e3ba0f6939a7bcc7d381b3c3b7b35d2b443c2056b218cdefc7f17486a9", "imageRevision": "3c4c3a5ae9fac944350b6710322fd9d5223eccde", "providerMode": "deterministic", "externalProviderRequests": 0},
+    "fieldAcceptance": {"status": "passed", "total": "122/122", "failed": 0, "environmentBlocked": 0, "reason": "Current Runtime and image completed one unspliced Docker field run from 0/122 with deterministic provider.", "report": "tmp/v304-field-acceptance-78c7dd5/field-20260921T081500Z-e650ac28/field-acceptance.json", "reportSha256": "b03b6cee49951b301e13dc38531834cb65e210df0d351f6d659c74bd55cf18ec", "fixtureSha256": "7b7616e3ba0f6939a7bcc7d381b3c3b7b35d2b443c2056b218cdefc7f17486a9", "imageRevision": "78c7dd5c0156d7d4b18df75b0df6221b6b2b4df4", "providerMode": "deterministic", "externalProviderRequests": 0},
     "deepseek": {"status": "not_run_by_design", "model": "deepseek-flash", "thinkingMode": "enabled", "reasoningEffort": "high", "batchStatus": "not_run", "calls": 0, "logicalProviderRequests": 0, "modelCalled": false, "successfulCalls": 0, "failedCalls": 0, "tokens": 0, "providerHttpAttempts": 0, "modelHttpAttempted": false, "ledgerReconciled": true, "reason": "No online retest was run for this candidate; the historical invalidated batch remains in v3_0_4LivePreflightRepair."},
     "showcase": {"status": "not_executed", "scenarios": [{"scenarioId": "main_open_task_closed_loop", "status": "not_executed"}, {"scenarioId": "pause_resume", "status": "not_executed"}, {"scenarioId": "fact_change_handoff", "status": "not_executed"}]}
   },
@@ -254,7 +254,7 @@
   },
   "v3_0_4AuthorizedFinalBatch": {"status": "failed", "releaseId": "mall-v3.0.4-portfolio-final-3c4c3a5a", "batchId": "portfolio_final-3d7b9340d60d", "failureStage": "agent_task_create", "failureCode": "task_terminal_state_unexpected", "taskStatusTransitions": ["task_created", "task_blocked"], "proposalFormed": false, "toolCalls": 0, "javaEligibility": false, "javaCommit": false, "statusReadback": false, "providerRequests": 1, "successfulRequests": 0, "failedRequests": 1, "totalTokens": 0, "ledgerReconciled": true, "report": "tmp/v304-portfolio-final-mall-v3.0.4-portfolio-final-3c4c3a5a/report.json", "reportSha256": "d3508d1f485e77944ad3db62dfe7fc8298b83746ce9ad1bec86d23b5e8f1521c", "lock": "docs/evidence/deepseek-release-lock-mall-v3.0.4-portfolio-final-3c4c3a5a.json", "lockSha256": "d9b65d14c1ae4c8b8be135b4a1d4bdb96cdde764e2f0988721714462ed91313c", "ledger": "tmp/release-ledger-mall-v3.0.4-portfolio-final-3c4c3a5a/ledger.jsonl", "ledgerSha256": "cd3ea9cb26a1e32764e8888f26302a8e4eaac16d587197ff06cec925c71fe10b", "mainSupplementalGrounding": "not_executed", "assets": "not_generated", "releaseQualified": false},
   "releaseLedger": {"path": "tmp/release-ledger-mall-v3.0.3-portfolio-final-db3860701086/ledger.jsonl", "releaseId": "mall-v3.0.3-portfolio-final-db3860701086", "batchId": "portfolio_final-c9b46de42c2d", "providerRequests": 8, "successfulRequests": 8, "failedRequests": 0, "totalTokens": 29542, "ledgerReconciled": true, "sha256": "814cdcf09a3e9d37b6450bfbacbe7ff65915a76c378a07f60dfd3a8725087b18", "v3_0_3UnplannedProviderRequests": 16, "v3_0_3UnplannedProviderTokens": 14553},
-  "ci": {"status": "passed", "scope": "v3.0.4 contract-alignment offline repair candidate", "testedCommit": "95f6041165adf4fedb64c938fb6f928a2e3eaf60", "mallCi": "https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/35511412046", "qualityEvaluation": "https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/35511412051", "mallCiConclusion": "success", "qualityEvaluationConclusion": "success", "previousRemoteRunsStale": true},
+  "ci": {"status": "pending_remote_final_sha", "scope": "v3.0.4 minimal-retest candidate", "testedCommit": null, "mallCi": null, "qualityEvaluation": null, "mallCiConclusion": "pending", "qualityEvaluationConclusion": "pending", "previousRemoteRunsStale": true},
   "publicValidator": {"command": "python scripts/validate_public_release.py", "exitCode": 0, "status": "dynamic_report", "reason": "读取当前 FastAPI JUnit/sidecar，不再硬编码历史测试数量。"},
   "claims": {
     "testRunComplete": true,
@@ -267,7 +267,7 @@
     "unplannedProviderRun": {"requests": 16, "tokens": 14553, "formalRelease": false}
   },
   "publicClaims": [
-    "当前 Runtime 的 FastAPI 机器报告为 455 passed、0 failed、0 skipped（终端 443 passed + 12 subtests）；v3 deterministic 为 478/478、代表性 Runtime 为 8/8。",
+    "当前 Runtime 的 FastAPI 机器报告为 471 passed、0 failed、0 skipped（455 pytest cases + 16 subtests）；v3 deterministic 为 478/478、代表性 Runtime 为 8/8。",
     "当前 Runtime 的本地合成现场从 0/122 完整执行并通过：Browser 24、Java/MySQL 30、Fault 36、Durable Recovery 32；报告与 Fixture SHA 已绑定，外部 Provider 请求 0。该结果是 deterministic/offline 证据，不是实时 DeepSeek 质量。",
     "v3.0.3 慢网关现场经公共 Nginx 运行 76.156 秒并返回 201/ready_to_commit，Provider 请求 0、Java 写入 0；唯一正式在线批次的 8 次 Provider 调用均成功且账本对账，但第一核心链未形成 Proposal 后安全停止。",
     "Java mall2 仍是身份、归属、资格、状态、幂等、事务、Outbox 和最终写入权威。"
