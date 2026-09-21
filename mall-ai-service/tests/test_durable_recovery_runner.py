@@ -40,3 +40,47 @@ def test_proposal_fixture_isolated_per_case_and_logs_in_via_public_api(tmp_path,
     # The short-lived bootstrap result must be removed after the references
     # have been consumed; it is never part of a public report.
     assert not list((tmp_path / "tmp" / "durable-proposal-fixtures").glob("*.json"))
+
+
+def test_store_recovery_waits_for_java_after_redis_container_is_healthy(monkeypatch):
+    waits = []
+    java_ready = []
+
+    monkeypatch.setattr(
+        MODULE,
+        "_create_waiting_task",
+        lambda *_args, **_kwargs: {"task_ref": "taskref-synthetic-recovery"},
+    )
+    monkeypatch.setattr(
+        MODULE,
+        "_compose",
+        lambda _args: SimpleNamespace(returncode=0, stdout="", stderr=""),
+    )
+    monkeypatch.setattr(
+        MODULE,
+        "_continue",
+        lambda *_args, **_kwargs: {"task_ref": "taskref-synthetic-recovery"},
+    )
+    monkeypatch.setattr(
+        MODULE,
+        "_wait_healthy",
+        lambda service: waits.append(service) or True,
+    )
+    monkeypatch.setattr(
+        MODULE,
+        "_wait_java_ready",
+        lambda client, base: java_ready.append((client, base)) or True,
+    )
+    monkeypatch.setenv("MALL_JAVA_BASE_URL", "http://java.test:8085/")
+
+    client = object()
+    result = MODULE._run_store_recovery_case(
+        client,
+        "http://runtime.test",
+        "Bearer synthetic",
+        "synthetic-order",
+    )
+
+    assert waits == ["redis", "mall-portal"]
+    assert java_ready == [(client, "http://java.test:8085")]
+    assert "java_redis_dependency_recovered" in result["assertions"]

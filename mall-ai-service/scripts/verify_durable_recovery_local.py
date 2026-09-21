@@ -328,9 +328,21 @@ def _run_store_recovery_case(client: httpx.Client, base: str, authorization: str
             raise RecoveryCaseError("store_recovery_failed", "redis_unavailable")
     finally:
         _compose(["start", "redis"])
-        if not _wait_healthy("redis"):
+        java_base = os.getenv("MALL_JAVA_BASE_URL", "http://127.0.0.1:8085").rstrip("/")
+        if (
+            not _wait_healthy("redis")
+            or not _wait_healthy("mall-portal")
+            or not _wait_java_ready(client, java_base)
+        ):
             raise RecoveryCaseError("dependency_recovery_failed", "redis_restore")
-    return {"assertions": ["redis_interruption_fail_closed", "redis_health_recovered", "no_business_write"]}
+    return {
+        "assertions": [
+            "redis_interruption_fail_closed",
+            "redis_health_recovered",
+            "java_redis_dependency_recovered",
+            "no_business_write",
+        ]
+    }
 
 
 def _create_waiting_task(client: httpx.Client, base: str, authorization: str, session_id: str) -> dict[str, Any]:
@@ -416,6 +428,22 @@ def _wait_healthy(service: str) -> bool:
         )
         if any(line.strip() == f"{service}|running|healthy" for line in result.stdout.splitlines()):
             return True
+        time.sleep(2)
+    return False
+
+
+def _wait_java_ready(client: httpx.Client, java_base: str, *, timeout: int = 120) -> bool:
+    """Wait for Java's Redis-backed health, not only the Redis container."""
+
+    deadline = time.monotonic() + timeout
+    while time.monotonic() < deadline:
+        try:
+            response = client.get(f"{java_base}/actuator/health", timeout=5)
+            payload = response.json()
+            if response.status_code == 200 and isinstance(payload, dict) and payload.get("status") == "UP":
+                return True
+        except (httpx.HTTPError, ValueError, json.JSONDecodeError):
+            pass
         time.sleep(2)
     return False
 
