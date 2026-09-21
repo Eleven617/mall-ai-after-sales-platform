@@ -2,9 +2,11 @@
 
 ## 当前权威快照｜v3.0.4 离线收口候选（2026-09-21）
 
-Release Gate：**NOT_COMPLETE**。当前 Runtime/image `8ff255aeff320b5f3800aa05bfacefec975a684a` 的 FastAPI JUnit **483/483**（467 cases + 16 subtests）、manifest **478/478**、representative **8/8**、contract replay **36/36** 均通过。主 Compose **8/8 healthy**；同一冻结版本从 0/122 完整现场通过 Browser 24、Java/MySQL 30、隔离 Compose Fault 36、Durable Recovery 32，failed 0、environmentBlocked 0。
+机器报告在新增入口恢复回归后更新为 FastAPI JUnit **484/484**（468 cases + 16 subtests）；旧章节中的 483/483 仅为历史快照。
 
-现场报告 `tmp/v304-field-acceptance-8ff255a-corrected/field-20260921T114110Z-54e374ab/field-acceptance.json`，SHA-256 `7156497d23080a7aac6a7d4183949b7d11c41ec8c9ae8799e53722773b26a64c`；Fixture SHA-256 `7b7616e3ba0f6939a7bcc7d381b3c3b7b35d2b443c2056b218cdefc7f17486a9`。确定性展示链 3/3、12 帧，报告 SHA-256 `07638edf7377bec1d510fd4580874231bf6342b7cbeef84b4253f1db8187e1d0`；关键状态卡跨场景不重复。本轮外部 Provider requests/tokens 均为 0，未创建在线 Release/Batch/Lock，未合并 `main`。
+Release Gate：**NOT_COMPLETE**。当前 Runtime/image `8ff255aeff320b5f3800aa05bfacefec975a684a` 的离线工程验证为 FastAPI JUnit **483/483**、manifest **478/478**、representative **8/8**、contract replay **36/36**，现场 **122/122**。唯一授权的最小在线复测已启动但在主阶段停止：Release `mall-v3.0.4-final-minimal-8ff255ae-20260921` / Batch `minimal_retest-e61923d45dcb`，16 attempts、15 成功、1 个 `model_contract_schema_invalid`，49,158 tokens；3 个主阶段 Case 通过，`agent-open-010` blocked，补充、Grounding 和展示阶段未执行。
+
+现场报告 `tmp/v304-field-acceptance-8ff255a-corrected/field-20260921T114110Z-54e374ab/field-acceptance.json`，SHA-256 `7156497d23080a7aac6a7d4183949b7d11c41ec8c9ae8799e53722773b26a64c`；Fixture SHA-256 `7b7616e3ba0f6939a7bcc7d381b3c3b7b35d2b443c2056b218cdefc7f17486a9`。确定性展示链 3/3、12 帧仍是离线素材；本次在线批次实际 Provider requests/attempts `16/16`、tokens `49,158`，Report/Ledger/Lock 已单独保存，未合并 `main`。
 
 历史在线最小复测仍是 FAILED：21 次 HTTP attempts、19 成功、2 次 network 失败、73,833 tokens，11 个目标/对照未执行。当前候选只具备一次最小在线复测的工程入口，不得把 deterministic 素材或 122/122 写成真实模型效果。
 

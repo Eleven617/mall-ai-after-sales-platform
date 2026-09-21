@@ -9,7 +9,9 @@
 
 ## 30 秒了解项目
 
-> 当前展示状态：`NOT_COMPLETE`。Runtime `8ff255aeff320b5f3800aa05bfacefec975a684a` 已通过 FastAPI JUnit `483/483`（467 cases + 16 subtests）、manifest `478/478`、representative `8/8`、contract replay `36/36` 和当前镜像现场 `122/122`；确定性三条展示链 `3/3`，任务绑定关键帧已修复，外部 Provider 调用为 0。历史最小在线复测真实消耗 21 次 HTTP attempts、73,833 tokens 后失败，11 个目标/对照未执行；当前候选尚未在线复测，历史 Report、Ledger 和 Lock 保持不可变，未合并 `main`。
+离线回归在新增入口恢复测试后更新为 FastAPI JUnit **484/484**（468 cases + 16 subtests）；机器报告已绑定 `f27718858049808eb99504b50f72c0b16859cbe3`。
+
+> 当前展示状态：`NOT_COMPLETE`。Runtime `8ff255aeff320b5f3800aa05bfacefec975a684a` 的离线工程验证仍为 FastAPI JUnit `483/483`、manifest `478/478`、representative `8/8`、contract replay `36/36` 和现场 `122/122`。唯一授权的最小在线复测已真实启动并在主阶段停止：Release `mall-v3.0.4-final-minimal-8ff255ae-20260921` / Batch `minimal_retest-e61923d45dcb`，16 HTTP attempts、15 成功、1 个模型结构化合同失败、49,158 tokens；`agent-open-003/005/006` 通过，`agent-open-010` 因 `model_contract_schema_invalid` blocked，后续阶段未执行。历史和本次 Report/Ledger/Lock 均保持不可变，未合并 `main`。
 
 ### 为什么不是普通聊天机器人
 
@@ -66,7 +68,7 @@ MCP 只读工具、人工售后工作台和 LangGraph 确定性节点是能力�
 
 结果按套件独立统计，不相加，也不外推为生产 SLA 或真实用户泛化：
 
-- 当前候选收口的 FastAPI JUnit 为 `483 passed`（467 pytest cases + 16 subtests），exit `0`；
+- 当前候选收口的 FastAPI JUnit 为 `484 passed`（468 pytest cases + 16 subtests），exit `0`；
 - v3 deterministic 发布合同为 `478/478`，代表性 Runtime 为 `8/8`；本轮 contract replay 为 `36/36`，Provider `0`；这些都不是浏览器 E2E 或真实模型效果；
 - Java portal 核心 `12/12`、admin `6/6`、Spring context `1/1`、Vue production build、8 服务 Compose 和四类现场 Runner 均已在当前候选环境验证通过；
 - 当前现场 `122/122` 绑定 Runtime/image `8ff255ae`，来自本地 Docker、Chrome、Java/MySQL、隔离故障 Compose 与合成 Fixture deterministic 证据，不代表真实模型效果或生产 SLA；

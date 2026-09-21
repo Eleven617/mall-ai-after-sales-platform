@@ -2,9 +2,11 @@
 
 ## 当前候选快照｜v3.0.4 离线收口（2026-09-21）
 
+新增入口恢复回归后，FastAPI 机器报告为 **484/484**（468 cases + 16 subtests）；旧章节数字仅作历史记录。
+
 Runtime/image `8ff255aeff320b5f3800aa05bfacefec975a684a`：FastAPI **483/483**（467 cases + 16 subtests）、manifest **478/478**、representative **8/8**、contract replay **36/36**。同一镜像从 0/122 完整现场通过 Browser 24、Java/MySQL 30、隔离 Compose Fault 36、Durable Recovery 32；failed=0、environmentBlocked=0，报告 SHA-256 `7156497d23080a7aac6a7d4183949b7d11c41ec8c9ae8799e53722773b26a64c`，Fixture SHA-256 `7b7616e3ba0f6939a7bcc7d381b3c3b7b35d2b443c2056b218cdefc7f17486a9`。
 
-确定性展示链 **3/3**、12 帧，报告 SHA-256 `07638edf7377bec1d510fd4580874231bf6342b7cbeef84b4253f1db8187e1d0`；Provider requests/tokens 为 0。历史在线批次和真实模型指标保持原样，当前候选尚未在线复测，Release Gate **NOT_COMPLETE**。
+确定性展示链 **3/3**、12 帧仍是离线素材。唯一授权在线复测实际发生 16 次 HTTP attempts、15 成功、1 结构化合同失败，共 49,158 tokens；`agent-open-010` blocked 后未进入补充、Grounding 或展示阶段，Release Gate **NOT_COMPLETE**。
 
 ## 当前候选快照｜v3.0.4 最小在线复测取证（2026-09-21）
 

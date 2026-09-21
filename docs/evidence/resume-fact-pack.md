@@ -2,9 +2,11 @@
 
 ## 当前候选｜v3.0.4 离线收口（2026-09-21）
 
+新增入口恢复回归后，FastAPI 机器报告为 **484/484**（468 cases + 16 subtests）；旧数字只属于历史快照。
+
 Runtime/image `8ff255aeff320b5f3800aa05bfacefec975a684a`：FastAPI **483/483**（467 cases + 16 subtests）、manifest **478/478**、representative **8/8**、contract replay **36/36**；主 Compose **8/8 healthy**，当前镜像完整现场 **122/122**（24 + 30 + 36 + 32），failed=0、environmentBlocked=0。确定性展示链 **3/3**、12 帧，关键任务卡跨场景不重复；本轮外部 Provider requests/tokens 为 0。
 
-状态仍为 **NOT_COMPLETE**：历史最小在线复测的 21 attempts、73,833 tokens 与 FAILED Report/Ledger/Lock 保持不变；当前候选尚未在线复测，CI 等待当前证据提交。离线结果不得表述为真实模型效果，未合并 `main`。
+状态仍为 **NOT_COMPLETE**：唯一授权在线复测实际发生 16 attempts、15 成功、1 个 `model_contract_schema_invalid`、49,158 tokens，在 `agent-open-010` 后停止；历史与本次 Report/Ledger/Lock 均保持不变。离线结果不得表述为真实模型效果，未合并 `main`。
 
 ## 当前事实｜v3.0.4 最小在线复测（2026-09-21）
 

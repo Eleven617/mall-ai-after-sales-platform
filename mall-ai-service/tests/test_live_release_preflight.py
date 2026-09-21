@@ -106,3 +106,21 @@ def test_v304_final_entry_is_a_real_single_batch_path_with_ephemeral_password() 
     assert "Get-BoundedReleaseLimit $previousMaxTokens 200000" in content
     assert "GetEnvironmentVariable('MALL_LIVE_DEMO_PASSWORD', 'User')" in content
     assert "docker compose up -d --no-deps --force-recreate mall-ai-service" in content
+
+
+def test_v304_final_entry_restores_frozen_offline_runtime_identity() -> None:
+    root = Path(__file__).resolve().parents[2]
+    content = (root / "scripts" / "Run-V3_0_4-Portfolio-Release.ps1").read_text(encoding="utf-8")
+
+    restore_marker = "# Compose build args and container identity default to"
+    restore = content[content.index(restore_marker) :]
+    assert "SetEnvironmentVariable('MALL_RUNTIME_PROVIDER_MODE', 'deterministic', 'Process')" in restore
+    assert "SetEnvironmentVariable('MALL_PROVIDER_LIVE_AUTH', '0', 'Process')" in restore
+    assert "SetEnvironmentVariable('MALL_RUNTIME_COMMIT', $RuntimeCommit, 'Process')" in restore
+    assert "SetEnvironmentVariable('MALL_IMAGE_REVISION', $RuntimeCommit, 'Process')" in restore
+    assert "restoredVersion.runtimeCommit -eq $RuntimeCommit" in restore
+    assert "restoredVersion.imageRevision -eq $RuntimeCommit" in restore
+    assert "restoredVersion.providerMode -eq 'deterministic'" in restore
+    assert restore.index("docker compose up -d --no-deps --force-recreate mall-ai-service") < restore.index(
+        "Remove-Item Env:MALL_RUNTIME_PROVIDER_MODE"
+    )

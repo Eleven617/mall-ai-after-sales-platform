@@ -2,9 +2,11 @@
 
 ## 当前状态｜v3.0.4 离线收口候选（2026-09-21）
 
-**NOT_COMPLETE**。Runtime/image `8ff255aeff320b5f3800aa05bfacefec975a684a` 已通过 FastAPI **483/483**（467 cases + 16 subtests）、manifest **478/478**、representative **8/8**、contract replay **36/36** 和一次未拼接现场 **122/122**；主 Compose 8/8 healthy，外部 Provider requests/tokens 为 0。确定性三条展示链 3/3，任务绑定的关键状态帧已验证为不同内容。
+新增正式入口恢复回归后，当前机器报告为 FastAPI **484/484**（468 cases + 16 subtests）；旧章节数字保持历史原样。
 
-历史在线最小复测仍为 FAILED（21 attempts、19 成功、2 次 network 失败、73,833 tokens，11 个目标/对照未执行）。当前候选尚未在线复测，未创建新在线 Release/Lock、未合并 main；历史 Report/Ledger/Lock 未修改。
+**NOT_COMPLETE**。Runtime/image `8ff255aeff320b5f3800aa05bfacefec975a684a` 的离线验证仍为 FastAPI **483/483**、manifest **478/478**、representative **8/8**、contract replay **36/36** 和现场 **122/122**。唯一授权的在线复测在主阶段停止：16 attempts、15 成功、49,158 tokens；`agent-open-003/005/006` 通过，`agent-open-010` 因 `model_contract_schema_invalid` blocked，后续阶段未执行。
+
+历史在线批次与本次新批次均保持原始 Report/Ledger/Lock；本次不是环境阻塞，也不是网络重试失败，而是单个真实模型结构化输出违反已冻结合同。当前 Release Gate 仍为 **NOT_COMPLETE**，未合并 main。
 
 ## 当前状态｜v3.0.4 最小在线复测后（2026-09-21）
 

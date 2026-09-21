@@ -2,9 +2,11 @@
 
 ## 当前候选记录｜v3.0.4 离线收口（2026-09-21）
 
-Release Gate **NOT_COMPLETE**。Runtime/image `8ff255aeff320b5f3800aa05bfacefec975a684a` 的 FastAPI **483/483**（467 cases + 16 subtests）、manifest **478/478**、representative **8/8**、contract replay **36/36** 均通过。主 Compose 8/8 healthy；当前镜像完整现场 **122/122**（Browser 24、Java/MySQL 30、隔离 Fault 36、Durable 32），报告 SHA-256 `7156497d23080a7aac6a7d4183949b7d11c41ec8c9ae8799e53722773b26a64c`，Fixture SHA-256 `7b7616e3ba0f6939a7bcc7d381b3c3b7b35d2b443c2056b218cdefc7f17486a9`。
+新增入口恢复回归后，FastAPI 机器报告为 **484/484**（468 cases + 16 subtests）；历史章节保持原样。
 
-确定性展示链 3/3、12 帧，关键状态卡跨场景不重复；本轮外部 Provider requests/tokens 为 0。历史最小在线复测仍为 FAILED（21 attempts、73,833 tokens），其 Report/Ledger/Lock 不变；当前候选尚未在线复测、未创建新在线 Release/Lock、未合并 main。
+Release Gate **NOT_COMPLETE**。Runtime/image `8ff255aeff320b5f3800aa05bfacefec975a684a` 的离线验证为 FastAPI **483/483**、manifest **478/478**、representative **8/8**、contract replay **36/36**、现场 **122/122**。唯一授权在线复测在主阶段停止：16 attempts、15 成功、1 个 `model_contract_schema_invalid`、49,158 tokens；后续评测与展示链未执行。
+
+确定性展示链 3/3、12 帧为离线素材，关键状态卡跨场景不重复。历史批次与本次批次的 Report/Ledger/Lock 均保留；本次不是环境阻塞，未合并 main。
 
 ## 当前候选记录｜v3.0.4 最小在线复测取证（2026-09-21）
 

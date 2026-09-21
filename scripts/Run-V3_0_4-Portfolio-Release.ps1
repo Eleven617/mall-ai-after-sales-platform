@@ -159,8 +159,28 @@ finally {
     if ($null -eq $previousMaxAttempts) { Remove-Item Env:MALL_RELEASE_MAX_PROVIDER_HTTP_ATTEMPTS -ErrorAction SilentlyContinue } else { [Environment]::SetEnvironmentVariable('MALL_RELEASE_MAX_PROVIDER_HTTP_ATTEMPTS', $previousMaxAttempts, 'Process') }
     if ($null -eq $previousMaxTokens) { Remove-Item Env:MALL_RELEASE_MAX_TOTAL_TOKENS -ErrorAction SilentlyContinue } else { [Environment]::SetEnvironmentVariable('MALL_RELEASE_MAX_TOTAL_TOKENS', $previousMaxTokens, 'Process') }
     if ($null -eq $previousReserveTokens) { Remove-Item Env:MALL_RELEASE_RESERVE_TOKENS -ErrorAction SilentlyContinue } else { [Environment]::SetEnvironmentVariable('MALL_RELEASE_RESERVE_TOKENS', $previousReserveTokens, 'Process') }
-    Remove-Item Env:MALL_JAVA_BASE_URL,Env:MALL_DEMO_WEB_BASE_URL,Env:MALL_RUNTIME_PROVIDER_MODE,Env:MALL_PROVIDER_LIVE_AUTH,Env:MALL_RELEASE_ID,Env:MALL_RELEASE_BATCH_ID,Env:MALL_RELEASE_LEDGER_HOST_PATH,Env:MALL_RELEASE_LEDGER_CONTAINER_PATH,Env:MALL_RELEASE_LEDGER_PATH,Env:MALL_RUNTIME_COMMIT,Env:MALL_IMAGE_REVISION -ErrorAction SilentlyContinue
+    Remove-Item Env:MALL_JAVA_BASE_URL,Env:MALL_DEMO_WEB_BASE_URL,Env:MALL_RELEASE_ID,Env:MALL_RELEASE_BATCH_ID,Env:MALL_RELEASE_LEDGER_HOST_PATH,Env:MALL_RELEASE_LEDGER_CONTAINER_PATH,Env:MALL_RELEASE_LEDGER_PATH -ErrorAction SilentlyContinue
     $password = $null
+    # Compose build args and container identity default to "unknown" when these
+    # variables are absent. Restore the frozen deterministic runtime explicitly,
+    # then verify it before removing the process-only values.
+    [Environment]::SetEnvironmentVariable('MALL_RUNTIME_PROVIDER_MODE', 'deterministic', 'Process')
+    [Environment]::SetEnvironmentVariable('MALL_PROVIDER_LIVE_AUTH', '0', 'Process')
+    [Environment]::SetEnvironmentVariable('MALL_RUNTIME_COMMIT', $RuntimeCommit, 'Process')
+    [Environment]::SetEnvironmentVariable('MALL_IMAGE_REVISION', $RuntimeCommit, 'Process')
     & docker compose up -d --no-deps --force-recreate mall-ai-service | Out-Null
+    $restoreDeadline = (Get-Date).AddSeconds(120)
+    $restoredVersion = $null
+    do {
+        try {
+            $restoredVersion = Invoke-RestMethod -Uri 'http://127.0.0.1:8000/health/version' -TimeoutSec 5
+            if ($restoredVersion.runtimeCommit -eq $RuntimeCommit -and $restoredVersion.imageRevision -eq $RuntimeCommit -and $restoredVersion.providerMode -eq 'deterministic') { break }
+        } catch { }
+        Start-Sleep -Seconds 2
+    } while ((Get-Date) -lt $restoreDeadline)
+    if ($null -eq $restoredVersion -or $restoredVersion.runtimeCommit -ne $RuntimeCommit -or $restoredVersion.imageRevision -ne $RuntimeCommit -or $restoredVersion.providerMode -ne 'deterministic') {
+        Write-Error 'offline_runtime_restore_failed'
+    }
+    Remove-Item Env:MALL_RUNTIME_PROVIDER_MODE,Env:MALL_PROVIDER_LIVE_AUTH,Env:MALL_RUNTIME_COMMIT,Env:MALL_IMAGE_REVISION -ErrorAction SilentlyContinue
 }
 exit $runnerExitCode

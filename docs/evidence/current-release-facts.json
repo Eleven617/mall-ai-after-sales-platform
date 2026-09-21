@@ -1,11 +1,11 @@
 {
   "schemaVersion": "mall-public-release-facts.v4",
-  "generatedAt": "2026-09-21T19:50:00+08:00",
+  "generatedAt": "2026-09-21T21:35:00+08:00",
   "releaseStatus": "NOT_COMPLETE",
   "runtimeCommit": "8ff255aeff320b5f3800aa05bfacefec975a684a",
-  "evidenceCommit": "8ff255aeff320b5f3800aa05bfacefec975a684a",
+  "evidenceCommit": "f27718858049808eb99504b50f72c0b16859cbe3",
   "evidenceState": "current candidate evidence; runtime freeze, execution head and online batch are recorded separately",
-  "statusReason": "历史最小在线复测已真实消耗 21 次 HTTP attempts 和 73833 tokens，并保持 FAILED/NOT_COMPLETE。当前 Runtime 已完成辅助角色失败传播、共享预算入口演练和任务绑定素材采集修复；现场 122/122 与 deterministic 展示链 3/3 已重新绑定当前镜像。本候选尚未执行新的在线复测，本轮外部 Provider 调用为 0。",
+  "statusReason": "唯一授权的最小在线复测已真实发生 16 次 HTTP attempts、15 成功、1 个 model_contract_schema_invalid，消耗 49158 tokens，并在 agent-open-010 后停止。该失败不是环境阻塞或网络重试；历史与本次 Report/Ledger/Lock 均保留。离线现场 122/122 与 deterministic 展示链 3/3 仍绑定当前 Runtime。",
   "project": {
     "name": "Mall AI After-sales Platform",
     "repository": "https://github.com/Eleven617/mall-ai-after-sales-platform",
@@ -26,7 +26,7 @@
   "v3_0_4CurrentFieldAcceptance": {
     "status": "passed_offline_deterministic_current",
     "runtimeCommit": "8ff255aeff320b5f3800aa05bfacefec975a684a",
-    "executionHead": "8ff255aeff320b5f3800aa05bfacefec975a684a",
+    "executionHead": "f27718858049808eb99504b50f72c0b16859cbe3",
     "imageRevision": "8ff255aeff320b5f3800aa05bfacefec975a684a",
     "providerMode": "deterministic",
     "report": "tmp/v304-field-acceptance-8ff255a-corrected/field-20260921T114110Z-54e374ab/field-acceptance.json",
@@ -182,8 +182,9 @@
       "note": "报告/锁的 requests=0 是主机未设置 MALL_RELEASE_LEDGER_PATH 的记录缺口；共享 ledger 独立观察到 9 次 Provider 元数据事件。该批次仍是失败，不构成任何任务通过率。"
     }
   ],
+  "latestOfflineRegression": {"fastapi": "484/484", "pytestCases": 468, "subtests": 16, "runtimeCommit": "8ff255aeff320b5f3800aa05bfacefec975a684a", "evidenceCommit": "f27718858049808eb99504b50f72c0b16859cbe3", "reason": "Added formal-entry offline identity restoration regression after the authorized live batch stopped."},
   "tests": {
-    "fastapi": {"passed": 483, "failed": 0, "skipped": 0, "warnings": 1, "subtests": 16, "pytestTerminalPassed": 467, "exitCode": 0, "command": "mall-ai-service/.venv/Scripts/python.exe scripts/run_fastapi_ci_report.py --junitxml=ci-evidence/v3-fastapi-junit.xml --report=ci-evidence/v3-fastapi-report.json", "semanticReportSha256": "26ce60f7ccc4dc9053f8973de9da19b2f144c7736431e4a1564bdf797ec01957", "junitSha256": "ab8dd1dfa7765ad035967f7de504dd15609bf9f9a060a202e684cf3f5a5f7d32"},
+    "fastapi": {"passed": 484, "failed": 0, "skipped": 0, "warnings": 1, "subtests": 16, "pytestTerminalPassed": 468, "exitCode": 0, "command": "mall-ai-service/.venv/Scripts/python.exe scripts/run_fastapi_ci_report.py --junitxml=ci-evidence/v3-fastapi-junit.xml --report=ci-evidence/v3-fastapi-report.json", "semanticReportSha256": "f0e5ed50028e8cd524a4fb052f39376148efb8329f06ed743f3fc8689191c74e", "junitSha256": "3c8566e12ed1e5cc39cdb91906b58e079d5223095ae363bac1a0884a45772920"},
     "java": {"portalCore": "12/12", "portalCompatibility": "2/2", "portalFull": "14/14", "admin": "6/6", "springContext": "1/1", "exitCode": 0},
     "vue": {"command": "npm run build", "status": "passed", "exitCode": 0},
     "compose": {"configExitCode": 0, "servicesHealthy": "8/8"},
@@ -232,13 +233,14 @@
     "runtimeCommit": "8ff255aeff320b5f3800aa05bfacefec975a684a",
     "executionHead": "8ff255aeff320b5f3800aa05bfacefec975a684a",
     "executionState": "offline candidate: explicit auxiliary-role degradation/fail-closed policy, shared-ledger minimal-retest rehearsal, and task-bound showcase capture",
-    "fastapi": {"passed": 483, "failed": 0, "warnings": 1, "subtests": 16, "pytestTerminalPassed": 467, "exitCode": 0},
+    "fastapi": {"passed": 484, "failed": 0, "warnings": 1, "subtests": 16, "pytestTerminalPassed": 468, "exitCode": 0},
     "deterministic": {"manifest": "478/478", "representative": "8/8", "exitCode": 0},
     "fieldAcceptance": {"status": "passed", "total": "122/122", "failed": 0, "environmentBlocked": 0, "reason": "One unspliced run against the current Runtime/image; isolated fault Compose included.", "report": "tmp/v304-field-acceptance-8ff255a-corrected/field-20260921T114110Z-54e374ab/field-acceptance.json", "reportSha256": "7156497d23080a7aac6a7d4183949b7d11c41ec8c9ae8799e53722773b26a64c", "fixtureSha256": "7b7616e3ba0f6939a7bcc7d381b3c3b7b35d2b443c2056b218cdefc7f17486a9", "imageRevision": "8ff255aeff320b5f3800aa05bfacefec975a684a", "providerMode": "deterministic", "externalProviderRequests": 0, "externalProviderTokens": 0},
-    "deepseek": {"status": "not_run_by_design", "model": "deepseek-flash", "thinkingMode": "enabled", "reasoningEffort": "high", "batchStatus": "not_run", "calls": 0, "tokens": 0, "providerHttpAttempts": 0, "modelCalled": false, "reason": "Current Runtime candidate has completed offline validation only. The immutable 21-attempt failed historical batch remains recorded in v3_0_4MinimalRetest."},
-    "showcase": {"status": "passed", "mode": "deterministic", "businessAssertions": "3/3 passed", "assetStatus": "task_bound_frames_valid", "report": "mall-ai-service/tmp/v304-offline-showcase-8ff255a-corrected/showcase.json", "reportSha256": "07638edf7377bec1d510fd4580874231bf6342b7cbeef84b4253f1db8187e1d0", "externalProviderRequests": 0, "scenarios": [{"scenarioId": "main_open_task_closed_loop", "status": "passed"}, {"scenarioId": "clarify_pause_resume", "status": "passed"}, {"scenarioId": "fact_change_replan", "status": "passed"}]}
+    "deepseek": {"status": "failed", "model": "deepseek-flash", "thinkingMode": "enabled", "reasoningEffort": "high", "batchStatus": "failed", "releaseId": "mall-v3.0.4-final-minimal-8ff255ae-20260921", "batchId": "minimal_retest-e61923d45dcb", "calls": 16, "successfulCalls": 15, "failedCalls": 1, "tokens": 49158, "providerHttpAttempts": 16, "modelCalled": true, "failureStage": "main.agent-open-010", "failureCategory": "model_quality_issue", "limitationCode": "model_contract_schema_invalid", "targetedEvaluation": "3/11 target/control cases executed before stop; supplemental/grounding/showcase not executed", "ledgerReconciled": true, "report": "tmp/v304-minimal-retest-mall-v3.0.4-final-minimal-8ff255ae-20260921/report.json", "reportSha256": "d7d68259549bbf2f3877bc0e610378c5b42a3576391fa52a911ef35724bd4b", "ledger": "tmp/release-ledger-mall-v3.0.4-final-minimal-8ff255ae-20260921/ledger.jsonl", "ledgerSha256": "ff93e6106b1f670312c5a46d53bdcaeca713f7503cb0c2661f4a5468eb341ce9", "lock": "docs/evidence/deepseek-release-lock-mall-v3.0.4-final-minimal-8ff255ae-20260921.json", "lockSha256": "1b8a0dd7520c4c09ec022deee35a96f4689f291b7db238f62deb5a658de8f99", "reason": "A single live model structured response violated the frozen contract after three main cases passed; no security side effect or duplicate business write occurred. No second batch was started."},
+    "showcase": {"status": "failed", "mode": "live_model", "businessAssertions": "not_executed", "assetStatus": "not_generated", "reason": "The main evaluation stage did not pass 11/11, so the frozen plan correctly did not enter the live showcase stage. Deterministic 3/3 evidence remains recorded separately under showcase.deterministic.", "externalProviderRequests": 0, "scenarios": []}
   },
   "v3_0_4MinimalRetest": {"status": "FAILED", "runtimeCommit": "78c7dd5c0156d7d4b18df75b0df6221b6b2b4df4", "executionHead": "a63d50d357296e5e9b1c9f23226992c9b6e8bf8d", "releaseId": "mall-v3.0.4-minimal-retest-78c7dd5-20260921", "batchId": "minimal_retest-d551e9d01402", "promptVersion": "agent_runtime_v3_4", "skillCatalogVersion": "skill_catalog_v3_1", "logicalProviderRequests": 21, "providerHttpAttempts": 21, "successfulRequests": 19, "failedRequests": 2, "promptTokens": 44666, "completionTokens": 29167, "totalTokens": 73833, "reservations": 21, "settlements": 21, "unresolvedReservations": 0, "budgetDenials": 0, "ledgerReconciled": true, "failureCategory": "provider_failure", "showcaseBusinessAssertions": "3/3 passed", "targetedEvaluation": "0/11 executed", "assets": "invalid_cross_scenario_frame_reuse", "report": "tmp/v304-minimal-retest-mall-v3.0.4-minimal-retest-78c7dd5-20260921/report.json", "reportSha256": "7793e790771003ea2e51375e1c899e6d2fd26176a4388f9a20d375b846b3305d", "ledger": "tmp/release-ledger-mall-v3.0.4-minimal-retest-78c7dd5-20260921/ledger.jsonl", "ledgerSha256": "44e2c38b186ed23a47d0bbc5596e36456c71a16dcfb612fc5ce22f1aee67777f", "lock": "docs/evidence/deepseek-release-lock-mall-v3.0.4-minimal-retest-78c7dd5-20260921.json", "lockSha256": "a359808bdab972dfda69e4b214eca437b0e5c1cc3ca53e3bf2789cd84a168a1e"},
+  "v3_0_4AuthorizedReplacementMinimalRetest": {"status": "FAILED", "releaseId": "mall-v3.0.4-final-minimal-8ff255ae-20260921", "batchId": "minimal_retest-e61923d45dcb", "runtimeCommit": "8ff255aeff320b5f3800aa05bfacefec975a684a", "executionHead": "f27718858049808eb99504b50f72c0b16859cbe3", "provider": "DeepSeek", "model": "deepseek-flash", "thinkingMode": "enabled", "reasoningEffort": "high", "logicalProviderRequests": 16, "providerHttpAttempts": 16, "successfulRequests": 15, "failedRequests": 1, "promptTokens": 38897, "completionTokens": 10261, "totalTokens": 49158, "reservations": 16, "settlements": 16, "unresolvedReservations": 0, "ledgerReconciled": true, "failureCategory": "model_quality_issue", "failureCode": "model_contract_schema_invalid", "failureCase": "agent-open-010", "mainExecuted": "3/4 cases passed in main suite; agent-open-010 blocked", "supplemental": "not_executed", "grounding": "not_executed", "showcase": "not_executed", "report": "tmp/v304-minimal-retest-mall-v3.0.4-final-minimal-8ff255ae-20260921/report.json", "reportSha256": "d7d68259549bbf2f3877bc0e610378c5b42a3576391fa52a911ef35724bd4b", "ledger": "tmp/release-ledger-mall-v3.0.4-final-minimal-8ff255ae-20260921/ledger.jsonl", "ledgerSha256": "ff93e6106b1f670312c5a46d53bdcaeca713f7503cb0c2661f4a5468eb341ce9", "lock": "docs/evidence/deepseek-release-lock-mall-v3.0.4-final-minimal-8ff255ae-20260921.json", "lockSha256": "1b8a0dd7520c4c09ec022deee35a96f4689f291b7db238f62deb5a658de8f99", "releaseQualified": false},
   "v3_0_4LivePreflightRepair": {
     "status": "ONLINE_BATCH_FAILED_NOT_COMPLETE",
     "runtimeCommit": "3c4c3a5ae9fac944350b6710322fd9d5223eccde",
