@@ -232,6 +232,30 @@ class ReleaseLedgerTests(unittest.TestCase):
                 self.assertFalse(ledger["ledgerReconciled"])
                 self.assertEqual("ledger_mismatch", ledger["failureCategory"])
 
+    def test_provider_event_keeps_safe_scenario_and_runtime_role(self) -> None:
+        with TemporaryDirectory() as directory:
+            ledger_path = Path(directory) / "release.jsonl"
+            with release_ledger_context(
+                batch_id="scenario-batch",
+                path=ledger_path,
+                source="fastapi",
+                scenario="clarify_pause_resume",
+            ):
+                from app.services.release_ledger import append_release_event
+
+                append_release_event(
+                    event_type="provider_request",
+                    operation="context_curator",
+                    outcome="failed",
+                    failure_class="network",
+                )
+
+            event = read_release_events(ledger_path, batch_id="scenario-batch")[0]
+            self.assertEqual("clarify_pause_resume", event["scenario"])
+            self.assertEqual("context_curator", event["operation"])
+            self.assertNotIn("prompt", event)
+            self.assertNotIn("reasoning", event)
+
     def test_final_after_failed_batch_uses_a_new_single_use_lock(self) -> None:
         """A repaired Runtime may consume one new final batch without reusing A."""
 

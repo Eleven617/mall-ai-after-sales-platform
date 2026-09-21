@@ -19,6 +19,11 @@ from app.services.release_ledger import append_release_event
 
 
 _ALLOWED_OPERATIONS = {"text", "tools", "json"}
+_ALLOWED_RUNTIME_OPERATIONS = {
+    "commerce_executor",
+    "context_curator",
+    "resolution_critic",
+}
 _ALLOWED_OUTCOMES = {"succeeded", "failed"}
 _ALLOWED_FAILURE_CLASSES = {
     "missing_configuration",
@@ -96,6 +101,27 @@ _policy_var: ContextVar[LLMCallPolicy] = ContextVar(
     "mall_ai_llm_call_policy",
     default=LLMCallPolicy(),
 )
+_operation_var: ContextVar[str | None] = ContextVar(
+    "mall_ai_llm_operation",
+    default=None,
+)
+
+
+@contextmanager
+def llm_operation_context(operation: str) -> Iterator[None]:
+    """Attach a reviewed model role to metrics without retaining payloads."""
+
+    safe_operation = operation if operation in _ALLOWED_RUNTIME_OPERATIONS else None
+    token = _operation_var.set(safe_operation)
+    try:
+        yield
+    finally:
+        _operation_var.reset(token)
+
+
+def current_llm_operation(default: str) -> str:
+    operation = _operation_var.get()
+    return operation if operation in _ALLOWED_RUNTIME_OPERATIONS else default
 
 
 @contextmanager
@@ -144,7 +170,11 @@ def record_llm_metric(
 ) -> None:
     """Emit a validated number-only event to the checkpoint-local sink."""
     metric = LLMCallMetric(
-        operation=operation if operation in _ALLOWED_OPERATIONS else "text",
+        operation=(
+            operation
+            if operation in _ALLOWED_OPERATIONS | _ALLOWED_RUNTIME_OPERATIONS
+            else "text"
+        ),
         outcome=outcome if outcome in _ALLOWED_OUTCOMES else "failed",
         elapsed_ms=_non_negative_int(elapsed_ms),
         attempts=max(1, _non_negative_int(attempts)),

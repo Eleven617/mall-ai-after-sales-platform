@@ -21,6 +21,7 @@ from app.schemas.agent_task import (
     SkillCall,
 )
 from app.services.llm_service import LLMServiceError, generate_json
+from app.services.llm_observability import llm_operation_context
 from app.services.structured_output_gateway import (
     StructuredOutputError,
     StructuredOutputMode,
@@ -260,11 +261,12 @@ class DeepSeekRuntimeProvider:
 
     def critique(self, context: dict[str, Any]) -> ResolutionCritique:
         try:
-            raw = generate_json(
-                message=json.dumps(context, ensure_ascii=False),
-                system_prompt=CRITIC_SYSTEM_PROMPT,
-                temperature=0,
-            )
+            with llm_operation_context("resolution_critic"):
+                raw = generate_json(
+                    message=json.dumps(context, ensure_ascii=False),
+                    system_prompt=CRITIC_SYSTEM_PROMPT,
+                    temperature=0,
+                )
             return ResolutionCritique.model_validate(raw, strict=True)
         except (LLMServiceError, StructuredOutputError, ValueError, TypeError) as exc:
             category = getattr(exc, "category", "invalid_response")
@@ -286,21 +288,22 @@ class DeepSeekRuntimeProvider:
         mode: StructuredOutputMode = StructuredOutputMode.PROMPT_JSON,
     ):
         try:
-            result = generate_structured_output_with_correction(
-                message=message,
-                system_prompt=system_prompt,
-                response_model=response_model,
-                mode=mode,
-                temperature=0,
-                json_generator=generate_json,
-                correction_context=correction_context,
-                correction_system_prompt=system_prompt,
-                correction_message=(
-                    "仅修复已列出的 JSON/运行时契约错误；如果错误要求先读取已提供的事实引用，"
-                    "只选择一个最小只读 Skill，不新增业务结论。"
-                ),
-                validate_result=validate_result,
-            )
+            with llm_operation_context(role):
+                result = generate_structured_output_with_correction(
+                    message=message,
+                    system_prompt=system_prompt,
+                    response_model=response_model,
+                    mode=mode,
+                    temperature=0,
+                    json_generator=generate_json,
+                    correction_context=correction_context,
+                    correction_system_prompt=system_prompt,
+                    correction_message=(
+                        "仅修复已列出的 JSON/运行时契约错误；如果错误要求先读取已提供的事实引用，"
+                        "只选择一个最小只读 Skill，不新增业务结论。"
+                    ),
+                    validate_result=validate_result,
+                )
             return result.value
         except (LLMServiceError, StructuredOutputError, ValueError, TypeError) as exc:
             if role == "commerce_executor" and isinstance(exc, StructuredOutputError):

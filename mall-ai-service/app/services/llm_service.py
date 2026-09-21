@@ -17,6 +17,7 @@ import httpx
 from app.config import settings
 from app.services.llm_observability import (
     current_llm_call_policy,
+    current_llm_operation,
     record_llm_metric,
 )
 from app.services.provider_guard import ProviderGuardError, assert_provider_request_allowed
@@ -91,7 +92,7 @@ def generate_text(
         "messages": messages,
         **_agent_reasoning_control(),
     }
-    return _request_json("text", url, _headers(), payload, _extract_text)
+    return _request_json(current_llm_operation("text"), url, _headers(), payload, _extract_text)
 
 
 def generate_with_tools(
@@ -117,7 +118,7 @@ def generate_with_tools(
         "tools": tools,
         **_agent_reasoning_control(),
     }
-    result = _request_json("tools", url, _headers(), payload, _extract_response)
+    result = _request_json(current_llm_operation("tools"), url, _headers(), payload, _extract_response)
     _LOGGER.debug(
         "llm_tool_response has_content=%s tool_count=%s",
         bool(result.content),
@@ -155,7 +156,7 @@ def generate_json(
     if output_mode == "json_object":
         payload["response_format"] = {"type": "json_object"}
 
-    return _request_json("json", url, _headers(), payload, _extract_json_object)
+    return _request_json(current_llm_operation("json"), url, _headers(), payload, _extract_json_object)
 
 
 def _request_json(

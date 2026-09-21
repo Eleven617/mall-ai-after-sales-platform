@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 import httpx
 
-from app.services.llm_observability import capture_llm_metrics
+from app.services.llm_observability import capture_llm_metrics, llm_operation_context
 from app.services.provider_guard import provider_access_context
 from app.services.llm_service import (
     LLMServiceError,
@@ -109,6 +109,23 @@ class _MissingToolIdResponse(_FakeResponse):
 
 
 class LLMServiceObservabilityTests(unittest.TestCase):
+    def test_runtime_role_labels_metric_without_payload(self) -> None:
+        fake_settings = SimpleNamespace(
+            deepseek_api_key="fixture-key",
+            deepseek_base_url="https://example.invalid",
+            deepseek_model="deepseek-flash",
+            deepseek_timeout_seconds=1.0,
+        )
+        with patch("app.services.llm_service.settings", fake_settings), patch(
+            "app.services.llm_service.httpx.post", return_value=_FakeResponse()
+        ), capture_llm_metrics(max_attempts=1, timeout_seconds=1.0) as sink, llm_operation_context(
+            "context_curator"
+        ):
+            self.assertEqual("ok", generate_text("private prompt"))
+
+        self.assertEqual("context_curator", sink.events[0].operation)
+        self.assertNotIn("private prompt", repr(sink.events[0]))
+
     def setUp(self) -> None:
         self._provider_grant = provider_access_context(
             mode="mock",

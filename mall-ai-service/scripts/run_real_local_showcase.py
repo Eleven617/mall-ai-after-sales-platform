@@ -203,6 +203,7 @@ def run_real_local_showcase(
                     ("clarify_pause_resume", lambda: _agent_pause_resume(client, api_base, auth_a, closed_loop_order.order_sn)),
                     ("fact_change_replan", lambda: _agent_fact_change_replan(client, api_base, admin_base, auth_a, fact_change_order.order_id, fact_change_order.order_sn, password)),
                 ):
+                    client.headers["X-Mall-Release-Scenario"] = scenario
                     try:
                         result = callback()
                     except ShowcaseError as exc:
@@ -218,6 +219,34 @@ def run_real_local_showcase(
                         )
                         return _showcase_failure(batch_id, started, chain_results, frame_paths, failure, frame_groups)
                     chain_results.append(result)
+                    provider_usage = _provider_usage(batch_id)
+                    failure = _provider_failure_after_scenario(
+                        scenario, result, provider_usage
+                    )
+                    if failure is not None:
+                        append_release_event(
+                            event_type="scenario",
+                            operation=f"showcase.{scenario}",
+                            outcome="failed",
+                            failure_class="scenario_failure",
+                            scenario=scenario,
+                            stage="provider",
+                            failure_code=failure.failure_code,
+                            completed_step_count=failure.completed_steps,
+                            model_called=True,
+                            proposal_formed=failure.proposal_formed,
+                            java_eligibility=failure.java_eligibility,
+                            java_commit=failure.java_commit,
+                            status_readback=failure.status_readback,
+                        )
+                        return _showcase_failure(
+                            batch_id,
+                            started,
+                            chain_results,
+                            frame_paths,
+                            failure,
+                            frame_groups,
+                        )
                     captured = _capture_chain_frames(
                         password,
                         account_a.username,
@@ -265,11 +294,13 @@ def run_real_local_showcase(
                 failure_class="scenario_failure", scenario="runtime", stage="unexpected", failure_code=failure.failure_code,
             )
             return _showcase_failure(batch_id, started, chain_results, frame_paths, failure, frame_groups)
+    cross_scenario_frames_distinct = _cross_scenario_frames_distinct(frame_groups)
     status = "passed" if (
         all(item.get("status") == "passed" for item in chain_results)
         and len(frame_paths) >= 12
         and all(group.get("valid") is True for group in frame_groups.values())
         and len(frame_groups) == 3
+        and cross_scenario_frames_distinct
     ) else "failed"
     gif_paths = _build_offline_gifs(frame_groups, report_dir / "gifs") if status == "passed" else []
     report = {
@@ -281,6 +312,7 @@ def run_real_local_showcase(
         "frames": frame_paths,
         "browserFrameCount": len(frame_paths),
         "frameGroups": frame_groups,
+        "crossScenarioFramesDistinct": cross_scenario_frames_distinct,
         "gifPaths": gif_paths,
         "fixture": {"kind": "local_demo_synthetic", "containsRawValuesInReport": False},
     }
@@ -331,6 +363,50 @@ def _showcase_failure(
     }
     report.update(_aggregate_showcase_metrics(chains))
     return report
+
+
+def _provider_usage(batch_id: str) -> dict[str, Any]:
+    ledger_path = os.getenv("MALL_RELEASE_LEDGER_PATH")
+    if not ledger_path:
+        return {}
+    return summarize_release_events(read_release_events(ledger_path, batch_id=batch_id))
+
+
+def _provider_failure_after_scenario(
+    scenario: str,
+    result: dict[str, Any],
+    provider_usage: dict[str, Any],
+) -> ShowcaseError | None:
+    provider_failures = int(provider_usage.get("providerFailures", 0))
+    if provider_failures == 0:
+        return None
+    return ShowcaseError(
+        "provider_http_failure",
+        scenario=scenario,
+        stage="provider",
+        completed_steps=int(result.get("completedStepCount", 0)),
+        model_called=True,
+        proposal_formed=bool(result.get("proposalFormed", False)),
+        java_eligibility=bool(result.get("javaRechecked", False)),
+        java_commit=bool(result.get("confirmedWrite", False)),
+        status_readback=bool(result.get("statusReadback", False)),
+        task_metrics={
+            "rootFailureClass": "provider_failure",
+            "providerFailures": provider_failures,
+        },
+    )
+
+
+def _cross_scenario_frames_distinct(frame_groups: dict[str, dict[str, Any]]) -> bool:
+    """Reject reused same-stage frames across supposedly independent chains."""
+
+    if len(frame_groups) != 3:
+        return False
+    groups = list(frame_groups.values())
+    hashes_by_stage = list(zip(*(group.get("hashes", []) for group in groups)))
+    if len(hashes_by_stage) != 4:
+        return False
+    return all(len(set(stage_hashes)) == len(groups) for stage_hashes in hashes_by_stage)
 
 
 def _aggregate_showcase_metrics(chains: list[dict[str, Any]]) -> dict[str, Any]:

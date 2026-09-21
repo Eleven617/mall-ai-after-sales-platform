@@ -23,6 +23,7 @@ from typing import Any, Iterator, Mapping
 _BATCH_ID = ContextVar("mall_release_batch_id", default=None)
 _LEDGER_PATH = ContextVar("mall_release_ledger_path", default=None)
 _SOURCE = ContextVar("mall_release_ledger_source", default="runtime")
+_SCENARIO = ContextVar("mall_release_ledger_scenario", default=None)
 _WRITE_LOCK = threading.Lock()
 _SAFE_EVENT_TYPES = {
     "provider_request",
@@ -110,15 +111,20 @@ def release_ledger_context(
     batch_id: str | None = None,
     path: str | Path | None = None,
     source: str = "runtime",
+    scenario: str | None = None,
 ) -> Iterator[None]:
     """Bind a release batch to the current process/request only."""
 
     batch_token = _BATCH_ID.set(batch_id or current_batch_id())
     path_token = _LEDGER_PATH.set(Path(path) if path is not None else _configured_path())
     source_token = _SOURCE.set(_safe_text(source, fallback="runtime"))
+    scenario_token = _SCENARIO.set(
+        _safe_text(scenario, fallback="unknown") if scenario else None
+    )
     try:
         yield
     finally:
+        _SCENARIO.reset(scenario_token)
         _SOURCE.reset(source_token)
         _LEDGER_PATH.reset(path_token)
         _BATCH_ID.reset(batch_token)
@@ -371,6 +377,9 @@ def append_release_event(
         "schemaVersion": _safe_text(os.getenv("MALL_SCHEMA_VERSION"), fallback="unknown"),
         "source": _SOURCE.get(),
     }
+    active_scenario = scenario or _SCENARIO.get()
+    if active_scenario:
+        event["scenario"] = _safe_text(active_scenario, fallback="unknown")
     if safe_type in {"scenario", "test"}:
         event.update(
             {

@@ -12,6 +12,8 @@ from app.services.release_ledger import release_ledger_context
 from scripts.run_real_local_showcase import (
     ShowcaseError,
     _create_agent_task,
+    _cross_scenario_frames_distinct,
+    _provider_failure_after_scenario,
     _response_failure_code,
     _status_class,
     _task_failure_code,
@@ -135,3 +137,43 @@ def test_showcase_uses_independent_orders_for_commit_and_fact_change(monkeypatch
     assert account_a.username != account_b.username
     assert closed_loop.order_id != fact_change.order_id
     assert created == ["v301-A:3", "v301-A:2", "v301-B:1"]
+
+
+def test_cross_scenario_capture_rejects_reused_same_stage_frames() -> None:
+    duplicated = {
+        "one": {"hashes": ["goal-1", "evidence", "handoff", "status"]},
+        "two": {"hashes": ["goal-2", "evidence", "handoff", "status"]},
+        "three": {"hashes": ["goal-3", "evidence", "handoff", "status"]},
+    }
+    distinct = {
+        "one": {"hashes": ["1-goal", "1-evidence", "1-handoff", "1-status"]},
+        "two": {"hashes": ["2-goal", "2-evidence", "2-handoff", "2-status"]},
+        "three": {"hashes": ["3-goal", "3-evidence", "3-handoff", "3-status"]},
+    }
+
+    assert _cross_scenario_frames_distinct(duplicated) is False
+    assert _cross_scenario_frames_distinct(distinct) is True
+
+
+def test_provider_failure_after_passed_scenario_stops_with_safe_root_cause() -> None:
+    result = {
+        "completedStepCount": 4,
+        "proposalFormed": True,
+        "javaRechecked": True,
+        "confirmedWrite": False,
+        "statusReadback": True,
+    }
+
+    assert _provider_failure_after_scenario("pause", result, {}) is None
+
+    failure = _provider_failure_after_scenario(
+        "pause", result, {"providerFailures": 1}
+    )
+    assert failure is not None
+    assert failure.failure_code == "provider_http_failure"
+    assert failure.stage == "provider"
+    assert failure.task_metrics == {
+        "rootFailureClass": "provider_failure",
+        "providerFailures": 1,
+    }
+    assert "prompt" not in repr(failure.to_public())

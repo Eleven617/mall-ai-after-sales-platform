@@ -33,6 +33,7 @@ async def correlation_middleware(request: Request, call_next):
     with release_ledger_context(
         batch_id=request.headers.get("x-mall-release-batch-id"),
         source="fastapi",
+        scenario=request.headers.get("x-mall-release-scenario"),
     ):
         with provider_access_context(
             mode=request.headers.get(
