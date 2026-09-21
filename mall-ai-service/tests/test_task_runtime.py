@@ -54,12 +54,17 @@ SESSION_ID = "synthetic-runtime-session"
 
 
 def test_executor_prompt_handles_unspecified_after_sales_draft_without_guessing_type() -> None:
-    assert RUNTIME_PROMPT_VERSION == "agent_runtime_v3_3"
+    assert RUNTIME_PROMPT_VERSION == "agent_runtime_v3_4"
     assert "verified 的 order_fact" in EXECUTOR_SYSTEM_PROMPT
     assert "不要猜测四种申请类型" in EXECUTOR_SYSTEM_PROMPT
     assert "仅引用 orderFactRef" in EXECUTOR_SYSTEM_PROMPT
     assert "不得直接选择 commit_after_sales_action" in EXECUTOR_SYSTEM_PROMPT
     assert "requiredInputKeys" in EXECUTOR_SYSTEM_PROMPT
+    assert "[决策与服务器终态]" in EXECUTOR_SYSTEM_PROMPT
+    assert "waiting_for_user" in EXECUTOR_SYSTEM_PROMPT
+    assert "ready_to_commit" in EXECUTOR_SYSTEM_PROMPT
+    assert "置为 completed" in EXECUTOR_SYSTEM_PROMPT
+    assert "停止为 blocked" in EXECUTOR_SYSTEM_PROMPT
 
 
 def _observation(
@@ -1311,7 +1316,14 @@ def test_spawn_subtask_creates_a_real_owner_scoped_task_without_gateway_write() 
 
     provider = ScriptedRuntimeProvider(
         decisions=[
-            _decision(name="spawn_subtask", summary="调查库存替代方案。"),
+            _decision(
+                name="spawn_subtask",
+                summary="调查库存替代方案。",
+                action_arguments={
+                    "goalCode": "inventory_alternatives",
+                    "requiredSkills": ["search_catalog"],
+                },
+            ),
             _decision(name="finish", summary="上级任务已记录后续调查安排。"),
         ]
     )

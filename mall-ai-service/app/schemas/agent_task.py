@@ -382,6 +382,18 @@ class ExecutorDecision(BaseModel):
             raise ValueError("澄清决策必须包含用户问题")
         if self.decision == "revise_plan" and not self.new_plan_nodes:
             raise ValueError("重规划必须包含新的计划节点")
+        if self.decision == "spawn_subtask" and not self.action_arguments:
+            raise ValueError("子任务决策必须包含受控 action_arguments")
+        if self.decision != "call_skill" and self.skill_calls:
+            raise ValueError("只有 call_skill 决策可以包含 skill_calls")
+        if self.decision != "revise_plan" and self.new_plan_nodes:
+            raise ValueError("只有 revise_plan 决策可以包含 new_plan_nodes")
+        if self.decision != "propose_action" and self.action_skill is not None:
+            raise ValueError("只有 propose_action 决策可以包含 action_skill")
+        if self.decision not in {"propose_action", "spawn_subtask"} and self.action_arguments:
+            raise ValueError("只有 propose_action 或 spawn_subtask 可以包含 action_arguments")
+        if self.decision != "ask_user" and self.user_question is not None:
+            raise ValueError("只有 ask_user 决策可以包含 user_question")
         return self
 
 

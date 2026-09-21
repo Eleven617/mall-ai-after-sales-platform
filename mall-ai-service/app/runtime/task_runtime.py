@@ -1028,6 +1028,7 @@ class TaskRuntime:
                 raise TaskRuntimeError("当前任务已达到子任务上限。", code="skill_call_budget_exhausted")
             if task.tool_calls >= task.execution_budget.max_tool_calls:
                 raise TaskRuntimeError("任务达到 Skill 调用预算。", code="tool_call_budget_exhausted")
+            self._validate_skill_arguments(skill.skill_id, decision.action_arguments)
         if decision.decision == "propose_action":
             if decision.action_skill is None:
                 raise TaskRuntimeError("行动提案缺少 Skill。", code="action_skill_missing")

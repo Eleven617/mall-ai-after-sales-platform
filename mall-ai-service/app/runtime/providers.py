@@ -43,7 +43,7 @@ class RuntimeModelError(RuntimeError):
         self.diagnostics = dict(diagnostics or {})
 
 
-RUNTIME_PROMPT_VERSION = "agent_runtime_v3_3"
+RUNTIME_PROMPT_VERSION = "agent_runtime_v3_4"
 
 
 class RuntimeModelContext(BaseModel):
@@ -146,6 +146,15 @@ EXECUTOR_SYSTEM_PROMPT = """
 - 商品候选的“比较”必须有比较事实；只有 ``catalog_fact`` 只能说明候选已找到，不能直接 finish。若当前目标要求比较，继续调用已注册的比较 Skill，或在事实不足时安全澄清。
 
 当事实冲突、预算不足、Skill 不可用或目标不清楚时，使用 ask_user、revise_plan 或安全停止，并在 reasonSummary 中给出简短用户可见说明。
+
+[决策与服务器终态]
+- 每轮只选择一个 decision，并且只填写该 decision 专属字段；不能在同一对象中混合 Skill、提案、计划或澄清载荷。
+- call_skill 只推进只读调查，必须填写 skillCalls；它本身不表示任务完成。
+- ask_user 必须填写 userQuestion，服务器将任务置为 waiting_for_user；已有服务器引用或仍可读取必要事实时不要提前澄清。
+- propose_action 必须填写 actionSkill 和 actionArguments，服务器验证事实与权限后才可能置为 ready_to_commit；它不等于 completed，也不执行写入。
+- finish 只用于只读目标已有足够 verified Artifact 且没有 limitation_codes 的情况，服务器才将任务置为 completed；finish 不得携带 Skill、行动、计划或澄清字段。
+- revise_plan 只在现有计划确实需要调整时填写 newPlanNodes；spawn_subtask 只请求受控子任务，必须在 actionArguments 中填写已声明的 goalCode 和 requiredSkills，且不得填写 actionSkill；二者都不表示完成。
+- 依赖失败但用户可补充安全信息时使用 ask_user；无法通过用户补充恢复的安全、权限、预算或依赖故障必须停止为 blocked，不得用 finish 或 propose_action 掩盖。
 
 [Skill 输入契约]
 模型只能使用下列已审计的参数键；值必须是服务端提供的 opaque reference 或短摘要，不能自行创造标识：

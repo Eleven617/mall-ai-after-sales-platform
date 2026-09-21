@@ -21,6 +21,27 @@ CHUNK_TWO = RetrievedChunk(
     text="Return instructions are given after approval.",
     distance=0.3,
 )
+CURRENT_RETURN_POLICY = RetrievedChunk(
+    chunk_id="policy-current-return",
+    document_name="policy",
+    section_path="policy > 七天无理由退货",
+    text="当前发布规则要求商品及包装保持完好，是否拆封不能单独决定结果。",
+    distance=0.1,
+)
+AFTER_WINDOW_POLICY = RetrievedChunk(
+    chunk_id="policy-after-window",
+    document_name="policy",
+    section_path="policy > 超过七天售后",
+    text="签收超过七天后，不再适用七天无理由退货；质量问题可按售后规则核验。",
+    distance=0.1,
+)
+REFUND_TIMING_POLICY = RetrievedChunk(
+    chunk_id="policy-refund-timing",
+    document_name="policy",
+    section_path="policy > 退款到账时间",
+    text="退款审核通过后原路退回，到账时间以支付渠道为准。",
+    distance=0.1,
+)
 
 
 class RagEvidenceVerifierTests(unittest.TestCase):
@@ -86,6 +107,58 @@ class RagEvidenceVerifierTests(unittest.TestCase):
         )
 
         self.assertEqual(["policy-two"], [chunk.chunk_id for chunk in verified])
+
+    def test_current_policy_can_answer_despite_user_recalling_an_old_rule(self) -> None:
+        def fake_json_generator(**kwargs):
+            self.assertIn("当前发布版本", kwargs["system_prompt"])
+            self.assertIn("以前客服", kwargs["message"])
+            return {"sufficient": True, "supporting_chunk_ids": ["policy-current-return"]}
+
+        verified = verify_policy_evidence(
+            "以前客服说拆封都能退，现在按当前规则还能退吗？",
+            [CURRENT_RETURN_POLICY],
+            json_generator=fake_json_generator,
+        )
+
+        self.assertEqual(["policy-current-return"], [chunk.chunk_id for chunk in verified])
+
+    def test_after_window_answer_uses_only_the_directly_applicable_section(self) -> None:
+        def fake_json_generator(**kwargs):
+            self.assertIn("最小且直接", kwargs["system_prompt"])
+            return {"sufficient": True, "supporting_chunk_ids": ["policy-after-window"]}
+
+        verified = verify_policy_evidence(
+            "签收第八天只是后悔了，还能按无理由退货吗？",
+            [CURRENT_RETURN_POLICY, AFTER_WINDOW_POLICY],
+            json_generator=fake_json_generator,
+        )
+
+        self.assertEqual(["policy-after-window"], [chunk.chunk_id for chunk in verified])
+
+    def test_refund_timing_does_not_support_cash_out_or_account_transfer(self) -> None:
+        def fake_json_generator(**kwargs):
+            self.assertIn("不能作为提现证据", kwargs["system_prompt"])
+            return {"sufficient": False, "supporting_chunk_ids": []}
+
+        verified = verify_policy_evidence(
+            "到货付款退货后能否提现或转到其他账户？",
+            [REFUND_TIMING_POLICY],
+            json_generator=fake_json_generator,
+        )
+
+        self.assertEqual([], verified)
+
+    def test_refund_timing_still_answers_a_normal_timing_question(self) -> None:
+        verified = verify_policy_evidence(
+            "退款审核通过后多久能到账？",
+            [REFUND_TIMING_POLICY],
+            json_generator=lambda **_kwargs: {
+                "sufficient": True,
+                "supporting_chunk_ids": ["policy-refund-timing"],
+            },
+        )
+
+        self.assertEqual(["policy-refund-timing"], [chunk.chunk_id for chunk in verified])
 
     def test_untrusted_policy_text_cannot_close_the_data_delimiter(self) -> None:
         malicious = CHUNK_ONE.model_copy(

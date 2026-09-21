@@ -59,6 +59,83 @@ class StructuredOutputGatewayTests(unittest.TestCase):
                 extra="forbid",
             )
 
+    def test_executor_decision_rejects_fields_owned_by_another_decision(self) -> None:
+        from app.schemas.agent_task import ExecutorDecision
+
+        invalid_payloads = [
+            {
+                "decision": "finish",
+                "reasonSummary": "只读目标完成。",
+                "skillCalls": [{"skill_id": "read_order", "arguments": {}}],
+            },
+            {
+                "decision": "ask_user",
+                "reasonSummary": "需要澄清。",
+                "userQuestion": "请补充必要信息。",
+                "actionSkill": "create_after_sales_draft",
+            },
+            {
+                "decision": "propose_action",
+                "reasonSummary": "形成待确认草案。",
+                "actionSkill": "create_after_sales_draft",
+                "actionArguments": {},
+                "userQuestion": "不应同时询问。",
+            },
+            {
+                "decision": "spawn_subtask",
+                "reasonSummary": "缺少受控子任务参数。",
+            },
+        ]
+
+        for payload in invalid_payloads:
+            with self.subTest(payload=payload["decision"]), self.assertRaises(Exception):
+                ExecutorDecision.model_validate(payload, strict=True, extra="forbid")
+
+    def test_executor_decision_accepts_each_terminal_shape_without_cross_fields(self) -> None:
+        from app.schemas.agent_task import ExecutorDecision
+
+        finish = ExecutorDecision.model_validate(
+            {"decision": "finish", "reasonSummary": "已根据核验事实完成只读答复。"},
+            strict=True,
+            extra="forbid",
+        )
+        waiting = ExecutorDecision.model_validate(
+            {
+                "decision": "ask_user",
+                "reasonSummary": "缺少用户可补充的信息。",
+                "userQuestion": "请补充必要信息。",
+            },
+            strict=True,
+            extra="forbid",
+        )
+        proposal = ExecutorDecision.model_validate(
+            {
+                "decision": "propose_action",
+                "reasonSummary": "基于核验事实形成待确认草案。",
+                "actionSkill": "create_after_sales_draft",
+                "actionArguments": {"orderFactRef": "fact-order-abcdefgh"},
+            },
+            strict=True,
+            extra="forbid",
+        )
+        subtask = ExecutorDecision.model_validate(
+            {
+                "decision": "spawn_subtask",
+                "reasonSummary": "创建受控只读调查子任务。",
+                "actionArguments": {
+                    "goalCode": "inventory_alternatives",
+                    "requiredSkills": ["search_catalog"],
+                },
+            },
+            strict=True,
+            extra="forbid",
+        )
+
+        self.assertEqual("finish", finish.decision)
+        self.assertEqual("ask_user", waiting.decision)
+        self.assertEqual("propose_action", proposal.decision)
+        self.assertEqual("spawn_subtask", subtask.decision)
+
     def test_json_object_parser_accepts_one_bounded_presentation_prefix(self) -> None:
         parsed = _extract_json_object(
             {"choices": [{"message": {"content": 'JSON: {"ok": true}'}}]}
