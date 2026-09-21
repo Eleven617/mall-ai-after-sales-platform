@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from app.schemas.agent_task import ResolutionCritique, TaskArtifact, TaskPlan
-from app.runtime.providers import RuntimeModelError, RuntimeModelProvider
+from app.runtime.providers import RuntimeModelProvider
 
 
 class ResolutionCritic:
@@ -38,9 +38,7 @@ class ResolutionCritic:
                 for artifact in artifacts[-12:]
             ],
         }
-        try:
-            return self._provider.critique(payload)
-        except RuntimeModelError:
-            # A critic outage must never convert an otherwise valid task into a
-            # false success or trigger a write. Keep the result explicitly absent.
-            return None
+        # The Task Runtime owns degradation policy. Propagate the safe typed
+        # error so it can record an explicit limitation instead of silently
+        # treating an unavailable critic as a successful no-op.
+        return self._provider.critique(payload)

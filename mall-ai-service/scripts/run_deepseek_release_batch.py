@@ -174,6 +174,26 @@ def _load_minimal_retest_plan(path: Path = MINIMAL_RETEST_PLAN_PATH) -> dict[str
         "reserveTokens": 12_000,
     }:
         raise ValueError("minimal retest budget is invalid")
+    budget_plan = plan.get("budgetPlan")
+    if not isinstance(budget_plan, dict):
+        raise ValueError("minimal retest budget plan is missing")
+    stages = budget_plan.get("stages")
+    if not isinstance(stages, list) or [item.get("name") for item in stages] != [
+        "main",
+        "supplemental_v3",
+        "grounding",
+        "showcase",
+    ]:
+        raise ValueError("minimal retest stage budget plan is invalid")
+    planned_attempts = sum(int(item.get("providerHttpAttempts", -1)) for item in stages)
+    planned_tokens = sum(int(item.get("tokens", -1)) for item in stages)
+    if (
+        planned_attempts != int(budget_plan.get("plannedMaximumProviderHttpAttempts", -1))
+        or planned_tokens != int(budget_plan.get("plannedMaximumTokens", -1))
+        or planned_attempts > int(budget["maxProviderHttpAttempts"])
+        or planned_tokens > int(budget["maxTotalTokens"])
+    ):
+        raise ValueError("minimal retest planned budget exceeds the shared hard limit")
     return plan
 
 
@@ -642,23 +662,21 @@ def _run_portfolio_b(ledger: dict[str, object], report_dir: Path) -> dict[str, o
 
 
 def _run_minimal_retest(ledger: dict[str, object], report_dir: Path) -> dict[str, object]:
-    """Run the reviewed 11-case retest and three live chains exactly once."""
+    """Run 11 reviewed cases first; capture showcase only after all pass."""
 
     plan = _load_minimal_retest_plan()
     suites = plan["suites"]
     assert isinstance(suites, dict)
-    first = _run_portfolio_showcase(ledger, report_dir)
-    reports: dict[str, object] = dict(first)
-    reports.pop("status", None)
+    reports: dict[str, object] = {}
     reports["retestPlan"] = {
         "schemaVersion": plan["schemaVersion"],
         "sha256": _sha256(MINIMAL_RETEST_PLAN_PATH),
         "evaluationCases": plan["expectedEvaluationCases"],
         "showcaseChains": plan["expectedShowcaseChains"],
         "requiredRuns": plan["requiredRuns"],
+        "executionOrder": ["main", "supplemental_v3", "grounding", "showcase"],
+        "budgetPlan": plan["budgetPlan"],
     }
-    if first.get("status") != "passed":
-        return {"status": first.get("status", "failed"), **reports}
 
     selected_reports: list[dict[str, object]] = []
     for report_name, suite_path in (("main", DEFAULT_SUITE_PATH), ("supplemental", HOLDOUT_SUITE_PATH)):
@@ -689,6 +707,10 @@ def _run_minimal_retest(ledger: dict[str, object], report_dir: Path) -> dict[str
             ledger["status"] = "failed"
             ledger["failureCategory"] = "ledger_mismatch"
             return {"status": "failed", "failureCategory": "ledger_mismatch", **reports}
+        if int(ledger.get("providerFailures", 0) or 0) > 0:
+            ledger["status"] = "failed"
+            ledger["failureCategory"] = "provider_failure"
+            return {"status": "failed", "failureCategory": "provider_failure", **reports}
         if _budget_exceeded(ledger):
             ledger["status"] = "budget_exhausted"
             ledger["failureCategory"] = "budget_exhausted"
@@ -721,6 +743,10 @@ def _run_minimal_retest(ledger: dict[str, object], report_dir: Path) -> dict[str
         ledger["status"] = "failed"
         ledger["failureCategory"] = "ledger_mismatch"
         return {"status": "failed", "failureCategory": "ledger_mismatch", **reports}
+    if int(ledger.get("providerFailures", 0) or 0) > 0:
+        ledger["status"] = "failed"
+        ledger["failureCategory"] = "provider_failure"
+        return {"status": "failed", "failureCategory": "provider_failure", **reports}
     statuses = {str(report.get("status")) for report in selected_reports}
     if "environment_blocked" in statuses:
         overall = "environment_blocked"
@@ -730,7 +756,9 @@ def _run_minimal_retest(ledger: dict[str, object], report_dir: Path) -> dict[str
     elif statuses & {"failed", "quality_failed"}:
         overall = "failed"
     else:
-        overall = "passed"
+        showcase = _run_portfolio_showcase(ledger, report_dir)
+        reports.update({key: value for key, value in showcase.items() if key != "status"})
+        overall = str(showcase.get("status", "failed"))
     ledger["status"] = overall
     ledger["endedAt"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
     return {"status": overall, **reports}

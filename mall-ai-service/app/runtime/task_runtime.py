@@ -774,30 +774,24 @@ class TaskRuntime:
                 )
                 try:
                     self._refresh_context(bundle, discovered, deadline_at=deadline_at)
-                    if bundle.artifacts and self._critic.should_trigger(
-                        artifacts=bundle.artifacts,
-                        skill_calls=task.tool_calls,
-                        has_action=False,
-                        has_conflict=self._has_conflict(bundle),
-                    ):
-                        self._maybe_critic(bundle, deadline_at=deadline_at)
                 except RuntimeModelError as exc:
-                    failure_code = (
-                        "runtime_deadline_exceeded"
-                        if self._remaining_seconds(deadline_at) <= 0 or exc.category == "runtime_deadline_exceeded"
-                        else f"model_{exc.category}"
-                    )
-                    self._block(bundle, failure_code, "任务上下文服务暂时不可用，已安全停止；未执行业务写入。")
-                    record_trace(
-                        "task_runtime",
-                        "context_unavailable",
-                        task.task_ref,
-                        role=exc.role,
-                        result_kind="blocked",
-                        error_category=exc.category,
-                        **exc.diagnostics,
-                    )
-                    break
+                    if self._auxiliary_failure_must_block(exc, deadline_at):
+                        self._block_auxiliary_failure(bundle, exc, deadline_at)
+                        break
+                    self._record_auxiliary_degradation(bundle, exc)
+                if bundle.artifacts and self._critic.should_trigger(
+                    artifacts=bundle.artifacts,
+                    skill_calls=task.tool_calls,
+                    has_action=False,
+                    has_conflict=self._has_conflict(bundle),
+                ):
+                    try:
+                        self._maybe_critic(bundle, deadline_at=deadline_at)
+                    except RuntimeModelError as exc:
+                        if self._auxiliary_failure_must_block(exc, deadline_at):
+                            self._block_auxiliary_failure(bundle, exc, deadline_at)
+                            break
+                        self._record_auxiliary_degradation(bundle, exc)
                 self._save(bundle)
                 conditional_draft = self._conditional_draft_for_insufficient_policy_evidence(
                     bundle,
@@ -1105,11 +1099,19 @@ class TaskRuntime:
                     "商品比较尚未完成候选搜索和规格对比。",
                     code="catalog_comparison_incomplete",
                 )
-        if decision.decision == "finish" and task.limitation_codes:
+        if decision.decision == "finish" and self._has_blocking_limitation(task.limitation_codes):
             raise TaskRuntimeError(
                 "当前任务存在未解决的 Skill 或事实失败，不能宣称完成。",
                 code="finish_after_dependency_failure",
             )
+
+    @staticmethod
+    def _has_blocking_limitation(limitation_codes: list[str]) -> bool:
+        advisory = {
+            "context_curator_unavailable",
+            "resolution_critic_unavailable",
+        }
+        return any(code not in advisory for code in limitation_codes)
 
     @staticmethod
     def _requires_catalog_comparison(goal: str) -> bool:
@@ -1525,23 +1527,97 @@ class TaskRuntime:
         remaining = self._remaining_seconds(deadline_at) if deadline_at is not None else settings.context_timeout_seconds
         if remaining <= 0:
             raise RuntimeModelError("任务运行时间达到安全上限。", role="context_curator", category="runtime_deadline_exceeded")
-        with capture_llm_metrics(
-            timeout_seconds=min(settings.context_timeout_seconds, remaining),
-            max_attempts=1,
-        ):
-            pack = self._curator.build_pack(
-                task=bundle.task,
-                plan=plan,
-                artifacts=bundle.artifacts[-24:],
-                memory_hints=bundle.memory_hints[-8:],
-                available_skills=[skill.skill_id for skill in discovered],
-            )
+        curator_arguments = {
+            "task": bundle.task,
+            "plan": plan,
+            "artifacts": bundle.artifacts[-24:],
+            "memory_hints": bundle.memory_hints[-8:],
+            "available_skills": [skill.skill_id for skill in discovered],
+        }
+        try:
+            with capture_llm_metrics(
+                timeout_seconds=min(settings.context_timeout_seconds, remaining),
+                max_attempts=1,
+            ):
+                pack = self._curator.build_pack(**curator_arguments)
+        except RuntimeModelError:
+            pack = self._curator.build_pack(**curator_arguments, use_provider=False)
+            bundle.context_packs.append(pack)
+            bundle.task.context_model_calls += 1
+            bundle.task.context_pack_ref = pack.pack_id
+            bundle.task.working_memory_ref = pack.pack_id
+            bundle.memory_hints.extend(pack.memory_hints[-4:])
+            raise
         bundle.context_packs.append(pack)
         bundle.task.context_model_calls += 1
         bundle.task.context_pack_ref = pack.pack_id
         bundle.task.working_memory_ref = pack.pack_id
         bundle.memory_hints.extend(pack.memory_hints[-4:])
         return pack
+
+    def _auxiliary_failure_must_block(
+        self,
+        exc: RuntimeModelError,
+        deadline_at: float | None,
+    ) -> bool:
+        if deadline_at is not None and self._remaining_seconds(deadline_at) <= 0:
+            return True
+        return exc.category in {
+            "runtime_deadline_exceeded",
+            "budget_exhausted",
+            "ledger_malformed",
+            "missing_configuration",
+            "provider_http",
+        }
+
+    def _block_auxiliary_failure(
+        self,
+        bundle: TaskRecordBundle,
+        exc: RuntimeModelError,
+        deadline_at: float | None,
+    ) -> None:
+        failure_code = (
+            "runtime_deadline_exceeded"
+            if deadline_at is not None and self._remaining_seconds(deadline_at) <= 0
+            else f"model_{exc.category}"
+        )
+        self._block(
+            bundle,
+            failure_code,
+            "任务辅助模型遇到不可降级的基础设施错误，已安全停止；未执行业务写入。",
+        )
+        record_trace(
+            "task_runtime",
+            "auxiliary_model_unavailable",
+            bundle.task.task_ref,
+            role=exc.role,
+            result_kind="blocked",
+            error_category=exc.category,
+            **exc.diagnostics,
+        )
+
+    def _record_auxiliary_degradation(
+        self,
+        bundle: TaskRecordBundle,
+        exc: RuntimeModelError,
+    ) -> None:
+        limitation = f"{exc.role}_unavailable"
+        if limitation not in bundle.task.limitation_codes:
+            bundle.task.limitation_codes.append(limitation)
+        self._append_event(
+            bundle,
+            "plan_updated",
+            "辅助分析暂不可用；继续使用已经核验的事实和服务端合同。",
+        )
+        record_trace(
+            "task_runtime",
+            "auxiliary_model_degraded",
+            bundle.task.task_ref,
+            role=exc.role,
+            result_kind="degraded",
+            error_category=exc.category,
+            **exc.diagnostics,
+        )
 
     def _maybe_critic(self, bundle: TaskRecordBundle, *, deadline_at: float | None = None) -> None:
         plan = bundle.latest_plan()

@@ -218,6 +218,16 @@ def run_real_local_showcase(
                             status_readback=failure.status_readback,
                         )
                         return _showcase_failure(batch_id, started, chain_results, frame_paths, failure, frame_groups)
+                    capture_session_id = result.pop("_captureSessionId", None)
+                    if not isinstance(capture_session_id, str):
+                        failure = ShowcaseError(
+                            "browser_capture_failed",
+                            scenario=scenario,
+                            stage="capture_context",
+                        )
+                        return _showcase_failure(
+                            batch_id, started, chain_results, frame_paths, failure, frame_groups
+                        )
                     chain_results.append(result)
                     provider_usage = _provider_usage(batch_id)
                     failure = _provider_failure_after_scenario(
@@ -252,6 +262,8 @@ def run_real_local_showcase(
                         account_a.username,
                         report_dir / "browser",
                         scenario,
+                        capture_session_id,
+                        _capture_expected_markers(scenario),
                     )
                     frame_groups[scenario] = captured
                     frame_paths.extend(captured["frames"])
@@ -398,15 +410,28 @@ def _provider_failure_after_scenario(
 
 
 def _cross_scenario_frames_distinct(frame_groups: dict[str, dict[str, Any]]) -> bool:
-    """Reject reused same-stage frames across supposedly independent chains."""
+    """Reject reuse of scenario-specific final task cards.
+
+    Goal and evidence projections may legitimately match after public DTO
+    redaction. The final task card must still reflect each scenario's own
+    status and therefore cannot be reused across independent chains.
+    """
 
     if len(frame_groups) != 3:
         return False
-    groups = list(frame_groups.values())
-    hashes_by_stage = list(zip(*(group.get("hashes", []) for group in groups)))
-    if len(hashes_by_stage) != 4:
+    status_hashes: list[str] = []
+    for group in frame_groups.values():
+        stages = group.get("stages")
+        hashes = group.get("hashes")
+        if not isinstance(stages, list) or not isinstance(hashes, list) or len(stages) != len(hashes):
+            return False
+        try:
+            status_hashes.append(str(hashes[stages.index("status")]))
+        except ValueError:
+            return False
+    if len(status_hashes) != 3:
         return False
-    return all(len(set(stage_hashes)) == len(groups) for stage_hashes in hashes_by_stage)
+    return len(set(status_hashes)) == len(status_hashes)
 
 
 def _aggregate_showcase_metrics(chains: list[dict[str, Any]]) -> dict[str, Any]:
@@ -448,6 +473,7 @@ def _agent_closed_loop(
     """Open-task Agent -> proposal -> confirmation -> Java status readback."""
 
     session_id = str(uuid.uuid4())
+    _create_customer_conversation(client, api_base, auth_a, session_id)
     before = _list_applications(client, api_base, auth_a)
     created = _create_agent_task(
         client,
@@ -550,6 +576,7 @@ def _agent_closed_loop(
         "statusReadback": True,
         "duplicateConfirmationWrites": 0,
         "crossAccountLeakage": 0,
+        "_captureSessionId": session_id,
         **_safe_task_metrics(amended, _list_agent_events(client, api_base, auth_a, task_ref)),
     }
 
@@ -563,6 +590,7 @@ def _agent_pause_resume(
     """Persist a waiting task, restart FastAPI, and resume the same task."""
 
     session_id = str(uuid.uuid4())
+    _create_customer_conversation(client, api_base, auth, session_id)
     waiting = _create_agent_task(client, api_base, auth, session_id, "查询订单物流")
     task_ref = waiting.get("task_ref")
     if waiting.get("status") != "waiting_for_user" or not waiting.get("open_question") or not isinstance(task_ref, str):
@@ -594,6 +622,7 @@ def _agent_pause_resume(
         "javaFactsAfterResume": True,
         "businessWrites": 0,
         "statusReadback": True,
+        "_captureSessionId": session_id,
     }
 
 
@@ -609,6 +638,7 @@ def _agent_fact_change_replan(
     """Invalidate a proposal through a real Java fact transition."""
 
     session_id = str(uuid.uuid4())
+    _create_customer_conversation(client, api_base, auth, session_id)
     before = _list_applications(client, api_base, auth)
     created = _create_agent_task(
         client,
@@ -660,7 +690,29 @@ def _agent_fact_change_replan(
         "recheckOrHandoffObserved": True,
         "businessWritesForStaleProposal": 0,
         "statusReadback": True,
+        "_captureSessionId": session_id,
     }
+
+
+def _create_customer_conversation(
+    client: httpx.Client,
+    api_base: str,
+    auth: str,
+    session_id: str,
+) -> None:
+    try:
+        response = client.post(
+            f"{api_base}/customer-service/conversations/{session_id}",
+            headers={"Authorization": auth},
+        )
+    except httpx.HTTPError as exc:
+        raise ShowcaseError("conversation_create_failed", stage="fixture") from exc
+    if response.status_code not in {200, 201, 409}:
+        raise ShowcaseError(
+            "conversation_create_failed",
+            stage="fixture",
+            http_status_class=_status_class(response.status_code),
+        )
 
 
 def _create_agent_task(client: httpx.Client, api_base: str, auth: str, session_id: str, goal: str) -> dict[str, Any]:
@@ -913,22 +965,19 @@ def _capture_chain_frames(
     customer_username: str,
     directory: Path,
     scenario: str,
+    conversation_id: str,
+    expected_markers: tuple[str, ...],
 ) -> dict[str, Any]:
-    """Capture four real role surfaces after each completed chain.
-
-    The frames are taken from the running Vue application, not generated or
-    painted by the verifier.  Different role surfaces make adjacent hashes
-    useful evidence while keeping all data synthetic and public-safe.
-    """
+    """Capture four regions from the exact scenario conversation and task."""
 
     directory.mkdir(parents=True, exist_ok=True)
     old_username = os.environ.get("MALL_FIELD_BROWSER_CUSTOMER_USER")
     os.environ["MALL_FIELD_BROWSER_CUSTOMER_USER"] = customer_username
     frame_specs = (
-        ("customer", "goal"),
-        ("operations", "evidence"),
-        ("service_operations", "handoff"),
-        ("customer", "status"),
+        ("goal", ".agent-task-card .agent-task-heading"),
+        ("evidence", ".agent-task-card .agent-artifact-list"),
+        ("progress", ".agent-task-card .agent-plan-list"),
+        ("status", ".agent-task-card"),
     )
     paths: list[str] = []
     hashes: list[str] = []
@@ -936,12 +985,15 @@ def _capture_chain_frames(
         from field_browser_support import BrowserSession
 
         with BrowserSession(password=password, evidence_dir=directory) as browser:
-            for route, stage in frame_specs:
-                browser.open_route(route)
+            browser.open_customer_conversation(
+                conversation_id,
+                expected_markers=expected_markers,
+            )
+            for stage, selector in frame_specs:
                 browser.assert_ready()
                 browser.assert_safe_public_text()
                 target = directory / f"{scenario}-{stage}.png"
-                browser.screenshot(target)
+                browser.screenshot(target, selector=selector)
                 if not target.is_file() or target.stat().st_size < 1024:
                     return {"frames": paths, "hashes": hashes, "valid": False, "frameCount": len(paths)}
                 digest = hashlib.sha256(target.read_bytes()).hexdigest()
@@ -958,10 +1010,19 @@ def _capture_chain_frames(
     return {
         "frames": paths,
         "hashes": hashes,
+        "stages": [stage for stage, _selector in frame_specs],
         "valid": len(paths) == 4 and adjacent_distinct,
         "frameCount": len(paths),
         "adjacentDistinct": adjacent_distinct,
     }
+
+
+def _capture_expected_markers(scenario: str) -> tuple[str, ...]:
+    return {
+        "main_open_task_closed_loop": ("申请取消退款", "已完成"),
+        "clarify_pause_resume": ("查询订单物流",),
+        "fact_change_replan": ("申请取消退款", "当前无法继续"),
+    }.get(scenario, ())
 
 
 def _build_offline_gifs(frame_groups: dict[str, dict[str, Any]], directory: Path) -> list[str]:

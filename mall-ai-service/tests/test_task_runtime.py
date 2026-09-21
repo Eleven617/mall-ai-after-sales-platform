@@ -558,6 +558,105 @@ def test_model_failure_safely_blocks_before_any_skill_or_action() -> None:
     assert gateway.commits == []
 
 
+def test_context_curator_network_failure_degrades_without_losing_verified_fact() -> None:
+    class Provider:
+        def __init__(self):
+            self.decisions = [
+                _decision(
+                    name="call_skill",
+                    summary="读取订单事实。",
+                    calls=[SkillCall(skill_id="read_order", arguments={"orderRef": "ref-order-alpha"})],
+                ),
+                _decision(name="finish", summary="已使用核验事实完成只读结论。"),
+            ]
+
+        def decide(self, _context):
+            return self.decisions.pop(0)
+
+        def curate(self, _context):
+            raise RuntimeModelError("synthetic network", role="context_curator", category="network")
+
+        def critique(self, _context):
+            raise AssertionError("critic should not run")
+
+    runtime = _runtime(Provider(), RecordingGateway({"read_order": _observation()}))
+    with capture_safe_traces() as traces:
+        result = runtime.create_task(
+            session_id=SESSION_ID,
+            goal="查询合成订单",
+            member_id=MEMBER_ID,
+            authorization=AUTHORIZATION,
+        )
+
+    assert result.view.status == "completed"
+    assert "context_curator_unavailable" in result.view.limitation_codes
+    assert result.view.artifacts[0].factuality == "verified"
+    degraded = [item for item in traces.events if item.event == "auxiliary_model_degraded"]
+    assert degraded[-1].details["role"] == "context_curator"
+    assert degraded[-1].details["error_category"] == "network"
+
+
+def test_resolution_critic_timeout_is_visible_but_advisory() -> None:
+    provider = ScriptedRuntimeProvider(
+        decisions=[
+            _decision(
+                name="call_skill",
+                summary="读取订单事实。",
+                calls=[SkillCall(skill_id="read_order", arguments={"orderRef": "ref-order-alpha"})],
+            ),
+            _decision(name="finish", summary="已使用核验事实完成只读结论。"),
+        ]
+    )
+    runtime = _runtime(provider, RecordingGateway({"read_order": _observation()}))
+    runtime._critic.should_trigger = lambda **_kwargs: True  # noqa: SLF001
+    runtime._critic.evaluate = lambda **_kwargs: (_ for _ in ()).throw(  # noqa: SLF001
+        RuntimeModelError("synthetic timeout", role="resolution_critic", category="timeout")
+    )
+
+    result = runtime.create_task(
+        session_id=SESSION_ID,
+        goal="查询合成订单",
+        member_id=MEMBER_ID,
+        authorization=AUTHORIZATION,
+    )
+
+    assert result.view.status == "completed"
+    assert "resolution_critic_unavailable" in result.view.limitation_codes
+
+
+def test_auxiliary_ledger_failure_remains_fail_closed() -> None:
+    class Provider:
+        def __init__(self):
+            self.decisions = [
+                _decision(
+                    name="call_skill",
+                    summary="读取订单事实。",
+                    calls=[SkillCall(skill_id="read_order", arguments={"orderRef": "ref-order-alpha"})],
+                )
+            ]
+
+        def decide(self, _context):
+            return self.decisions.pop(0)
+
+        def curate(self, _context):
+            raise RuntimeModelError("synthetic ledger", role="context_curator", category="ledger_malformed")
+
+        def critique(self, _context):
+            raise AssertionError("critic should not run")
+
+    result = _runtime(
+        Provider(), RecordingGateway({"read_order": _observation()})
+    ).create_task(
+        session_id=SESSION_ID,
+        goal="查询合成订单",
+        member_id=MEMBER_ID,
+        authorization=AUTHORIZATION,
+    )
+
+    assert result.view.status == "blocked"
+    assert "model_ledger_malformed" in result.view.limitation_codes
+
+
 def test_runtime_deadline_is_capped_at_240_seconds() -> None:
     with pytest.raises(ValidationError):
         TaskExecutionBudget(max_wall_clock_seconds=241)

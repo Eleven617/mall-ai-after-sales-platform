@@ -41,12 +41,13 @@ from scripts.run_deepseek_release_batch import (
 
 class _FakeProviderHandler(BaseHTTPRequestHandler):
     calls = 0
+    failure_call: int | None = 4
 
     def do_POST(self) -> None:  # noqa: N802 - stdlib handler API
         type(self).calls += 1
         length = int(self.headers.get("content-length", "0"))
         self.rfile.read(length)
-        if type(self).calls == 4:
+        if type(self).failure_call == type(self).calls:
             self.send_response(503)
             self.end_headers()
             return
@@ -74,6 +75,9 @@ class ReleaseLedgerTests(unittest.TestCase):
         self.assertEqual(3, plan["expectedShowcaseChains"])
         self.assertEqual(80, plan["budget"]["maxProviderHttpAttempts"])
         self.assertEqual(200_000, plan["budget"]["maxTotalTokens"])
+        self.assertEqual(80, plan["budgetPlan"]["plannedMaximumProviderHttpAttempts"])
+        self.assertEqual(198_000, plan["budgetPlan"]["plannedMaximumTokens"])
+        self.assertEqual(2_000, plan["budgetPlan"]["tokenHeadroom"])
 
     def test_minimal_retest_executes_only_reviewed_cases_once(self) -> None:
         agent_reports = [
@@ -90,7 +94,7 @@ class ReleaseLedgerTests(unittest.TestCase):
             batch_runner,
             "_run_portfolio_showcase",
             return_value={"status": "passed", "realLocalShowcase": {"status": "passed"}},
-        ), patch.object(
+        ) as showcase_run, patch.object(
             batch_runner,
             "run_live_model_agent_evaluation",
             side_effect=agent_reports,
@@ -126,6 +130,38 @@ class ReleaseLedgerTests(unittest.TestCase):
             grounding_run.call_args.kwargs["case_ids"],
         )
         self.assertEqual(1, grounding_run.call_args.kwargs["max_attempts"])
+        showcase_run.assert_called_once()
+        self.assertEqual(
+            ["main", "supplemental_v3", "grounding", "showcase"],
+            result["retestPlan"]["executionOrder"],
+        )
+
+    def test_minimal_retest_quality_failure_skips_showcase_after_collecting_targets(self) -> None:
+        agent_reports = [
+            {"status": "quality_failed", "failed": 1, "environmentBlocked": 0, "toolCalls": 1, "uniqueCases": 4, "requiredRunsPerCase": 1},
+            {"status": "passed", "failed": 0, "environmentBlocked": 0, "toolCalls": 1, "uniqueCases": 3, "requiredRunsPerCase": 1},
+        ]
+        grounding_report = {"status": "passed", "quality_failed_cases": 0, "environment_blocked_cases": 0}
+        ledger: dict[str, object] = {"batchId": "minimal-quality", "runtimeCommit": "a" * 40}
+        with TemporaryDirectory() as directory, patch.object(
+            batch_runner, "_run_portfolio_showcase"
+        ) as showcase_run, patch.object(
+            batch_runner, "run_live_model_agent_evaluation", side_effect=agent_reports
+        ) as agent_run, patch.object(
+            batch_runner,
+            "load_rag2_golden_suite",
+            return_value={"schema_version": "1", "suite_version": "fixture", "cases": [], "injection_fixtures": []},
+        ), patch.object(
+            batch_runner, "evaluate_grounded_answer_suite", return_value=grounding_report
+        ) as grounding_run, patch.object(
+            batch_runner, "_sync_process_ledger", return_value=True
+        ), patch.object(batch_runner, "_budget_exceeded", return_value=False):
+            result = batch_runner._run_minimal_retest(ledger, Path(directory))
+
+        self.assertEqual("failed", result["status"])
+        self.assertEqual(2, agent_run.call_count)
+        grounding_run.assert_called_once()
+        showcase_run.assert_not_called()
 
     def test_release_lock_create_is_exclusive_and_final_update_is_atomic(self) -> None:
         with TemporaryDirectory() as directory:
@@ -139,6 +175,7 @@ class ReleaseLedgerTests(unittest.TestCase):
 
     def test_local_fake_provider_records_three_successes_and_one_failure(self) -> None:
         _FakeProviderHandler.calls = 0
+        _FakeProviderHandler.failure_call = 4
         server = ThreadingHTTPServer(("127.0.0.1", 0), _FakeProviderHandler)
         thread = threading.Thread(target=server.serve_forever, daemon=True)
         thread.start()
@@ -175,11 +212,129 @@ class ReleaseLedgerTests(unittest.TestCase):
                 self.assertEqual(0, summary["scenarioFailures"])
                 self.assertEqual(0, summary["testFailures"])
                 self.assertEqual(15, summary["totalTokens"])
+                reservations = {
+                    event["reservationId"]
+                    for event in events
+                    if event["eventType"] == "provider_reservation"
+                }
+                settlements = {
+                    event["reservationId"]
+                    for event in events
+                    if event["eventType"] == "provider_reservation_settlement"
+                }
+                self.assertEqual(reservations, settlements)
                 for event in events:
                     self.assertNotIn("prompt", event)
                     self.assertNotIn("messages", event)
                     self.assertNotIn("reasoning", event)
                     self.assertEqual("fake-batch", event["batchId"])
+        finally:
+            server.shutdown()
+            server.server_close()
+            thread.join(timeout=2)
+
+    def test_minimal_retest_entry_rehearses_order_and_shared_ledger_offline(self) -> None:
+        _FakeProviderHandler.calls = 0
+        _FakeProviderHandler.failure_call = None
+        server = ThreadingHTTPServer(("127.0.0.1", 0), _FakeProviderHandler)
+        thread = threading.Thread(target=server.serve_forever, daemon=True)
+        thread.start()
+        stage_order: list[str] = []
+        try:
+            with TemporaryDirectory() as directory:
+                root = Path(directory)
+                ledger_path = root / "ledger.jsonl"
+                ledger_path.touch()
+                ledger: dict[str, object] = {
+                    "batchId": "offline-minimal-rehearsal",
+                    "runtimeCommit": "a" * 40,
+                }
+                fake_settings = SimpleNamespace(
+                    deepseek_api_key="fixture-only",
+                    deepseek_model="deepseek-flash",
+                    deepseek_base_url=f"http://127.0.0.1:{server.server_port}",
+                    deepseek_timeout_seconds=2.0,
+                )
+
+                def run_agent(*, case_ids: set[str], suite_path: Path, **_kwargs: object) -> dict[str, object]:
+                    stage_order.append("main" if "agent-open-003" in case_ids else "supplemental_v3")
+                    for case_id in sorted(case_ids):
+                        self.assertEqual("synthetic answer", generate_text(f"fixture {case_id}"))
+                    return {
+                        "status": "passed",
+                        "failed": 0,
+                        "environmentBlocked": 0,
+                        "toolCalls": len(case_ids),
+                        "uniqueCases": len(case_ids),
+                        "requiredRunsPerCase": 1,
+                        "suitePath": str(suite_path),
+                    }
+
+                def run_grounding(_suite: object, *, case_ids: set[str], **_kwargs: object) -> dict[str, object]:
+                    stage_order.append("grounding")
+                    for case_id in sorted(case_ids):
+                        self.assertEqual("synthetic answer", generate_text(f"fixture {case_id}"))
+                    return {"status": "passed", "quality_failed_cases": 0, "environment_blocked_cases": 0}
+
+                def run_showcase(_ledger: dict[str, object], _report_dir: Path) -> dict[str, object]:
+                    stage_order.append("showcase")
+                    for scenario in ("main", "pause_resume", "fact_change"):
+                        self.assertEqual("synthetic answer", generate_text(f"fixture {scenario}"))
+                    return {"status": "passed", "realLocalShowcase": {"status": "passed"}}
+
+                budget_env = {
+                    "MALL_RELEASE_LEDGER_PATH": str(ledger_path),
+                    "MALL_RELEASE_MAX_PROVIDER_HTTP_ATTEMPTS": "80",
+                    "MALL_RELEASE_MAX_TOTAL_TOKENS": "200000",
+                    "MALL_RELEASE_RESERVE_TOKENS": "12000",
+                    "MALL_RUNTIME_COMMIT": "a" * 40,
+                }
+                with patch.dict(os.environ, budget_env, clear=False), patch(
+                    "app.services.llm_service.settings", fake_settings
+                ), release_ledger_context(
+                    batch_id="offline-minimal-rehearsal", path=ledger_path, source="offline_rehearsal"
+                ), provider_access_context(
+                    mode="mock",
+                    release_id="offline-rehearsal",
+                    batch_id="offline-minimal-rehearsal",
+                    ledger_path=str(ledger_path),
+                    runtime_commit="a" * 40,
+                    authorized=True,
+                    allow_mock=True,
+                ), capture_llm_metrics(max_attempts=1, timeout_seconds=2.0), patch.object(
+                    batch_runner, "run_live_model_agent_evaluation", side_effect=run_agent
+                ), patch.object(
+                    batch_runner,
+                    "load_rag2_golden_suite",
+                    return_value={"schema_version": "1", "suite_version": "fixture", "cases": [], "injection_fixtures": []},
+                ), patch.object(
+                    batch_runner, "evaluate_grounded_answer_suite", side_effect=run_grounding
+                ), patch.object(batch_runner, "_run_portfolio_showcase", side_effect=run_showcase):
+                    result = batch_runner._run_minimal_retest(ledger, root / "artifacts")
+
+                events = read_release_events(ledger_path, batch_id="offline-minimal-rehearsal")
+                summary = summarize_release_events(events)
+                reservations = {
+                    event["reservationId"]
+                    for event in events
+                    if event["eventType"] == "provider_reservation"
+                }
+                settlements = {
+                    event["reservationId"]
+                    for event in events
+                    if event["eventType"] == "provider_reservation_settlement"
+                }
+
+                self.assertEqual("passed", result["status"])
+                self.assertEqual(["main", "supplemental_v3", "grounding", "showcase"], stage_order)
+                self.assertEqual(14, summary["providerRequests"])
+                self.assertEqual(14, summary["providerHttpAttempts"])
+                self.assertEqual(14, summary["providerSuccesses"])
+                self.assertEqual(0, summary["providerFailures"])
+                self.assertEqual(70, summary["totalTokens"])
+                self.assertEqual(reservations, settlements)
+                self.assertEqual(14, len(reservations))
+                self.assertTrue(ledger["ledgerReconciled"])
         finally:
             server.shutdown()
             server.server_close()

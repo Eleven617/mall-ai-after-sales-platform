@@ -67,13 +67,29 @@ class _Page:
             time.sleep(0.25)
         raise TimeoutError("page_condition_timeout")
 
-    def screenshot(self, path: Path) -> None:
+    def screenshot(self, path: Path, *, selector: str | None = None) -> None:
         metrics = self.command("Page.getLayoutMetrics")
         size = metrics.get("contentSize", {})
         width = min(max(int(size.get("width", 1440)), 960), 2200)
         height = min(max(int(size.get("height", 1000)), 720), 1200)
         self.command("Emulation.setDeviceMetricsOverride", {"width": width, "height": height, "deviceScaleFactor": 1, "mobile": False})
-        shot = self.command("Page.captureScreenshot", {"format": "png", "captureBeyondViewport": True, "fromSurface": True})
+        params: dict[str, Any] = {
+            "format": "png",
+            "captureBeyondViewport": True,
+            "fromSurface": True,
+        }
+        if selector is not None:
+            rect = self.evaluate(
+                "(function(){const el=document.querySelector(%s); if(!el)return null; "
+                "el.scrollIntoView({block:'center'}); const r=el.getBoundingClientRect(); "
+                "return {x:Math.max(0,r.left+scrollX-12),y:Math.max(0,r.top+scrollY-12),"
+                "width:Math.max(1,r.width+24),height:Math.max(1,r.height+24)};})()"
+                % json.dumps(selector)
+            )
+            if not isinstance(rect, dict):
+                raise RuntimeError("screenshot_target_missing")
+            params["clip"] = {**rect, "scale": 1}
+        shot = self.command("Page.captureScreenshot", params)
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_bytes(base64.b64decode(shot["data"]))
 
@@ -211,10 +227,37 @@ class BrowserSession:
         elif scenario in {"sse_reconnect", "refresh_recovery"}:
             self.page.wait_for("!!document.querySelector('textarea, input, button')")
 
-    def screenshot(self, path: Path) -> None:
+    def open_customer_conversation(
+        self,
+        conversation_id: str,
+        *,
+        expected_markers: tuple[str, ...],
+    ) -> None:
+        """Bind the customer page to the exact synthetic scenario session."""
+
+        self.open_route("customer")
         if self.page is None:
             raise RuntimeError("browser_page_unavailable")
-        self.page.screenshot(path)
+        bound = self.page.evaluate(
+            "(function(){try{const member=JSON.parse(sessionStorage.getItem('mall-ai-web:member-profile')||'null');"
+            "if(!member||!Number.isInteger(member.member_id))return false;"
+            "localStorage.setItem('mall-ai-web:active-conversation:'+member.member_id,%s);return true;}catch{return false;}})()"
+            % json.dumps(conversation_id)
+        )
+        if bound is not True:
+            raise RuntimeError("customer_conversation_bind_failed")
+        self.page.navigate(BASE + "/?field=" + uuid.uuid4().hex[:8])
+        self.page.wait_for("!!document.querySelector('.agent-task-card')", timeout=45)
+        for marker in expected_markers:
+            self.page.wait_for(
+                "document.querySelector('.agent-task-card')?.innerText.includes(%s)" % json.dumps(marker),
+                timeout=45,
+            )
+
+    def screenshot(self, path: Path, *, selector: str | None = None) -> None:
+        if self.page is None:
+            raise RuntimeError("browser_page_unavailable")
+        self.page.screenshot(path, selector=selector)
 
     def _login_customer(self) -> None:
         if self.page is None:

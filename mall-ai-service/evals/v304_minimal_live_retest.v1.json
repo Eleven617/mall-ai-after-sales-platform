@@ -8,6 +8,23 @@
     "maxTotalTokens": 200000,
     "reserveTokens": 12000
   },
+  "budgetPlan": {
+    "hardLimitScope": "shared_release_ledger",
+    "plannedMaximumProviderHttpAttempts": 80,
+    "plannedMaximumTokens": 198000,
+    "tokenHeadroom": 2000,
+    "perItemMaximum": {
+      "agentEvaluation": {"providerHttpAttempts": 6, "tokens": 16000},
+      "groundingEvaluation": {"providerHttpAttempts": 2, "tokens": 8000},
+      "showcaseChain": {"providerHttpAttempts": 10, "tokens": 18000}
+    },
+    "stages": [
+      {"name": "main", "items": 4, "providerHttpAttempts": 24, "tokens": 64000},
+      {"name": "supplemental_v3", "items": 3, "providerHttpAttempts": 18, "tokens": 48000},
+      {"name": "grounding", "items": 4, "providerHttpAttempts": 8, "tokens": 32000},
+      {"name": "showcase", "items": 3, "providerHttpAttempts": 30, "tokens": 54000}
+    ]
+  },
   "suites": {
     "main": {
       "targetCaseIds": ["agent-open-003", "agent-open-006", "agent-open-010"],

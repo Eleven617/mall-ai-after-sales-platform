@@ -11,6 +11,7 @@ from unittest.mock import patch
 from app.services.release_ledger import release_ledger_context
 from scripts.run_real_local_showcase import (
     ShowcaseError,
+    _capture_chain_frames,
     _create_agent_task,
     _cross_scenario_frames_distinct,
     _provider_failure_after_scenario,
@@ -141,18 +142,68 @@ def test_showcase_uses_independent_orders_for_commit_and_fact_change(monkeypatch
 
 def test_cross_scenario_capture_rejects_reused_same_stage_frames() -> None:
     duplicated = {
-        "one": {"hashes": ["goal-1", "evidence", "handoff", "status"]},
-        "two": {"hashes": ["goal-2", "evidence", "handoff", "status"]},
-        "three": {"hashes": ["goal-3", "evidence", "handoff", "status"]},
+        "one": {"stages": ["goal", "evidence", "progress", "status"], "hashes": ["goal", "evidence", "progress", "status"]},
+        "two": {"stages": ["goal", "evidence", "progress", "status"], "hashes": ["goal", "evidence", "progress", "status"]},
+        "three": {"stages": ["goal", "evidence", "progress", "status"], "hashes": ["goal", "evidence", "progress", "status"]},
     }
     distinct = {
-        "one": {"hashes": ["1-goal", "1-evidence", "1-handoff", "1-status"]},
-        "two": {"hashes": ["2-goal", "2-evidence", "2-handoff", "2-status"]},
-        "three": {"hashes": ["3-goal", "3-evidence", "3-handoff", "3-status"]},
+        "one": {"stages": ["goal", "evidence", "progress", "status"], "hashes": ["shared-goal", "shared-evidence", "shared-progress", "1-status"]},
+        "two": {"stages": ["goal", "evidence", "progress", "status"], "hashes": ["shared-goal", "shared-evidence", "shared-progress", "2-status"]},
+        "three": {"stages": ["goal", "evidence", "progress", "status"], "hashes": ["shared-goal", "shared-evidence", "shared-progress", "3-status"]},
     }
 
     assert _cross_scenario_frames_distinct(duplicated) is False
     assert _cross_scenario_frames_distinct(distinct) is True
+
+
+def test_capture_binds_exact_conversation_and_task_regions(tmp_path, monkeypatch) -> None:
+    calls: list[tuple[str, object]] = []
+
+    class Browser:
+        def __init__(self, **_kwargs):
+            pass
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *_args):
+            return False
+
+        def open_customer_conversation(self, conversation_id, *, expected_markers):
+            calls.append(("conversation", (conversation_id, expected_markers)))
+
+        def assert_ready(self):
+            pass
+
+        def assert_safe_public_text(self):
+            pass
+
+        def screenshot(self, target, *, selector):
+            calls.append(("selector", selector))
+            target.write_bytes((selector * 200).encode("utf-8"))
+
+    monkeypatch.setattr("field_browser_support.BrowserSession", Browser)
+    result = _capture_chain_frames(
+        "not-written",
+        "synthetic-user",
+        tmp_path,
+        "clarify_pause_resume",
+        "00000000-0000-0000-0000-000000000001",
+        ("查询订单物流",),
+    )
+
+    assert result["valid"] is True
+    assert result["stages"] == ["goal", "evidence", "progress", "status"]
+    assert calls[0] == (
+        "conversation",
+        ("00000000-0000-0000-0000-000000000001", ("查询订单物流",)),
+    )
+    assert [value for kind, value in calls if kind == "selector"] == [
+        ".agent-task-card .agent-task-heading",
+        ".agent-task-card .agent-artifact-list",
+        ".agent-task-card .agent-plan-list",
+        ".agent-task-card",
+    ]
 
 
 def test_provider_failure_after_passed_scenario_stops_with_safe_root_cause() -> None:

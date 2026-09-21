@@ -49,6 +49,7 @@ _SAFE_RESULT_KINDS = {
     "timeout",
     "pending",
     "completed",
+    "degraded",
     "rejected",
     "skipped",
     "succeeded",

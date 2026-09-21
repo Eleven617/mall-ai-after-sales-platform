@@ -36,6 +36,7 @@ class ContextCurator:
         artifacts: Iterable[TaskArtifact],
         memory_hints: list[str],
         available_skills: list[str],
+        use_provider: bool = True,
     ) -> ContextPack:
         live_artifacts = [artifact for artifact in artifacts if artifact.expires_at > time.time()]
         summaries = [artifact.summary for artifact in live_artifacts]
@@ -49,7 +50,7 @@ class ContextCurator:
             "skills": available_skills[:8],
         }
         before = estimate_tokens(json.dumps(before_payload, ensure_ascii=False))
-        try:
+        if use_provider:
             curated = self._provider.curate(
                 ContextCuratorInput(
                     task_ref=task.task_ref,
@@ -66,9 +67,10 @@ class ContextCurator:
             candidates = curated.candidate_actions
             effects = curated.executed_effects
             hints = curated.memory_hints
-        except RuntimeModelError:
+        else:
             # Context compression is useful but not a reason to leak data or
-            # fail a read-only task. A deterministic bounded projection is safe.
+            # lose verified facts. The Runtime selects this deterministic
+            # fallback after it has classified and recorded the provider error.
             verified_facts = summaries[:8]
             unresolved = []
             candidates = []
