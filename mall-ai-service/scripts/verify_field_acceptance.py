@@ -1041,11 +1041,7 @@ def _release_gate(
         reasons.append("docker_or_compose_preflight_failed")
     if not fixture_ready:
         reasons.append("synthetic_fixture_not_bound")
-    if (
-        runtime_identity.get("runtimeCommit") != commit
-        or runtime_identity.get("imageRevision") != commit
-        or runtime_identity.get("providerMode") not in {"deterministic", "offline"}
-    ):
+    if not _runtime_identity_matches_execution(runtime_identity, commit):
         reasons.append("runtime_identity_mismatch")
     for category in selected:
         category_results = [item for item in results if item.category == category]
@@ -1058,6 +1054,52 @@ def _release_gate(
     if any(item.executionMode == "deterministic_runtime_fault_contract" for item in results):
         reasons.append("fault_injection_requires_independent_compose_profile")
     return {"passed": not reasons, "reasons": reasons}
+
+
+def _runtime_identity_matches_execution(
+    runtime_identity: dict[str, Any], execution_commit: str
+) -> bool:
+    runtime_commit = runtime_identity.get("runtimeCommit")
+    if (
+        not isinstance(runtime_commit, str)
+        or runtime_identity.get("imageRevision") != runtime_commit
+        or runtime_identity.get("providerMode") not in {"deterministic", "offline"}
+    ):
+        return False
+    if runtime_commit == execution_commit:
+        return True
+    ancestor = subprocess.run(
+        ["git", "merge-base", "--is-ancestor", runtime_commit, execution_commit],
+        cwd=ROOT,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if ancestor.returncode != 0:
+        return False
+    changed = subprocess.run(
+        ["git", "diff", "--name-only", runtime_commit, execution_commit],
+        cwd=ROOT,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if changed.returncode != 0:
+        return False
+    runtime_prefixes = (
+        "mall-ai-service/app/",
+        "mall-ai-service/evals/",
+        "mall-ai-service/requirements.txt",
+        "mall-ai-service/Dockerfile",
+        "mall2/",
+        "mall-ai-web/src/",
+        "docker-compose",
+        "evals/",
+    )
+    return not any(
+        path.strip().replace("\\", "/").startswith(runtime_prefixes)
+        for path in changed.stdout.splitlines()
+    )
 
 
 def _commands(args: argparse.Namespace, fixture_path: Path | None) -> list[str]:

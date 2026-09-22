@@ -97,7 +97,12 @@ def test_release_gate_accepts_only_all_ready_live_cases() -> None:
     assert gate == {"passed": True, "reasons": []}
 
 
-def test_release_gate_rejects_runtime_or_image_not_bound_to_tested_commit() -> None:
+def test_release_gate_rejects_runtime_or_image_not_bound_to_tested_commit(monkeypatch) -> None:
+    monkeypatch.setattr(
+        runner.subprocess,
+        "run",
+        lambda *_args, **_kwargs: SimpleNamespace(returncode=1, stdout="", stderr=""),
+    )
     gate = runner._release_gate(
         [],
         [],
@@ -113,6 +118,44 @@ def test_release_gate_rejects_runtime_or_image_not_bound_to_tested_commit() -> N
 
     assert gate["passed"] is False
     assert gate["reasons"] == ["runtime_identity_mismatch"]
+
+
+def test_runtime_identity_allows_descendant_evidence_commit_without_runtime_drift(monkeypatch) -> None:
+    responses = iter(
+        [
+            SimpleNamespace(returncode=0, stdout="", stderr=""),
+            SimpleNamespace(
+                returncode=0,
+                stdout="mall-ai-service/scripts/verify_field_acceptance.py\n",
+                stderr="",
+            ),
+        ]
+    )
+    monkeypatch.setattr(runner.subprocess, "run", lambda *_args, **_kwargs: next(responses))
+
+    assert runner._runtime_identity_matches_execution(
+        {"runtimeCommit": "runtime", "imageRevision": "runtime", "providerMode": "deterministic"},
+        "evidence",
+    )
+
+
+def test_runtime_identity_rejects_descendant_that_changes_runtime_files(monkeypatch) -> None:
+    responses = iter(
+        [
+            SimpleNamespace(returncode=0, stdout="", stderr=""),
+            SimpleNamespace(
+                returncode=0,
+                stdout="mall-ai-service/app/services/rag_service.py\n",
+                stderr="",
+            ),
+        ]
+    )
+    monkeypatch.setattr(runner.subprocess, "run", lambda *_args, **_kwargs: next(responses))
+
+    assert not runner._runtime_identity_matches_execution(
+        {"runtimeCommit": "runtime", "imageRevision": "runtime", "providerMode": "deterministic"},
+        "evidence",
+    )
 
 
 def test_durable_recovery_child_receives_an_absolute_report_path(tmp_path: Path, monkeypatch) -> None:
