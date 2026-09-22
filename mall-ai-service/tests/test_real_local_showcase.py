@@ -13,6 +13,7 @@ from scripts.run_real_local_showcase import (
     ShowcaseError,
     _capture_chain_frames,
     _capture_expected_markers,
+    _build_offline_gifs,
     _create_agent_task,
     _cross_scenario_frames_distinct,
     _provider_failure_after_scenario,
@@ -243,6 +244,28 @@ def test_capture_reports_safe_conversation_binding_failure(tmp_path, monkeypatch
 
 def test_main_capture_marker_does_not_require_completed_task_status() -> None:
     assert _capture_expected_markers("main_open_task_closed_loop") == ("申请取消退款",)
+
+
+def test_gif_normalizes_different_capture_region_sizes(tmp_path, monkeypatch) -> None:
+    from PIL import Image
+    import scripts.run_real_local_showcase as showcase
+
+    monkeypatch.setattr(showcase, "ROOT", tmp_path)
+    frame_paths = []
+    for index, size in enumerate(((120, 60), (200, 100), (160, 180), (240, 140))):
+        path = tmp_path / f"frame-{index}.png"
+        Image.new("RGB", size, (20 * index, 50, 100)).save(path)
+        frame_paths.append(path.name)
+
+    outputs = _build_offline_gifs(
+        {"main_open_task_closed_loop": {"valid": True, "frames": frame_paths}},
+        tmp_path / "gifs",
+    )
+
+    assert outputs == ["gifs/main-open-task-closed-loop.gif"]
+    gif = Image.open(tmp_path / outputs[0])
+    assert gif.size == (240, 180)
+    assert gif.n_frames == 4
 
 
 def test_provider_failure_after_passed_scenario_stops_with_safe_root_cause() -> None:

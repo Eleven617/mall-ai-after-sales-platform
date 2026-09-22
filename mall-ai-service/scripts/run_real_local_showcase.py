@@ -1121,9 +1121,24 @@ def _build_offline_gifs(frame_groups: dict[str, dict[str, Any]], directory: Path
                 break
         if len(images) != 4:
             continue
-        target = directory / names[scenario]
-        images[0].save(target, save_all=True, append_images=images[1:], duration=900, loop=0, optimize=True)
+        max_width = max(image.width for image in images)
+        max_height = max(image.height for image in images)
+        normalized: list[Image.Image] = []
         for image in images:
+            canvas = Image.new("RGB", (max_width, max_height), "white")
+            canvas.paste(image, ((max_width - image.width) // 2, 0))
+            normalized.append(canvas)
+            image.close()
+        target = directory / names[scenario]
+        normalized[0].save(
+            target,
+            save_all=True,
+            append_images=normalized[1:],
+            duration=900,
+            loop=0,
+            optimize=True,
+        )
+        for image in normalized:
             image.close()
         if target.stat().st_size <= 3 * 1024 * 1024:
             outputs.append(_safe_rel(target))
