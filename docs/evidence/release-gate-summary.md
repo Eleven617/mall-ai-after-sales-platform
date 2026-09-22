@@ -2,7 +2,7 @@
 
 ## 当前权威快照｜v3.0.4 最终在线批次后（2026-09-22）
 
-当前 Runtime/image `d4ec989548e953a8f8c5ee7ceef4ea13b464fbfb` 的机器报告为 FastAPI JUnit **508/508**（492 cases + 16 subtests）、manifest **478/478**、representative **8/8**、contract replay **36/36**；当前镜像现场从零执行 **122/122**，Provider requests/tokens 为 0/0。
+当前 Runtime/image `d4ec989548e953a8f8c5ee7ceef4ea13b464fbfb` 的机器报告为 FastAPI JUnit **510/510**（494 cases + 16 subtests）、manifest **478/478**、representative **8/8**、contract replay **36/36**；当前镜像现场从零执行 **122/122**，Provider requests/tokens 为 0/0。
 
 Release Gate：**NOT_COMPLETE**。第三批固定范围 `5/5` 通过：普通 Agent 对照 `1/1`、Grounding `4/4`，其中 `rag2-042` 正确基于现行政策回答，缺证据与版本冲突对照正确 abstain。随后首条真实售后链的业务断言通过，但浏览器采集以 `browser_capture_failed` 失败，另外两条 live 链未执行，未生成可发布素材。
 

@@ -2,7 +2,7 @@
 
 ## 当前状态｜v3.0.4 最终在线批次后（2026-09-22）
 
-当前 Runtime/image `d4ec989548e953a8f8c5ee7ceef4ea13b464fbfb` 的机器报告为 FastAPI **508/508**（492 cases + 16 subtests）、manifest **478/478**、representative **8/8**、contract replay **36/36**；当前 Runtime/image 现场 **122/122**。
+当前 Runtime/image `d4ec989548e953a8f8c5ee7ceef4ea13b464fbfb` 的机器报告为 FastAPI **510/510**（494 cases + 16 subtests）、manifest **478/478**、representative **8/8**、contract replay **36/36**；当前 Runtime/image 现场 **122/122**。
 
 **NOT_COMPLETE**。Grounding v3 最终针对性范围 `5/5` 通过。第三批首条 live 售后链业务断言通过，浏览器会话绑定竞态已修复，原任务页面已只读事后补采；另外两条当前 live 链仍未执行，仅有明确标注的 deterministic 素材。
 

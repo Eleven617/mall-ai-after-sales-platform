@@ -182,9 +182,9 @@
       "note": "报告/锁的 requests=0 是主机未设置 MALL_RELEASE_LEDGER_PATH 的记录缺口；共享 ledger 独立观察到 9 次 Provider 元数据事件。该批次仍是失败，不构成任何任务通过率。"
     }
   ],
-  "latestOfflineRegression": {"fastapi": "508/508", "pytestCases": 492, "subtests": 16, "runtimeCommit": "d4ec989548e953a8f8c5ee7ceef4ea13b464fbfb", "evidenceCommit": "7f54624d175d495ec58699db3a5db4e2036a5490", "reason": "Validated the unchanged Runtime contracts plus post-login conversation binding, safe capture-stage diagnostics, existing-task read-only post-capture and mixed-size GIF normalization."},
+  "latestOfflineRegression": {"fastapi": "510/510", "pytestCases": 494, "subtests": 16, "runtimeCommit": "d4ec989548e953a8f8c5ee7ceef4ea13b464fbfb", "evidenceCommit": "8047ca821339a381387c298c4b7edf6620498790", "reason": "Validated the unchanged Runtime contracts plus post-login conversation binding, safe capture-stage diagnostics, existing-task read-only post-capture, mixed-size GIF normalization and bounded showcase-supplement entry."},
   "tests": {
-    "fastapi": {"passed": 508, "failed": 0, "skipped": 0, "warnings": 1, "subtests": 16, "pytestTerminalPassed": 492, "exitCode": 0, "command": "MALL_RUNTIME_COMMIT=d4ec989548e953a8f8c5ee7ceef4ea13b464fbfb mall-ai-service/.venv/Scripts/python.exe scripts/run_fastapi_ci_report.py --junitxml=ci-evidence/v3-fastapi-junit.xml --report=ci-evidence/v3-fastapi-report.json", "semanticReportSha256": "fec4af20dbbb105d29eb6f925c9ef9f5a8708f108bde627093f4bc5056c5ba75", "junitSha256": "3368e38365b001655d24568af29905bb28040a6e6818f8e766609b788615e475"},
+    "fastapi": {"passed": 510, "failed": 0, "skipped": 0, "warnings": 1, "subtests": 16, "pytestTerminalPassed": 494, "exitCode": 0, "command": "MALL_RUNTIME_COMMIT=d4ec989548e953a8f8c5ee7ceef4ea13b464fbfb mall-ai-service/.venv/Scripts/python.exe scripts/run_fastapi_ci_report.py --junitxml=ci-evidence/v3-fastapi-junit.xml --report=ci-evidence/v3-fastapi-report.json", "semanticReportSha256": "7440ca29511545f2b3f472b1cb46277d9b47e209b2125f1d965063c68ce2ff2d", "junitSha256": "41ba7a4168f1602180d451f9ad02fd5ee297fa9ab95d69346517ff95c1d62c21"},
     "java": {"portalCore": "12/12", "portalCompatibility": "2/2", "portalFull": "14/14", "admin": "6/6", "springContext": "1/1", "exitCode": 0},
     "vue": {"command": "npm run build", "status": "passed", "exitCode": 0},
     "compose": {"configExitCode": 0, "servicesHealthy": "8/8"},
@@ -233,7 +233,7 @@
     "runtimeCommit": "d4ec989548e953a8f8c5ee7ceef4ea13b464fbfb",
     "executionHead": "25d9150cfa5b163a40471b3940a67204be17d8c7",
     "executionState": "final targeted live evaluation passed 5/5; showcase capture failed after the first chain's business assertions passed; two live chains not executed",
-    "fastapi": {"passed": 508, "failed": 0, "warnings": 1, "subtests": 16, "pytestTerminalPassed": 492, "exitCode": 0},
+    "fastapi": {"passed": 510, "failed": 0, "warnings": 1, "subtests": 16, "pytestTerminalPassed": 494, "exitCode": 0},
     "deterministic": {"manifest": "478/478", "representative": "8/8", "exitCode": 0},
     "fieldAcceptance": {"status": "passed", "total": "122/122", "failed": 0, "environmentBlocked": 0, "reason": "One unspliced run against Runtime/image d4ec989; execution HEAD differs only in field-runner/tests and passed the no-runtime-drift gate.", "report": "tmp/v304-field-acceptance-d4ec989-valid/field-20260922T070406Z-c630dd4f/field-acceptance.json", "reportSha256": "c29bc370c79a9235f7aa5ab7e7cdb50d2558bec5037123e2a1fb8088fafb244e", "fixtureSha256": "a7bd88ba4340e8116d1672e40a00caede1bc4621894952e36de508a673efcb95", "imageRevision": "d4ec989548e953a8f8c5ee7ceef4ea13b464fbfb", "providerMode": "deterministic", "externalProviderRequests": 0, "externalProviderTokens": 0},
     "deepseek": {"status": "failed", "model": "deepseek-flash", "thinkingMode": "enabled", "reasoningEffort": "high", "batchStatus": "failed", "releaseId": "mall-v3.0.4-grounding-v3-final-20260922", "batchId": "minimal_retest-d72ec7554756", "logicalRequests": 16, "providerHttpAttempts": 16, "successfulRequests": 16, "failedRequests": 0, "protocolCorrections": 1, "networkRetries": 0, "tokens": 42123, "modelCalled": true, "failureStage": "showcase.capture", "failureCategory": "showcase_tooling_or_environment_failure", "limitationCode": "browser_capture_failed", "targetedEvaluation": "5/5; agent control 1/1, grounding 4/4", "ledgerReconciled": true, "report": "tmp/v304-minimal-retest-mall-v3.0.4-grounding-v3-final-20260922/report.json", "reportSha256": "00709076fee19c2240bce011336e7f1643c251c308ea745325e783a111c7e80b", "ledger": "tmp/release-ledger-mall-v3.0.4-grounding-v3-final-20260922/ledger.jsonl", "ledgerSha256": "84d0f69f44f5b885a9d9e3122d2ca0a7a296e147954075f1d44c618069595ffe", "lock": "docs/evidence/deepseek-release-lock-mall-v3.0.4-grounding-v3-final-20260922.json", "lockSha256": "296673489ab5d586687a3874b2a2ae0c8ca42d33e20de4dd978332620d195cb1", "reason": "All five fixed evaluation items passed and all Provider requests settled. The first live showcase chain passed its business assertions, then browser capture failed before any frame was saved; two showcase chains were not executed."},
@@ -273,7 +273,7 @@
     "unplannedProviderRun": {"requests": 16, "tokens": 14553, "formalRelease": false}
   },
   "publicClaims": [
-    "当前 Runtime 的 FastAPI 机器报告为 508 passed、0 failed、0 skipped（492 pytest cases + 16 subtests）；v3 deterministic 为 478/478、代表性 Runtime 为 8/8。",
+    "当前 Runtime 的 FastAPI 机器报告为 510 passed、0 failed、0 skipped（494 pytest cases + 16 subtests）；v3 deterministic 为 478/478、代表性 Runtime 为 8/8。",
     "当前 Runtime 的本地合成现场从 0/122 完整执行并通过：Browser 24、Java/MySQL 30、Fault 36、Durable Recovery 32；报告与 Fixture SHA 已绑定，外部 Provider 请求 0。该结果是 deterministic/offline 证据，不是实时 DeepSeek 质量。",
     "Grounding v3 的最终固定在线范围为 5/5；三批累计 98 HTTP attempts、291444 tokens且账本对账。首条当前 live 售后链业务断言通过，但浏览器采集失败，另外两条未执行，因此没有当前 live 素材且 Release Gate 为 NOT_COMPLETE。",
     "Java mall2 仍是身份、归属、资格、状态、幂等、事务、Outbox 和最终写入权威。"
