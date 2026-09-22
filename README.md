@@ -9,13 +9,19 @@
 
 ## 30 秒了解项目
 
-当前 Runtime 的离线回归为 FastAPI JUnit **510/510**（494 cases + 16 subtests）。
+当前 Runtime 的离线回归为 FastAPI JUnit **511/511**（495 cases + 16 subtests）。
 
-> 当前展示状态：`NOT_COMPLETE`。Runtime `d4ec989548e953a8f8c5ee7ceef4ea13b464fbfb` 的 Grounding v3 最终针对性在线评测为 **5/5**。三批累计 98 HTTP attempts、291,444 tokens，Ledger 全部对账。最后一批首条真实售后链的 Proposal、Java 重校验、确认写入与回查均通过；其页面已在零模型、零任务写入条件下事后补采。暂停恢复与事实变化两条当前 live 链仍未执行，三批额度已耗尽，因此未合并 `main`。
+> 当前展示状态：`NOT_COMPLETE`。Runtime `d4ec989548e953a8f8c5ee7ceef4ea13b464fbfb` 的 Grounding v3 最终针对性在线评测为 **5/5**。三批累计 98 HTTP attempts、291,444 tokens，Ledger 全部对账。后续 showcase supplement 的两条业务链均完成、14 次请求全部成功并生成 8 张在线补录素材，但原始包装器在最终汇总阶段异常；原始 FAILED 工件与派生对账分开保留，尚未合并 `main`。
 
 ### 为什么不是普通聊天机器人
 
 LLM 只在受限 Schema 内理解目标、选择已注册 Skill、规划只读调查并生成草案。订单、物流、资格和售后状态由 Java 提供；JWT/归属、资格、状态机、幂等、事务、Outbox 与最终写入也由 Java `mall2/` 负责。没有用户确认和 Java 重校验，模型不能写业务库，浏览器也不能绕过服务端写接口。
+
+当前在线补录素材：
+
+- [暂停恢复截图](docs/assets/showcase-live-supplement-v304/clarify_pause_resume-status.png)
+- [事实变化重新规划截图](docs/assets/showcase-live-supplement-v304/fact_change_replan-status.png)
+- [补录事后对账](docs/evidence/v3.0.4-showcase-supplement-reconciliation.md)
 
 核心数据流：
 
@@ -79,7 +85,7 @@ MCP 只读工具、人工售后工作台和 LangGraph 确定性节点是能力�
 
 结果按套件独立统计，不相加，也不外推为生产 SLA 或真实用户泛化：
 
-- 当前候选收口的 FastAPI JUnit 为 `510 passed`（494 pytest cases + 16 subtests），exit `0`；
+- 当前候选收口的 FastAPI JUnit 为 `511 passed`（495 pytest cases + 16 subtests），exit `0`；
 - v3 deterministic 发布合同为 `478/478`，代表性 Runtime 为 `8/8`；本轮 contract replay 为 `36/36`，Provider `0`；这些都不是浏览器 E2E 或真实模型效果；
 - Java portal 核心 `12/12`、admin `6/6`、Spring context `1/1`、Vue production build、8 服务 Compose 和四类现场 Runner 均已在当前候选环境验证通过；
 - 当前现场 `122/122` 绑定 Runtime/image `d4ec989548e953a8f8c5ee7ceef4ea13b464fbfb`，execution HEAD `25d9150cfa5b163a40471b3940a67204be17d8c7` 仅包含现场 Runner/测试差异并通过无 Runtime 漂移校验；它来自本地 Docker、Chrome、Java/MySQL、隔离故障 Compose 与合成 Fixture，不代表真实模型效果或生产 SLA；

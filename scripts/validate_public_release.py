@@ -192,7 +192,7 @@ def main() -> int:
             require(bool(current.get("deepseek", {}).get("batchId")), "failed DeepSeek batch must record batchId")
             require(current.get("deepseek", {}).get("ledgerReconciled") is True, "failed DeepSeek batch ledger must reconcile")
         showcase_status = current.get("showcase", {}).get("status")
-        require(showcase_status in {"environment_blocked", "passed", "failed", "not_executed"}, "showcase status must be explicit")
+        require(showcase_status in {"environment_blocked", "passed", "failed", "not_executed", "supplement_reconciled"}, "showcase status must be explicit")
         require(
             all(item.get("status") in {"environment_blocked", "passed", "failed", "not_executed"} for item in current["showcase"].get("scenarios", [])),
             "showcase scenario status mismatch",
@@ -206,7 +206,7 @@ def main() -> int:
         elif deepseek_status == "failed":
             require(facts.get("claims", {}).get("releaseQualified") is False, "failed live batch cannot qualify release")
             require(
-                current.get("showcase", {}).get("status") in {"failed", "not_executed"},
+                current.get("showcase", {}).get("status") in {"failed", "not_executed", "supplement_reconciled"},
                 "failed live batch must fail or gate showcase",
             )
     require(tests["java"]["portalCore"] == "12/12", "Java portal core fact mismatch")

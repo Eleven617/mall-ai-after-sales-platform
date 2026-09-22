@@ -37,17 +37,23 @@ def _metrics(batch_id: str) -> dict[str, object]:
     path = os.getenv("MALL_RELEASE_LEDGER_PATH")
     if not path:
         raise ValueError("ledger_path_missing")
-    summary = summarize_release_events(read_release_events(path, batch_id=batch_id))
+    events = read_release_events(path, batch_id=batch_id)
+    summary = summarize_release_events(events)
+    reservations = sum(1 for item in events if item.get("eventType") == "provider_reservation")
+    settlements = sum(1 for item in events if item.get("eventType") == "provider_reservation_settlement")
     return {
         "logicalProviderRequests": summary["logicalProviderRequests"],
         "providerHttpAttempts": summary["providerHttpAttempts"],
         "successfulRequests": summary["providerSuccesses"],
         "failedRequests": summary["providerFailures"],
         "totalTokens": summary["totalTokens"],
-        "reservations": summary["reservations"],
-        "settlements": summary["settlements"],
+        "reservations": reservations,
+        "settlements": settlements,
         "unresolvedReservations": summary["unresolvedReservations"],
-        "budgetDenials": summary["budgetDenials"],
+        # ``summarize_release_events`` exposes the public counter as
+        # ``deniedBeforeNetwork``. Keep the supplement report's clearer
+        # ``budgetDenials`` name without assuming a second summary schema.
+        "budgetDenials": summary.get("budgetDenials", summary.get("deniedBeforeNetwork", 0)),
         "ledgerReconciled": True,
     }
 

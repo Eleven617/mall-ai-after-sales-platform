@@ -2,7 +2,7 @@
 
 ## 当前候选快照｜v3.0.4 最终在线批次后（2026-09-22）
 
-Runtime/image `d4ec989548e953a8f8c5ee7ceef4ea13b464fbfb`：FastAPI **510/510**（494 cases + 16 subtests）、manifest **478/478**、representative **8/8**、contract replay **36/36**。
+Runtime/image `d4ec989548e953a8f8c5ee7ceef4ea13b464fbfb`：FastAPI **511/511**（495 cases + 16 subtests）、manifest **478/478**、representative **8/8**、contract replay **36/36**。
 
 同一镜像从 0/122 完整现场通过 Browser 24、Java/MySQL 30、隔离 Compose Fault 36、Durable Recovery 32；failed=0、environmentBlocked=0。有效报告 SHA-256 `c29bc370c79a9235f7aa5ab7e7cdb50d2558bec5037123e2a1fb8088fafb244e`，Fixture SHA-256 `a7bd88ba4340e8116d1672e40a00caede1bc4621894952e36de508a673efcb95`，Provider requests/tokens=0/0。
 

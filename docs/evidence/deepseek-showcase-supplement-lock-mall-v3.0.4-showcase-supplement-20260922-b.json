@@ -1,0 +1,17 @@
+{
+  "schemaVersion": "deepseek-showcase-supplement-lock.v1",
+  "releaseId": "mall-v3.0.4-showcase-supplement-20260922-b",
+  "batchIds": [
+    "showcase_supplement-e8d7912033b9"
+  ],
+  "runtimeCommit": "d4ec989548e953a8f8c5ee7ceef4ea13b464fbfb",
+  "status": "FAILED",
+  "scope": [
+    "clarify_pause_resume",
+    "fact_change_replan"
+  ],
+  "maxProviderHttpAttempts": 40,
+  "maxTotalTokens": 100000,
+  "requests": 0,
+  "totalTokens": 0
+}

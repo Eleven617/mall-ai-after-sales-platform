@@ -330,7 +330,7 @@ def run_real_local_showcase(
                 failure_class="scenario_failure", scenario="runtime", stage="unexpected", failure_code=failure.failure_code,
             )
             return _showcase_failure(batch_id, started, chain_results, frame_paths, failure, frame_groups)
-    cross_scenario_frames_distinct = _cross_scenario_frames_distinct(frame_groups)
+    cross_scenario_frames_distinct = _cross_scenario_frames_distinct(frame_groups, expected_count=len(selected_scenarios))
     status = "passed" if (
         all(item.get("status") == "passed" for item in chain_results)
         and len(frame_paths) == 4 * len(selected_scenarios)
@@ -434,7 +434,9 @@ def _provider_failure_after_scenario(
     )
 
 
-def _cross_scenario_frames_distinct(frame_groups: dict[str, dict[str, Any]]) -> bool:
+def _cross_scenario_frames_distinct(
+    frame_groups: dict[str, dict[str, Any]], *, expected_count: int = 3
+) -> bool:
     """Reject reuse of scenario-specific final task cards.
 
     Goal and evidence projections may legitimately match after public DTO
@@ -442,7 +444,7 @@ def _cross_scenario_frames_distinct(frame_groups: dict[str, dict[str, Any]]) -> 
     status and therefore cannot be reused across independent chains.
     """
 
-    if len(frame_groups) != 3:
+    if len(frame_groups) != expected_count or expected_count < 1:
         return False
     status_hashes: list[str] = []
     for group in frame_groups.values():
@@ -454,7 +456,7 @@ def _cross_scenario_frames_distinct(frame_groups: dict[str, dict[str, Any]]) -> 
             status_hashes.append(str(hashes[stages.index("status")]))
         except ValueError:
             return False
-    if len(status_hashes) != 3:
+    if len(status_hashes) != expected_count:
         return False
     return len(set(status_hashes)) == len(status_hashes)
 

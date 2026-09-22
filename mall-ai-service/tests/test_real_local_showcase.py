@@ -178,6 +178,12 @@ def test_cross_scenario_capture_rejects_reused_same_stage_frames() -> None:
     assert _cross_scenario_frames_distinct(duplicated) is False
     assert _cross_scenario_frames_distinct(distinct) is True
 
+    two_chain = {
+        "one": distinct["one"],
+        "two": distinct["two"],
+    }
+    assert _cross_scenario_frames_distinct(two_chain, expected_count=2) is True
+
 
 def test_capture_binds_exact_conversation_and_task_regions(tmp_path, monkeypatch) -> None:
     calls: list[tuple[str, object]] = []

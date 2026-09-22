@@ -1,0 +1,76 @@
+{
+  "schemaVersion": "v304-showcase-supplement-reconciliation.v1",
+  "sourceStatus": "FAILED/runner_exception",
+  "sourceReason": "wrapper summary serialization failed after scenario and screenshot completion",
+  "releaseId": "mall-v3.0.4-showcase-supplement-20260922-b",
+  "batchId": "showcase_supplement-e8d7912033b9",
+  "runtimeCommit": "d4ec989548e953a8f8c5ee7ceef4ea13b464fbfb",
+  "scenarios": {
+    "clarify_pause_resume": {
+      "completedStepCount": 4,
+      "modelCalled": true,
+      "javaCommit": false,
+      "statusReadback": true
+    },
+    "fact_change_replan": {
+      "completedStepCount": 5,
+      "modelCalled": true,
+      "javaCommit": false,
+      "statusReadback": true
+    }
+  },
+  "ledgerMetrics": {
+    "logicalProviderRequests": 14,
+    "providerHttpAttempts": 14,
+    "successfulRequests": 14,
+    "failedRequests": 0,
+    "totalTokens": 48862,
+    "reservations": 14,
+    "settlements": 14,
+    "unresolvedReservations": 0,
+    "budgetDenials": 0
+  },
+  "assets": [
+    {
+      "path": "..\\tmp\\v304-showcase-supplement-mall-v3.0.4-showcase-supplement-20260922-b\\showcase_supplement-e8d7912033b9-artifacts\\browser\\clarify_pause_resume-evidence.png",
+      "sha256": "8408ca29ba35d6781b9a587395747b418a442d5faba7980be8c9bcd7b7ee8788",
+      "size": 14056
+    },
+    {
+      "path": "..\\tmp\\v304-showcase-supplement-mall-v3.0.4-showcase-supplement-20260922-b\\showcase_supplement-e8d7912033b9-artifacts\\browser\\clarify_pause_resume-goal.png",
+      "sha256": "ae1b7e5eea7c325342aa1e76eb73e55b5e1cd6e7f351485a8d97ac13b2e6ece4",
+      "size": 5470
+    },
+    {
+      "path": "..\\tmp\\v304-showcase-supplement-mall-v3.0.4-showcase-supplement-20260922-b\\showcase_supplement-e8d7912033b9-artifacts\\browser\\clarify_pause_resume-progress.png",
+      "sha256": "0fbf4a9210da8c018e79f102e35b5d2a15cdf220f1cd189feef7f7fe931253e8",
+      "size": 4226
+    },
+    {
+      "path": "..\\tmp\\v304-showcase-supplement-mall-v3.0.4-showcase-supplement-20260922-b\\showcase_supplement-e8d7912033b9-artifacts\\browser\\clarify_pause_resume-status.png",
+      "sha256": "2caec868c1e2f554b589067faaf195f26da4d0102378c6df65387c8d4e774925",
+      "size": 34779
+    },
+    {
+      "path": "..\\tmp\\v304-showcase-supplement-mall-v3.0.4-showcase-supplement-20260922-b\\showcase_supplement-e8d7912033b9-artifacts\\browser\\fact_change_replan-evidence.png",
+      "sha256": "5f9dc1d0f6729eae045f3618d21ac0b490a85336e479ea21a9c2132f7b761162",
+      "size": 26986
+    },
+    {
+      "path": "..\\tmp\\v304-showcase-supplement-mall-v3.0.4-showcase-supplement-20260922-b\\showcase_supplement-e8d7912033b9-artifacts\\browser\\fact_change_replan-goal.png",
+      "sha256": "9fde4ba3bb3cd153aff4a9534de70a51916db9fb1a081d825e319d4a47537244",
+      "size": 11914
+    },
+    {
+      "path": "..\\tmp\\v304-showcase-supplement-mall-v3.0.4-showcase-supplement-20260922-b\\showcase_supplement-e8d7912033b9-artifacts\\browser\\fact_change_replan-progress.png",
+      "sha256": "0fbf4a9210da8c018e79f102e35b5d2a15cdf220f1cd189feef7f7fe931253e8",
+      "size": 4226
+    },
+    {
+      "path": "..\\tmp\\v304-showcase-supplement-mall-v3.0.4-showcase-supplement-20260922-b\\showcase_supplement-e8d7912033b9-artifacts\\browser\\fact_change_replan-status.png",
+      "sha256": "1d03e8a26ca21cccbcf20b15f7fcc8b0e467a353d69a06efadea325a32ff0e79",
+      "size": 53421
+    }
+  ],
+  "derivedOnly": true
+}
