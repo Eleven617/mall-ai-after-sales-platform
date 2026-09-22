@@ -5,11 +5,14 @@ sections explicitly support the user's exact question before the answer model
 is allowed to compose a policy reply.
 """
 from collections.abc import Callable
+from datetime import date
+import re
 from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from app.schemas.rag import RetrievedChunk
+from app.config import settings
 from app.services.llm_service import LLMServiceError, generate_json
 from app.services.structured_output_gateway import (
     StructuredOutputError,
@@ -18,7 +21,7 @@ from app.services.structured_output_gateway import (
 )
 
 
-GROUNDING_PROMPT_VERSION = "rag2_grounding_v2"
+GROUNDING_PROMPT_VERSION = "rag2_grounding_v3"
 
 
 EVIDENCE_VERIFIER_SYSTEM_PROMPT = """
@@ -59,6 +62,9 @@ EVIDENCE_VERIFIER_SYSTEM_PROMPT = """
 13. 用户转述的旧客服说法、旧规则或个人记忆不是政策证据，也不能把直接覆盖问题的
     当前生效政策降格为 insufficient。若当前政策确实覆盖问题，应依据当前政策判定
     sufficient 为 true；若当前政策没有覆盖关键限定条件，仍必须判定 false。
+14. 做新旧规则比较时，若候选是服务端标记的当前发布版本、章节直接对应问题主题且
+     生效日期有效，必须选择该来源。不要因为用户提到旧说法就拒答；只有没有直接
+     覆盖、版本冲突无法消解或关键限定条件缺失时才判 false。
 """.strip()
 
 
@@ -126,6 +132,13 @@ def verify_policy_evidence(
         ) from exc
 
     if not verdict.sufficient:
+        # The verifier model can be conservatively wrong when a question
+        # explicitly contrasts an old rule with the current published one.
+        # Recover only this narrow, server-checkable false negative.  The
+        # fallback never widens the source set and refuses ambiguous versions.
+        recovered = _recover_direct_current_evidence(question, candidate_chunks)
+        if recovered:
+            return recovered
         return []
 
     selected_ids = list(dict.fromkeys(verdict.supporting_chunk_ids))
@@ -161,3 +174,70 @@ def _render_candidates(candidate_chunks: list[RetrievedChunk]) -> str:
 
 def _escape_untrusted_text(value: str) -> str:
     return value.replace("<", "&lt;").replace(">", "&gt;")
+
+
+_VERSION_COMPARISON_TERMS = ("以前", "旧", "过去", "现在", "当前", "最新", "新规则", "现行")
+_TOKEN_RE = re.compile(r"[一-鿿A-Za-z0-9]{2,}")
+_POLICY_MARKERS = ("可以", "支持", "不支持", "通常", "申请", "以", "审核", "规则")
+
+
+def _recover_direct_current_evidence(
+    question: str, candidate_chunks: list[RetrievedChunk]
+) -> list[RetrievedChunk]:
+    """Recover a bounded verifier false-negative without trusting model text."""
+    if not any(term in question for term in _VERSION_COMPARISON_TERMS):
+        return []
+    active_version = getattr(settings, "rag_active_policy_version", None)
+    today = date.today()
+    direct_candidates = [
+        chunk for chunk in candidate_chunks if _topic_overlap(question, chunk)
+    ]
+    direct_versions = {
+        chunk.policy_version for chunk in direct_candidates if chunk.policy_version
+    }
+    if len(direct_versions) != 1:
+        return []
+    eligible = [
+        chunk
+        for chunk in direct_candidates
+        if chunk.policy_version
+        and chunk.policy_version == active_version
+        and _is_effective(chunk.effective_from, today)
+        and any(marker in chunk.text for marker in _POLICY_MARKERS)
+    ]
+    # Multiple published revisions or multiple unrelated sections remain
+    # ambiguous and must continue to abstain.
+    if len(eligible) != 1:
+        return []
+    return eligible
+
+
+def _topic_overlap(question: str, chunk: RetrievedChunk) -> bool:
+    question_tokens = set(_TOKEN_RE.findall(question))
+    section_tokens = set(_TOKEN_RE.findall(chunk.section_path))
+    if question_tokens & section_tokens:
+        return True
+    # Chinese policy headings often contain a suffix such as "退货" while
+    # the question uses the shorter exact policy term.  Compare bounded
+    # 3/4-character n-grams, never arbitrary keyword lists.
+    question_ngrams = _cjk_ngrams(question)
+    section_ngrams = _cjk_ngrams(chunk.section_path)
+    return bool(question_ngrams & section_ngrams)
+
+
+def _is_effective(value: str | None, today: date) -> bool:
+    if not value:
+        return False
+    try:
+        return date.fromisoformat(value) <= today
+    except ValueError:
+        return False
+
+
+def _cjk_ngrams(value: str) -> set[str]:
+    chars = [char for char in value if "\u4e00" <= char <= "\u9fff"]
+    return {
+        "".join(chars[index : index + size])
+        for size in (3, 4)
+        for index in range(max(0, len(chars) - size + 1))
+    }

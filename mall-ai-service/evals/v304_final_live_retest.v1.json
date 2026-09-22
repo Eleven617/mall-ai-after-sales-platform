@@ -1,0 +1,34 @@
+{
+  "schemaVersion": "v304-final-live-retest.v1",
+  "description": "Third and final bounded retest after the grounding false-negative repair.",
+  "requiredRuns": 1,
+  "maxAttemptsPerRequest": 1,
+  "groundingSuite": "evals/v304_final_grounding_cases.v1.json",
+  "budget": {
+    "maxProviderHttpAttempts": 80,
+    "maxTotalTokens": 200000,
+    "reserveTokens": 12000
+  },
+  "budgetPlan": {
+    "hardLimitScope": "shared_release_ledger_and_campaign",
+    "plannedMaximumProviderHttpAttempts": 44,
+    "plannedMaximumTokens": 102000,
+    "tokenHeadroom": 98000,
+    "stages": [
+      {"name": "main", "items": 1, "providerHttpAttempts": 6, "tokens": 16000},
+      {"name": "grounding", "items": 4, "providerHttpAttempts": 8, "tokens": 32000},
+      {"name": "showcase", "items": 3, "providerHttpAttempts": 30, "tokens": 54000}
+    ]
+  },
+  "suites": {
+    "main": {"targetCaseIds": [], "controlCaseIds": ["agent-open-005"]},
+    "supplemental": {"targetCaseIds": [], "controlCaseIds": []},
+    "grounding": {
+      "targetCaseIds": ["rag2-042"],
+      "controlCaseIds": ["rag2-037", "rag2-045", "rag2-final-001"]
+    }
+  },
+  "showcaseCaseIds": ["agent-open-020", "agent-open-001", "agent-open-021"],
+  "expectedEvaluationCases": 5,
+  "expectedShowcaseChains": 3
+}

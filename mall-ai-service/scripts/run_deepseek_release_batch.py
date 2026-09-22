@@ -145,8 +145,12 @@ def _load_minimal_retest_plan(path: Path = MINIMAL_RETEST_PLAN_PATH) -> dict[str
         plan = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError) as exc:
         raise ValueError("minimal retest plan is unavailable") from exc
-    if not isinstance(plan, dict) or plan.get("schemaVersion") != "v304-minimal-live-retest.v1":
+    if not isinstance(plan, dict) or plan.get("schemaVersion") not in {
+        "v304-minimal-live-retest.v1",
+        "v304-final-live-retest.v1",
+    }:
         raise ValueError("minimal retest plan version is invalid")
+    final_scope = plan["schemaVersion"] == "v304-final-live-retest.v1"
     suites = plan.get("suites")
     if not isinstance(suites, dict) or set(suites) != {"main", "supplemental", "grounding"}:
         raise ValueError("minimal retest suites are invalid")
@@ -159,9 +163,23 @@ def _load_minimal_retest_plan(path: Path = MINIMAL_RETEST_PLAN_PATH) -> dict[str
         controls = suite.get("controlCaseIds")
         if not isinstance(targets, list) or not isinstance(controls, list):
             raise ValueError("minimal retest case selection is invalid")
-        if not targets or len(controls) != 1 or not all(isinstance(item, str) and item for item in targets + controls):
+        if not all(isinstance(item, str) and item for item in targets + controls):
             raise ValueError("minimal retest case selection is invalid")
         selected.extend(targets + controls)
+    if final_scope:
+        if (
+            len(suites["main"]["targetCaseIds"] + suites["main"]["controlCaseIds"]) != 1
+            or suites["supplemental"]["targetCaseIds"]
+            or suites["supplemental"]["controlCaseIds"]
+            or len(suites["grounding"]["targetCaseIds"]) != 1
+            or len(suites["grounding"]["controlCaseIds"]) != 3
+        ):
+            raise ValueError("final retest scope must contain one agent and four grounding cases")
+    elif any(
+        not suites[name]["targetCaseIds"] or len(suites[name]["controlCaseIds"]) != 1
+        for name in ("main", "supplemental", "grounding")
+    ):
+        raise ValueError("minimal retest case selection is invalid")
     if len(selected) != len(set(selected)) or len(selected) != int(plan.get("expectedEvaluationCases", -1)):
         raise ValueError("minimal retest case count is invalid")
     showcase = plan.get("showcaseCaseIds")
@@ -184,12 +202,12 @@ def _load_minimal_retest_plan(path: Path = MINIMAL_RETEST_PLAN_PATH) -> dict[str
     if not isinstance(budget_plan, dict):
         raise ValueError("minimal retest budget plan is missing")
     stages = budget_plan.get("stages")
-    if not isinstance(stages, list) or [item.get("name") for item in stages] != [
-        "main",
-        "supplemental_v3",
-        "grounding",
-        "showcase",
-    ]:
+    expected_stages = (
+        ["main", "grounding", "showcase"]
+        if final_scope
+        else ["main", "supplemental_v3", "grounding", "showcase"]
+    )
+    if not isinstance(stages, list) or [item.get("name") for item in stages] != expected_stages:
         raise ValueError("minimal retest stage budget plan is invalid")
     planned_attempts = sum(int(item.get("providerHttpAttempts", -1)) for item in stages)
     planned_tokens = sum(int(item.get("tokens", -1)) for item in stages)
@@ -201,6 +219,19 @@ def _load_minimal_retest_plan(path: Path = MINIMAL_RETEST_PLAN_PATH) -> dict[str
     ):
         raise ValueError("minimal retest planned budget exceeds the shared hard limit")
     return plan
+
+
+def _grounding_suite_path(plan: dict[str, object]) -> Path:
+    configured = plan.get("groundingSuite")
+    if configured is None:
+        return GROUNDING_SUITE_PATH
+    if not isinstance(configured, str) or not configured:
+        raise ValueError("minimal retest grounding suite is invalid")
+    path = (SERVICE_ROOT / configured).resolve()
+    eval_root = (SERVICE_ROOT / "evals").resolve()
+    if path.parent != eval_root or not path.is_file():
+        raise ValueError("minimal retest grounding suite is outside the reviewed eval directory")
+    return path
 
 
 def _base_ledger(*, batch_id: str, release_id: str, phase: str, command: str) -> dict[str, object]:
@@ -667,20 +698,23 @@ def _run_portfolio_b(ledger: dict[str, object], report_dir: Path) -> dict[str, o
     return {"status": ledger["status"], **reports}
 
 
-def _run_minimal_retest(ledger: dict[str, object], report_dir: Path) -> dict[str, object]:
-    """Run 11 reviewed cases first; capture showcase only after all pass."""
+def _run_minimal_retest(
+    ledger: dict[str, object], report_dir: Path, plan_path: Path = MINIMAL_RETEST_PLAN_PATH
+) -> dict[str, object]:
+    """Run the reviewed bounded cases first; capture showcase only after all pass."""
 
-    plan = _load_minimal_retest_plan()
+    plan = _load_minimal_retest_plan(plan_path)
+    grounding_suite_path = _grounding_suite_path(plan)
     suites = plan["suites"]
     assert isinstance(suites, dict)
     reports: dict[str, object] = {}
     reports["retestPlan"] = {
         "schemaVersion": plan["schemaVersion"],
-        "sha256": _sha256(MINIMAL_RETEST_PLAN_PATH),
+        "sha256": _sha256(plan_path),
         "evaluationCases": plan["expectedEvaluationCases"],
         "showcaseChains": plan["expectedShowcaseChains"],
         "requiredRuns": plan["requiredRuns"],
-        "executionOrder": ["main", "supplemental_v3", "grounding", "showcase"],
+        "executionOrder": [item["name"] for item in plan["budgetPlan"]["stages"]],
         "budgetPlan": plan["budgetPlan"],
     }
 
@@ -689,6 +723,9 @@ def _run_minimal_retest(ledger: dict[str, object], report_dir: Path) -> dict[str
         selection = suites[report_name]
         assert isinstance(selection, dict)
         case_ids = set(selection["targetCaseIds"] + selection["controlCaseIds"])
+        if not case_ids:
+            reports[report_name] = {"status": "not_selected", "uniqueCases": 0}
+            continue
         report = run_live_model_agent_evaluation(
             suite_path=suite_path,
             case_ids=case_ids,
@@ -721,7 +758,7 @@ def _run_minimal_retest(ledger: dict[str, object], report_dir: Path) -> dict[str
     grounding_selection = suites["grounding"]
     assert isinstance(grounding_selection, dict)
     grounding = evaluate_grounded_answer_suite(
-        load_rag2_golden_suite(GROUNDING_SUITE_PATH),
+        load_rag2_golden_suite(grounding_suite_path),
         mode="dense",
         case_ids=set(grounding_selection["targetCaseIds"] + grounding_selection["controlCaseIds"]),
         timeout_seconds=20.0,
@@ -774,6 +811,7 @@ def main() -> int:
     parser.add_argument("--report", type=Path, required=True)
     parser.add_argument("--lock", type=Path, default=None)
     parser.add_argument("--campaign", type=Path, default=None)
+    parser.add_argument("--plan", type=Path, default=MINIMAL_RETEST_PLAN_PATH)
     args = parser.parse_args()
 
     if args.lock is None:
@@ -862,6 +900,15 @@ def main() -> int:
         print(json.dumps({"status": "preflight_blocked", "failureCode": "missing_provider_configuration"}), file=sys.stderr)
         return 2
 
+    selected_plan: dict[str, object] | None = None
+    if args.phase == "minimal_retest":
+        try:
+            selected_plan = _load_minimal_retest_plan(args.plan)
+            _grounding_suite_path(selected_plan)
+        except ValueError as exc:
+            print(f"deepseek release batch refused: {exc}", file=sys.stderr)
+            return 3
+
     batch_id = f"{args.phase}-{uuid.uuid4().hex[:12]}"
     campaign_path: Path | None = None
     if args.phase == "minimal_retest":
@@ -900,11 +947,14 @@ def main() -> int:
         command=" ".join(sys.argv),
     )
     ledger["runtimeCommit"] = args.runtime_commit
+    selected_grounding_suite = _grounding_suite_path(selected_plan) if selected_plan is not None else GROUNDING_SUITE_PATH
     ledger["suiteHashes"] = {
         "main": _sha256(DEFAULT_SUITE_PATH),
         "supplemental": _sha256(HOLDOUT_SUITE_PATH),
-        "grounding": _sha256(GROUNDING_SUITE_PATH),
+        "grounding": _sha256(selected_grounding_suite),
     }
+    if selected_plan is not None:
+        ledger["suiteHashes"]["retestPlan"] = _sha256(args.plan)
     if not settings.deepseek_api_key:
         ledger["status"] = "environment_blocked"
         ledger["environmentBlocked"] = 1
@@ -965,7 +1015,7 @@ def main() -> int:
             if args.phase == "candidate"
             else _run_portfolio_showcase(ledger, args.report.parent / f"{batch_id}-artifacts")
             if args.phase == "portfolio_a"
-            else _run_minimal_retest(ledger, args.report.parent / f"{batch_id}-artifacts")
+            else _run_minimal_retest(ledger, args.report.parent / f"{batch_id}-artifacts", args.plan)
             if args.phase == "minimal_retest"
             else _run_portfolio_b(ledger, args.report.parent / f"{batch_id}-artifacts")
         )

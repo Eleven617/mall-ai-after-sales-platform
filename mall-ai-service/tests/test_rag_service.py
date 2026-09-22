@@ -14,6 +14,8 @@ QUALITY_SHIPPING_CHUNK = RetrievedChunk(
     section_path="after-sales-policy > shipping-fee",
     text="For a quality-related return, the merchant pays shipping.",
     distance=0.18,
+    policy_version="V1.1",
+    effective_from="2026-08-04",
 )
 
 
@@ -33,6 +35,9 @@ class RagServiceTests(unittest.TestCase):
         self.assertEqual("policy-transport-001", answer.sources[0].chunk_id)
         prompt = generate_text.call_args.kwargs["message"]
         self.assertIn("policy-transport-001", prompt)
+        self.assertIn("policy_version=V1.1", prompt)
+        self.assertIn("effective_from=2026-08-04", prompt)
+        self.assertIn("必须说明", generate_text.call_args.kwargs["system_prompt"])
         verify_policy_evidence.assert_called_once()
 
     @patch("app.services.rag_service.verify_policy_evidence")

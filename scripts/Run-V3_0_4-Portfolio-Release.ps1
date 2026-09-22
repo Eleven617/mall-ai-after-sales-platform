@@ -5,7 +5,8 @@ param(
     [Parameter(Mandatory=$true)][ValidatePattern('^mall-v3\.0\.4-[a-z0-9._-]+$')][string]$ReleaseId,
     [string]$ReplayReport = 'tmp/v304-contract-replay/replay.json',
     [string]$FieldReportDir = 'tmp/v304-field-acceptance-final',
-    [string]$FieldReport = ''
+    [string]$FieldReport = '',
+    [string]$RetestPlan = 'mall-ai-service/evals/v304_minimal_live_retest.v1.json'
 )
 
 $ErrorActionPreference = 'Stop'
@@ -19,6 +20,7 @@ $status = (git status --porcelain | Out-String).Trim()
 if ($status -ne '') { throw 'worktree_not_clean' }
 git merge-base --is-ancestor $RuntimeCommit $head | Out-Null
 if ($LASTEXITCODE -ne 0) { throw 'runtime_commit_not_ancestor' }
+$resolvedRetestPlan = (Resolve-Path -LiteralPath $RetestPlan).Path
 
 docker info --format '{{.ServerVersion}}' | Out-Null
 docker compose config --quiet
@@ -157,7 +159,7 @@ try {
     $reportPath = Join-Path $root "tmp\v304-minimal-retest-$ReleaseId\report.json"
     & .\mall-ai-service\.venv\Scripts\python.exe .\mall-ai-service\scripts\run_deepseek_release_batch.py `
         --phase minimal_retest --release-id $ReleaseId --runtime-commit $RuntimeCommit `
-        --report $reportPath --lock $lockPath --campaign $campaignPath
+        --report $reportPath --lock $lockPath --campaign $campaignPath --plan $resolvedRetestPlan
     $runnerExitCode = $LASTEXITCODE
 }
 finally {

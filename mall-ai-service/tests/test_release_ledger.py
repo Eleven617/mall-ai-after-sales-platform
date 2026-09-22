@@ -79,6 +79,54 @@ class ReleaseLedgerTests(unittest.TestCase):
         self.assertEqual(198_000, plan["budgetPlan"]["plannedMaximumTokens"])
         self.assertEqual(2_000, plan["budgetPlan"]["tokenHeadroom"])
 
+    def test_final_retest_plan_is_five_cases_and_uses_remaining_campaign_budget(self) -> None:
+        path = batch_runner.SERVICE_ROOT / "evals" / "v304_final_live_retest.v1.json"
+        plan = _load_minimal_retest_plan(path)
+
+        self.assertEqual("v304-final-live-retest.v1", plan["schemaVersion"])
+        self.assertEqual(5, plan["expectedEvaluationCases"])
+        self.assertEqual(44, plan["budgetPlan"]["plannedMaximumProviderHttpAttempts"])
+        self.assertEqual(102_000, plan["budgetPlan"]["plannedMaximumTokens"])
+        self.assertEqual([], plan["suites"]["supplemental"]["controlCaseIds"])
+
+    def test_final_retest_runs_one_agent_and_four_grounding_cases(self) -> None:
+        plan_path = batch_runner.SERVICE_ROOT / "evals" / "v304_final_live_retest.v1.json"
+        ledger: dict[str, object] = {"batchId": "final-fixture", "runtimeCommit": "a" * 40}
+        with TemporaryDirectory() as directory, patch.object(
+            batch_runner,
+            "_run_portfolio_showcase",
+            return_value={"status": "passed", "realLocalShowcase": {"status": "passed"}},
+        ) as showcase_run, patch.object(
+            batch_runner,
+            "run_live_model_agent_evaluation",
+            return_value={
+                "status": "passed",
+                "failed": 0,
+                "environmentBlocked": 0,
+                "toolCalls": 1,
+                "uniqueCases": 1,
+                "requiredRunsPerCase": 1,
+            },
+        ) as agent_run, patch.object(
+            batch_runner,
+            "evaluate_grounded_answer_suite",
+            return_value={"status": "passed", "quality_failed_cases": 0, "environment_blocked_cases": 0},
+        ) as grounding_run, patch.object(
+            batch_runner, "_sync_process_ledger", return_value=True
+        ), patch.object(batch_runner, "_budget_exceeded", return_value=False):
+            result = batch_runner._run_minimal_retest(ledger, Path(directory), plan_path)
+
+        self.assertEqual("passed", result["status"])
+        self.assertEqual(1, agent_run.call_count)
+        self.assertEqual({"agent-open-005"}, agent_run.call_args.kwargs["case_ids"])
+        self.assertEqual(
+            {"rag2-042", "rag2-037", "rag2-045", "rag2-final-001"},
+            grounding_run.call_args.kwargs["case_ids"],
+        )
+        self.assertEqual("not_selected", result["supplemental"]["status"])
+        self.assertEqual(["main", "grounding", "showcase"], result["retestPlan"]["executionOrder"])
+        showcase_run.assert_called_once()
+
     def test_minimal_retest_executes_only_reviewed_cases_once(self) -> None:
         agent_reports = [
             {"status": "passed", "failed": 0, "environmentBlocked": 0, "toolCalls": 2, "uniqueCases": 4, "requiredRunsPerCase": 1},
@@ -131,7 +179,7 @@ class ReleaseLedgerTests(unittest.TestCase):
         )
         self.assertEqual(1, grounding_run.call_args.kwargs["max_attempts"])
         self.assertEqual(
-            "rag2_grounding_v2",
+            "rag2_grounding_v3",
             result["grounding"]["model"]["promptVersion"],
         )
         showcase_run.assert_called_once()
