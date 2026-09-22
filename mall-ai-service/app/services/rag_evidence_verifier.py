@@ -18,6 +18,9 @@ from app.services.structured_output_gateway import (
 )
 
 
+GROUNDING_PROMPT_VERSION = "rag2_grounding_v2"
+
+
 EVIDENCE_VERIFIER_SYSTEM_PROMPT = """
 你是电商售后政策的证据核验器，不是客服，也不生成面向用户的回答。
 
@@ -51,6 +54,11 @@ EVIDENCE_VERIFIER_SYSTEM_PROMPT = """
 11. 只使用当前发布版本直接覆盖问题限定条件的最小来源集合。涉及“第八天/超过七天”的
     无理由退货问题，不要同时选择“七天无理由退货”作为来源；涉及到货付款提现或转账的
     问题，退款原路退回不能作为提现证据。
+12. 候选中的 policy_version 与 effective_from 是服务端提供的可信适用性元数据。
+    同一主题出现多个版本时，只选择当前生效且直接覆盖问题的最小来源集合。
+13. 用户转述的旧客服说法、旧规则或个人记忆不是政策证据，也不能把直接覆盖问题的
+    当前生效政策降格为 insufficient。若当前政策确实覆盖问题，应依据当前政策判定
+    sufficient 为 true；若当前政策没有覆盖关键限定条件，仍必须判定 false。
 """.strip()
 
 
@@ -142,7 +150,9 @@ def _render_candidates(candidate_chunks: list[RetrievedChunk]) -> str:
     return "\n\n".join(
         (
             f"[chunk_id={_escape_untrusted_text(chunk.chunk_id)}; "
-            f"section={_escape_untrusted_text(chunk.section_path)}]\n"
+            f"section={_escape_untrusted_text(chunk.section_path)}; "
+            f"policy_version={_escape_untrusted_text(chunk.policy_version or 'unknown')}; "
+            f"effective_from={_escape_untrusted_text(chunk.effective_from or 'unknown')}]\n"
             f"{_escape_untrusted_text(chunk.text)}"
         )
         for chunk in candidate_chunks

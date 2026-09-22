@@ -130,6 +130,10 @@ class ReleaseLedgerTests(unittest.TestCase):
             grounding_run.call_args.kwargs["case_ids"],
         )
         self.assertEqual(1, grounding_run.call_args.kwargs["max_attempts"])
+        self.assertEqual(
+            "rag2_grounding_v2",
+            result["grounding"]["model"]["promptVersion"],
+        )
         showcase_run.assert_called_once()
         self.assertEqual(
             ["main", "supplemental_v3", "grounding", "showcase"],

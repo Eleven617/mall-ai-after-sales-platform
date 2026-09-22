@@ -45,6 +45,7 @@ from app.services.rag2_evaluation import (  # noqa: E402
     evaluate_grounded_answer_suite,
     load_rag2_golden_suite,
 )
+from app.services.rag_evidence_verifier import GROUNDING_PROMPT_VERSION  # noqa: E402
 from app.services.llm_service import (  # noqa: E402
     DEEPSEEK_REASONING_EFFORT,
     DEEPSEEK_THINKING_MODE,
@@ -403,7 +404,7 @@ def _run_final(ledger: dict[str, object]) -> dict[str, object]:
         "model": settings.deepseek_model,
         "thinkingMode": DEEPSEEK_THINKING_MODE,
         "reasoningEffort": DEEPSEEK_REASONING_EFFORT,
-        "promptVersion": "rag2_grounding_v1",
+        "promptVersion": GROUNDING_PROMPT_VERSION,
         "skillCatalogVersion": SKILL_CATALOG_VERSION,
         "runtimeCommit": ledger["runtimeCommit"],
         "executionBoundary": "synthetic_policy_corpus",
@@ -527,7 +528,7 @@ def _run_candidate(ledger: dict[str, object], report_dir: Path) -> dict[str, obj
         "model": settings.deepseek_model,
         "thinkingMode": DEEPSEEK_THINKING_MODE,
         "reasoningEffort": DEEPSEEK_REASONING_EFFORT,
-        "promptVersion": "rag2_grounding_v1",
+        "promptVersion": GROUNDING_PROMPT_VERSION,
         "skillCatalogVersion": SKILL_CATALOG_VERSION,
         "runtimeCommit": ledger["runtimeCommit"],
         "executionBoundary": "synthetic_policy_corpus",
@@ -641,7 +642,7 @@ def _run_portfolio_b(ledger: dict[str, object], report_dir: Path) -> dict[str, o
         "model": settings.deepseek_model,
         "thinkingMode": DEEPSEEK_THINKING_MODE,
         "reasoningEffort": DEEPSEEK_REASONING_EFFORT,
-        "promptVersion": "rag2_grounding_v1",
+        "promptVersion": GROUNDING_PROMPT_VERSION,
         "skillCatalogVersion": SKILL_CATALOG_VERSION,
         "runtimeCommit": ledger["runtimeCommit"],
         "executionBoundary": "synthetic_policy_corpus",
@@ -732,7 +733,7 @@ def _run_minimal_retest(ledger: dict[str, object], report_dir: Path) -> dict[str
         "model": settings.deepseek_model,
         "thinkingMode": DEEPSEEK_THINKING_MODE,
         "reasoningEffort": DEEPSEEK_REASONING_EFFORT,
-        "promptVersion": "rag2_grounding_v1",
+        "promptVersion": GROUNDING_PROMPT_VERSION,
         "skillCatalogVersion": SKILL_CATALOG_VERSION,
         "runtimeCommit": ledger["runtimeCommit"],
         "executionBoundary": "synthetic_policy_corpus",
