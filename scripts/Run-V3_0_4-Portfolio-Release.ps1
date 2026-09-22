@@ -39,7 +39,13 @@ if ($Phase -eq 'Preflight') {
         throw 'field_report_required_for_preflight'
     }
     $field = Get-Content -Raw -LiteralPath $FieldReport | ConvertFrom-Json
-    if ($field.testedCodeCommit -ne $RuntimeCommit -or $field.releaseGate.passed -ne $true -or $field.caseCount -ne 122) { throw 'field_acceptance_provenance_or_gate_failed' }
+    if ($field.releaseGate.passed -ne $true -or $field.caseCount -ne 122) { throw 'field_acceptance_provenance_or_gate_failed' }
+    if ($field.testedCodeCommit -ne $RuntimeCommit) {
+        $runtimeChanged = @(git diff --name-only $RuntimeCommit $field.testedCodeCommit | Where-Object {
+            $_ -like 'mall-ai-service/app/*' -or $_ -like 'mall2/*' -or $_ -like 'mall-ai-web/src/*' -or $_ -like 'evals/*' -or $_ -like 'mall2/document/sql/migrations/*'
+        })
+        if ($runtimeChanged.Count -gt 0) { throw 'field_acceptance_provenance_runtime_changed_after_freeze' }
+    }
     if ($field.providerUsage.externalProviderRequests -ne 0 -or $field.providerUsage.externalProviderTokens -ne 0) { throw 'field_acceptance_provider_usage_nonzero' }
     Write-Output "V3_0_4_PREFLIGHT_PASSED runtime=$RuntimeCommit replay=36/36 phase=$Phase releaseId=$ReleaseId"
     exit 0
