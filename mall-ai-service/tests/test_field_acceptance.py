@@ -53,7 +53,14 @@ def test_release_gate_rejects_deterministic_fault_contract_as_field_evidence() -
         )
         for case in cases
     ]
-    gate = runner._release_gate(results, ["fault_injection"], {"dockerAvailable": True, "composeConfigValid": True}, True)
+    gate = runner._release_gate(
+        results,
+        ["fault_injection"],
+        {"dockerAvailable": True, "composeConfigValid": True},
+        True,
+        "abc",
+        {"runtimeCommit": "abc", "imageRevision": "abc", "providerMode": "deterministic"},
+    )
     assert gate["passed"] is False
     assert "fault_injection_requires_independent_compose_profile" in gate["reasons"]
 
@@ -79,8 +86,33 @@ def test_release_gate_accepts_only_all_ready_live_cases() -> None:
         )
         for case in cases
     ]
-    gate = runner._release_gate(results, ["browser_e2e"], {"dockerAvailable": True, "composeConfigValid": True}, True)
+    gate = runner._release_gate(
+        results,
+        ["browser_e2e"],
+        {"dockerAvailable": True, "composeConfigValid": True},
+        True,
+        "abc",
+        {"runtimeCommit": "abc", "imageRevision": "abc", "providerMode": "deterministic"},
+    )
     assert gate == {"passed": True, "reasons": []}
+
+
+def test_release_gate_rejects_runtime_or_image_not_bound_to_tested_commit() -> None:
+    gate = runner._release_gate(
+        [],
+        [],
+        {"dockerAvailable": True, "composeConfigValid": True},
+        True,
+        "current-commit",
+        {
+            "runtimeCommit": "different-commit",
+            "imageRevision": "different-commit",
+            "providerMode": "deterministic",
+        },
+    )
+
+    assert gate["passed"] is False
+    assert gate["reasons"] == ["runtime_identity_mismatch"]
 
 
 def test_durable_recovery_child_receives_an_absolute_report_path(tmp_path: Path, monkeypatch) -> None:

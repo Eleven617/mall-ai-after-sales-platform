@@ -228,6 +228,8 @@ def main() -> int:
         selected,
         preflight,
         bool(fixture_hash),
+        commit,
+        runtime_identity,
     )
     evidence["endedAt"] = _now()
     evidence["durationMs"] = _duration_ms(started, evidence["endedAt"])
@@ -1026,12 +1028,25 @@ def _category_summary(results: list[CaseResult], expected: int) -> dict[str, Any
     }
 
 
-def _release_gate(results: list[CaseResult], selected: list[str], preflight: dict[str, Any], fixture_ready: bool) -> dict[str, Any]:
+def _release_gate(
+    results: list[CaseResult],
+    selected: list[str],
+    preflight: dict[str, Any],
+    fixture_ready: bool,
+    commit: str,
+    runtime_identity: dict[str, Any],
+) -> dict[str, Any]:
     reasons: list[str] = []
     if not preflight["dockerAvailable"] or not preflight["composeConfigValid"]:
         reasons.append("docker_or_compose_preflight_failed")
     if not fixture_ready:
         reasons.append("synthetic_fixture_not_bound")
+    if (
+        runtime_identity.get("runtimeCommit") != commit
+        or runtime_identity.get("imageRevision") != commit
+        or runtime_identity.get("providerMode") not in {"deterministic", "offline"}
+    ):
+        reasons.append("runtime_identity_mismatch")
     for category in selected:
         category_results = [item for item in results if item.category == category]
         if len(category_results) != EXPECTED_COUNTS[category]:
