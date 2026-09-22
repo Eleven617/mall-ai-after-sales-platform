@@ -1,12 +1,12 @@
 # Mall v3.0 最终交付状态
 
-## 当前状态｜v3.0.4 离线收口候选（2026-09-21）
+## 当前状态｜v3.0.4 离线收口候选（2026-09-22）
 
-新增正式入口恢复回归后，当前机器报告为 FastAPI **484/484**（468 cases + 16 subtests）；旧章节数字保持历史原样。
+当前 Runtime/image `62b61c2d64f75ffc80ed876976bc7d79e61c1d23` 的机器报告为 FastAPI **494/494**（478 cases + 16 subtests）、manifest **478/478**、representative **8/8**、contract replay **36/36**，现场 **122/122**。
 
-**NOT_COMPLETE**。Runtime/image `8ff255aeff320b5f3800aa05bfacefec975a684a` 的离线验证仍为 FastAPI **483/483**、manifest **478/478**、representative **8/8**、contract replay **36/36** 和现场 **122/122**。唯一授权的在线复测在主阶段停止：16 attempts、15 成功、49,158 tokens；`agent-open-003/005/006` 通过，`agent-open-010` 因 `model_contract_schema_invalid` blocked，后续阶段未执行。
+**NOT_COMPLETE**。当前候选已离线修复阻止一次有界结构纠正的通用协议缺陷，并完成新 Runtime 现场验收；新的在线目标集合与展示阶段仍为 `not_executed`。上一在线复测在主阶段停止：16 attempts、15 成功、49,158 tokens；`agent-open-010` 因 `model_contract_schema_invalid` blocked。
 
-历史在线批次与本次新批次均保持原始 Report/Ledger/Lock；本次不是环境阻塞，也不是网络重试失败，而是单个真实模型结构化输出违反已冻结合同。当前 Release Gate 仍为 **NOT_COMPLETE**，未合并 main。
+历史在线批次保持原始 Report/Ledger/Lock；当前候选本轮外部 Provider requests/tokens 为 0/0。Release Gate 仍为 **NOT_COMPLETE**，未合并 main。
 
 ## 当前状态｜v3.0.4 最小在线复测后（2026-09-21）
 

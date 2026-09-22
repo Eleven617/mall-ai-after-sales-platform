@@ -1,12 +1,12 @@
 # 公开发布记录
 
-## 当前候选记录｜v3.0.4 离线收口（2026-09-21）
+## 当前候选记录｜v3.0.4 离线收口（2026-09-22）
 
-新增入口恢复回归后，FastAPI 机器报告为 **484/484**（468 cases + 16 subtests）；历史章节保持原样。
+当前 Runtime/image `62b61c2d64f75ffc80ed876976bc7d79e61c1d23` 的 FastAPI 机器报告为 **494/494**（478 cases + 16 subtests），manifest **478/478**、representative **8/8**、contract replay **36/36**、现场 **122/122**。
 
-Release Gate **NOT_COMPLETE**。Runtime/image `8ff255aeff320b5f3800aa05bfacefec975a684a` 的离线验证为 FastAPI **483/483**、manifest **478/478**、representative **8/8**、contract replay **36/36**、现场 **122/122**。唯一授权在线复测在主阶段停止：16 attempts、15 成功、1 个 `model_contract_schema_invalid`、49,158 tokens；后续评测与展示链未执行。
+Release Gate **NOT_COMPLETE**。当前候选已修复阻止一次有界结构纠正的协议缺陷，但新的在线目标集合与展示链仍为 `not_executed`。上一在线复测在主阶段停止：16 attempts、15 成功、1 个 `model_contract_schema_invalid`、49,158 tokens。
 
-确定性展示链 3/3、12 帧为离线素材，关键状态卡跨场景不重复。历史批次与本次批次的 Report/Ledger/Lock 均保留；本次不是环境阻塞，未合并 main。
+确定性展示链 3/3、12 帧为离线素材，关键状态卡跨场景不重复。当前候选外部 Provider requests/tokens 为 0/0；历史 Report/Ledger/Lock 均保留，未合并 main。
 
 ## 当前候选记录｜v3.0.4 最小在线复测取证（2026-09-21）
 
