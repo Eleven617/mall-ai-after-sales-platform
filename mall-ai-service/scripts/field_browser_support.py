@@ -238,6 +238,11 @@ class BrowserSession:
         self.open_route("customer")
         if self.page is None:
             raise RuntimeError("browser_page_unavailable")
+        # Login initializes the authenticated workspace asynchronously.  Wait
+        # until that first conversation is visibly active before overriding
+        # its persisted selection; otherwise the late initialization can win
+        # the race and replace the requested capture conversation.
+        self.page.wait_for("!!document.querySelector('.history-item.active')", timeout=45)
         bound = self.page.evaluate(
             "(function(){try{const member=JSON.parse(sessionStorage.getItem('mall-ai-web:member-profile')||'null');"
             "if(!member||!Number.isInteger(member.member_id))return false;"
@@ -247,6 +252,12 @@ class BrowserSession:
         if bound is not True:
             raise RuntimeError("customer_conversation_bind_failed")
         self.page.navigate(BASE + "/?field=" + uuid.uuid4().hex[:8])
+        self.page.wait_for(
+            "(function(){try{const member=JSON.parse(sessionStorage.getItem('mall-ai-web:member-profile')||'null');"
+            "return !!member&&localStorage.getItem('mall-ai-web:active-conversation:'+member.member_id)===%s;}catch{return false;}})()"
+            % json.dumps(conversation_id),
+            timeout=45,
+        )
         self.page.wait_for("!!document.querySelector('.agent-task-card')", timeout=45)
         for marker in expected_markers:
             self.page.wait_for(

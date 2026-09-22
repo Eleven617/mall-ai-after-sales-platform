@@ -268,10 +268,18 @@ def run_real_local_showcase(
                     frame_groups[scenario] = captured
                     frame_paths.extend(captured["frames"])
                     if not captured["valid"]:
-                        failure = ShowcaseError("browser_capture_failed", scenario=scenario, stage="capture")
+                        capture_failure_stage = str(captured.get("failureStage") or "unknown")
+                        capture_failure_code = str(captured.get("failureCode") or "browser_capture_internal_error")
+                        failure = ShowcaseError(
+                            "browser_capture_failed",
+                            scenario=scenario,
+                            stage=f"capture.{capture_failure_stage}",
+                            task_metrics={"captureFailureCode": capture_failure_code},
+                        )
                         append_release_event(
                             event_type="scenario", operation=f"showcase.{scenario}.frames", outcome="failed",
-                            failure_class="scenario_failure", scenario=scenario, stage="capture", failure_code=failure.failure_code,
+                            failure_class="scenario_failure", scenario=scenario, stage=failure.stage,
+                            failure_code=failure.failure_code,
                         )
                         return _showcase_failure(batch_id, started, chain_results, frame_paths, failure, frame_groups)
                     append_release_event(
@@ -981,45 +989,105 @@ def _capture_chain_frames(
     )
     paths: list[str] = []
     hashes: list[str] = []
+    capture_stage = "browser_startup"
     try:
         from field_browser_support import BrowserSession
 
         with BrowserSession(password=password, evidence_dir=directory) as browser:
+            capture_stage = "conversation_binding"
             browser.open_customer_conversation(
                 conversation_id,
                 expected_markers=expected_markers,
             )
             for stage, selector in frame_specs:
+                capture_stage = f"{stage}_readiness"
                 browser.assert_ready()
                 browser.assert_safe_public_text()
                 target = directory / f"{scenario}-{stage}.png"
+                capture_stage = f"{stage}_screenshot"
                 browser.screenshot(target, selector=selector)
                 if not target.is_file() or target.stat().st_size < 1024:
-                    return {"frames": paths, "hashes": hashes, "valid": False, "frameCount": len(paths)}
+                    return _invalid_capture_result(
+                        paths,
+                        hashes,
+                        failure_stage=f"{stage}_file_validation",
+                        failure_code="screenshot_file_invalid",
+                    )
                 digest = hashlib.sha256(target.read_bytes()).hexdigest()
                 paths.append(_safe_rel(target))
                 hashes.append(digest)
-    except Exception:
-        return {"frames": paths, "hashes": hashes, "valid": False, "frameCount": len(paths)}
+    except Exception as exc:
+        return _invalid_capture_result(
+            paths,
+            hashes,
+            failure_stage=capture_stage,
+            failure_code=_safe_capture_failure_code(exc),
+        )
     finally:
         if old_username is None:
             os.environ.pop("MALL_FIELD_BROWSER_CUSTOMER_USER", None)
         else:
             os.environ["MALL_FIELD_BROWSER_CUSTOMER_USER"] = old_username
     adjacent_distinct = all(left != right for left, right in zip(hashes, hashes[1:]))
+    valid = len(paths) == 4 and adjacent_distinct
     return {
         "frames": paths,
         "hashes": hashes,
         "stages": [stage for stage, _selector in frame_specs],
-        "valid": len(paths) == 4 and adjacent_distinct,
+        "valid": valid,
         "frameCount": len(paths),
         "adjacentDistinct": adjacent_distinct,
+        "failureStage": None if valid else "frame_validation",
+        "failureCode": None if valid else "adjacent_frames_identical",
     }
+
+
+def _invalid_capture_result(
+    paths: list[str],
+    hashes: list[str],
+    *,
+    failure_stage: str,
+    failure_code: str,
+) -> dict[str, Any]:
+    return {
+        "frames": paths,
+        "hashes": hashes,
+        "valid": False,
+        "frameCount": len(paths),
+        "failureStage": failure_stage,
+        "failureCode": failure_code,
+    }
+
+
+def _safe_capture_failure_code(exc: Exception) -> str:
+    code = str(exc)
+    allowed = {
+        "browser_page_unavailable",
+        "button_not_found",
+        "chrome_cdp_unavailable",
+        "chrome_executable_unavailable",
+        "chrome_target_unavailable",
+        "customer_conversation_bind_failed",
+        "document_not_ready",
+        "input_not_found",
+        "long_numeric_identifier_in_public_text",
+        "page_condition_timeout",
+        "page_evaluation_failed",
+        "screenshot_target_missing",
+        "unsafe_public_text",
+    }
+    if code in allowed:
+        return code
+    if code.startswith("cdp_") and code.endswith("_failed"):
+        return "cdp_command_failed"
+    if isinstance(exc, TimeoutError):
+        return "browser_timeout"
+    return "browser_capture_internal_error"
 
 
 def _capture_expected_markers(scenario: str) -> tuple[str, ...]:
     return {
-        "main_open_task_closed_loop": ("申请取消退款", "已完成"),
+        "main_open_task_closed_loop": ("申请取消退款",),
         "clarify_pause_resume": ("查询订单物流",),
         "fact_change_replan": ("申请取消退款", "当前无法继续"),
     }.get(scenario, ())

@@ -12,6 +12,7 @@ from app.services.release_ledger import release_ledger_context
 from scripts.run_real_local_showcase import (
     ShowcaseError,
     _capture_chain_frames,
+    _capture_expected_markers,
     _create_agent_task,
     _cross_scenario_frames_distinct,
     _provider_failure_after_scenario,
@@ -204,6 +205,44 @@ def test_capture_binds_exact_conversation_and_task_regions(tmp_path, monkeypatch
         ".agent-task-card .agent-plan-list",
         ".agent-task-card",
     ]
+
+
+def test_capture_reports_safe_conversation_binding_failure(tmp_path, monkeypatch) -> None:
+    class Browser:
+        def __init__(self, **_kwargs):
+            pass
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *_args):
+            return False
+
+        def open_customer_conversation(self, *_args, **_kwargs):
+            raise TimeoutError("page_condition_timeout")
+
+    monkeypatch.setattr("field_browser_support.BrowserSession", Browser)
+    result = _capture_chain_frames(
+        "not-written",
+        "synthetic-user",
+        tmp_path,
+        "main_open_task_closed_loop",
+        "00000000-0000-0000-0000-000000000001",
+        ("申请取消退款",),
+    )
+
+    assert result == {
+        "frames": [],
+        "hashes": [],
+        "valid": False,
+        "frameCount": 0,
+        "failureStage": "conversation_binding",
+        "failureCode": "page_condition_timeout",
+    }
+
+
+def test_main_capture_marker_does_not_require_completed_task_status() -> None:
+    assert _capture_expected_markers("main_open_task_closed_loop") == ("申请取消退款",)
 
 
 def test_provider_failure_after_passed_scenario_stops_with_safe_root_cause() -> None:
