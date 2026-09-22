@@ -2,11 +2,11 @@
 
 ## 当前候选记录｜v3.0.4 最终在线批次后（2026-09-22）
 
-当前 Runtime/image `d4ec989548e953a8f8c5ee7ceef4ea13b464fbfb` 的 FastAPI 机器报告为 **504/504**（488 cases + 16 subtests），manifest **478/478**、representative **8/8**、contract replay **36/36**；当前镜像现场 **122/122**。
+当前 Runtime/image `d4ec989548e953a8f8c5ee7ceef4ea13b464fbfb` 的 FastAPI 机器报告为 **508/508**（492 cases + 16 subtests），manifest **478/478**、representative **8/8**、contract replay **36/36**；当前镜像现场 **122/122**。
 
 Release Gate **NOT_COMPLETE**。最终批次的固定评测范围 `5/5` 通过：普通 Agent 对照 `1/1`、Grounding `4/4`，`rag2-042` 正确基于现行适用政策回答。批次共 16 attempts、16 成功、42,123 tokens，Ledger 完整对账。
 
-首条 live 售后链的 Proposal、Java 重校验、确认写入与回查通过，随后浏览器采集失败；其余两条 live 链未执行，0 帧。确定性展示链 3/3、12 帧仍为离线素材。三批累计 98 attempts、291,444 tokens，额度 3/3 已耗尽；历史 Report/Ledger/Lock 均保留，未合并 main。
+首条 live 售后链的 Proposal、Java 重校验、确认写入与回查通过；浏览器会话绑定竞态已修复，原任务页面完成只读事后补采。其余两条当前 live 链未执行；当前 deterministic 3/3 素材明确单列。三批累计 98 attempts、291,444 tokens，额度 3/3 已耗尽；历史 Report/Ledger/Lock 均保留，未合并 main。
 
 ## 当前候选记录｜v3.0.4 最小在线复测取证（2026-09-21）
 

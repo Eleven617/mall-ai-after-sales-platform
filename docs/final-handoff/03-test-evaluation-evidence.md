@@ -2,11 +2,11 @@
 
 ## 当前候选快照｜v3.0.4 最终在线批次后（2026-09-22）
 
-Runtime/image `d4ec989548e953a8f8c5ee7ceef4ea13b464fbfb`：FastAPI **504/504**（488 cases + 16 subtests）、manifest **478/478**、representative **8/8**、contract replay **36/36**。
+Runtime/image `d4ec989548e953a8f8c5ee7ceef4ea13b464fbfb`：FastAPI **508/508**（492 cases + 16 subtests）、manifest **478/478**、representative **8/8**、contract replay **36/36**。
 
 同一镜像从 0/122 完整现场通过 Browser 24、Java/MySQL 30、隔离 Compose Fault 36、Durable Recovery 32；failed=0、environmentBlocked=0。有效报告 SHA-256 `c29bc370c79a9235f7aa5ab7e7cdb50d2558bec5037123e2a1fb8088fafb244e`，Fixture SHA-256 `a7bd88ba4340e8116d1672e40a00caede1bc4621894952e36de508a673efcb95`，Provider requests/tokens=0/0。
 
-当前镜像现场 **122/122**，报告绑定 Runtime `d4ec989`、execution HEAD `25d9150`，Provider 0/0。最终在线批次固定评测 `5/5`：普通 Agent `1/1`、Grounding `4/4`；16 attempts 全部成功、42,123 tokens、Ledger reconciled。首条 live 售后链业务断言通过后发生 `browser_capture_failed`，其余两条未执行且 0 帧。确定性展示链 **3/3**、12 帧仍只作为离线素材。Release Gate **NOT_COMPLETE**。
+当前镜像现场 **122/122**，报告绑定 Runtime `d4ec989`、execution HEAD `25d9150`，Provider 0/0。最终在线批次固定评测 `5/5`：普通 Agent `1/1`、Grounding `4/4`；16 attempts 全部成功、42,123 tokens、Ledger reconciled。首条 live 售后链业务断言通过，其原任务页面已零模型事后补采；其余两条当前 live 链未执行。当前 deterministic 展示链 **3/3**、12 帧另行标注。Release Gate **NOT_COMPLETE**。
 
 ## 当前候选快照｜v3.0.4 最小在线复测取证（2026-09-21）
 

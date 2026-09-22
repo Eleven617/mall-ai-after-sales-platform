@@ -1,0 +1,54 @@
+{
+  "schemaVersion": "v304-existing-task-post-capture.v1",
+  "status": "passed",
+  "source": {
+    "releaseId": "mall-v3.0.4-grounding-v3-final-20260922",
+    "batchId": "minimal_retest-d72ec7554756",
+    "runtimeCommit": "d4ec989548e953a8f8c5ee7ceef4ea13b464fbfb",
+    "conversationHash": "48bf4345798a61030faac5baa442058a26bdb0129a7a797d05209e353d13afbd"
+  },
+  "capture": {
+    "capturedAt": "2026-09-22T08:39:23.452492+00:00",
+    "captureToolVersion": "5528e12398f92e2da2b20cf07f973e89e47f0ff0",
+    "mode": "post_capture_existing_live_task",
+    "frames": {
+      "frames": [
+        "docs/assets/showcase-postcapture-v304/main_open_task_closed_loop-goal.png",
+        "docs/assets/showcase-postcapture-v304/main_open_task_closed_loop-evidence.png",
+        "docs/assets/showcase-postcapture-v304/main_open_task_closed_loop-progress.png",
+        "docs/assets/showcase-postcapture-v304/main_open_task_closed_loop-status.png"
+      ],
+      "hashes": [
+        "ea094f1842b62a2fc9725542334026ec153bb2203d811f18f32f92c40e243c56",
+        "c660e8ab50f1b7388ccbc8e7e413bfdf77104087ba5c3b302b56646ab71cabf0",
+        "0fbf4a9210da8c018e79f102e35b5d2a15cdf220f1cd189feef7f7fe931253e8",
+        "0fe2c474a277ce0afac80f6549050b4d2257b929f58b544eb874dad8930bcef5"
+      ],
+      "stages": [
+        "goal",
+        "evidence",
+        "progress",
+        "status"
+      ],
+      "valid": true,
+      "frameCount": 4,
+      "adjacentDistinct": true,
+      "failureStage": null,
+      "failureCode": null
+    },
+    "gif": {
+      "path": "docs/assets/showcase-postcapture-v304/main-live-third-batch-postcapture.gif",
+      "sha256": "c92a1eaf40fc1120df8f90535598f168ebce92735c728904939b6f029632762b",
+      "encoderVersion": "7f54624d175d495ec58699db3a5db4e2036a5490",
+      "frameCount": 4,
+      "canvas": "343x650",
+      "adjacentFramesChanged": true
+    },
+    "externalProviderRequests": 0,
+    "taskCreateRequests": 0,
+    "taskContinueRequests": 0,
+    "taskAmendRequests": 0,
+    "taskConfirmationRequests": 0
+  },
+  "claimBoundary": "Frames were captured after the source batch from its persisted task. They prove the later page state only, not an original real-time recording or missing intermediate steps."
+}

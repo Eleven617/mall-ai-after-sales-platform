@@ -9,9 +9,9 @@
 
 ## 30 秒了解项目
 
-当前 Runtime 的离线回归为 FastAPI JUnit **504/504**（488 cases + 16 subtests）。
+当前 Runtime 的离线回归为 FastAPI JUnit **508/508**（492 cases + 16 subtests）。
 
-> 当前展示状态：`NOT_COMPLETE`。Runtime `d4ec989548e953a8f8c5ee7ceef4ea13b464fbfb` 的 Grounding v3 最终针对性在线评测为 **5/5**：充分且适用的当前政策证据会得到回答，缺证据、无法消解的版本冲突和超出支付路径证据的问题仍安全拒答。三批累计 98 HTTP attempts、291,444 tokens，Ledger 全部对账。最后一批首条真实售后链的 Proposal、Java 重校验、确认写入与回查均通过，但浏览器采集失败，另外两条 live 链未执行且没有有效 live 素材；三批额度已耗尽，因此未合并 `main`。
+> 当前展示状态：`NOT_COMPLETE`。Runtime `d4ec989548e953a8f8c5ee7ceef4ea13b464fbfb` 的 Grounding v3 最终针对性在线评测为 **5/5**。三批累计 98 HTTP attempts、291,444 tokens，Ledger 全部对账。最后一批首条真实售后链的 Proposal、Java 重校验、确认写入与回查均通过；其页面已在零模型、零任务写入条件下事后补采。暂停恢复与事实变化两条当前 live 链仍未执行，三批额度已耗尽，因此未合并 `main`。
 
 ### 为什么不是普通聊天机器人
 
@@ -52,7 +52,18 @@ MCP 只读工具、人工售后工作台和 LangGraph 确定性节点是能力�
 2. 等待输入 → 暂停保留 → 政策岔开 → 同一任务恢复；
 3. 事实版本变化 → 旧结果失效 → 重新核验 → 新方案或人工交接。
 
-无模型 deterministic/replay 运行只证明受控 Runtime 合同、Proposal/确认边界和 Java 权威写入路径；它不证明真实模型的自然语言泛化。历史正式在线评测曾完成三条展示链，主集 `69/72`、补充集 `30/36`、Grounding `49/52`；这些结果及失败分类保持不可变。当前 Runtime 的最终针对性复测为 `5/5`，不能与历史完整评测拼接。该批首条真实售后链业务断言通过后在浏览器采集失败，另外两条链未执行，所以没有可发布的当前 live GIF/PNG。录制入口仍支持无模型 dry-run：[`scripts/Capture-PublicShowcase.ps1 -DryRun`](scripts/Capture-PublicShowcase.ps1)。
+无模型 deterministic/replay 运行只证明受控 Runtime 合同、Proposal/确认边界和 Java 权威写入路径；它不证明真实模型的自然语言泛化。历史正式在线评测曾完成三条展示链，主集 `69/72`、补充集 `30/36`、Grounding `49/52`；这些结果及失败分类保持不可变。当前 Runtime 的最终针对性复测为 `5/5`，不能与历史完整评测拼接。该批首条真实售后链业务断言通过后发生浏览器采集故障，已对持久化主链做只读事后补采；另外两条当前 live 链未执行。录制入口仍支持无模型 dry-run：[`scripts/Capture-PublicShowcase.ps1 -DryRun`](scripts/Capture-PublicShowcase.ps1)。
+
+第三批主链事后补采（不是原批次实时录屏）：
+
+![第三批真实主链事后补采](docs/assets/showcase-postcapture-v304/main-live-third-batch-postcapture.gif)
+
+当前 Runtime 的暂停恢复与事实变化素材为 **deterministic**，不是 live 模型证据：
+
+- [暂停与同任务恢复](docs/assets/showcase-deterministic-d4ec989/clarify-pause-resume.gif)
+- [Java 事实变化后重新规划](docs/assets/showcase-deterministic-d4ec989/fact-change-replan-handoff.gif)
+
+采集时间、素材 Hash、工具版本与限制见 [展示采集修复证据](docs/evidence/v3.0.4-showcase-capture-repair.md)。
 
 ## 架构与代码入口
 
@@ -68,7 +79,7 @@ MCP 只读工具、人工售后工作台和 LangGraph 确定性节点是能力�
 
 结果按套件独立统计，不相加，也不外推为生产 SLA 或真实用户泛化：
 
-- 当前候选收口的 FastAPI JUnit 为 `504 passed`（488 pytest cases + 16 subtests），exit `0`；
+- 当前候选收口的 FastAPI JUnit 为 `508 passed`（492 pytest cases + 16 subtests），exit `0`；
 - v3 deterministic 发布合同为 `478/478`，代表性 Runtime 为 `8/8`；本轮 contract replay 为 `36/36`，Provider `0`；这些都不是浏览器 E2E 或真实模型效果；
 - Java portal 核心 `12/12`、admin `6/6`、Spring context `1/1`、Vue production build、8 服务 Compose 和四类现场 Runner 均已在当前候选环境验证通过；
 - 当前现场 `122/122` 绑定 Runtime/image `d4ec989548e953a8f8c5ee7ceef4ea13b464fbfb`，execution HEAD `25d9150cfa5b163a40471b3940a67204be17d8c7` 仅包含现场 Runner/测试差异并通过无 Runtime 漂移校验；它来自本地 Docker、Chrome、Java/MySQL、隔离故障 Compose 与合成 Fixture，不代表真实模型效果或生产 SLA；

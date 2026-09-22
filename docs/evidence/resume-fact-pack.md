@@ -2,7 +2,7 @@
 
 ## 当前候选｜v3.0.4 最终在线批次后（2026-09-22）
 
-Runtime/image `d4ec989548e953a8f8c5ee7ceef4ea13b464fbfb`：FastAPI **504/504**（488 cases + 16 subtests）、manifest **478/478**、representative **8/8**、contract replay **36/36**；主 Compose **8/8 healthy**，当前镜像现场 **122/122**，Provider requests/tokens=0/0。
+Runtime/image `d4ec989548e953a8f8c5ee7ceef4ea13b464fbfb`：FastAPI **508/508**（492 cases + 16 subtests）、manifest **478/478**、representative **8/8**、contract replay **36/36**；主 Compose **8/8 healthy**，当前镜像现场 **122/122**，Provider requests/tokens=0/0。
 
 当前候选在既有结构纠正和累计预算守卫之上新增 Grounding v3。最终批次固定的普通 Agent 对照 `1/1`、Grounding `4/4` 全部通过；`rag2-042` 基于当前适用政策回答，缺证据和版本冲突对照均正确 abstain。
 
