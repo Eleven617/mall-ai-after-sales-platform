@@ -175,7 +175,10 @@ def main() -> int:
                 current.get("deepseek", {}).get("batchStatus") in {"failed", "invalidated_before_provider_network"},
                 "current DeepSeek failure status mismatch",
             )
-            require(current.get("deepseek", {}).get("calls", 0) > 0, "failed DeepSeek batch must record calls")
+            require(
+                int(current.get("deepseek", {}).get("calls", current.get("deepseek", {}).get("logicalRequests", 0)) or 0) > 0,
+                "failed DeepSeek batch must record calls",
+            )
             # A provider can reject or terminate a request before returning
             # usage metadata.  The immutable ledger must still expose the
             # observed (possibly zero) token count rather than fabricating a
@@ -202,7 +205,10 @@ def main() -> int:
             require(readiness.get("historicalInvalidatedRun") is True, "historical invalidated run must remain recorded")
         elif deepseek_status == "failed":
             require(facts.get("claims", {}).get("releaseQualified") is False, "failed live batch cannot qualify release")
-            require(current.get("showcase", {}).get("status") == "failed", "failed live batch must fail showcase")
+            require(
+                current.get("showcase", {}).get("status") in {"failed", "not_executed"},
+                "failed live batch must fail or gate showcase",
+            )
     require(tests["java"]["portalCore"] == "12/12", "Java portal core fact mismatch")
     require(tests["java"]["portalCompatibility"] == "2/2", "Java portal compatibility fact mismatch")
     require(tests["java"]["admin"] == "6/6", "Java admin fact mismatch")

@@ -2,11 +2,11 @@
 
 ## 当前候选快照｜v3.0.4 离线收口（2026-09-22）
 
-Runtime/image `62b61c2d64f75ffc80ed876976bc7d79e61c1d23`：FastAPI **494/494**（478 cases + 16 subtests）、manifest **478/478**、representative **8/8**、contract replay **36/36**。
+Runtime/image `1bfe2809206d91077220a974637d88fa2e82f4aa`：FastAPI **495/495**（479 cases + 16 subtests）、manifest **478/478**、representative **8/8**、contract replay **36/36**。
 
 同一镜像从 0/122 完整现场通过 Browser 24、Java/MySQL 30、隔离 Compose Fault 36、Durable Recovery 32；failed=0、environmentBlocked=0，报告 SHA-256 `51dff5a65ce8536089b4a4bbe0ecb1c52712a57f5d1c13fb72739ba6f0b24e54`，Fixture SHA-256 `7b7616e3ba0f6939a7bcc7d381b3c3b7b35d2b443c2056b218cdefc7f17486a9`，Provider requests/tokens=0/0。
 
-确定性展示链 **3/3**、12 帧仍是离线素材。上一在线复测实际发生 16 次 HTTP attempts、15 成功、1 结构化合同失败，共 49,158 tokens；当前候选新的在线目标集合和展示阶段仍为 `not_executed`，Release Gate **NOT_COMPLETE**。
+确定性展示链 **3/3**、12 帧仍是离线素材。Runtime `62b61c2` 首轮针对性在线复测为 `10/11`，41 attempts、123,822 tokens；`rag2-042` 失败后展示阶段未执行，当前 Runtime `1bfe280` 已完成离线修复，Release Gate **NOT_COMPLETE**。
 
 ## 当前候选快照｜v3.0.4 最小在线复测取证（2026-09-21）
 

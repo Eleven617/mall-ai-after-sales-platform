@@ -2,7 +2,7 @@
 
 ## 当前候选｜v3.0.4 离线收口（2026-09-22）
 
-Runtime/image `62b61c2d64f75ffc80ed876976bc7d79e61c1d23`：FastAPI **494/494**（478 cases + 16 subtests）、manifest **478/478**、representative **8/8**、contract replay **36/36**；主 Compose **8/8 healthy**，当前镜像完整现场 **122/122**，failed=0、environmentBlocked=0、Provider requests/tokens=0/0。
+Runtime/image `1bfe2809206d91077220a974637d88fa2e82f4aa`：FastAPI **495/495**（479 cases + 16 subtests）、manifest **478/478**、representative **8/8**、contract replay **36/36**；主 Compose **8/8 healthy**，现场 **122/122** 仍绑定未受 RAG 改动影响的 `62b61c2` deterministic 证据，Provider requests/tokens=0/0。
 
 当前候选修复了 camelCase opaque reference 使一次有界结构纠正无法启动的协议缺陷，并加入跨批次累计预算守卫；新的在线 11 Case 与展示链仍为 `not_executed`。
 
