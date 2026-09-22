@@ -94,6 +94,7 @@ if ([string]::IsNullOrWhiteSpace($password) -or $password.Trim().Length -lt 12) 
 $ledgerDirectory = Join-Path $root "tmp\release-ledger-$ReleaseId"
 $ledgerPath = Join-Path $ledgerDirectory 'ledger.jsonl'
 $lockPath = Join-Path $root "docs\evidence\deepseek-release-lock-$ReleaseId.json"
+$campaignPath = Join-Path $root 'docs\evidence\v304-live-retest-campaign.json'
 [Environment]::SetEnvironmentVariable('MALL_RELEASE_LEDGER_HOST_PATH', $ledgerDirectory, 'Process')
 [Environment]::SetEnvironmentVariable('MALL_RELEASE_LEDGER_CONTAINER_PATH', '/app/release-ledger/ledger.jsonl', 'Process')
 [Environment]::SetEnvironmentVariable('MALL_RELEASE_LEDGER_PATH', $ledgerPath, 'Process')
@@ -150,7 +151,7 @@ try {
     $reportPath = Join-Path $root "tmp\v304-minimal-retest-$ReleaseId\report.json"
     & .\mall-ai-service\.venv\Scripts\python.exe .\mall-ai-service\scripts\run_deepseek_release_batch.py `
         --phase minimal_retest --release-id $ReleaseId --runtime-commit $RuntimeCommit `
-        --report $reportPath --lock $lockPath
+        --report $reportPath --lock $lockPath --campaign $campaignPath
     $runnerExitCode = $LASTEXITCODE
 }
 finally {

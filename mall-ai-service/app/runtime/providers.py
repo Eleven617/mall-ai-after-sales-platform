@@ -44,7 +44,7 @@ class RuntimeModelError(RuntimeError):
         self.diagnostics = dict(diagnostics or {})
 
 
-RUNTIME_PROMPT_VERSION = "agent_runtime_v3_4"
+RUNTIME_PROMPT_VERSION = "agent_runtime_v3_5"
 
 
 class RuntimeModelContext(BaseModel):

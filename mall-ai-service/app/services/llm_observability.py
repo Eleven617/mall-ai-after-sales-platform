@@ -105,6 +105,10 @@ _operation_var: ContextVar[str | None] = ContextVar(
     "mall_ai_llm_operation",
     default=None,
 )
+_protocol_correction_var: ContextVar[bool] = ContextVar(
+    "mall_ai_llm_protocol_correction",
+    default=False,
+)
 
 
 @contextmanager
@@ -122,6 +126,20 @@ def llm_operation_context(operation: str) -> Iterator[None]:
 def current_llm_operation(default: str) -> str:
     operation = _operation_var.get()
     return operation if operation in _ALLOWED_RUNTIME_OPERATIONS else default
+
+
+@contextmanager
+def protocol_correction_context() -> Iterator[None]:
+    """Mark exactly one bounded structured-output repair request."""
+    token = _protocol_correction_var.set(True)
+    try:
+        yield
+    finally:
+        _protocol_correction_var.reset(token)
+
+
+def current_protocol_correction() -> bool:
+    return _protocol_correction_var.get()
 
 
 @contextmanager

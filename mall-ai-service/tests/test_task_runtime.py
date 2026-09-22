@@ -54,7 +54,7 @@ SESSION_ID = "synthetic-runtime-session"
 
 
 def test_executor_prompt_handles_unspecified_after_sales_draft_without_guessing_type() -> None:
-    assert RUNTIME_PROMPT_VERSION == "agent_runtime_v3_4"
+    assert RUNTIME_PROMPT_VERSION == "agent_runtime_v3_5"
     assert "verified 的 order_fact" in EXECUTOR_SYSTEM_PROMPT
     assert "不要猜测四种申请类型" in EXECUTOR_SYSTEM_PROMPT
     assert "仅引用 orderFactRef" in EXECUTOR_SYSTEM_PROMPT

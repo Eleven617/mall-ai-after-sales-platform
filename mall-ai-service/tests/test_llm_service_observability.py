@@ -4,11 +4,16 @@ from unittest.mock import patch
 
 import httpx
 
-from app.services.llm_observability import capture_llm_metrics, llm_operation_context
+from app.services.llm_observability import (
+    capture_llm_metrics,
+    llm_operation_context,
+    protocol_correction_context,
+)
 from app.services.provider_guard import provider_access_context
 from app.services.llm_service import (
     LLMServiceError,
     _extract_response,
+    generate_json,
     generate_text,
     generate_with_tools,
 )
@@ -48,6 +53,37 @@ class _InvalidContractResponse(_FakeResponse):
                 "prompt_tokens": 12,
                 "completion_tokens": 0,
                 "total_tokens": 12,
+            },
+        }
+
+
+class _MalformedJsonContentResponse(_FakeResponse):
+    headers = {"x-request-id": "synthetic-request-id"}
+
+    def json(self) -> dict:
+        return {
+            "choices": [
+                {
+                    "finish_reason": "length",
+                    "message": {"content": "not-json", "reasoning_content": "private"},
+                }
+            ],
+            "usage": {
+                "prompt_tokens": 21,
+                "completion_tokens": 8,
+                "total_tokens": 29,
+            },
+        }
+
+
+class _ValidJsonContentResponse(_FakeResponse):
+    def json(self) -> dict:
+        return {
+            "choices": [{"message": {"content": '{"ok":true}'}}],
+            "usage": {
+                "prompt_tokens": 12,
+                "completion_tokens": 5,
+                "total_tokens": 17,
             },
         }
 
@@ -207,6 +243,55 @@ class LLMServiceObservabilityTests(unittest.TestCase):
         self.assertEqual(1, len(sink.events))
         self.assertEqual("failed", sink.events[0].outcome)
         self.assertEqual("invalid_response", sink.events[0].failure_class)
+
+    def test_malformed_json_retains_safe_envelope_diagnostics_and_usage(self) -> None:
+        fake_settings = SimpleNamespace(
+            deepseek_api_key="test-key",
+            deepseek_model="deepseek-flash",
+            deepseek_base_url="https://example.invalid",
+            deepseek_timeout_seconds=5.0,
+        )
+        with (
+            patch("app.services.llm_service.settings", fake_settings),
+            patch(
+                "app.services.llm_service.httpx.post",
+                return_value=_MalformedJsonContentResponse(),
+            ),
+            capture_llm_metrics(max_attempts=1, timeout_seconds=1.0) as sink,
+        ):
+            with self.assertRaises(LLMServiceError) as raised:
+                generate_json("private prompt", "return json", output_mode="json_object")
+
+        self.assertEqual(
+            {
+                "has_content": True,
+                "has_tool_calls": False,
+                "finish_reason": "length",
+                "schema_error_kinds": ["json_parse"],
+            },
+            raised.exception.diagnostics,
+        )
+        self.assertNotIn("private", str(raised.exception.diagnostics))
+        self.assertEqual(29, sink.events[0].total_tokens)
+        self.assertFalse(sink.events[0].protocol_correction)
+
+    def test_protocol_correction_attempt_is_explicitly_marked(self) -> None:
+        fake_settings = SimpleNamespace(
+            deepseek_api_key="test-key",
+            deepseek_model="deepseek-flash",
+            deepseek_base_url="https://example.invalid",
+            deepseek_timeout_seconds=5.0,
+        )
+        with (
+            patch("app.services.llm_service.settings", fake_settings),
+            patch("app.services.llm_service.httpx.post", return_value=_ValidJsonContentResponse()),
+            capture_llm_metrics(max_attempts=1, timeout_seconds=1.0) as sink,
+            protocol_correction_context(),
+        ):
+            generate_json("synthetic", "return json", output_mode="json_object")
+
+        self.assertEqual(1, len(sink.events))
+        self.assertTrue(sink.events[0].protocol_correction)
 
     def test_tool_planning_uses_the_reviewed_high_reasoning_profile(self) -> None:
         fake_settings = SimpleNamespace(

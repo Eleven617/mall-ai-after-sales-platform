@@ -18,6 +18,7 @@ from app.config import settings
 from app.services.llm_observability import (
     current_llm_call_policy,
     current_llm_operation,
+    current_protocol_correction,
     record_llm_metric,
 )
 from app.services.provider_guard import ProviderGuardError, assert_provider_request_allowed
@@ -57,11 +58,13 @@ class LLMServiceError(RuntimeError):
         category: str = "unknown",
         attempts: int | None = None,
         request_id_hash: str | None = None,
+        diagnostics: dict[str, object] | None = None,
     ) -> None:
         super().__init__(message)
         self.category = category
         self.attempts = attempts
         self.request_id_hash = request_id_hash
+        self.diagnostics = dict(diagnostics or {})
 
 
 @dataclass
@@ -170,6 +173,7 @@ def _request_json(
     started_at = time.monotonic()
     attempts = 1
     provider_request_id_hash: str | None = None
+    usage_mapping: dict = {}
     try:
         reliability_governor.ensure_dependency_available("llm")
         raw_response = _post_with_retry(url, headers, payload)
@@ -187,22 +191,21 @@ def _request_json(
                 "Provider response JSON must be an object",
                 category="invalid_response",
             )
+        usage = data.get("usage")
+        usage_mapping = usage if isinstance(usage, dict) else {}
         try:
             result = parser(data)
         except LLMServiceError as exc:
             # Provider request identifiers are useful for support without
             # exposing a raw response header or model payload.
             request_id_hash = exc.request_id_hash or _response_request_id_hash(response)
-            if request_id_hash and not exc.request_id_hash:
-                raise LLMServiceError(
-                    str(exc),
-                    category=exc.category,
-                    attempts=exc.attempts,
-                    request_id_hash=request_id_hash,
-                ) from exc
-            raise
-        usage = data.get("usage")
-        usage_mapping = usage if isinstance(usage, dict) else {}
+            raise LLMServiceError(
+                str(exc),
+                category=exc.category,
+                attempts=exc.attempts,
+                request_id_hash=request_id_hash,
+                diagnostics={**_provider_envelope_diagnostics(data), **exc.diagnostics},
+            ) from exc
         record_llm_metric(
             operation=operation,
             outcome="succeeded",
@@ -212,6 +215,7 @@ def _request_json(
             completion_tokens=_usage_int(usage_mapping, "completion_tokens"),
             total_tokens=_usage_int(usage_mapping, "total_tokens"),
             provider_request_id_hash=provider_request_id_hash,
+            protocol_correction=current_protocol_correction(),
         )
         reliability_governor.record_dependency_success(
             "llm", duration_ms=_elapsed_ms(started_at)
@@ -254,7 +258,11 @@ def _request_json(
             elapsed_ms=_elapsed_ms(started_at),
             attempts=attempts,
             failure_class=exc.category,
+            prompt_tokens=_usage_int(usage_mapping, "prompt_tokens"),
+            completion_tokens=_usage_int(usage_mapping, "completion_tokens"),
+            total_tokens=_usage_int(usage_mapping, "total_tokens"),
             provider_request_id_hash=exc.request_id_hash or provider_request_id_hash,
+            protocol_correction=current_protocol_correction(),
             write_ledger=exc.category != "budget_exhausted",
         )
         if exc.category != "circuit_open":
@@ -273,7 +281,11 @@ def _request_json(
             elapsed_ms=_elapsed_ms(started_at),
             attempts=attempts,
             failure_class=error.category,
+            prompt_tokens=_usage_int(usage_mapping, "prompt_tokens"),
+            completion_tokens=_usage_int(usage_mapping, "completion_tokens"),
+            total_tokens=_usage_int(usage_mapping, "total_tokens"),
             provider_request_id_hash=provider_request_id_hash,
+            protocol_correction=current_protocol_correction(),
         )
         reliability_governor.record_dependency_failure(
             "llm", duration_ms=_elapsed_ms(started_at)
@@ -464,13 +476,31 @@ def _extract_json_object(data: dict) -> dict:
             raise LLMServiceError(
                 "Model did not return valid JSON",
                 category="invalid_response",
+                diagnostics={"schema_error_kinds": ["json_parse"]},
             ) from exc
     if not isinstance(payload, dict):
         raise LLMServiceError(
             "Model JSON result must be an object",
             category="invalid_response",
+            diagnostics={"schema_error_kinds": ["root_type"]},
         )
     return payload
+
+
+def _provider_envelope_diagnostics(data: dict) -> dict[str, object]:
+    """Return bounded response metadata without model text or reasoning."""
+    choices = data.get("choices")
+    if not isinstance(choices, list) or not choices or not isinstance(choices[0], dict):
+        return {"has_content": False, "has_tool_calls": False, "finish_reason": "missing_choice"}
+    choice = choices[0]
+    message = choice.get("message") if isinstance(choice.get("message"), dict) else {}
+    raw_finish = choice.get("finish_reason")
+    finish_reason = raw_finish if raw_finish in {"stop", "length", "tool_calls", "content_filter"} else None
+    return {
+        "has_content": isinstance(message.get("content"), str) and bool(message.get("content", "").strip()),
+        "has_tool_calls": isinstance(message.get("tool_calls"), list) and bool(message.get("tool_calls")),
+        "finish_reason": finish_reason,
+    }
 
 
 def _extract_embedded_json_object(text: str) -> dict | None:

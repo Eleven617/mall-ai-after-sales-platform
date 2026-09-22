@@ -57,6 +57,11 @@ from app.services.release_ledger import (  # noqa: E402
     read_release_events,
     summarize_release_events,
 )
+from live_retest_campaign import (  # noqa: E402
+    CampaignBudgetError,
+    begin_campaign_batch,
+    settle_campaign_batch,
+)
 
 
 REPOSITORY_ROOT = SERVICE_ROOT.parent
@@ -707,10 +712,6 @@ def _run_minimal_retest(ledger: dict[str, object], report_dir: Path) -> dict[str
             ledger["status"] = "failed"
             ledger["failureCategory"] = "ledger_mismatch"
             return {"status": "failed", "failureCategory": "ledger_mismatch", **reports}
-        if int(ledger.get("providerFailures", 0) or 0) > 0:
-            ledger["status"] = "failed"
-            ledger["failureCategory"] = "provider_failure"
-            return {"status": "failed", "failureCategory": "provider_failure", **reports}
         if _budget_exceeded(ledger):
             ledger["status"] = "budget_exhausted"
             ledger["failureCategory"] = "budget_exhausted"
@@ -743,10 +744,6 @@ def _run_minimal_retest(ledger: dict[str, object], report_dir: Path) -> dict[str
         ledger["status"] = "failed"
         ledger["failureCategory"] = "ledger_mismatch"
         return {"status": "failed", "failureCategory": "ledger_mismatch", **reports}
-    if int(ledger.get("providerFailures", 0) or 0) > 0:
-        ledger["status"] = "failed"
-        ledger["failureCategory"] = "provider_failure"
-        return {"status": "failed", "failureCategory": "provider_failure", **reports}
     statuses = {str(report.get("status")) for report in selected_reports}
     if "environment_blocked" in statuses:
         overall = "environment_blocked"
@@ -775,6 +772,7 @@ def main() -> int:
     parser.add_argument("--runtime-commit", required=True)
     parser.add_argument("--report", type=Path, required=True)
     parser.add_argument("--lock", type=Path, default=None)
+    parser.add_argument("--campaign", type=Path, default=None)
     args = parser.parse_args()
 
     if args.lock is None:
@@ -864,6 +862,28 @@ def main() -> int:
         return 2
 
     batch_id = f"{args.phase}-{uuid.uuid4().hex[:12]}"
+    campaign_path: Path | None = None
+    if args.phase == "minimal_retest":
+        if args.campaign is None:
+            print("deepseek release batch refused: campaign budget path is missing", file=sys.stderr)
+            return 3
+        campaign_path = args.campaign if args.campaign.is_absolute() else REPOSITORY_ROOT / args.campaign
+        try:
+            configured_attempts = int(os.getenv("MALL_RELEASE_MAX_PROVIDER_HTTP_ATTEMPTS", "80"))
+            configured_tokens = int(os.getenv("MALL_RELEASE_MAX_TOTAL_TOKENS", "200000"))
+            if configured_attempts <= 0 or configured_tokens <= 0:
+                raise CampaignBudgetError("configured release budget is invalid")
+            campaign_attempts, campaign_tokens = begin_campaign_batch(
+                campaign_path,
+                batch_id=batch_id,
+                release_id=args.release_id,
+                runtime_commit=args.runtime_commit,
+            )
+        except (CampaignBudgetError, ValueError) as exc:
+            print(f"deepseek release batch refused: {exc}", file=sys.stderr)
+            return 3
+        os.environ["MALL_RELEASE_MAX_PROVIDER_HTTP_ATTEMPTS"] = str(min(configured_attempts, campaign_attempts))
+        os.environ["MALL_RELEASE_MAX_TOTAL_TOKENS"] = str(min(configured_tokens, campaign_tokens))
     # The formal entry point binds every required authorization dimension in
     # the host process.  The FastAPI container receives the same values through
     # Compose environment and request headers; a key by itself never unlocks
@@ -983,6 +1003,21 @@ def main() -> int:
         and isinstance(report.get("realLocalShowcase"), dict)
         and report["realLocalShowcase"].get("status") == "passed"
     )
+    if campaign_path is not None:
+        try:
+            settle_campaign_batch(
+                campaign_path,
+                batch_id=batch_id,
+                status=str(ledger.get("status") or "failed").upper(),
+                provider_http_attempts=int(ledger.get("providerHttpAttempts", 0) or 0),
+                total_tokens=int(ledger.get("totalTokens", 0) or 0),
+                ledger_reconciled=ledger.get("ledgerReconciled") is True,
+            )
+        except CampaignBudgetError:
+            ledger["status"] = "failed"
+            ledger["failureCategory"] = "campaign_budget_mismatch"
+            report["status"] = "failed"
+            report["failureCategory"] = "campaign_budget_mismatch"
     payload = {"ledger": ledger, "report": report}
     args.report.parent.mkdir(parents=True, exist_ok=True)
     args.report.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")

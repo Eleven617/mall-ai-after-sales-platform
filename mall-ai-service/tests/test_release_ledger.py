@@ -163,6 +163,37 @@ class ReleaseLedgerTests(unittest.TestCase):
         grounding_run.assert_called_once()
         showcase_run.assert_not_called()
 
+    def test_minimal_retest_collects_all_targets_after_one_isolated_schema_failure(self) -> None:
+        agent_reports = [
+            {"status": "quality_failed", "failed": 1, "environmentBlocked": 0, "toolCalls": 1, "uniqueCases": 4, "requiredRunsPerCase": 1},
+            {"status": "passed", "failed": 0, "environmentBlocked": 0, "toolCalls": 1, "uniqueCases": 3, "requiredRunsPerCase": 1},
+        ]
+        grounding_report = {"status": "passed", "quality_failed_cases": 0, "environment_blocked_cases": 0}
+        ledger: dict[str, object] = {
+            "batchId": "minimal-isolated-schema",
+            "runtimeCommit": "a" * 40,
+            "providerFailures": 1,
+        }
+        with TemporaryDirectory() as directory, patch.object(
+            batch_runner, "_run_portfolio_showcase"
+        ) as showcase_run, patch.object(
+            batch_runner, "run_live_model_agent_evaluation", side_effect=agent_reports
+        ) as agent_run, patch.object(
+            batch_runner,
+            "load_rag2_golden_suite",
+            return_value={"schema_version": "1", "suite_version": "fixture", "cases": [], "injection_fixtures": []},
+        ), patch.object(
+            batch_runner, "evaluate_grounded_answer_suite", return_value=grounding_report
+        ) as grounding_run, patch.object(
+            batch_runner, "_sync_process_ledger", return_value=True
+        ), patch.object(batch_runner, "_budget_exceeded", return_value=False):
+            result = batch_runner._run_minimal_retest(ledger, Path(directory))
+
+        self.assertEqual("failed", result["status"])
+        self.assertEqual(2, agent_run.call_count)
+        grounding_run.assert_called_once()
+        showcase_run.assert_not_called()
+
     def test_release_lock_create_is_exclusive_and_final_update_is_atomic(self) -> None:
         with TemporaryDirectory() as directory:
             lock = Path(directory) / "deepseek-release-lock-v3.0.1-final-test.json"

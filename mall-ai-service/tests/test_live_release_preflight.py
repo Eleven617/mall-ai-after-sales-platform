@@ -86,6 +86,12 @@ def test_environment_name_is_consistent_across_runner_compose_and_powershell() -
         assert PASSWORD_ENV_NAME in source.read_text(encoding="utf-8")
 
 
+def test_compose_prompt_identity_matches_runtime_protocol() -> None:
+    root = Path(__file__).resolve().parents[2]
+    compose = (root / "docker-compose.yml").read_text(encoding="utf-8")
+    assert "MALL_PROMPT_VERSION: ${MALL_PROMPT_VERSION:-agent_runtime_v3_5}" in compose
+
+
 def test_v304_final_entry_is_a_real_single_batch_path_with_ephemeral_password() -> None:
     root = Path(__file__).resolve().parents[2]
     content = (root / "scripts" / "Run-V3_0_4-Portfolio-Release.ps1").read_text(encoding="utf-8")
@@ -102,6 +108,7 @@ def test_v304_final_entry_is_a_real_single_batch_path_with_ephemeral_password() 
     assert "docker compose exec -T mall-ai-service" in content
     assert "deepseek-release-lock-$ReleaseId.json" in content
     assert "--phase minimal_retest" in content
+    assert "--campaign $campaignPath" in content
     assert "Get-BoundedReleaseLimit $previousMaxAttempts 80" in content
     assert "Get-BoundedReleaseLimit $previousMaxTokens 200000" in content
     assert "GetEnvironmentVariable('MALL_LIVE_DEMO_PASSWORD', 'User')" in content

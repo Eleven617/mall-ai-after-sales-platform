@@ -16,6 +16,7 @@ from typing import Any, Generic, TypeVar
 from pydantic import BaseModel, ValidationError
 
 from app.services.llm_service import LLMServiceError, generate_json
+from app.services.llm_observability import protocol_correction_context
 
 
 ModelT = TypeVar("ModelT", bound=BaseModel)
@@ -179,6 +180,7 @@ def generate_structured_output_with_correction(
             {
                 "failure_stage": "provider_envelope" if exc.category == "invalid_response" else "http",
                 "provider_request_id_hash": getattr(exc, "request_id_hash", None),
+                **dict(getattr(exc, "diagnostics", {}) or {}),
             }
         )
         if exc.category != "invalid_response":
@@ -230,18 +232,19 @@ def generate_structured_output_with_correction(
         + _safe_json(repair_envelope)
     )
     try:
-        repaired = _generate_and_validate_once(
-            message=repair_prompt,
-            system_prompt=(
-                _append_schema_contract(correction_system_prompt or system_prompt, response_model)
-                + "\n\n[受限校正]\n只允许修复 validationErrors 中列出的错误；"
-                "不得输出解释或读取外部数据。校正最多执行一次。"
-            ),
-            response_model=response_model,
-            mode=mode,
-            temperature=temperature,
-            json_generator=json_generator,
-        )
+        with protocol_correction_context():
+            repaired = _generate_and_validate_once(
+                message=repair_prompt,
+                system_prompt=(
+                    _append_schema_contract(correction_system_prompt or system_prompt, response_model)
+                    + "\n\n[受限校正]\n只允许修复 validationErrors 中列出的错误；"
+                    "不得输出解释或读取外部数据。校正最多执行一次。"
+                ),
+                response_model=response_model,
+                mode=mode,
+                temperature=temperature,
+                json_generator=json_generator,
+            )
         second_codes = _normalise_validation_codes(
             validate_result(repaired) if validate_result is not None else ()
         )
@@ -264,8 +267,9 @@ def generate_structured_output_with_correction(
             validation_codes=("correction_provider_unavailable",),
             correction_attempted=True,
             diagnostics={
-                "failure_stage": "http",
+                "failure_stage": "provider_envelope" if exc.category == "invalid_response" else "http",
                 "correction_result": "failed",
+                **dict(getattr(exc, "diagnostics", {}) or {}),
             },
         ) from exc
     except ValidationError as exc:
@@ -459,10 +463,14 @@ def _safe_correction_context(value: Mapping[str, Any] | None) -> dict[str, Any] 
         }:
             if not isinstance(raw_value, (list, tuple)) or len(raw_value) > 32:
                 return None
-            if not all(
-                isinstance(item, str) and _SAFE_CONTEXT_IDENTIFIER.fullmatch(item)
-                for item in raw_value
-            ):
+            if raw_key == "reference_hint_keys":
+                valid_items = all(item in {"orderRef", "skuRef"} for item in raw_value)
+            else:
+                valid_items = all(
+                    isinstance(item, str) and _SAFE_CONTEXT_IDENTIFIER.fullmatch(item)
+                    for item in raw_value
+                )
+            if not valid_items:
                 return None
             sanitized[raw_key] = list(raw_value)
         elif raw_key == "reference_hint_values":

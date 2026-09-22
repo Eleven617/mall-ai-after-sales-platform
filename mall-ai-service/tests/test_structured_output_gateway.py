@@ -4,6 +4,7 @@ from unittest.mock import patch
 
 from pydantic import BaseModel
 
+from app.services.llm_observability import capture_llm_metrics
 from app.services.llm_service import LLMServiceError, _extract_json_object, generate_json
 from app.services.structured_output_gateway import (
     StructuredOutputError,
@@ -24,11 +25,19 @@ class _DecisionContract(BaseModel):
 
 
 class _FakeResponse:
-    def __init__(self, content: str) -> None:
+    def __init__(self, content: str, *, total_tokens: int = 0) -> None:
         self._content = content
+        self._total_tokens = total_tokens
 
     def json(self) -> dict:
-        return {"choices": [{"message": {"content": self._content}}]}
+        return {
+            "choices": [{"finish_reason": "stop", "message": {"content": self._content}}],
+            "usage": {
+                "prompt_tokens": self._total_tokens,
+                "completion_tokens": 0,
+                "total_tokens": self._total_tokens,
+            },
+        }
 
 
 class StructuredOutputGatewayTests(unittest.TestCase):
@@ -289,6 +298,108 @@ class StructuredOutputGatewayTests(unittest.TestCase):
         self.assertIn('"safeContext"', correction_message)
         self.assertNotIn("untrusted candidate text", correction_message)
         self.assertIn("受限校正", calls[1]["system_prompt"])
+
+    def test_gateway_allows_camel_case_opaque_reference_hints_for_one_correction(self) -> None:
+        calls: list[dict] = []
+
+        def fake_json_generator(**kwargs):
+            calls.append(kwargs)
+            if len(calls) == 1:
+                raise LLMServiceError(
+                    "Model did not return valid JSON",
+                    category="invalid_response",
+                    diagnostics={"schema_error_kinds": ["json_parse"]},
+                )
+            return {
+                "intent": "query_logistics",
+                "need_tool": True,
+                "tool": {"name": "logistics_service", "order_sn": "opaque-ref"},
+            }
+
+        with capture_llm_metrics(max_attempts=1) as sink:
+            result = generate_structured_output(
+                message="private input must not be replayed",
+                system_prompt="识别意图",
+                response_model=_DecisionContract,
+                json_generator=fake_json_generator,
+                correction_context={
+                    "reference_hint_keys": ["orderRef", "skuRef"],
+                    "reference_hint_values": {
+                        "orderRef": "ref-order-alpha",
+                        "skuRef": "ref-sku-alpha",
+                    },
+                    "schema_version": "v1",
+                },
+            )
+
+        self.assertEqual("query_logistics", result.value.intent)
+        self.assertEqual(2, len(calls))
+        self.assertNotIn("private input must not be replayed", calls[1]["message"])
+        self.assertEqual([], sink.events)
+
+    def test_gateway_rejects_unknown_reference_hint_key_without_correction(self) -> None:
+        calls = 0
+
+        def malformed(**_kwargs):
+            nonlocal calls
+            calls += 1
+            raise LLMServiceError("invalid", category="invalid_response")
+
+        with self.assertRaises(StructuredOutputError) as raised:
+            generate_structured_output(
+                message="private input",
+                system_prompt="识别意图",
+                response_model=_DecisionContract,
+                json_generator=malformed,
+                correction_context={
+                    "reference_hint_keys": ["customerId"],
+                    "schema_version": "v1",
+                },
+            )
+
+        self.assertEqual(1, calls)
+        self.assertFalse(raised.exception.correction_attempted)
+
+    def test_provider_json_failure_and_bounded_correction_are_both_accounted(self) -> None:
+        fake_settings = type(
+            "Settings",
+            (),
+            {
+                "deepseek_api_key": "unit-test-key",
+                "deepseek_base_url": "https://example.invalid",
+                "deepseek_model": "unit-test-model",
+            },
+        )()
+        responses = [
+            _FakeResponse("not-json", total_tokens=7),
+            _FakeResponse(
+                '{"intent":"query_logistics","need_tool":true,'
+                '"tool":{"name":"logistics_service","order_sn":"opaque-ref"}}',
+                total_tokens=11,
+            ),
+        ]
+        with (
+            patch("app.services.llm_service.settings", fake_settings),
+            patch("app.services.llm_service._post_with_retry", side_effect=responses),
+            capture_llm_metrics(max_attempts=1) as sink,
+        ):
+            result = generate_structured_output(
+                message="private input",
+                system_prompt="识别意图",
+                response_model=_DecisionContract,
+                json_generator=generate_json,
+                correction_context={
+                    "reference_hint_keys": ["orderRef"],
+                    "reference_hint_values": {"orderRef": "ref-order-alpha"},
+                    "schema_version": "v1",
+                },
+            )
+
+        self.assertEqual("query_logistics", result.value.intent)
+        self.assertEqual(2, len(sink.events))
+        self.assertEqual(["failed", "succeeded"], [event.outcome for event in sink.events])
+        self.assertEqual([7, 11], [event.total_tokens for event in sink.events])
+        self.assertEqual([False, True], [event.protocol_correction for event in sink.events])
 
     def test_gateway_blocks_after_one_unsuccessful_protocol_correction(self) -> None:
         calls: list[dict] = []
