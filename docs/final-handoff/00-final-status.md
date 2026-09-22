@@ -2,9 +2,9 @@
 
 ## 当前状态｜v3.0.4 离线收口候选（2026-09-22）
 
-当前 Runtime/image `1bfe2809206d91077220a974637d88fa2e82f4aa` 的机器报告为 FastAPI **495/495**（479 cases + 16 subtests）、manifest **478/478**、representative **8/8**、contract replay **36/36**；现场 **122/122** 仍引用未受 RAG 改动影响的 `62b61c2` deterministic 证据。
+当前 Runtime/image `d4ec989548e953a8f8c5ee7ceef4ea13b464fbfb` 的机器报告为 FastAPI **504/504**（488 cases + 16 subtests）、manifest **478/478**、representative **8/8**、contract replay **36/36**；当前 Runtime/image 现场 **122/122**。
 
-**NOT_COMPLETE**。当前候选已修复 RAG 证据核验的政策版本适用性缺口；首轮在线目标为 `10/11`，`rag2-042` 仍需在新 Runtime 上复测，展示阶段未执行。
+**NOT_COMPLETE**。当前候选已修复 RAG 证据核验的当前政策假阴性，并保留缺证据、冲突、不适用和支付路径拒答；前两轮在线目标均为 `10/11`，最后一批 5 项范围已冻结但尚未执行，展示阶段未执行。
 
 历史在线批次保持原始 Report/Ledger/Lock；当前候选本轮外部 Provider requests/tokens 为 0/0。Release Gate 仍为 **NOT_COMPLETE**，未合并 main。
 

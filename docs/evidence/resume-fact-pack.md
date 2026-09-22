@@ -2,9 +2,9 @@
 
 ## 当前候选｜v3.0.4 离线收口（2026-09-22）
 
-Runtime/image `1bfe2809206d91077220a974637d88fa2e82f4aa`：FastAPI **495/495**（479 cases + 16 subtests）、manifest **478/478**、representative **8/8**、contract replay **36/36**；主 Compose **8/8 healthy**，现场 **122/122** 仍绑定未受 RAG 改动影响的 `62b61c2` deterministic 证据，Provider requests/tokens=0/0。
+Runtime/image `d4ec989548e953a8f8c5ee7ceef4ea13b464fbfb`：FastAPI **504/504**（488 cases + 16 subtests）、manifest **478/478**、representative **8/8**、contract replay **36/36**；主 Compose **8/8 healthy**，当前镜像现场 **122/122**，Provider requests/tokens=0/0。
 
-当前候选修复了 camelCase opaque reference 使一次有界结构纠正无法启动的协议缺陷，并加入跨批次累计预算守卫；新的在线 11 Case 与展示链仍为 `not_executed`。
+当前候选在既有结构纠正和累计预算守卫之上，新增 Grounding v3：服务端只对当前版本、有效日期、直接主题且无版本冲突的证据纠正保守假阴性；最后一批固定为 4 个 Grounding 项与 1 个普通成功对照，尚未执行。
 
 状态仍为 **NOT_COMPLETE**：上一在线复测实际发生 16 attempts、15 成功、1 个 `model_contract_schema_invalid`、49,158 tokens，在 `agent-open-010` 后停止；历史 Report/Ledger/Lock 均保持不变。离线结果不得表述为真实模型效果，未合并 `main`。
 

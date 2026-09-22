@@ -2,11 +2,11 @@
 
 ## 当前权威快照｜v3.0.4 离线收口候选（2026-09-22）
 
-当前 Runtime/image `1bfe2809206d91077220a974637d88fa2e82f4aa` 的机器报告为 FastAPI JUnit **495/495**（479 cases + 16 subtests）、manifest **478/478**、representative **8/8**、contract replay **36/36**；未受 RAG 改动影响的现场证据仍为 **122/122**，绑定前一 Runtime `62b61c2`。
+当前 Runtime/image `d4ec989548e953a8f8c5ee7ceef4ea13b464fbfb` 的机器报告为 FastAPI JUnit **504/504**（488 cases + 16 subtests）、manifest **478/478**、representative **8/8**、contract replay **36/36**；当前镜像现场从零执行 **122/122**，Provider requests/tokens 为 0/0。
 
-Release Gate：**NOT_COMPLETE**。Runtime `62b61c2` 的首轮针对性在线复测为 `10/11`，使用 41 attempts、123,822 tokens；`rag2-042` 为 OUTCOME_MISMATCH，展示阶段按门禁未执行。当前 Runtime `1bfe280` 已完成通用 RAG 证据版本绑定离线修复，待最小复测。历史 Report/Ledger/Lock 保持不变。
+Release Gate：**NOT_COMPLETE**。前两轮针对性在线复测均为 `10/11`，累计 82 attempts、249,321 tokens；`rag2-042` 为 OUTCOME_MISMATCH，展示阶段按门禁未执行。当前 Runtime 已完成通用 Grounding v3 假阴性修复，并冻结第三批 5 项范围；需当前 SHA 的 CI 成功后才可执行。历史 Report/Ledger/Lock 保持不变。
 
-现场报告 `tmp/v304-field-acceptance-62b61c2/field-20260922T031548Z-a8e35576/field-acceptance.json`；Fixture SHA-256 `7b7616e3ba0f6939a7bcc7d381b3c3b7b35d2b443c2056b218cdefc7f17486a9`。确定性展示链 3/3、12 帧仍是离线素材；当前候选外部 Provider requests/tokens 为 0/0，未合并 `main`。
+现场报告 `tmp/v304-field-acceptance-d4ec989-valid/field-20260922T070406Z-c630dd4f/field-acceptance.json`，SHA-256 `c29bc370c79a9235f7aa5ab7e7cdb50d2558bec5037123e2a1fb8088fafb244e`；Fixture SHA-256 `a7bd88ba4340e8116d1672e40a00caede1bc4621894952e36de508a673efcb95`。确定性展示链 3/3、12 帧仍是离线素材；当前候选外部 Provider requests/tokens 为 0/0，未合并 `main`。
 
 历史在线最小复测仍是 FAILED：21 次 HTTP attempts、19 成功、2 次 network 失败、73,833 tokens，11 个目标/对照未执行。当前候选只具备一次最小在线复测的工程入口，不得把 deterministic 素材或 122/122 写成真实模型效果。
 

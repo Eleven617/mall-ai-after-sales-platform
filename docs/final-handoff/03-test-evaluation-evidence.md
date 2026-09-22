@@ -2,11 +2,11 @@
 
 ## 当前候选快照｜v3.0.4 离线收口（2026-09-22）
 
-Runtime/image `1bfe2809206d91077220a974637d88fa2e82f4aa`：FastAPI **495/495**（479 cases + 16 subtests）、manifest **478/478**、representative **8/8**、contract replay **36/36**。
+Runtime/image `d4ec989548e953a8f8c5ee7ceef4ea13b464fbfb`：FastAPI **504/504**（488 cases + 16 subtests）、manifest **478/478**、representative **8/8**、contract replay **36/36**。
 
 同一镜像从 0/122 完整现场通过 Browser 24、Java/MySQL 30、隔离 Compose Fault 36、Durable Recovery 32；failed=0、environmentBlocked=0，报告 SHA-256 `51dff5a65ce8536089b4a4bbe0ecb1c52712a57f5d1c13fb72739ba6f0b24e54`，Fixture SHA-256 `7b7616e3ba0f6939a7bcc7d381b3c3b7b35d2b443c2056b218cdefc7f17486a9`，Provider requests/tokens=0/0。
 
-确定性展示链 **3/3**、12 帧仍是离线素材。Runtime `62b61c2` 首轮针对性在线复测为 `10/11`，41 attempts、123,822 tokens；`rag2-042` 失败后展示阶段未执行，当前 Runtime `1bfe280` 已完成离线修复，Release Gate **NOT_COMPLETE**。
+当前镜像现场 **122/122**，报告绑定 Runtime `d4ec989`、execution HEAD `25d9150`，Provider 0/0。确定性展示链 **3/3**、12 帧仍是离线素材。前两轮针对性在线复测均为 `10/11`；当前 Runtime 已完成 Grounding v3 离线修复，最后一批 5 项尚未执行，Release Gate **NOT_COMPLETE**。
 
 ## 当前候选快照｜v3.0.4 最小在线复测取证（2026-09-21）
 

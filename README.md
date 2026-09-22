@@ -9,9 +9,9 @@
 
 ## 30 秒了解项目
 
-当前 Runtime 的离线回归为 FastAPI JUnit **495/495**（479 cases + 16 subtests）。
+当前 Runtime 的离线回归为 FastAPI JUnit **504/504**（488 cases + 16 subtests）。
 
-> 当前展示状态：`NOT_COMPLETE`。Runtime `1bfe2809206d91077220a974637d88fa2e82f4aa` 的离线工程验证为 FastAPI JUnit `495/495`、manifest `478/478`、representative `8/8`、contract replay `36/36`；未受 RAG 改动影响的现场 `122/122` 仍绑定前一 Runtime `62b61c2`。两轮针对性在线复测均为 `10/11`：主集 `4/4`、补充 v3 `3/3`、Grounding `3/4`；`rag2-042` 在版本化证据 Prompt 下仍安全拒答但与预期 outcome 不符。累计 82 HTTP attempts、249,321 tokens，两个 Ledger 均完整对账；目标未全过，因此未进入三条展示链。当前问题没有新的可验证 Runtime 修复方向，未启动第三批，未合并 `main`。
+> 当前展示状态：`NOT_COMPLETE`。Runtime `d4ec989548e953a8f8c5ee7ceef4ea13b464fbfb` 已完成 Grounding v3 通用假阴性修复：只有服务端绑定的当前版本、有效日期和直接主题证据才能纠正过度保守的拒答；缺证据、版本冲突、相似但不适用及支付路径问题仍拒答。离线工程验证为 FastAPI JUnit `504/504`、manifest `478/478`、representative `8/8`、contract replay `36/36`，当前 Runtime/image 现场 `122/122`。历史两轮针对性在线复测仍各为 `10/11`，累计 82 HTTP attempts、249,321 tokens；最后一批 5 项范围已冻结，尚未执行，未合并 `main`。
 
 ### 为什么不是普通聊天机器人
 
@@ -68,13 +68,13 @@ MCP 只读工具、人工售后工作台和 LangGraph 确定性节点是能力�
 
 结果按套件独立统计，不相加，也不外推为生产 SLA 或真实用户泛化：
 
-- 当前候选收口的 FastAPI JUnit 为 `495 passed`（479 pytest cases + 16 subtests），exit `0`；
+- 当前候选收口的 FastAPI JUnit 为 `504 passed`（488 pytest cases + 16 subtests），exit `0`；
 - v3 deterministic 发布合同为 `478/478`，代表性 Runtime 为 `8/8`；本轮 contract replay 为 `36/36`，Provider `0`；这些都不是浏览器 E2E 或真实模型效果；
 - Java portal 核心 `12/12`、admin `6/6`、Spring context `1/1`、Vue production build、8 服务 Compose 和四类现场 Runner 均已在当前候选环境验证通过；
-- 当前现场 `122/122` 绑定 Runtime/image `62b61c2`，来自本地 Docker、Chrome、Java/MySQL、隔离故障 Compose 与合成 Fixture deterministic 证据，不代表真实模型效果或生产 SLA；
+- 当前现场 `122/122` 绑定 Runtime/image `d4ec989548e953a8f8c5ee7ceef4ea13b464fbfb`，execution HEAD `25d9150cfa5b163a40471b3940a67204be17d8c7` 仅包含现场 Runner/测试差异并通过无 Runtime 漂移校验；它来自本地 Docker、Chrome、Java/MySQL、隔离故障 Compose 与合成 Fixture，不代表真实模型效果或生产 SLA；
 - RAG Dense、Hybrid、Hybrid+Rerank 的 52 条版本化合成政策 Case 指标只说明检索排序质量，不是答案准确率；
 - 历史 supplemental evaluation set 不是独立盲测集，旧结果只作为开发期审计，不能外推到真实用户；
-- 真实模型主集、补充集、Grounding 已在历史批次执行并单独披露；Runtime `62b61c2` 的首轮针对性复测为 `10/11`，当前 Runtime `1bfe280` 尚待复测，历史报告与当前提交不一致时明确标记。
+- 真实模型主集、补充集、Grounding 已在历史批次执行并单独披露；两轮针对性复测分别绑定 `62b61c2` 与 `1bfe280`，均为 `10/11`。当前 Runtime `d4ec989` 的最后一批仅包含 4 个 Grounding 项与 1 个普通成功对照，尚待执行，不能与历史完整评测拼接。
 
 历史失败、根因和修复过程见 [evaluation-evolution](docs/evidence/evaluation-evolution.md) 与 [failure matrix](docs/evidence/final-agent-failure-matrix.md)。当前数字的唯一事实源是 [`current-release-facts.json`](docs/evidence/current-release-facts.json)，并由 [`validate_public_release.py`](scripts/validate_public_release.py) 在 CI 中校验。
 

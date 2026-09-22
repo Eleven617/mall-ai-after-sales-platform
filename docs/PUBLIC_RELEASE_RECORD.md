@@ -2,9 +2,9 @@
 
 ## 当前候选记录｜v3.0.4 离线收口（2026-09-22）
 
-当前 Runtime/image `1bfe2809206d91077220a974637d88fa2e82f4aa` 的 FastAPI 机器报告为 **495/495**（479 cases + 16 subtests），manifest **478/478**、representative **8/8**、contract replay **36/36**；现场 **122/122** 仍绑定前一 Runtime `62b61c2` deterministic 证据。
+当前 Runtime/image `d4ec989548e953a8f8c5ee7ceef4ea13b464fbfb` 的 FastAPI 机器报告为 **504/504**（488 cases + 16 subtests），manifest **478/478**、representative **8/8**、contract replay **36/36**；当前镜像现场 **122/122**。
 
-Release Gate **NOT_COMPLETE**。Runtime `62b61c2` 首轮针对性在线复测为 `10/11`，`rag2-042` 为 OUTCOME_MISMATCH；当前 Runtime `1bfe280` 已完成通用 RAG 证据版本适用性修复，展示阶段未执行，待下一最小复测。
+Release Gate **NOT_COMPLETE**。前两轮针对性在线复测均为 `10/11`，`rag2-042` 为 OUTCOME_MISMATCH；当前 Runtime 已完成通用 Grounding v3 假阴性修复，展示阶段未执行，最后一批 5 项范围待 CI 后执行。
 
 确定性展示链 3/3、12 帧为离线素材，关键状态卡跨场景不重复。当前候选外部 Provider requests/tokens 为 0/0；历史 Report/Ledger/Lock 均保留，未合并 main。
 
