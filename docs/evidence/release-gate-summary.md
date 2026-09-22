@@ -1,12 +1,12 @@
 # Mall v3.0 Release Gate 复核
 
-## 当前权威快照｜v3.0.4 离线收口候选（2026-09-22）
+## 当前权威快照｜v3.0.4 最终在线批次后（2026-09-22）
 
 当前 Runtime/image `d4ec989548e953a8f8c5ee7ceef4ea13b464fbfb` 的机器报告为 FastAPI JUnit **504/504**（488 cases + 16 subtests）、manifest **478/478**、representative **8/8**、contract replay **36/36**；当前镜像现场从零执行 **122/122**，Provider requests/tokens 为 0/0。
 
-Release Gate：**NOT_COMPLETE**。前两轮针对性在线复测均为 `10/11`，累计 82 attempts、249,321 tokens；`rag2-042` 为 OUTCOME_MISMATCH，展示阶段按门禁未执行。当前 Runtime 已完成通用 Grounding v3 假阴性修复，并冻结第三批 5 项范围；需当前 SHA 的 CI 成功后才可执行。历史 Report/Ledger/Lock 保持不变。
+Release Gate：**NOT_COMPLETE**。第三批固定范围 `5/5` 通过：普通 Agent 对照 `1/1`、Grounding `4/4`，其中 `rag2-042` 正确基于现行政策回答，缺证据与版本冲突对照正确 abstain。随后首条真实售后链的业务断言通过，但浏览器采集以 `browser_capture_failed` 失败，另外两条 live 链未执行，未生成可发布素材。
 
-现场报告 `tmp/v304-field-acceptance-d4ec989-valid/field-20260922T070406Z-c630dd4f/field-acceptance.json`，SHA-256 `c29bc370c79a9235f7aa5ab7e7cdb50d2558bec5037123e2a1fb8088fafb244e`；Fixture SHA-256 `a7bd88ba4340e8116d1672e40a00caede1bc4621894952e36de508a673efcb95`。确定性展示链 3/3、12 帧仍是离线素材；当前候选外部 Provider requests/tokens 为 0/0，未合并 `main`。
+第三批为 16/16 HTTP attempts 成功、42,123 tokens、Ledger 对账完成；三批累计 `3/3`、98 attempts、291,444 tokens，不能创建第四批。现场报告 `tmp/v304-field-acceptance-d4ec989-valid/field-20260922T070406Z-c630dd4f/field-acceptance.json`，SHA-256 `c29bc370c79a9235f7aa5ab7e7cdb50d2558bec5037123e2a1fb8088fafb244e`；确定性展示链 3/3 仍是离线素材，未合并 `main`。详情见 `docs/evidence/v3.0.4-grounding-v3-final-batch.md`。
 
 历史在线最小复测仍是 FAILED：21 次 HTTP attempts、19 成功、2 次 network 失败、73,833 tokens，11 个目标/对照未执行。当前候选只具备一次最小在线复测的工程入口，不得把 deterministic 素材或 122/122 写成真实模型效果。
 

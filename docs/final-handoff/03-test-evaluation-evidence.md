@@ -1,12 +1,12 @@
 # 测试、评测与现场证据
 
-## 当前候选快照｜v3.0.4 离线收口（2026-09-22）
+## 当前候选快照｜v3.0.4 最终在线批次后（2026-09-22）
 
 Runtime/image `d4ec989548e953a8f8c5ee7ceef4ea13b464fbfb`：FastAPI **504/504**（488 cases + 16 subtests）、manifest **478/478**、representative **8/8**、contract replay **36/36**。
 
-同一镜像从 0/122 完整现场通过 Browser 24、Java/MySQL 30、隔离 Compose Fault 36、Durable Recovery 32；failed=0、environmentBlocked=0，报告 SHA-256 `51dff5a65ce8536089b4a4bbe0ecb1c52712a57f5d1c13fb72739ba6f0b24e54`，Fixture SHA-256 `7b7616e3ba0f6939a7bcc7d381b3c3b7b35d2b443c2056b218cdefc7f17486a9`，Provider requests/tokens=0/0。
+同一镜像从 0/122 完整现场通过 Browser 24、Java/MySQL 30、隔离 Compose Fault 36、Durable Recovery 32；failed=0、environmentBlocked=0。有效报告 SHA-256 `c29bc370c79a9235f7aa5ab7e7cdb50d2558bec5037123e2a1fb8088fafb244e`，Fixture SHA-256 `a7bd88ba4340e8116d1672e40a00caede1bc4621894952e36de508a673efcb95`，Provider requests/tokens=0/0。
 
-当前镜像现场 **122/122**，报告绑定 Runtime `d4ec989`、execution HEAD `25d9150`，Provider 0/0。确定性展示链 **3/3**、12 帧仍是离线素材。前两轮针对性在线复测均为 `10/11`；当前 Runtime 已完成 Grounding v3 离线修复，最后一批 5 项尚未执行，Release Gate **NOT_COMPLETE**。
+当前镜像现场 **122/122**，报告绑定 Runtime `d4ec989`、execution HEAD `25d9150`，Provider 0/0。最终在线批次固定评测 `5/5`：普通 Agent `1/1`、Grounding `4/4`；16 attempts 全部成功、42,123 tokens、Ledger reconciled。首条 live 售后链业务断言通过后发生 `browser_capture_failed`，其余两条未执行且 0 帧。确定性展示链 **3/3**、12 帧仍只作为离线素材。Release Gate **NOT_COMPLETE**。
 
 ## 当前候选快照｜v3.0.4 最小在线复测取证（2026-09-21）
 

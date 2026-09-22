@@ -11,7 +11,7 @@
 
 当前 Runtime 的离线回归为 FastAPI JUnit **504/504**（488 cases + 16 subtests）。
 
-> 当前展示状态：`NOT_COMPLETE`。Runtime `d4ec989548e953a8f8c5ee7ceef4ea13b464fbfb` 已完成 Grounding v3 通用假阴性修复：只有服务端绑定的当前版本、有效日期和直接主题证据才能纠正过度保守的拒答；缺证据、版本冲突、相似但不适用及支付路径问题仍拒答。离线工程验证为 FastAPI JUnit `504/504`、manifest `478/478`、representative `8/8`、contract replay `36/36`，当前 Runtime/image 现场 `122/122`。历史两轮针对性在线复测仍各为 `10/11`，累计 82 HTTP attempts、249,321 tokens；最后一批 5 项范围已冻结，尚未执行，未合并 `main`。
+> 当前展示状态：`NOT_COMPLETE`。Runtime `d4ec989548e953a8f8c5ee7ceef4ea13b464fbfb` 的 Grounding v3 最终针对性在线评测为 **5/5**：充分且适用的当前政策证据会得到回答，缺证据、无法消解的版本冲突和超出支付路径证据的问题仍安全拒答。三批累计 98 HTTP attempts、291,444 tokens，Ledger 全部对账。最后一批首条真实售后链的 Proposal、Java 重校验、确认写入与回查均通过，但浏览器采集失败，另外两条 live 链未执行且没有有效 live 素材；三批额度已耗尽，因此未合并 `main`。
 
 ### 为什么不是普通聊天机器人
 
@@ -52,7 +52,7 @@ MCP 只读工具、人工售后工作台和 LangGraph 确定性节点是能力�
 2. 等待输入 → 暂停保留 → 政策岔开 → 同一任务恢复；
 3. 事实版本变化 → 旧结果失效 → 重新核验 → 新方案或人工交接。
 
-无模型 deterministic/replay 运行只证明受控 Runtime 合同、Proposal/确认边界和 Java 权威写入路径；它不证明真实模型的自然语言泛化。历史正式在线评测曾完成三条展示链，主集 `69/72`、补充集 `30/36`、Grounding `49/52`；这些结果及失败分类保持不可变。当前 Runtime 的两轮针对性复测均为 `10/11`，展示阶段因目标未全过而未执行，不能与历史完整评测拼接。录制入口仍支持无模型 dry-run：[`scripts/Capture-PublicShowcase.ps1 -DryRun`](scripts/Capture-PublicShowcase.ps1)。
+无模型 deterministic/replay 运行只证明受控 Runtime 合同、Proposal/确认边界和 Java 权威写入路径；它不证明真实模型的自然语言泛化。历史正式在线评测曾完成三条展示链，主集 `69/72`、补充集 `30/36`、Grounding `49/52`；这些结果及失败分类保持不可变。当前 Runtime 的最终针对性复测为 `5/5`，不能与历史完整评测拼接。该批首条真实售后链业务断言通过后在浏览器采集失败，另外两条链未执行，所以没有可发布的当前 live GIF/PNG。录制入口仍支持无模型 dry-run：[`scripts/Capture-PublicShowcase.ps1 -DryRun`](scripts/Capture-PublicShowcase.ps1)。
 
 ## 架构与代码入口
 
@@ -74,7 +74,7 @@ MCP 只读工具、人工售后工作台和 LangGraph 确定性节点是能力�
 - 当前现场 `122/122` 绑定 Runtime/image `d4ec989548e953a8f8c5ee7ceef4ea13b464fbfb`，execution HEAD `25d9150cfa5b163a40471b3940a67204be17d8c7` 仅包含现场 Runner/测试差异并通过无 Runtime 漂移校验；它来自本地 Docker、Chrome、Java/MySQL、隔离故障 Compose 与合成 Fixture，不代表真实模型效果或生产 SLA；
 - RAG Dense、Hybrid、Hybrid+Rerank 的 52 条版本化合成政策 Case 指标只说明检索排序质量，不是答案准确率；
 - 历史 supplemental evaluation set 不是独立盲测集，旧结果只作为开发期审计，不能外推到真实用户；
-- 真实模型主集、补充集、Grounding 已在历史批次执行并单独披露；两轮针对性复测分别绑定 `62b61c2` 与 `1bfe280`，均为 `10/11`。当前 Runtime `d4ec989` 的最后一批仅包含 4 个 Grounding 项与 1 个普通成功对照，尚待执行，不能与历史完整评测拼接。
+- 真实模型主集、补充集、Grounding 已在历史批次执行并单独披露；两轮针对性复测分别绑定 `62b61c2` 与 `1bfe280`，均为 `10/11`。当前 Runtime `d4ec989` 的最后一批仅包含 4 个 Grounding 项与 1 个普通成功对照，结果为 `5/5`；这证明本次 Grounding v3 针对性范围通过，不代表完整 `72/36/52` 重新通过。
 
 历史失败、根因和修复过程见 [evaluation-evolution](docs/evidence/evaluation-evolution.md) 与 [failure matrix](docs/evidence/final-agent-failure-matrix.md)。当前数字的唯一事实源是 [`current-release-facts.json`](docs/evidence/current-release-facts.json)，并由 [`validate_public_release.py`](scripts/validate_public_release.py) 在 CI 中校验。
 

@@ -1,0 +1,14 @@
+{
+  "schemaVersion": "deepseek-release-lock.v2",
+  "releaseId": "mall-v3.0.4-grounding-v3-final-20260922",
+  "batchIds": [
+    "minimal_retest-d72ec7554756"
+  ],
+  "runtimeCommit": "d4ec989548e953a8f8c5ee7ceef4ea13b464fbfb",
+  "status": "FAILED",
+  "testRunComplete": true,
+  "releaseQualified": false,
+  "requests": 16,
+  "totalTokens": 42123,
+  "phase": "minimal_retest"
+}

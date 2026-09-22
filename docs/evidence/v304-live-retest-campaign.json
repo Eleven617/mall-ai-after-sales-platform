@@ -31,10 +31,23 @@
       "totalTokens": 125499,
       "ledgerReconciled": true,
       "endedAt": "2026-09-22T04:48:40Z"
+    },
+    {
+      "batchId": "minimal_retest-d72ec7554756",
+      "releaseId": "mall-v3.0.4-grounding-v3-final-20260922",
+      "runtimeCommit": "d4ec989548e953a8f8c5ee7ceef4ea13b464fbfb",
+      "status": "FAILED",
+      "startedAt": "2026-09-22T07:21:21Z",
+      "maxProviderHttpAttempts": 80,
+      "maxTotalTokens": 200000,
+      "providerHttpAttempts": 16,
+      "totalTokens": 42123,
+      "ledgerReconciled": true,
+      "endedAt": "2026-09-22T07:23:10Z"
     }
   ],
-  "batchesUsed": 2,
-  "providerHttpAttempts": 82,
-  "totalTokens": 249321,
-  "updatedAt": "2026-09-22T04:48:40Z"
+  "batchesUsed": 3,
+  "providerHttpAttempts": 98,
+  "totalTokens": 291444,
+  "updatedAt": "2026-09-22T07:23:10Z"
 }

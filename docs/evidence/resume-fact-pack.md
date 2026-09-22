@@ -1,12 +1,12 @@
 # Mall AI 售后平台｜简历事实包
 
-## 当前候选｜v3.0.4 离线收口（2026-09-22）
+## 当前候选｜v3.0.4 最终在线批次后（2026-09-22）
 
 Runtime/image `d4ec989548e953a8f8c5ee7ceef4ea13b464fbfb`：FastAPI **504/504**（488 cases + 16 subtests）、manifest **478/478**、representative **8/8**、contract replay **36/36**；主 Compose **8/8 healthy**，当前镜像现场 **122/122**，Provider requests/tokens=0/0。
 
-当前候选在既有结构纠正和累计预算守卫之上，新增 Grounding v3：服务端只对当前版本、有效日期、直接主题且无版本冲突的证据纠正保守假阴性；最后一批固定为 4 个 Grounding 项与 1 个普通成功对照，尚未执行。
+当前候选在既有结构纠正和累计预算守卫之上新增 Grounding v3。最终批次固定的普通 Agent 对照 `1/1`、Grounding `4/4` 全部通过；`rag2-042` 基于当前适用政策回答，缺证据和版本冲突对照均正确 abstain。
 
-状态仍为 **NOT_COMPLETE**：上一在线复测实际发生 16 attempts、15 成功、1 个 `model_contract_schema_invalid`、49,158 tokens，在 `agent-open-010` 后停止；历史 Report/Ledger/Lock 均保持不变。离线结果不得表述为真实模型效果，未合并 `main`。
+状态仍为 **NOT_COMPLETE**：第三批发生 16 attempts、16 成功、42,123 tokens并完成 Ledger 对账；首条 live 售后链业务断言通过后，浏览器采集失败，另外两条链未执行且没有 live 素材。三批累计 98 attempts、291,444 tokens，额度 `3/3` 已耗尽。历史 Report/Ledger/Lock 保持不变，未合并 `main`。
 
 ## 当前事实｜v3.0.4 最小在线复测（2026-09-21）
 
