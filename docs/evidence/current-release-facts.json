@@ -3,7 +3,7 @@
   "generatedAt": "2026-09-22T16:00:00+08:00",
   "releaseStatus": "NOT_COMPLETE",
   "runtimeCommit": "d4ec989548e953a8f8c5ee7ceef4ea13b464fbfb",
-  "evidenceCommit": "555f07a9df22f8ad20163fef910ffe6ddd0d8173",
+  "evidenceCommit": "910545667ecc0fb3c0f09a19a16a015c6bfd2b7d",
   "evidenceState": "current candidate evidence; runtime freeze, execution head and online batch are recorded separately",
   "statusReason": "Runtime d4ec989 的 Grounding v3 最终针对性范围 5/5 通过；首条 live 售后链业务断言通过，原任务页面已零模型事后补采。暂停恢复与事实变化两条当前 live 链仍未执行，三批额度 3/3 已耗尽；Release Gate 保持 NOT_COMPLETE。",
   "project": {
