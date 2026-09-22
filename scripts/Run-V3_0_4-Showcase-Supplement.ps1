@@ -37,7 +37,15 @@ try {
     if ($LASTEXITCODE -ne 0) { throw 'ledger_initialization_failed' }
     docker compose up -d --no-deps --force-recreate mall-ai-service | Out-Null
     $deadline = (Get-Date).AddSeconds(120)
-    do { $version = Invoke-RestMethod -Uri 'http://127.0.0.1:8000/health/version' -TimeoutSec 5; if ($version.providerMode -eq 'live' -and $version.runtimeCommit -eq $RuntimeCommit -and $version.imageRevision -eq $RuntimeCommit) { break }; Start-Sleep -Seconds 2 } while ((Get-Date) -lt $deadline)
+    do {
+        try {
+            $version = Invoke-RestMethod -Uri 'http://127.0.0.1:8000/health/version' -TimeoutSec 5
+            if ($version.providerMode -eq 'live' -and $version.runtimeCommit -eq $RuntimeCommit -and $version.imageRevision -eq $RuntimeCommit) { break }
+        } catch {
+            $version = $null
+        }
+        Start-Sleep -Seconds 2
+    } while ((Get-Date) -lt $deadline)
     if ($null -eq $version -or $version.providerMode -ne 'live' -or $version.runtimeCommit -ne $RuntimeCommit -or $version.imageRevision -ne $RuntimeCommit) { throw 'runtime_identity_mismatch' }
     docker compose exec -T mall-ai-service python -c "from pathlib import Path; p=Path('/app/release-ledger/ledger.jsonl'); assert p.exists() and p.stat().st_size == 0; f=p.open('r+b'); f.read(0); f.close()"
     if ($LASTEXITCODE -ne 0) { throw 'ledger_container_not_readwrite' }
