@@ -95,6 +95,12 @@ SAFE_FAILURE_CODES = {
     "unknown_failure",
 }
 
+SHOWCASE_SCENARIOS = (
+    "main_open_task_closed_loop",
+    "clarify_pause_resume",
+    "fact_change_replan",
+)
+
 
 class ShowcaseError(RuntimeError):
     """Safe, enumerable showcase failure; never stores an HTTP body."""
@@ -154,8 +160,9 @@ def run_real_local_showcase(
     report_dir: Path,
     batch_id: str,
     provider_mode: str | None = None,
+    scenarios: tuple[str, ...] | None = None,
 ) -> dict[str, Any]:
-    """Run all three chains through the single public Agent Task Runtime."""
+    """Run an explicitly selected set of chains through the public Runtime."""
 
     password = os.getenv("MALL_LIVE_DEMO_PASSWORD")
     if not password:
@@ -163,6 +170,13 @@ def run_real_local_showcase(
     provider_mode = (provider_mode or os.getenv("MALL_RUNTIME_PROVIDER_MODE", "offline")).strip().lower()
     if provider_mode not in {"deterministic", "replay", "live", "offline"}:
         return {"status": "environment_blocked", "reason": "invalid_provider_mode"}
+    selected_scenarios = SHOWCASE_SCENARIOS if scenarios is None else scenarios
+    if (
+        not selected_scenarios
+        or len(set(selected_scenarios)) != len(selected_scenarios)
+        or any(item not in SHOWCASE_SCENARIOS for item in selected_scenarios)
+    ):
+        return {"status": "environment_blocked", "reason": "invalid_showcase_scenarios"}
     report_dir.mkdir(parents=True, exist_ok=True)
     started = time.monotonic()
     ledger_path = os.getenv("MALL_RELEASE_LEDGER_PATH")
@@ -198,11 +212,13 @@ def run_real_local_showcase(
             ) as client:
                 auth_a = _login(client, api_base, account_a.username, password)
                 auth_b = _login(client, api_base, account_b.username, password)
-                for scenario, callback in (
+                callbacks = dict((
                     ("main_open_task_closed_loop", lambda: _agent_closed_loop(client, api_base, auth_a, auth_b, closed_loop_order.order_sn)),
                     ("clarify_pause_resume", lambda: _agent_pause_resume(client, api_base, auth_a, closed_loop_order.order_sn)),
                     ("fact_change_replan", lambda: _agent_fact_change_replan(client, api_base, admin_base, auth_a, fact_change_order.order_id, fact_change_order.order_sn, password)),
-                ):
+                ))
+                for scenario in selected_scenarios:
+                    callback = callbacks[scenario]
                     client.headers["X-Mall-Release-Scenario"] = scenario
                     try:
                         result = callback()
@@ -317,9 +333,9 @@ def run_real_local_showcase(
     cross_scenario_frames_distinct = _cross_scenario_frames_distinct(frame_groups)
     status = "passed" if (
         all(item.get("status") == "passed" for item in chain_results)
-        and len(frame_paths) >= 12
+        and len(frame_paths) == 4 * len(selected_scenarios)
         and all(group.get("valid") is True for group in frame_groups.values())
-        and len(frame_groups) == 3
+        and len(frame_groups) == len(selected_scenarios)
         and cross_scenario_frames_distinct
     ) else "failed"
     gif_paths = _build_offline_gifs(frame_groups, report_dir / "gifs") if status == "passed" else []
@@ -327,6 +343,7 @@ def run_real_local_showcase(
         "status": status,
         "batchId": batch_id,
         "providerMode": provider_mode,
+        "requestedScenarios": list(selected_scenarios),
         "durationMs": round((time.monotonic() - started) * 1000),
         "chains": chain_results,
         "frames": frame_paths,
@@ -1240,12 +1257,14 @@ if __name__ == "__main__":
     parser.add_argument("report", nargs="?", type=Path, default=ROOT / "tmp" / "real-local-showcase.json")
     parser.add_argument("--provider-mode", choices=("deterministic", "replay", "live"), default=None)
     parser.add_argument("--batch-id", default=None)
+    parser.add_argument("--scenario", action="append", choices=SHOWCASE_SCENARIOS)
     args = parser.parse_args()
     report_path = args.report
     result = run_real_local_showcase(
         report_dir=report_path.parent,
         batch_id=args.batch_id or os.getenv("MALL_RELEASE_BATCH_ID", "manual"),
         provider_mode=args.provider_mode,
+        scenarios=tuple(args.scenario) if args.scenario else None,
     )
     report_path.parent.mkdir(parents=True, exist_ok=True)
     report_path.write_text(json.dumps(result, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")

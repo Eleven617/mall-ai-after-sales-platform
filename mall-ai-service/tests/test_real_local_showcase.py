@@ -21,6 +21,7 @@ from scripts.run_real_local_showcase import (
     _status_class,
     _task_failure_code,
     _prepare_showcase_fixture,
+    run_real_local_showcase,
 )
 from scripts.run_v3_0_2_slow_gateway_test import _prepare_synthetic_fixture
 
@@ -51,6 +52,26 @@ def test_showcase_error_is_a_safe_enumerated_projection() -> None:
         "taskMetrics": {},
     }
     assert "provider_response_body" not in str(public)
+
+
+def test_showcase_rejects_empty_or_duplicate_explicit_scope(tmp_path, monkeypatch) -> None:
+    monkeypatch.setenv("MALL_LIVE_DEMO_PASSWORD", "synthetic-password")
+
+    empty = run_real_local_showcase(
+        report_dir=tmp_path,
+        batch_id="synthetic",
+        provider_mode="deterministic",
+        scenarios=(),
+    )
+    duplicate = run_real_local_showcase(
+        report_dir=tmp_path,
+        batch_id="synthetic",
+        provider_mode="deterministic",
+        scenarios=("clarify_pause_resume", "clarify_pause_resume"),
+    )
+
+    assert empty == {"status": "environment_blocked", "reason": "invalid_showcase_scenarios"}
+    assert duplicate == {"status": "environment_blocked", "reason": "invalid_showcase_scenarios"}
 
 
 def test_status_class_and_ledger_context_are_deterministic() -> None:
