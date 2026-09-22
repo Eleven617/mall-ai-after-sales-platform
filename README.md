@@ -11,7 +11,7 @@
 
 当前 Runtime 的离线回归为 FastAPI JUnit **495/495**（479 cases + 16 subtests）。
 
-> 当前展示状态：`NOT_COMPLETE`。Runtime `1bfe2809206d91077220a974637d88fa2e82f4aa` 的离线工程验证为 FastAPI JUnit `495/495`、manifest `478/478`、representative `8/8`、contract replay `36/36`；未受 RAG 改动影响的现场 `122/122` 仍绑定前一 Runtime `62b61c2`。首轮针对性在线复测完成 `10/11`：主集 `4/4`、补充 v3 `3/3`、Grounding `3/4`；`rag2-042` 安全拒答但与预期 outcome 不符。批次使用 41 HTTP attempts、123,822 tokens，Ledger 完整对账；目标未全过，因此未进入三条展示链。当前 Runtime 已补充政策版本/生效日期的证据适用性协议，尚待第二批最小复测。历史 Report/Ledger/Lock 均保持不可变，未合并 `main`。
+> 当前展示状态：`NOT_COMPLETE`。Runtime `1bfe2809206d91077220a974637d88fa2e82f4aa` 的离线工程验证为 FastAPI JUnit `495/495`、manifest `478/478`、representative `8/8`、contract replay `36/36`；未受 RAG 改动影响的现场 `122/122` 仍绑定前一 Runtime `62b61c2`。两轮针对性在线复测均为 `10/11`：主集 `4/4`、补充 v3 `3/3`、Grounding `3/4`；`rag2-042` 在版本化证据 Prompt 下仍安全拒答但与预期 outcome 不符。累计 82 HTTP attempts、249,321 tokens，两个 Ledger 均完整对账；目标未全过，因此未进入三条展示链。当前问题没有新的可验证 Runtime 修复方向，未启动第三批，未合并 `main`。
 
 ### 为什么不是普通聊天机器人
 
@@ -52,7 +52,7 @@ MCP 只读工具、人工售后工作台和 LangGraph 确定性节点是能力�
 2. 等待输入 → 暂停保留 → 政策岔开 → 同一任务恢复；
 3. 事实版本变化 → 旧结果失效 → 重新核验 → 新方案或人工交接。
 
-无模型 deterministic/replay 运行只证明受控 Runtime 合同、Proposal/确认边界和 Java 权威写入路径；它不证明真实模型的自然语言泛化。历史正式在线评测曾完成三条展示链，主集 `69/72`、补充集 `30/36`、Grounding `49/52`；这些结果及失败分类保持不可变。当前候选首轮针对性复测为 `10/11`，但展示阶段因目标未全过而未执行，不能与历史完整评测拼接。录制入口仍支持无模型 dry-run：[`scripts/Capture-PublicShowcase.ps1 -DryRun`](scripts/Capture-PublicShowcase.ps1)。
+无模型 deterministic/replay 运行只证明受控 Runtime 合同、Proposal/确认边界和 Java 权威写入路径；它不证明真实模型的自然语言泛化。历史正式在线评测曾完成三条展示链，主集 `69/72`、补充集 `30/36`、Grounding `49/52`；这些结果及失败分类保持不可变。当前 Runtime 的两轮针对性复测均为 `10/11`，展示阶段因目标未全过而未执行，不能与历史完整评测拼接。录制入口仍支持无模型 dry-run：[`scripts/Capture-PublicShowcase.ps1 -DryRun`](scripts/Capture-PublicShowcase.ps1)。
 
 ## 架构与代码入口
 
