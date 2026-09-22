@@ -11,7 +11,7 @@
 
 离线回归在新增入口恢复测试后更新为 FastAPI JUnit **484/484**（468 cases + 16 subtests）；机器报告已绑定 `f27718858049808eb99504b50f72c0b16859cbe3`。
 
-> 当前展示状态：`NOT_COMPLETE`。Runtime `62b61c2d64f75ffc80ed876976bc7d79e61c1d23` 的离线工程验证为 FastAPI JUnit `494/494`、manifest `478/478`、representative `8/8`、contract replay `36/36` 和现场 `122/122`。上一最小在线复测（Runtime `8ff255ae`）真实发生 16 HTTP attempts、15 成功、1 个模型结构化合同失败、49,158 tokens；`agent-open-003/005/006` 通过，`agent-open-010` blocked，后续阶段未执行。当前候选已修复阻止一次有界结构纠正的协议缺陷，但尚未在线复测；历史 Report/Ledger/Lock 均保持不可变，未合并 `main`。
+> 当前展示状态：`NOT_COMPLETE`。Runtime `62b61c2d64f75ffc80ed876976bc7d79e61c1d23` 的离线工程验证为 FastAPI JUnit `494/494`、manifest `478/478`、representative `8/8`、contract replay `36/36` 和现场 `122/122`。该候选的首轮针对性在线复测完成 `10/11`：主集 `4/4`、补充 v3 `3/3`、Grounding `3/4`；`rag2-042` 安全拒答但与预期 outcome 不符。批次使用 41 HTTP attempts、123,822 tokens，Ledger 完整对账；目标未全过，因此未进入三条展示链。历史 Report/Ledger/Lock 均保持不可变，未合并 `main`。
 
 ### 为什么不是普通聊天机器人
 
@@ -52,7 +52,7 @@ MCP 只读工具、人工售后工作台和 LangGraph 确定性节点是能力�
 2. 等待输入 → 暂停保留 → 政策岔开 → 同一任务恢复；
 3. 事实版本变化 → 旧结果失效 → 重新核验 → 新方案或人工交接。
 
-无模型 deterministic/replay 运行只证明受控 Runtime 合同、Proposal/确认边界和 Java 权威写入路径；它不证明真实模型的自然语言泛化。历史正式在线评测曾完成三条展示链，主集 `69/72`、补充集 `30/36`、Grounding `49/52`；这些结果及失败分类保持不可变。当前候选已修订 holdout 合同、结构化诊断和政策适用性边界，但尚未在线复测。录制入口仍支持无模型 dry-run：[`scripts/Capture-PublicShowcase.ps1 -DryRun`](scripts/Capture-PublicShowcase.ps1)。
+无模型 deterministic/replay 运行只证明受控 Runtime 合同、Proposal/确认边界和 Java 权威写入路径；它不证明真实模型的自然语言泛化。历史正式在线评测曾完成三条展示链，主集 `69/72`、补充集 `30/36`、Grounding `49/52`；这些结果及失败分类保持不可变。当前候选首轮针对性复测为 `10/11`，但展示阶段因目标未全过而未执行，不能与历史完整评测拼接。录制入口仍支持无模型 dry-run：[`scripts/Capture-PublicShowcase.ps1 -DryRun`](scripts/Capture-PublicShowcase.ps1)。
 
 ## 架构与代码入口
 

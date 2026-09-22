@@ -1,0 +1,27 @@
+{
+  "schemaVersion": "v304-live-retest-campaign.v1",
+  "limits": {
+    "maxBatches": 3,
+    "maxProviderHttpAttempts": 240,
+    "maxTotalTokens": 600000
+  },
+  "batches": [
+    {
+      "batchId": "minimal_retest-ddb6d1f64138",
+      "releaseId": "mall-v3.0.4-correction-retest-62b61c2-20260922-b1",
+      "runtimeCommit": "62b61c2d64f75ffc80ed876976bc7d79e61c1d23",
+      "status": "FAILED",
+      "startedAt": "2026-09-22T03:39:14Z",
+      "maxProviderHttpAttempts": 80,
+      "maxTotalTokens": 200000,
+      "providerHttpAttempts": 41,
+      "totalTokens": 123822,
+      "ledgerReconciled": true,
+      "endedAt": "2026-09-22T03:42:08Z"
+    }
+  ],
+  "batchesUsed": 1,
+  "providerHttpAttempts": 41,
+  "totalTokens": 123822,
+  "updatedAt": "2026-09-22T03:42:08Z"
+}
