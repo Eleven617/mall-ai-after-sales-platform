@@ -1,5 +1,19 @@
 # Mall v3.0 Release Gate 复核
 
+## 当前收尾结论｜2026-09-23
+
+代码与新版 README 已发布到 GitHub `main`，核验基线为 `cb033d17092f8419e42e323c8750078e654c6e45`；该 SHA 的 [mall-ci](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/35823667967) 与 [quality-evaluation](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/35823667929) 均为 success。本次仅统一交接文档，后续文档提交的 CI 由 GitHub Actions 按其自身 SHA 记录，不继承基线结论。
+
+工程作品已公开展示：Runtime `d4ec989548e953a8f8c5ee7ceef4ea13b464fbfb`，FastAPI 511/511、manifest 478/478、representative 8/8、contract replay 36/36、当前 deterministic 现场 122/122。真实主链完成确认、Java 写入与回查；暂停恢复、事实变化两条在线补录业务链完成，派生对账与素材已归档。主链素材为既有真实任务事后补采，补录原始包装器失败记录保留。
+
+完整模型发布门禁仍为 **NOT_COMPLETE**；历史完整评测为 69/72、30/36、49/52，后续针对性 5/5 不替代完整评测。业务闭环、GitHub 展示和完整模型质量门禁是不同结论，main 已合并不等于全部模型评测通过。
+
+本轮外部模型 `not_run_by_design`，新增请求/Token 为 0/0。当前收尾范围到此为止；没有待自动启动的在线测试或功能扩展。若未来提高模型质量，作为新的明确任务处理。历史 Report、Ledger、Lock 不变。
+
+## 历史审计记录
+
+以下为各日期的原始快照；其中“当前”“未合并 main”“待补录”等只描述当时状态，不覆盖上面的收尾结论。
+
 ## 当前权威快照｜v3.0.4 最终在线批次后（2026-09-22）
 
 当前 Runtime/image `d4ec989548e953a8f8c5ee7ceef4ea13b464fbfb` 的机器报告为 FastAPI JUnit **511/511**（495 cases + 16 subtests）、manifest **478/478**、representative **8/8**、contract replay **36/36**；当前镜像现场从零执行 **122/122**，Provider requests/tokens 为 0/0。

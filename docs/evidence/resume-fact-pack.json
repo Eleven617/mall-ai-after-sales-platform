@@ -1,5 +1,12 @@
 {
   "schemaVersion": "resume-fact-pack.v3",
+  "currentHandoff": {
+    "authority": "docs/evidence/current-release-facts.json",
+    "status": "published_to_main_with_documented_model_quality_limits",
+    "verifiedMainCommit": "cb033d17092f8419e42e323c8750078e654c6e45",
+    "fullModelReleaseGate": "NOT_COMPLETE",
+    "note": "Fields below are historical resume evidence snapshots, not current blockers. Use authority.currentVerification and authority.publicationHandoff for current results. No automatic live retest is pending."
+  },
   "generatedAt": "2026-09-19T00:10:00Z",
   "releaseStatus": "NOT_COMPLETE",
   "project": {

@@ -1,5 +1,14 @@
 {
   "schemaVersion": "mall-public-release-facts.v4",
+  "publicationHandoff": {
+    "status": "published_to_main_with_documented_model_quality_limits",
+    "verifiedMainCommit": "cb033d17092f8419e42e323c8750078e654c6e45",
+    "mainCi": "https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/35823667967",
+    "mainQualityEvaluation": "https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/35823667929",
+    "bothConclusions": "success",
+    "automaticLiveRetestPending": false,
+    "note": "Publication and business closure do not change the NOT_COMPLETE full model release gate. CI links bind only verifiedMainCommit. Historical evidence identities below remain unchanged."
+  },
   "generatedAt": "2026-09-22T16:00:00+08:00",
   "releaseStatus": "NOT_COMPLETE",
   "runtimeCommit": "d4ec989548e953a8f8c5ee7ceef4ea13b464fbfb",
