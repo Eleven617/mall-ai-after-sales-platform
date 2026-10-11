@@ -79,3 +79,17 @@ def test_projection_hash_roundtrip_and_model_cannot_supply_it():
     bundle=r._store.load_owned(a.task_ref,owner_ref_for_member(1))
     restored=TaskRecordBundle.model_validate_json(bundle.model_dump_json())
     assert restored.handoff==bundle.handoff and restored.action_proposal==bundle.action_proposal
+
+def test_general_preview_can_be_revised_without_starting_another_issue():
+    r=runtime();a=prepare(r);b=prepare(r,reason='repeated_questions')
+    assert b.task_ref==a.task_ref and b.action.revision==a.action.revision+1
+    assert b.handoff_reason=='repeated_questions'
+
+def test_expired_general_preview_can_be_renewed():
+    r=runtime();a=prepare(r)
+    from app.runtime.task_store import owner_ref_for_member
+    bundle=r._store.load_owned(a.task_ref,owner_ref_for_member(1))
+    r._now=lambda:bundle.action_proposal.expires_at+1
+    b=prepare(r)
+    assert b.task_ref==a.task_ref and b.action.revision==a.action.revision+1
+    assert b.status=='ready_to_commit'

@@ -260,14 +260,18 @@ class TaskRuntime:
             existing = self._store.list_owned(owner, session)
             pending = next((item for item in existing if item.handoff and item.handoff.linked_task_ref is None and item.task.status in {"ready_to_commit","waiting_human","blocked"}), None)
             if pending and not request.new_issue:
-                return TaskRuntimeResult(self._public_view(pending), list(pending.events))
-            task_id=new_task_id()
-            bundle=TaskRecordBundle(task=AgentTask(task_id=task_id,task_ref='taskref-'+task_id.removeprefix('task-'),
-                owner_ref=owner,session_ref=session,goal_digest=hashlib.sha256(b'customer_handoff').hexdigest(),
-                normalized_goal="请求人工协助",expires_at=self._now()+settings.agent_task_ttl_seconds))
-            bundle.plans.append(build_initial_plan(bundle.task)); bundle.task.plan_version=bundle.plans[-1].version
-        if bundle.handoff and bundle.action_proposal and bundle.action_proposal.confirmation_status == 'awaiting_confirmation' and bundle.handoff.reason==request.reason and bundle.handoff.topic==request.topic:
+                bundle=pending
+                if bundle.task.status=='waiting_human' or (bundle.action_proposal and bundle.action_proposal.confirmation_status in {'confirmed','unknown'}):
+                    return TaskRuntimeResult(self._public_view(bundle),list(bundle.events))
+            else:
+                task_id=new_task_id()
+                bundle=TaskRecordBundle(task=AgentTask(task_id=task_id,task_ref='taskref-'+task_id.removeprefix('task-'),
+                    owner_ref=owner,session_ref=session,goal_digest=hashlib.sha256(b'customer_handoff').hexdigest(),
+                    normalized_goal="请求人工协助",expires_at=self._now()+settings.agent_task_ttl_seconds))
+                bundle.plans.append(build_initial_plan(bundle.task)); bundle.task.plan_version=bundle.plans[-1].version
+        if bundle.handoff and bundle.action_proposal and bundle.action_proposal.confirmation_status == 'awaiting_confirmation' and bundle.action_proposal.expires_at>self._now() and bundle.handoff.reason==request.reason and bundle.handoff.topic==request.topic:
             return TaskRuntimeResult(self._public_view(bundle),list(bundle.events))
+        bundle.task.expires_at=max(bundle.task.expires_at,self._now()+settings.agent_task_ttl_seconds)
         if bundle.handoff is None:
             bundle.handoff=HandoffContext(request_ref=hashlib.sha256(uuid.uuid4().bytes).hexdigest(),
                 scope_key=hashlib.sha256((owner+':'+bundle.task.task_ref).encode()).hexdigest(),

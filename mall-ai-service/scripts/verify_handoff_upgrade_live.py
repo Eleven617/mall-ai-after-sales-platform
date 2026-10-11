@@ -55,6 +55,9 @@ def run():
             before=len(events())
             task=call('POST','/human-handoffs/prepare',auth,{'session_id':session,'topic':'policy','reason':'repeated_questions'})
             check('button_without_model',len(events())==before and task['status']=='ready_to_commit')
+            changed=call('POST','/human-handoffs/prepare',auth,{'session_id':session,'topic':'policy','reason':'human_preference'})
+            check('general_preview_revision',changed['task_ref']==task['task_ref'] and changed['action']['revision']==task['action']['revision']+1)
+            task=call('POST','/human-handoffs/prepare',auth,{'session_id':session,'topic':'policy','reason':'repeated_questions'})
             check('no_case_before_confirmation',call('GET','/customer-service/service-cases',auth)==[])
             action=task['action'];ref=task['task_ref'];payload={'confirmation':'confirm','proposal_ref':action['proposal_ref'],'revision':action['revision']}
             committed=call('POST','/agent-tasks/'+ref+'/action',auth,payload)
