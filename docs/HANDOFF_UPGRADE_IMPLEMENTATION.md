@@ -2,7 +2,7 @@
 
 日期：2026-10-11。状态：本次功能升级已实现、部署到本地 Compose，并完成真实 DeepSeek、浏览器和重启回归。
 
-代码提交：`ad2966840e4fbb64585a38967f6eaf42ac3ccde3`。最终证据见 [机器事实包](evidence/handoff-upgrade-facts.json) 与 [31 项现场报告](evidence/handoff-upgrade-live-20261011.json)。远程 CI 按实际证据提交的 SHA 核验，不继承历史成功结果。
+业务代码提交：`ad2966840e4fbb64585a38967f6eaf42ac3ccde3`；前端安全依赖提交：`f6777049faa55dfcf265d9e77ccd49ffb2ad490a`。最终证据见 [机器事实包](evidence/handoff-upgrade-facts.json) 与 [31 项现场报告](evidence/handoff-upgrade-live-final-20261011.json)。远程 CI 按实际证据提交的 SHA 核验，不继承历史成功结果。
 
 目标：一次交付客户交接预览/确认、Java 幂等建案与查询、人工处理、异步原因分析与人工修正、统一窗口运营统计、内部改进事项、兼容迁移和验收。
 
@@ -42,7 +42,7 @@
 | Manifest / representative | 478/478、8/8（合同验证） |
 | Compose / 新增幂等迁移 | 8/8 healthy、迁移 exit 0 |
 | 最终真实现场 | 31/31，Nginx → FastAPI → Java/MySQL、Chrome 页面与服务重启 |
-| 最终真实 DeepSeek | 4 requests / 4 HTTP attempts，4 成功，5,770 tokens，0 未结算 |
+| 最终真实 DeepSeek | 4 requests / 4 HTTP attempts，4 成功，5,592 tokens，0 未结算 |
 
 现场覆盖按钮不调用模型、确认前零案件、重复/并发确认、跨账号拒绝、原请求查询、交接后禁写、人工领取复核与结案、运营权限隔离、7/30 天分页统计、改进关闭、保留预览/标记、真实意图识别和后台分析、三个角色页面，以及重启后原案件恢复。
 
@@ -53,6 +53,8 @@
 第一次现场完成 24 项、4 次模型请求成功、5,809 tokens。后续补齐哈希保护时，Mongo 重读把数字连续的服务器哈希误判为业务标识，导致确认返回 500（Provider 0）；已为服务器专用哈希增加严格格式校验和序列化回归，并保持拒绝模型提供该字段。
 
 之后一轮 31 项通过，4 个逻辑请求、5 HTTP attempts（1 次网络重试）、5,926 tokens。UTC 窗口边界补测后，最终部署又完成独立 31 项与 5,770 tokens。各报告分别保留，最终表格只引用最后一轮，没有拼接结果。合计本轮这三个成功范围 12 个逻辑请求、13 HTTP attempts、17,505 tokens。
+
+远程 CI 随后检出旧前端依赖的 5 条可修复漏洞，已更新 Vue/server-renderer 到 3.5.43、brace-expansion 到 2.1.7、source-map-js 到 1.2.2；没有新增忽略项。npm audit 为 0，重建及页面回归通过。校准运行版本标识时新建的 Python 镜像重新解析了已有依赖范围（FastAPI 0.143.0、Pydantic 2.14.0 等），因此对最终镜像重新完成独立的 31/31 与真实模型 4 次、5,592 tokens 验证。最终表格和 final 报告引用此轮；四个成功范围累计 16 个逻辑请求、17 HTTP attempts、23,097 tokens。上一轮报告仍保留，不覆盖。
 
 README 保持纯文字功能与技术介绍。历史 v3.0.4 Report/Ledger/Lock 及完整模型评测结果未修改；本次升级有独立的源码指纹、机器报告和校验器，不把新增功能回归当成历史完整模型评测翻盘。
 

@@ -3,10 +3,11 @@
   "scope": "human-handoff-2026-10-11",
   "status": "COMPLETED_LOCAL_VERIFIED",
   "runtimeCommit": "ad2966840e4fbb64585a38967f6eaf42ac3ccde3",
-  "sourceSha256": "09efab82153015ce9bb871b49e8b7fd102a4c6ef3b19c80eafbc67e2fb5c418c",
+  "sourceSha256": "ddc5cbd218f6968a3cf11e5b671def09cda1278d05aa2a01aad7593173444f03",
+  "dependencyCommit": "f6777049faa55dfcf265d9e77ccd49ffb2ad490a",
   "historicalEvaluationsRewritten": false,
-  "liveReport": "docs/evidence/handoff-upgrade-live-20261011.json",
-  "liveReportSha256": "db00497bb648bb5ba4397a5c2626cc65e03efbed8c78310e750f3d4e5b7c467c",
+  "liveReport": "docs/evidence/handoff-upgrade-live-final-20261011.json",
+  "liveReportSha256": "b66e7f8a0b6ab66556446565b64979bee327baf73d98060fd9e5c498a3ecee50",
   "pythonPassed": 519,
   "pythonCases": 503,
   "pythonSubtests": 16,
@@ -17,5 +18,5 @@
   "migrationExitCode": 0,
   "localProviderMode": "live",
   "liveChecks": 31,
-  "ci": "pending_exact_evidence_sha"
+  "ci": "GitHub Actions records the result for each exact evidence SHA; do not inherit historical results"
 }
