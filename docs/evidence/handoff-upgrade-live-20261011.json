@@ -1,0 +1,152 @@
+{
+  "date": "2026-10-11",
+  "scope": "synthetic local HTTP / real model when enabled",
+  "checks": [
+    {
+      "caseId": "handoff-v2-button_without_model",
+      "passed": true
+    },
+    {
+      "caseId": "handoff-v2-no_case_before_confirmation",
+      "passed": true
+    },
+    {
+      "caseId": "handoff-v2-confirmed_waiting_human",
+      "passed": true
+    },
+    {
+      "caseId": "handoff-v2-duplicate_confirmation_same_case",
+      "passed": true
+    },
+    {
+      "caseId": "handoff-v2-concurrent_confirmation_guard",
+      "passed": true
+    },
+    {
+      "caseId": "handoff-v2-agent_write_frozen",
+      "passed": true
+    },
+    {
+      "caseId": "handoff-v2-cross_account_rejected",
+      "passed": true
+    },
+    {
+      "caseId": "handoff-v2-original_request_lookup",
+      "passed": true
+    },
+    {
+      "caseId": "handoff-v2-human_claim",
+      "passed": true
+    },
+    {
+      "caseId": "handoff-v2-human_review_audited",
+      "passed": true
+    },
+    {
+      "caseId": "handoff-v2-operator_cannot_review_case",
+      "passed": true
+    },
+    {
+      "caseId": "handoff-v2-window_contains_new_case",
+      "passed": true
+    },
+    {
+      "caseId": "handoff-v2-same_filter_totals",
+      "passed": true
+    },
+    {
+      "caseId": "handoff-v2-thirty_day_pagination_consistent",
+      "passed": true
+    },
+    {
+      "caseId": "handoff-v2-structured_context_no_raw_text",
+      "passed": true
+    },
+    {
+      "caseId": "handoff-v2-improvement_verified_closure",
+      "passed": true
+    },
+    {
+      "caseId": "handoff-v2-processor_start_review",
+      "passed": true
+    },
+    {
+      "caseId": "handoff-v2-processor_resolve",
+      "passed": true
+    },
+    {
+      "caseId": "handoff-v2-processor_close",
+      "passed": true
+    },
+    {
+      "caseId": "handoff-v2-retention_dry_run",
+      "passed": true
+    },
+    {
+      "caseId": "handoff-v2-retention_hold_authorized",
+      "passed": true
+    },
+    {
+      "caseId": "handoff-v2-question_not_handoff",
+      "passed": true
+    },
+    {
+      "caseId": "handoff-v2-natural_language_handoff_preview",
+      "passed": true
+    },
+    {
+      "caseId": "handoff-v2-language_request_no_auto_case",
+      "passed": true
+    },
+    {
+      "caseId": "handoff-v2-analysis_terminal_without_blocking_case",
+      "passed": true
+    },
+    {
+      "caseId": "handoff-v2-real_analysis_succeeded",
+      "passed": true
+    },
+    {
+      "caseId": "handoff-v2-browser_customer_handoff",
+      "passed": true
+    },
+    {
+      "caseId": "handoff-v2-browser_operations",
+      "passed": true
+    },
+    {
+      "caseId": "handoff-v2-browser_processor",
+      "passed": true
+    },
+    {
+      "caseId": "handoff-v2-restart_original_case_reconciled",
+      "passed": true
+    },
+    {
+      "caseId": "handoff-v2-restart_no_duplicate_case",
+      "passed": true
+    }
+  ],
+  "provider": {
+    "logicalProviderRequests": 4,
+    "providerHttpAttempts": 4,
+    "providerRequests": 4,
+    "providerSuccesses": 4,
+    "providerFailures": 0,
+    "successfulRequests": 4,
+    "failedRequests": 0,
+    "deniedBeforeNetwork": 0,
+    "unresolvedReservations": 0,
+    "scenarioFailures": 0,
+    "testFailures": 0,
+    "promptTokens": 4944,
+    "completionTokens": 826,
+    "totalTokens": 5770,
+    "networkRetries": 0,
+    "protocolCorrections": 0,
+    "events": 12
+  },
+  "runtimeCommit": "ad2966840e4fbb64585a38967f6eaf42ac3ccde3",
+  "sourceSha256": "09efab82153015ce9bb871b49e8b7fd102a4c6ef3b19c80eafbc67e2fb5c418c",
+  "provenance": "Sanitized copy of tmp/handoff-upgrade-7be503eab6.json; original preserved"
+}

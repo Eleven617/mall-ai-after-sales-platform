@@ -1,4 +1,6 @@
 {
+  "activeUpgrade": "docs/evidence/handoff-upgrade-facts.json",
+  "historicalScopeNote": "The v3.0.4 fields below are historical. Current 2026-10-11 customer/human/operations upgrade has separate source-bound evidence; no historical evaluation is relabelled.",
   "schemaVersion": "mall-public-release-facts.v4",
   "publicationHandoff": {
     "status": "published_to_main_with_documented_model_quality_limits",

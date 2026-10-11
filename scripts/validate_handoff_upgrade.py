@@ -14,6 +14,7 @@ def validate():
     live_path=ROOT/facts['liveReport']
     assert hashlib.sha256(live_path.read_bytes()).hexdigest()==facts['liveReportSha256']
     live=json.loads(live_path.read_text(encoding='utf-8'))
+    assert live['sourceSha256']==facts['sourceSha256'] and live['runtimeCommit']==facts['runtimeCommit']
     assert all(item['passed'] for item in live['checks'])
     assert len({item['caseId'] for item in live['checks']})==len(live['checks'])
     required={'real_analysis_succeeded','natural_language_handoff_preview','no_case_before_confirmation',

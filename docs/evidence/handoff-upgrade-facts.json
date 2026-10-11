@@ -1,0 +1,21 @@
+{
+  "schemaVersion": "mall-handoff-upgrade.v1",
+  "scope": "human-handoff-2026-10-11",
+  "status": "COMPLETED_LOCAL_VERIFIED",
+  "runtimeCommit": "ad2966840e4fbb64585a38967f6eaf42ac3ccde3",
+  "sourceSha256": "09efab82153015ce9bb871b49e8b7fd102a4c6ef3b19c80eafbc67e2fb5c418c",
+  "historicalEvaluationsRewritten": false,
+  "liveReport": "docs/evidence/handoff-upgrade-live-20261011.json",
+  "liveReportSha256": "db00497bb648bb5ba4397a5c2626cc65e03efbed8c78310e750f3d4e5b7c467c",
+  "pythonPassed": 519,
+  "pythonCases": 503,
+  "pythonSubtests": 16,
+  "pythonSemanticSha256": "089755a14595d6cdcad9f3f49d136f9ec5e20e375fe97566ed67936cd7c5d3c8",
+  "javaSelectedTests": 32,
+  "webBuild": "passed",
+  "composeHealthy": "8/8",
+  "migrationExitCode": 0,
+  "localProviderMode": "live",
+  "liveChecks": 31,
+  "ci": "pending_exact_evidence_sha"
+}

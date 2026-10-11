@@ -1,5 +1,12 @@
 # 公开发布记录
 
+## 当前功能升级｜2026-10-11
+
+客户确认转人工、人工处理与运营改进已完成本地升级及验收。源码提交 `ad2966840e4fbb64585a38967f6eaf42ac3ccde3`；FastAPI 519/519，Java 受影响套件 32/32，最终真实现场 31/31，真实模型 4 次调用成功，8 个服务健康。新版 README 为纯文字功能与技术介绍。
+
+当前功能与证据见 [人工交接升级记录](HANDOFF_UPGRADE_IMPLEMENTATION.md)。以下 2026-09 的完整模型发布门禁及指标属于历史范围，不代表本次新增功能仍待开发；也未被本轮小范围验收改写为全量模型评测通过。
+
+
 ## 当前收尾结论｜2026-09-23
 
 代码与新版 README 已发布到 GitHub `main`，核验基线为 `cb033d17092f8419e42e323c8750078e654c6e45`；该 SHA 的 [mall-ci](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/35823667967) 与 [quality-evaluation](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/runs/35823667929) 均为 success。本次仅统一交接文档，后续文档提交的 CI 由 GitHub Actions 按其自身 SHA 记录，不继承基线结论。
