@@ -1,4 +1,5 @@
 # Never publish local Git metadata, editor state, personal materials or
+/docker-compose.override.yml
 # recoverable working copies. `mall2` is an upstream working tree locally;
 # the public-release staging process copies its source without its nested Git
 # directory so the published repository has one intentional history.

@@ -1,4 +1,5 @@
 import os
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
 
@@ -8,6 +9,8 @@ from app.routers import (
     chat,
     customer_service,
     health,
+    human_handoffs,
+    handoff_management,
     intent,
     mcp,
     operations,
@@ -19,7 +22,15 @@ from app.services.release_ledger import release_ledger_context
 from app.services.provider_guard import provider_access_context
 
 
+@asynccontextmanager
+async def lifespan(app):
+    from app.services.handoff_analysis_scheduler import start_worker
+    stop=start_worker()
+    yield
+    stop.set()
+
 app = FastAPI(
+    lifespan=lifespan,
     title="mall-ai-service",
     description="Minimal AI service for ecommerce customer support learning.",
     version="0.1.0",
@@ -56,6 +67,8 @@ async def correlation_middleware(request: Request, call_next):
                 return response
 
 app.include_router(health.router)
+app.include_router(human_handoffs.router)
+app.include_router(handoff_management.router)
 app.include_router(authentication.router)
 app.include_router(agent_tasks.router)
 app.include_router(chat.router)

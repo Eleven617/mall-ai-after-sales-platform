@@ -22,6 +22,7 @@ AgentTaskStatus = Literal[
     "replanning",
     "waiting_for_user",
     "waiting_for_async_task",
+    "waiting_human",
     "ready_to_commit",
     "committing",
     "completed",
@@ -182,6 +183,7 @@ class TaskArtifact(BaseModel):
         "action_result",
         "async_task",
         "memory_hint",
+        "conversation_context_projection",
     ]
     source_skill: str = Field(pattern=r"^[a-z][a-z0-9_]{2,63}$")
     source_version: str = Field(pattern=r"^v[0-9]+(?:\.[0-9]+){0,2}$")
@@ -512,6 +514,9 @@ class AgentTaskPublicView(BaseModel):
     """Customer DTO: no internal IDs, raw facts, messages, prompts or traces."""
 
     task_ref: str
+    handoff_topic: str | None = None
+    handoff_reason: str | None = None
+    handoff_case_ref: str | None = None
     goal: str
     status: AgentTaskStatus
     plan_version: int

@@ -78,10 +78,11 @@ services:
       - ./mall2/document/sql/migrations/V20260821__after_sales_review_and_outbox_source.sql:/migrations/V20260821__after_sales_review_and_outbox_source.sql:ro
       - ./mall2/document/sql/migrations/V20260824__unified_after_sales_finalization.sql:/migrations/V20260824__unified_after_sales_finalization.sql:ro
       - ./mall2/document/sql/migrations/V20260831__ai_service_case_collaboration.sql:/migrations/V20260831__ai_service_case_collaboration.sql:ro
+      - ./mall2/document/sql/migrations/V20261011__human_handoff_v2.sql:/migrations/V20261011__human_handoff_v2.sql:ro
     command:
       - /bin/sh
       - -ec
-      - mysql --protocol=TCP --host=mysql --port=3306 --user=root --default-character-set=utf8 mall < /migrations/V20260814__ai_after_sales_outbox.sql && mysql --protocol=TCP --host=mysql --port=3306 --user=root --default-character-set=utf8 mall < /migrations/V20260818__ai_case_handoff.sql && mysql --protocol=TCP --host=mysql --port=3306 --user=root --default-character-set=utf8 mall < /migrations/V20260819__ai_customer_conversation_history.sql && mysql --protocol=TCP --host=mysql --port=3306 --user=root --default-character-set=utf8 mall < /migrations/V20260820__build19_2_operations_overview_demo_records.sql && mysql --protocol=TCP --host=mysql --port=3306 --user=root --default-character-set=utf8 mall < /migrations/V20260820__ai_quality_developer_account.sql && mysql --protocol=TCP --host=mysql --port=3306 --user=root --default-character-set=utf8 mall < /migrations/V20260821__unified_after_sales_application.sql && mysql --protocol=TCP --host=mysql --port=3306 --user=root --default-character-set=utf8 mall < /migrations/V20260821__after_sales_review_and_outbox_source.sql && mysql --protocol=TCP --host=mysql --port=3306 --user=root --default-character-set=utf8 mall < /migrations/V20260824__unified_after_sales_finalization.sql && mysql --protocol=TCP --host=mysql --port=3306 --user=root --default-character-set=utf8 mall < /migrations/V20260831__ai_service_case_collaboration.sql
+      - mysql --protocol=TCP --host=mysql --port=3306 --user=root --default-character-set=utf8 mall < /migrations/V20260814__ai_after_sales_outbox.sql && mysql --protocol=TCP --host=mysql --port=3306 --user=root --default-character-set=utf8 mall < /migrations/V20260818__ai_case_handoff.sql && mysql --protocol=TCP --host=mysql --port=3306 --user=root --default-character-set=utf8 mall < /migrations/V20260819__ai_customer_conversation_history.sql && mysql --protocol=TCP --host=mysql --port=3306 --user=root --default-character-set=utf8 mall < /migrations/V20260820__build19_2_operations_overview_demo_records.sql && mysql --protocol=TCP --host=mysql --port=3306 --user=root --default-character-set=utf8 mall < /migrations/V20260820__ai_quality_developer_account.sql && mysql --protocol=TCP --host=mysql --port=3306 --user=root --default-character-set=utf8 mall < /migrations/V20260821__unified_after_sales_application.sql && mysql --protocol=TCP --host=mysql --port=3306 --user=root --default-character-set=utf8 mall < /migrations/V20260821__after_sales_review_and_outbox_source.sql && mysql --protocol=TCP --host=mysql --port=3306 --user=root --default-character-set=utf8 mall < /migrations/V20260824__unified_after_sales_finalization.sql && mysql --protocol=TCP --host=mysql --port=3306 --user=root --default-character-set=utf8 mall < /migrations/V20260831__ai_service_case_collaboration.sql && mysql --protocol=TCP --host=mysql --port=3306 --user=root --default-character-set=utf8 mall < /migrations/V20261011__human_handoff_v2.sql
     depends_on:
       mysql:
         condition: service_healthy
@@ -158,6 +159,7 @@ services:
       dockerfile: mall-admin/Dockerfile
     environment:
       SPRING_PROFILES_ACTIVE: docker
+      AI_CASE_HANDOFF_SERVICE_KEY: ${AI_CASE_HANDOFF_SERVICE_KEY:-local-build19-service-key}
       MALL_DB_USERNAME: ${MALL_DB_USERNAME:-mall_app}
       MALL_DB_PASSWORD: ${MALL_DB_PASSWORD:-mall_app}
     depends_on:
@@ -191,6 +193,7 @@ services:
     environment:
       MALL_API_BASE_URL: http://mall-portal:8085
       MALL_ADMIN_API_BASE_URL: http://mall-admin:8080
+      MALL_HANDOFF_ANALYSIS_ENABLED: '1'
       AI_CASE_HANDOFF_SERVICE_KEY: ${AI_CASE_HANDOFF_SERVICE_KEY:-local-build19-service-key}
       AI_AFTER_SALES_SERVICE_KEY: ${AI_AFTER_SALES_SERVICE_KEY:-local-build21-after-sales-key}
       CONVERSATION_STORE_BACKEND: redis

@@ -3,6 +3,7 @@ param(
     [switch]$PrepareDemoData,
     [switch]$SkipBuild,
     [switch]$SkipRagBootstrap,
+    [switch]$Offline,
     [int]$TimeoutSeconds = 180
 )
 
@@ -13,6 +14,10 @@ $projectRoot = Split-Path -Parent $PSScriptRoot
 $composeFile = Join-Path $projectRoot "docker-compose.yml"
 $aiProject = Join-Path $projectRoot "mall-ai-service"
 $python = Join-Path $aiProject ".venv\Scripts\python.exe"
+
+# Explicit daily-use configuration; formal release runners do not include it.
+& (Join-Path $PSScriptRoot 'Enable-LocalDeepSeek.ps1') -Offline:$Offline
+$composeArguments = @('-f', $composeFile, '-f', (Join-Path $projectRoot 'docker-compose.override.yml'))
 
 if (-not (Get-Command docker -ErrorAction SilentlyContinue)) {
     throw "Docker Desktop was not found. Install and start Docker Desktop first."
@@ -79,13 +84,13 @@ if (-not $SkipBuild) {
         Ensure-LocalBaseImage -Image $image
     }
 
-    & docker compose -f $composeFile build --pull=false
+    & docker compose @composeArguments build --pull=false
     if ($LASTEXITCODE -ne 0) {
         throw "Docker Compose failed to build the demo images. Run docker compose -f $composeFile logs."
     }
 }
 
-& docker compose -f $composeFile up -d --no-build
+& docker compose @composeArguments up -d --no-build
 if ($LASTEXITCODE -ne 0) {
     throw "Docker Compose failed to start. Run docker compose -f $composeFile logs."
 }

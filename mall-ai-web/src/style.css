@@ -161,7 +161,7 @@ h1 { margin-bottom: 0; font-size: 19px; line-height: 1.25; }
 .danger-button { border-color: #fecaca; color: #b91c1c; }
 .danger-button:hover { border-color: #ef4444; background: #fef2f2; }
 
-.workspace { display: grid; grid-template-columns: 220px minmax(0, 1fr) minmax(300px, 360px); min-height: 670px; }
+.workspace { display: grid; grid-template-columns: 220px minmax(0, 1fr); min-height: 670px; }
 .panel-kicker { color: #0f766e; }
 .history-sidebar { display: flex; width: auto; min-width: 0; flex: none; flex-direction: column; padding: 23px 14px; border-right: 1px solid #e7edf3; background: #f8fafc; }
 .history-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; padding: 0 7px 16px; }

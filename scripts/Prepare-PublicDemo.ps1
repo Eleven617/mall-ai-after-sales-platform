@@ -90,6 +90,7 @@ try {
         $startParameters.SkipBuild = $true
     }
     $startParameters.SkipRagBootstrap = $true
+    $startParameters.Offline = [bool]$SkipLiveModel
     & (Join-Path $PSScriptRoot "start-demo.ps1") @startParameters
     if ($LASTEXITCODE -ne 0) {
         throw "Local public-demo preparation failed."

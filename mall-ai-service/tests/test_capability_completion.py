@@ -153,7 +153,13 @@ def test_after_sales_amendment_versions_proposal_and_rejects_stale_confirmation(
     assert gateway.commits[0][1]["applicationType"] == "exchange"
 
 
-def test_human_case_confirmation_requires_only_safe_artifacts_and_is_idempotent() -> None:
+def test_human_case_confirmation_requires_only_safe_artifacts_and_is_idempotent(monkeypatch) -> None:
+    from app.schemas.human_handoff import HandoffResult
+    writes=[]
+    def java_handoff(context, content_hash, authorization, **kwargs):
+        writes.append(context)
+        return HandoffResult(caseRef='aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',state='QUEUED',version=1)
+    monkeypatch.setattr('app.runtime.task_runtime.handoff_request',java_handoff)
     policy_ref = "policy-human-evidence"
     provider = ScriptedRuntimeProvider(
         decisions=[
@@ -204,17 +210,10 @@ def test_human_case_confirmation_requires_only_safe_artifacts_and_is_idempotent(
         member_id=MEMBER_ID,
         authorization=AUTHORIZATION,
     )
-    assert confirmed.view.status == "executing"
-    assert len(gateway.commits) == 1
-    commit_skill, commit_args = gateway.commits[0]
-    assert commit_skill == "commit_human_case"
-    assert commit_args["artifactRefs"] == [policy_ref]
-    assert commit_args["reasonCode"] == "insufficient_evidence"
-    assert "orderFactRef" not in commit_args
-    assert "idempotencyKey" in commit_args
-
-    with pytest.raises(TaskRuntimeError) as duplicate:
-        runtime.confirm_action(
+    assert confirmed.view.status == "waiting_human"
+    assert gateway.commits == []
+    assert len(writes)==1 and writes[0].source=='system_suggested_accepted'
+    duplicate = runtime.confirm_action(
             task_ref=proposed.view.task_ref,
             confirmation="confirm",
             proposal_ref=proposed.view.action.proposal_ref,
@@ -222,8 +221,8 @@ def test_human_case_confirmation_requires_only_safe_artifacts_and_is_idempotent(
             member_id=MEMBER_ID,
             authorization=AUTHORIZATION,
         )
-    assert duplicate.value.code == "action_gate_missing"
-    assert len(gateway.commits) == 1
+    assert duplicate.view.status=='waiting_human'
+    assert len(writes)==1
 
     with pytest.raises(TaskRuntimeError) as other_owner:
         runtime.get_task(task_ref=proposed.view.task_ref, member_id=MEMBER_ID + 1, authorization=AUTHORIZATION)

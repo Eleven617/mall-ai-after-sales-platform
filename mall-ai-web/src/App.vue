@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, nextTick, ref, watch } from "vue";
 import AgentTaskWorkspace from "./AgentTaskWorkspace.vue";
+import HumanHandoffEntry from "./HumanHandoffEntry.vue";
 
 import {
   createCustomerConversation,
@@ -53,6 +54,7 @@ const quickPrompts = [
 const conversationElement = ref<HTMLElement | null>(null);
 const messageInput = ref("");
 const isSending = ref(false);
+const taskRefresh = ref(0);
 const settingsOpen = ref(false);
 const accessToken = ref(readSessionValue(TOKEN_KEY));
 const currentMember = ref<MemberProfile | null>(readMemberProfile());
@@ -121,6 +123,7 @@ async function sendMessage(rawMessage = messageInput.value): Promise<void> {
   }
 
   const requestSessionId = sessionId.value;
+  const requestToken = accessToken.value;
   messageInput.value = "";
   messages.value.push({ id: newId("user"), role: "user", content });
   isSending.value = true;
@@ -128,9 +131,10 @@ async function sendMessage(rawMessage = messageInput.value): Promise<void> {
 
   try {
     const response = await sendCustomerMessage(
-      { session_id: requestSessionId, message: content },
+      { session_id: requestSessionId, message: content, unified_entry: true },
       buildAuthorizationHeader(accessToken.value),
     );
+    if (sessionId.value !== requestSessionId || accessToken.value !== requestToken) return;
     messages.value.push({
       id: newId("assistant"),
       role: "assistant",
@@ -147,6 +151,7 @@ async function sendMessage(rawMessage = messageInput.value): Promise<void> {
       void refreshConversationSummaries();
     }
   } catch (error) {
+    if (sessionId.value !== requestSessionId || accessToken.value !== requestToken) return;
     const failureMessage =
       error instanceof CustomerServiceApiError
         ? error.message
@@ -157,6 +162,7 @@ async function sendMessage(rawMessage = messageInput.value): Promise<void> {
     }
   } finally {
     isSending.value = false;
+    taskRefresh.value += 1;
     await scrollToLatest();
   }
 }
@@ -1077,9 +1083,17 @@ async function scrollToLatest(): Promise<void> {
               </div>
             </article>
             <div v-if="isSending" class="typing-indicator" role="status"><span></span><span></span><span></span>正在处理你的问题</div>
+            <AgentTaskWorkspace
+              v-if="currentMember"
+              :authorization="buildAuthorizationHeader(accessToken) || ''"
+              :session-id="sessionId"
+              :refresh-key="taskRefresh"
+              :sending="isSending"
+            />
           </div>
 
           <div class="composer-area">
+            <HumanHandoffEntry :authorization="buildAuthorizationHeader(accessToken) || ''" :session-id="sessionId" :disabled="isSending || isCreatingConversation" @prepared="taskRefresh += 1" />
             <div class="quick-prompts" aria-label="快捷问题"><button v-for="prompt in quickPrompts" :key="prompt" type="button" :disabled="isSending || isCreatingConversation" @click="sendMessage(prompt)">{{ prompt }}</button></div>
             <form class="composer" @submit.prevent="sendMessage()">
               <textarea v-model="messageInput" :disabled="isSending || isCreatingConversation" rows="2" placeholder="例如：某笔订单的耳机损坏了，想申请退货" @keydown.enter.exact.prevent="sendMessage()"></textarea>
@@ -1089,19 +1103,6 @@ async function scrollToLatest(): Promise<void> {
           </div>
         </section>
 
-        <aside class="agent-sidebar" aria-label="开放任务 Agent 工作台">
-          <AgentTaskWorkspace
-            v-if="currentMember"
-            :authorization="buildAuthorizationHeader(accessToken) || ''"
-            :session-id="sessionId"
-          />
-          <section v-else class="agent-login-prompt">
-            <p class="panel-kicker">OPEN TASK AGENT</p>
-            <h2>登录后开启多步任务</h2>
-            <p>登录商城账号后，Agent 可以围绕订单、物流、政策和售后事实形成可追踪的任务计划。</p>
-            <button class="secondary-button" type="button" @click="settingsOpen = true">先登录账号</button>
-          </section>
-        </aside>
       </div>
     </section>
   </main>

@@ -1,84 +1,46 @@
 # Mall AI 售后平台
 
-[![mall-ci](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/workflows/ci.yml)
-[![quality-evaluation](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/workflows/quality-evaluation.yml/badge.svg?branch=main)](https://github.com/Eleven617/mall-ai-after-sales-platform/actions/workflows/quality-evaluation.yml)
-[![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
+基于真实商城业务的智能售后系统，连接自然语言对话、订单调查、政策检索和用户确认后的业务执行。客户只需在一个对话框描述需求，系统根据问题选择直接解答或多步 Agent 处理，在同一会话展示调查进度和处理方案。
 
-![Mall AI 售后平台](docs/assets/social-preview.png)
+## 功能
 
-面向电商售后的可信 Agent Runtime：用户用自然语言描述问题，系统调查订单与政策事实，生成可解释的处理方案，并在用户确认后由 Java 业务层完成最终校验与写入。
+- **统一客服对话**：问候、政策咨询、单项查询使用客服链路；复杂调查、方案比较和新的售后办理自动进入任务流程，无需客户选择 Agent 或填写任务表单。
+- **多轮事项处理**：缺少信息时追问，客户直接在对话中补充；服务端关联当前账号、当前会话的处理事项。咨询其他问题后仍可查看原事项。
+- **可确认的售后方案**：展示依据、预期效果和方案版本；支持修改售后类型、确认提交和暂不提交。Java 提交时重新校验身份、归属、资格和状态，保证重复确认不会重复写入。
+- **订单与政策联合调查**：订单、物流和售后资格来自 Java 接口；政策问答通过版本化知识检索和证据核验形成回答。
+- **随时转人工**：客户可直接说“转人工”或点击常驻入口，选择当前事项或一般咨询；查看交接卡并确认后登记案件。无需先提供订单，按钮路径不依赖模型。
+- **人工售后闭环**：客户查看排队、处理和补件进度；处理人员领取、核验、请求补充、解决与结案。交接后原事项停止自动写入，避免人工与 Agent 重复操作。
+- **问题分析与改进**：后台根据结构化交接信息异步分析原因，人工可复核分类；运营按统一时间窗口、业务、来源和原因筛选案例与统计，把问题分派为可追踪、需验证才能关闭的改进事项。
 
-这是基于 Apache-2.0 [`macrozheng/mall`](UPSTREAM.md) 二次开发的全栈 AI 工程作品集，重点展示 Agent 编排、RAG 证据、受控工具调用和真实业务写入边界如何协同工作。
+## 技术设计
 
-## 产品能力
+### 对话驱动的 Agent 编排
 
-| 能力 | 用户体验 | 工程实现 |
-| --- | --- | --- |
-| 售后开放任务 | 用一句话描述退货、补发、维修或人工协助需求 | FastAPI Task Runtime + 受限 Skill Catalog + 结构化 Proposal |
-| 可信确认写入 | 先看到事实、证据和方案，再明确确认 | Java 权威事实、资格重校验、状态机、幂等键和事务写入 |
-| 政策问答 | 回答带有可追溯来源，证据不足时主动拒答 | 版本化政策 RAG + Evidence Verifier + 来源白名单 |
-| 暂停与恢复 | 缺少信息时保留同一任务，补充信息后继续 | durable task state、TTL、owner 校验和恢复合同 |
-| 事实变化重规划 | 订单状态变化后让旧方案失效并重新核验 | 内容 Hash、事实版本、Proposal 过期保护 |
-| 运营与质量工作台 | 查看售后趋势、任务状态和评测结果 | Vue 角色化工作台 + 只读聚合 API + 可复现 EvalCase |
+FastAPI 统一入口通过结构化模型决策选择客服回答、创建事项、继续事项、请求澄清或人工交接。任务引用只从服务端读取的当前会话事项中选择；客户在同一对话中查看进度和确认方案。
 
-## 先看演示
+TaskRuntime 管理计划、Skill 调用、事实产物、暂停恢复和版本化 ActionProposal。Executor 负责受控执行，Context Curator 管理上下文，Resolution Critic 提供方案检查。JSON Schema、工具白名单和参数校验约束模型输出。
 
-### 售后任务闭环
+### 业务执行与一致性
 
-自然语言目标 → 调查订单与政策 → 生成方案 → 用户确认 → Java 重校验 → 一次性写入 → 状态回查。
+Java Spring Boot 是业务事实和最终写入的权威。Python 通过 API 获取事实，确认卡绑定方案引用和版本，提交经过资格重校验、幂等与事务处理。MySQL 保存业务数据，Outbox 与 RabbitMQ 支持异步业务流；Redis 提供会话、锁与短期状态，MongoDB 保存 Runtime 任务数据。
 
-![售后任务闭环](docs/assets/showcase-final/main-open-task-closed-loop.gif)
+### 政策 RAG 与模型接入
 
-### 可恢复的 Agent 工作流
+版本化政策知识支持 Dense / Hybrid / Rerank 检索，回答经过来源、适用性与证据核验。DeepSeek 通过统一模型网关接入，结构化输出、调用预算和 Ledger 对账用于控制模型调用；证据不足时请求补充信息或拒绝推断。
 
-![暂停与同任务恢复](docs/assets/showcase-final/clarify-pause-resume.png)
-![事实变化后重新规划](docs/assets/showcase-final/fact-change-replan-handoff.png)
+### 人工交接与可追溯分析
 
-### 面向团队的工作台
+交接复用 ActionProposal 的身份、版本、有效期和内容哈希校验。Java 使用稳定请求键与活动事项锁，在同一事务中关联案件、审计和 Outbox；提交结果不明时按原请求查询。客户、处理人员和运营使用独立身份与权限。
 
-![运营分析工作台](docs/assets/showcase-final/operations-analysis.png)
-![AI 质量评测工作台](docs/assets/showcase-final/quality-evaluation.png)
+原因分析读取业务类别、客户选择、任务阶段与进度计数，不复制原始聊天。后台通过持久化待分析状态、领取租约和条件更新恢复任务；模型初判与人工结论分别留存，并记录输入哈希及分析版本。运营列表、总数与原因分布共享过滤条件；保留期管理提供预览、保留标记、分批清理和审计。
 
-完整素材、截图来源和场景对账见[展示证据](docs/evidence/final-showcase-evidence.md)。仓库也提供无模型 deterministic/replay 入口，用于稳定复现状态机、权限和写入合同。
+### 前端与工程
 
-## 核心设计
-
-```mermaid
-flowchart LR
-  U[客户自然语言目标] --> R[FastAPI Agent Runtime]
-  R --> K[Skill / Tool 白名单]
-  K --> J[Java 订单与售后事实]
-  K --> Q[版本化政策 RAG]
-  J --> P[事实卡与候选方案]
-  Q --> P
-  P --> C[用户明确确认]
-  C --> V[Java 资格与事实重校验]
-  V --> DB[MySQL 事务 + 幂等写入]
-  DB --> O[Outbox / RabbitMQ]
-  R --> W[Vue 公开 DTO]
-```
-
-模型只负责受限 Schema 内的理解、调查编排和方案草拟；不能自创 Skill、直接访问业务库或提交业务写入。最终权限、资格、状态和写入始终由 Java 服务端决定，浏览器只消费公开 DTO。
-
-## 技术栈
-
-- **AI Runtime**：Python、FastAPI、Pydantic、JSON Schema、Executor / Curator / Critic、结构化输出网关。
-- **知识与证据**：版本化政策库、Dense / Hybrid / Rerank 检索、证据核验和 grounding 评测。
-- **业务后端**：Java Spring Boot、MySQL、Redis、RabbitMQ、Outbox、JWT、事务与幂等。
-- **前端工作台**：Vue、Vite，覆盖客户售后、运营分析、质量评测和人工协同视图。
-- **工程质量**：pytest、JUnit、Docker Compose、确定性 replay、故障注入、GitHub Actions。
-
-## 代码导航
-
-- `mall-ai-service/app/runtime/`：任务状态机、计划、Skill 白名单、Proposal、确认和安全停止。
-- `mall-ai-service/app/services/`：售后编排、RAG、MCP、Trace、评测和角色化 API。
-- `mall2/mall-portal/`、`mall2/mall-admin/`：订单事实、权限、资格、幂等、事务和人工协同。
-- `mall-ai-web/src/`：客户、运营、质量和人工处理人员的 Vue 页面。
-- `evals/`、`mall-ai-service/scripts/`：版本化 EvalCase、现场 Runner 和公开发布门禁。
+Vue + TypeScript + Vite 展示公开 DTO，将客服对话、处理进度和确认卡放在同一客户页面。Docker Compose 组织本地服务；pytest、JUnit、合同回放、现场验收与 GitHub Actions 覆盖不同层面的工程验证。
 
 ## 本地运行
 
-需要 Docker Desktop；完整模型演示使用运行者自己的 Provider Key。没有 Key 也可以运行 deterministic 合同、权限和现场验证。
+安装 Docker Desktop，准备自己的 DeepSeek Key，并按本地配置说明注入：
 
 ```powershell
 git clone https://github.com/Eleven617/mall-ai-after-sales-platform.git
@@ -86,31 +48,30 @@ Set-Location .\mall-ai-after-sales-platform
 .\scripts\Prepare-PublicDemo.ps1
 ```
 
-只运行无模型合同：
+日常真实模型对话配置见 [本地对话说明](docs/LOCAL_CHAT.md)。启动后访问 <http://127.0.0.1:5173>；API 文档位于 <http://127.0.0.1:8000/docs>。密钥和临时账号密码不进入 Git。
 
-```powershell
-.\scripts\Prepare-PublicDemo.ps1 -SkipLiveModel
-```
+## 代码导航
 
-启动后访问 <http://127.0.0.1:5173>、<http://127.0.0.1:8000/docs> 和 <http://127.0.0.1:8085>。本地账号使用初始化脚本创建，凭据不会写入仓库。
+| 目录 | 职责 |
+| --- | --- |
+| `mall-ai-service/app/services/conversation_entry.py` | 统一对话路由与事项关联 |
+| `mall-ai-service/app/runtime/` | 任务状态机、Skill、方案与确认 |
+| `mall-ai-service/app/services/` | 客服编排、RAG、模型网关和质量工具 |
+| `mall2/mall-portal/`、`mall2/mall-admin/` | 商城业务、权限、事务和人工协同 |
+| `mall-ai-web/src/` | 客户对话及角色工作台 |
+| `mall-ai-service/evals/`、`mall-ai-service/scripts/` | 评测合同与验证入口 |
 
-## 验证摘要
+## 验证与进一步阅读
 
-当前公开候选的工程验证包括：FastAPI JUnit `511 passed`、v3 deterministic 合同 `478/478`、Representative `8/8`、Contract Replay `36/36`、Java portal 核心 `12/12`、admin `6/6`、Spring context `1/1`、现场合成 Runner `122/122`。当前 DeepSeek 针对性在线评测为 `5/5`，其中 Grounding `4/4`。
+统一入口实现与本轮真实模型回归记录在 [统一对话变更记录](docs/evidence/unified-conversation-entry.md)。既有版本的结果见 [测试与演示证据](docs/TEST_AND_DEMO_EVIDENCE.md) 和 [评测演进记录](docs/evidence/evaluation-evolution.md)，保留各自的版本与范围。
 
-这些数字分别对应不同的工程合同、现场 Runner 和评测套件，不相加为单一准确率。历史完整模型评测与修复演进保留在[评测演进记录](docs/evidence/evaluation-evolution.md)；其中补充集不是独立盲测集。所有评测数据和展示账号均为合成或脱敏数据。
-
-## 进一步阅读
+新版人工交接、人工处理与运营改进的实现和验收见 [人工交接升级记录](docs/HANDOFF_UPGRADE_IMPLEMENTATION.md)。
 
 - [架构与责任边界](docs/architecture.md)
-- [展示素材证据](docs/evidence/final-showcase-evidence.md)
-- [测试与演示证据](docs/TEST_AND_DEMO_EVIDENCE.md)
-- [公开发布记录](docs/PUBLIC_RELEASE_RECORD.md)
-- [评测演进与历史结果](docs/evidence/evaluation-evolution.md)
 - [贡献与本地验证](CONTRIBUTING.md)
 - [安全问题](SECURITY.md)
 - [上游归属](UPSTREAM.md)
 
 ## 许可
 
-本项目按 Apache-2.0 发布；上游商城代码及其许可说明见 [NOTICE](NOTICE) 与 [UPSTREAM.md](UPSTREAM.md)。
+本项目按 Apache-2.0 发布；上游商城代码及许可说明见 [NOTICE](NOTICE) 与 [UPSTREAM.md](UPSTREAM.md)。

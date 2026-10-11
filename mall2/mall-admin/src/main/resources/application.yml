@@ -45,6 +45,8 @@ secure:
       - /actuator/**
       - /druid/**
       - /admin/login
+      # No customer/admin JWT: dedicated analysis capability checked in controller.
+      - /ai/handoff-management/internal/**
       - /admin/register
       - /admin/info
       - /admin/logout

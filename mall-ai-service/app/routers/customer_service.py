@@ -43,6 +43,7 @@ from app.services.durable_diagnosis import (
     clear_durable_diagnosis,
 )
 from app.services.customer_service import handle_customer_message
+from app.services.conversation_entry import handle_unified_message
 from app.services.feedback_governance_service import (
     FeedbackGovernanceError,
     feedback_governance_store,
@@ -113,9 +114,10 @@ def customer_service(
         # overwriting an owner-bound Redis draft or both consuming a pending
         # confirmation. Business writes remain separately protected by Java.
         with reliability_governor.lock(scope=scoped_session_id, kind="session"):
-            internal_response = handle_customer_message(
-                scoped_request,
-                ToolExecutionContext(authorization=authorization, member_id=member_id),
+            context = ToolExecutionContext(authorization=authorization, member_id=member_id)
+            internal_response = (
+                handle_unified_message(scoped_request, context, public_session_id=public_conversation_id)
+                if request.unified_entry else handle_customer_message(scoped_request, context)
             )
         public_response = to_public_customer_service_response(internal_response)
         if member_id is not None:

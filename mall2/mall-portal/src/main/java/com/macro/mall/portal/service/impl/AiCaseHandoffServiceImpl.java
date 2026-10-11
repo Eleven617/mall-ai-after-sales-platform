@@ -68,13 +68,13 @@ public class AiCaseHandoffServiceImpl implements AiCaseHandoffService {
         record.setCaseId(UUID.randomUUID().toString());
         record.setMemberId(member.getId());
         record.setCaseKey(request.getCaseKey().trim());
-        record.setSourceFlow("customer_diagnosis");
+        record.setSourceFlow(request.getSourceFlow());
         record.setDiagnosisCategory(request.getDiagnosisCategory().trim());
         record.setEvidenceStatus(request.getEvidenceStatus().trim());
         record.setHandoffReason(request.getHandoffReason().trim());
         record.setRequiresHumanReview(true);
         record.setCaseStatus("OPEN");
-        record.setSchemaVersion("1");
+        record.setSchemaVersion(request.getSchemaVersion());
         if (aiCaseHandoffDao.insertIgnore(record) != 1) {
             AiCaseHandoffRecord concurrent = aiCaseHandoffDao.findByMemberIdAndCaseKey(
                     member.getId(), request.getCaseKey().trim()
@@ -133,7 +133,7 @@ public class AiCaseHandoffServiceImpl implements AiCaseHandoffService {
         if (request == null || !isSha256(request.getCaseKey())) {
             Asserts.fail("人工跟进标识不合法！");
         }
-        if (!"customer_diagnosis".equals(request.getSourceFlow())) {
+        if (!"customer_diagnosis".equals(request.getSourceFlow()) && !"customer_requested".equals(request.getSourceFlow())) {
             Asserts.fail("人工跟进来源不合法！");
         }
         if (!DIAGNOSIS_CATEGORIES.contains(request.getDiagnosisCategory())) {
@@ -148,7 +148,7 @@ public class AiCaseHandoffServiceImpl implements AiCaseHandoffService {
         if (!Boolean.TRUE.equals(request.getRequiresHumanReview())) {
             Asserts.fail("人工跟进标记不合法！");
         }
-        if (!"1".equals(request.getSchemaVersion())) {
+        if (!("1".equals(request.getSchemaVersion()) && "customer_diagnosis".equals(request.getSourceFlow())) && !("2".equals(request.getSchemaVersion()) && "customer_requested".equals(request.getSourceFlow()))) {
             Asserts.fail("人工跟进协议版本不合法！");
         }
     }

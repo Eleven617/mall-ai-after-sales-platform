@@ -1445,13 +1445,13 @@ function isOperationsCase(payload: unknown): payload is OperationsCase {
   const data = payload as Record<string, unknown>;
   return (
     typeof data.case_id === "string"
-    && data.source_flow === "customer_diagnosis"
+    && (data.source_flow === "customer_diagnosis" || data.source_flow === "customer_requested")
     && typeof data.diagnosis_category === "string"
     && typeof data.evidence_status === "string"
     && typeof data.handoff_reason === "string"
     && data.requires_human_review === true
     && (data.case_status === "OPEN" || data.case_status === "CLOSED")
-    && data.schema_version === "1"
+    && (data.schema_version === "1" || data.schema_version === "2")
   );
 }
 

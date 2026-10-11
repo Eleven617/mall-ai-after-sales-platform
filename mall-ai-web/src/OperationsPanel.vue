@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, watch } from "vue";
+import HandoffManagement from './HandoffManagement.vue';
 
 import {
   analyzeOperationsCase,
@@ -303,6 +304,8 @@ function topHandoffCount(): string {
     </form>
 
     <div v-else class="operations-workspace">
+      <HandoffManagement :authorization="authorizationHeader() || ''" />
+      <details><summary>旧版诊断记录与历史聚合（独立口径）</summary>
       <div class="operations-toolbar">
         <p>当前仅可读取最小化转接事项和聚合统计；分析草稿不会修改售后、订单或退款。</p>
         <div>
@@ -405,6 +408,7 @@ function topHandoffCount(): string {
         <p v-else class="operations-note">选择一条人工跟进事项后，再决定是否生成分析草稿。</p>
       </div>
       <p v-else-if="!isLoadingCases && !casesError" class="operations-note">当前没有可供分析的人工跟进事项。</p>
+      </details>
     </div>
   </section>
 </template>

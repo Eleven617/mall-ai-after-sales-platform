@@ -23,6 +23,7 @@ export type AgentTaskStatus =
   | "replanning"
   | "waiting_for_user"
   | "waiting_for_async_task"
+  | "waiting_human"
   | "ready_to_commit"
   | "committing"
   | "completed"
@@ -81,6 +82,9 @@ export interface AgentTaskExecutionMetricsView {
 }
 
 export interface AgentTaskPublicView {
+  handoff_topic?: string | null;
+  handoff_reason?: string | null;
+  handoff_case_ref?: string | null;
   /** Opaque public reference; internal task IDs and action arguments stay server-side. */
   task_ref: string;
   goal: string;
@@ -240,6 +244,7 @@ export interface AfterSalesSelectionView {
 }
 
 export interface CustomerServiceResponse {
+  agent_task?: AgentTaskPublicView | null;
   answer: string;
   verified_facts?: VerifiedFactCard[] | null;
   after_sales_draft?: AfterSalesDraftView | null;
@@ -329,6 +334,7 @@ export interface CustomerServiceCaseReopenRequest {
 }
 
 export interface CustomerServiceRequest {
+  unified_entry?: boolean;
   session_id: string;
   message: string;
 }
@@ -430,13 +436,13 @@ export interface ServiceProcessorActionRequest {
 
 export interface OperationsCase {
   case_id: string;
-  source_flow: "customer_diagnosis";
+  source_flow: "customer_diagnosis" | "customer_requested";
   diagnosis_category: DiagnosisCategory;
   evidence_status: DiagnosisEvidenceStatus;
   handoff_reason: "tool_failure" | "insufficient_evidence" | "manual_review";
   requires_human_review: true;
   case_status: "OPEN" | "CLOSED";
-  schema_version: "1";
+  schema_version: "1" | "2";
   created_at?: string | null;
   updated_at?: string | null;
 }

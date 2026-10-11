@@ -4,8 +4,6 @@ import { computed, ref, watch } from "vue";
 import {
   confirmAgentTaskAction,
   amendAgentTaskAction,
-  continueAgentTask,
-  createAgentTask,
   CustomerServiceApiError,
   getAgentTasks,
 } from "./api";
@@ -14,104 +12,68 @@ import type { AgentTaskPublicView } from "./types";
 const props = defineProps<{
   authorization: string;
   sessionId: string;
+  refreshKey: number;
+  sending: boolean;
 }>();
 
-const goal = ref("");
 const tasks = ref<AgentTaskPublicView[]>([]);
-const continuationByTask = ref<Record<string, string>>({});
 const error = ref("");
 const busyTaskRef = ref("");
-const isCreating = ref(false);
+let generation = 0;
 const editTypeByTask = ref<Record<string, "cancel_refund" | "return_refund" | "exchange" | "repair">>({});
 
 const visibleTasks = computed(() => tasks.value.filter((task) => task.status !== "cancelled"));
 
 watch(
-  () => [props.authorization, props.sessionId],
-  () => {
-    void refresh();
-  },
+  () => [props.authorization, props.sessionId, props.refreshKey],
+  () => { tasks.value = []; error.value = ""; void refresh(); },
   { immediate: true },
 );
 
 async function refresh(): Promise<void> {
-  if (!props.authorization || !props.sessionId || isCreating.value || busyTaskRef.value) {
-    return;
-  }
+  const current = ++generation;
+  if (!props.authorization || !props.sessionId) return;
   try {
-    tasks.value = await getAgentTasks(props.sessionId, props.authorization);
+    const result = await getAgentTasks(props.sessionId, props.authorization);
+    if (current !== generation) return;
+    tasks.value = result;
     error.value = "";
   } catch (reason) {
-    error.value = messageFor(reason, "Agent 任务暂时无法读取。");
-  }
-}
-
-async function createTask(): Promise<void> {
-  const currentGoal = goal.value.trim();
-  if (!currentGoal || !props.authorization || isCreating.value) {
-    return;
-  }
-  isCreating.value = true;
-  error.value = "";
-  try {
-    const task = await createAgentTask(
-      { session_id: props.sessionId, goal: currentGoal },
-      props.authorization,
-    );
-    upsert(task);
-    goal.value = "";
-  } catch (reason) {
-    error.value = messageFor(reason, "Agent 任务未创建。");
-  } finally {
-    isCreating.value = false;
-  }
-}
-
-async function continueTask(task: AgentTaskPublicView): Promise<void> {
-  const message = (continuationByTask.value[task.task_ref] || "").trim();
-  if (!message || busyTaskRef.value) {
-    return;
-  }
-  busyTaskRef.value = task.task_ref;
-  error.value = "";
-  try {
-    const updated = await continueAgentTask(task.task_ref, message, props.authorization);
-    upsert(updated);
-    continuationByTask.value = { ...continuationByTask.value, [task.task_ref]: "" };
-  } catch (reason) {
-    error.value = messageFor(reason, "任务未继续，请稍后重试。");
-  } finally {
-    busyTaskRef.value = "";
+    if (current === generation) error.value = messageFor(reason, "处理详情暂时无法读取。");
   }
 }
 
 async function act(task: AgentTaskPublicView, confirmation: "confirm" | "withdraw"): Promise<void> {
-  if (busyTaskRef.value) return;
+  if (busyTaskRef.value || props.sending) return;
   busyTaskRef.value = task.task_ref;
+  const current = generation;
   error.value = "";
   try {
     if (!task.action) return;
-    upsert(await confirmAgentTaskAction(task.task_ref, confirmation, props.authorization, task.action.proposal_ref, task.action.revision));
+    const result = await confirmAgentTaskAction(task.task_ref, confirmation, props.authorization, task.action.proposal_ref, task.action.revision);
+    if (current === generation) upsert(result);
   } catch (reason) {
-    error.value = messageFor(reason, "行动未完成，请刷新后重试。");
+    if (current === generation) error.value = messageFor(reason, "行动未完成，请刷新后重试。");
   } finally {
     busyTaskRef.value = "";
   }
 }
 
 async function amend(task: AgentTaskPublicView): Promise<void> {
-  if (!task.action || busyTaskRef.value) return;
+  if (!task.action || busyTaskRef.value || props.sending) return;
   const applicationType = editTypeByTask.value[task.task_ref] || task.action.application_type || "return_refund";
+  const current = generation;
   busyTaskRef.value = task.task_ref;
   error.value = "";
   try {
-    upsert(await amendAgentTaskAction(task.task_ref, {
+    const result = await amendAgentTaskAction(task.task_ref, {
       proposal_ref: task.action.proposal_ref,
       revision: task.action.revision,
       application_type: applicationType,
-    }, props.authorization));
+    }, props.authorization);
+    if (current === generation) upsert(result);
   } catch (reason) {
-    error.value = messageFor(reason, "方案已更新，请刷新后重新确认。");
+    if (current === generation) error.value = messageFor(reason, "方案已更新，请刷新后重新确认。");
   } finally {
     busyTaskRef.value = "";
   }
@@ -132,6 +94,16 @@ function messageFor(reason: unknown, fallback: string): string {
   return reason instanceof CustomerServiceApiError ? reason.message : fallback;
 }
 
+async function reconcile(task: AgentTaskPublicView): Promise<void> {
+  const current=generation;
+  try { const response=await fetch('/api/human-handoffs/'+encodeURIComponent(task.task_ref)+'/result',{headers:{Authorization:props.authorization}});
+    if(!response.ok)throw new Error();
+    const value=await response.json();if(current===generation)upsert(value);
+  } catch { if(current===generation)error.value='交接结果仍待确认，请稍后查询；无需重新建案。'; }
+}
+const handoffReasons: Record<string,string>={human_preference:'希望人工帮助',intent_misunderstood:'意图未理解',repeated_questions:'重复追问',answer_or_evidence_insufficient:'回答或证据不足',tool_or_system_error:'工具或系统异常',capability_or_permission_limit:'能力或权限限制',business_dispute:'业务争议',delay_or_complex_process:'等待或流程复杂',unspecified:'未填写'};
+const handoffTopics: Record<string,string>={general:'一般咨询',unknown:'未知',policy:'政策咨询',logistics:'物流',refund:'退款',return:'退货',exchange:'换货',repair:'维修',application_follow_up:'申请进度'};
+
 function statusLabel(status: AgentTaskPublicView["status"]): string {
   return {
     created: "已创建",
@@ -140,6 +112,7 @@ function statusLabel(status: AgentTaskPublicView["status"]): string {
     replanning: "正在根据新事实调整方案",
     waiting_for_user: "等待你补充信息",
     waiting_for_async_task: "等待业务查询完成",
+    waiting_human: "已登记，等待人工处理",
     ready_to_commit: "方案已准备，等待确认",
     committing: "正在提交",
     completed: "已完成",
@@ -195,38 +168,18 @@ function actionStatusLabel(status: NonNullable<AgentTaskPublicView["action"]>["c
 </script>
 
 <template>
-  <section class="agent-task-workspace" aria-label="电商 Agent 任务工作台">
+  <section v-if="visibleTasks.length || error" class="agent-task-workspace" aria-label="当前会话处理详情">
     <header class="agent-workspace-header">
-      <div>
-        <p class="eyebrow">OPEN TASK AGENT</p>
-        <h2>开放任务工作台</h2>
-        <p>围绕你的目标调查订单、物流、库存和政策事实，并在需要写入前给出确认卡。</p>
-      </div>
-      <button class="secondary-button" type="button" :disabled="isCreating || !!busyTaskRef" @click="refresh">刷新任务</button>
+      <div><h2>处理进度与方案</h2><p>需要补充信息时，直接在对话框回复即可。</p></div>
+      <button class="secondary-button" type="button" :disabled="sending || !!busyTaskRef" @click="refresh">刷新状态</button>
     </header>
+    <p v-if="error" class="error-state" role="alert">{{ error }}</p>
 
-    <form class="agent-task-form" @submit.prevent="createTask">
-      <label for="agent-task-goal">任务目标</label>
-      <textarea
-        id="agent-task-goal"
-        v-model="goal"
-        maxlength="1000"
-        rows="3"
-        placeholder="例如：订单延误且即将出行，核验物流和可用方案；如需写入请先给我确认卡。"
-      />
-      <button class="primary-button" type="submit" :disabled="isCreating || !goal.trim()">
-        {{ isCreating ? "正在形成计划" : "创建 Agent 任务" }}
-      </button>
-    </form>
-
-    <p v-if="error" class="error-state agent-task-error" role="alert">{{ error }}</p>
-    <p v-else-if="!visibleTasks.length" class="empty-state agent-task-note">当前会话还没有开放任务。普通咨询仍可使用下方客服对话；需要多步调查时可从这里开始。</p>
-
-    <ol v-else class="agent-task-list">
+    <ol class="agent-task-list">
       <li v-for="task in visibleTasks" :key="task.task_ref" class="agent-task-card">
         <div class="agent-task-heading">
           <div>
-            <p class="card-caption">开放目标 · 计划第 {{ task.plan_version }} 版</p>
+            <p class="card-caption">处理事项 · 方案第 {{ task.plan_version }} 版</p>
             <h3>{{ task.goal }}</h3>
           </div>
           <span class="status-badge" :class="statusTone(task.status)">{{ statusLabel(task.status) }}</span>
@@ -247,13 +200,11 @@ function actionStatusLabel(status: NonNullable<AgentTaskPublicView["action"]>["c
 
         <p v-if="task.open_question" class="agent-open-question">{{ task.open_question }}</p>
         <p v-if="task.outcome" class="agent-outcome">{{ task.outcome }}</p>
+        <p v-if="task.handoff_topic">交接业务：{{handoffTopics[task.handoff_topic] || '一般咨询'}}；客户选择原因：{{handoffReasons[task.handoff_reason || 'unspecified']}}。只提交结构化事项背景，不提交原始聊天。</p>
         <p v-if="task.execution_summary" class="agent-execution-summary">{{ task.execution_summary }}</p>
-        <details v-if="task.context_summary" class="agent-context-details">
-          <summary>处理摘要</summary>
-          <p class="agent-context-summary">上下文摘要 v{{ task.context_summary.version }}：保留关键事实引用 {{ Math.round(task.context_summary.fact_reference_retention * 100) }}%，上下文规模从 {{ task.context_summary.token_estimate_before }} 调整为 {{ task.context_summary.token_estimate_after }} 的估算值。</p>
-        </details>
 
         <section v-if="task.action" class="agent-action-card">
+          <button v-if="task.action.action_skill==='open_human_case' && task.action.confirmation_status==='unknown'" class="secondary-button" @click="reconcile(task)">查询原交接结果</button>
           <div class="agent-action-heading"><p class="card-caption">行动方案</p><span class="status-badge" :class="task.action.confirmation_status === 'awaiting_confirmation' ? 'warning' : task.action.confirmation_status === 'committed' ? 'success' : 'agent'">{{ actionStatusLabel(task.action.confirmation_status) }}</span></div>
           <strong>{{ task.action.expected_effect }}</strong>
           <p>{{ task.action.user_explanation }}</p>
@@ -261,20 +212,14 @@ function actionStatusLabel(status: NonNullable<AgentTaskPublicView["action"]>["c
           <p v-if="task.limitation_codes.includes('insufficient_evidence')" class="agent-policy-boundary">政策证据不足：此草案仅表达你的申请意向，不代表政策支持或资格通过；确认后仍由 Java 重新核验。</p>
           <ul v-if="task.action.evidence_summaries.length" class="agent-action-evidence"><li v-for="item in task.action.evidence_summaries" :key="item">{{ item }}</li></ul>
           <div v-if="task.action.confirmation_status === 'awaiting_confirmation'" class="agent-action-buttons">
-            <select v-model="editTypeByTask[task.task_ref]" aria-label="修改售后类型">
+            <select v-if="task.action.application_type" v-model="editTypeByTask[task.task_ref]" aria-label="修改售后类型">
               <option value="cancel_refund">取消退款</option><option value="return_refund">退货退款</option><option value="exchange">换货</option><option value="repair">维修</option>
             </select>
-            <button class="secondary-button" type="button" :disabled="busyTaskRef === task.task_ref" @click="amend(task)">修改方案</button>
-            <button class="primary-button" type="button" :disabled="busyTaskRef === task.task_ref" @click="act(task, 'confirm')">确认后提交</button>
-            <button class="secondary-button" type="button" :disabled="busyTaskRef === task.task_ref" @click="act(task, 'withdraw')">暂不提交</button>
+            <button v-if="task.action.application_type" class="secondary-button" type="button" :disabled="sending || !!busyTaskRef" @click="amend(task)">修改方案</button>
+            <button class="primary-button" type="button" :disabled="sending || !!busyTaskRef" @click="act(task, 'confirm')">确认后提交</button>
+            <button class="secondary-button" type="button" :disabled="sending || !!busyTaskRef" @click="act(task, 'withdraw')">暂不提交</button>
           </div>
         </section>
-
-        <form v-if="task.status === 'waiting_for_user'" class="agent-continue-form" @submit.prevent="continueTask(task)">
-          <label :for="`continue-${task.task_ref}`">补充信息</label>
-          <input :id="`continue-${task.task_ref}`" v-model="continuationByTask[task.task_ref]" maxlength="1000" placeholder="按任务问题补充必要信息" />
-          <button class="secondary-button" type="submit" :disabled="busyTaskRef === task.task_ref || !(continuationByTask[task.task_ref] || '').trim()">继续任务</button>
-        </form>
 
         <p v-if="task.limitation_codes.length" class="agent-limitation">处理边界：{{ task.limitation_codes.map(limitationLabel).join('；') }}</p>
       </li>

@@ -117,6 +117,11 @@ def fastapi_facts_match(fastapi: dict[str, object], report: dict[str, object]) -
 
 
 def main() -> int:
+    # New scoped upgrades have their own evidence identity. Old live batches
+    # and their frozen report counts remain historical, never upgraded in place.
+    if (ROOT / 'docs/evidence/handoff-upgrade-facts.json').is_file():
+        from validate_handoff_upgrade import validate
+        return validate()
     require(FACTS_PATH.is_file(), "current-release-facts.json is missing")
     try:
         facts = json.loads(FACTS_PATH.read_text(encoding="utf-8"))
@@ -233,17 +238,14 @@ def main() -> int:
     for phrase in forbidden_phrases:
         require(phrase not in readme, f"README contains forbidden public wording: {phrase}")
     if release_status == "NOT_COMPLETE":
-        required_fragments = (
-            "DeepSeek",
-            f"{tests['fastapi']['passed']} passed",
-            "portal 核心 `12/12`",
-            "admin `6/6`",
-            "Spring context `1/1`",
-            "478/478",
-        )
-        for fragment in required_fragments:
-            require(fragment in readme, f"README missing fact fragment: {fragment}")
-        require("不是独立盲测集" in readme, "README must disclose supplemental-set boundary")
+        # Product documentation links to versioned evidence instead of
+        # duplicating frozen historical counts as current runtime claims.
+        require("docs/evidence/evaluation-evolution.md" in readme,
+                "README must link versioned evaluation evidence")
+        require("docs/TEST_AND_DEMO_EVIDENCE.md" in readme,
+                "README must link engineering evidence")
+        require("PORTFOLIO_RELEASE_COMPLETE" not in readme,
+                "README must not predeclare release completion")
     elif release_status == "IMPLEMENTATION_READY_FOR_FINAL_VALIDATION":
         require("PORTFOLIO_RELEASE_COMPLETE" not in readme, "README must not predeclare release completion")
     require(

@@ -35,7 +35,7 @@ class CaseHandoffView(StrictOperationsModel):
         min_length=36,
         max_length=36,
     )
-    source_flow: Literal["customer_diagnosis"] = Field(
+    source_flow: Literal["customer_diagnosis", "customer_requested"] = Field(
         validation_alias=AliasChoices("source_flow", "sourceFlow")
     )
     diagnosis_category: Literal[
@@ -60,7 +60,7 @@ class CaseHandoffView(StrictOperationsModel):
     case_status: Literal["OPEN", "CLOSED"] = Field(
         validation_alias=AliasChoices("case_status", "caseStatus")
     )
-    schema_version: Literal["1"] = Field(
+    schema_version: Literal["1", "2"] = Field(
         validation_alias=AliasChoices("schema_version", "schemaVersion")
     )
     created_at: datetime | None = Field(

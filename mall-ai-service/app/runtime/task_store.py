@@ -17,6 +17,7 @@ from typing import Any, Protocol
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from app.config import settings
+from app.schemas.human_handoff import HandoffContext
 from app.schemas.agent_task import (
     ActionProposal,
     AgentTask,
@@ -50,6 +51,7 @@ class TaskRecordBundle(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     task: AgentTask
+    handoff: HandoffContext | None = None
     plans: list[TaskPlan] = Field(default_factory=list, max_length=100)
     artifacts: list[TaskArtifact] = Field(default_factory=list, max_length=128)
     context_packs: list[ContextPack] = Field(default_factory=list, max_length=100)
@@ -118,6 +120,7 @@ class TaskRecordBundle(BaseModel):
             assert_safe_action_arguments(
                 arguments,
                 allow_generated_idempotency_key=True,
+                allow_generated_projection_hash=True,
                 allowed_opaque_references=artifact_refs,
             )
         return self
@@ -266,6 +269,7 @@ def assert_safe_action_arguments(
     *,
     allow_generated_idempotency_key: bool = False,
     allowed_opaque_references: set[str] | None = None,
+    allow_generated_projection_hash: bool = False,
 ) -> None:
     """Keep action arguments opaque and free of raw identifiers.
 
@@ -280,6 +284,10 @@ def assert_safe_action_arguments(
         raise TaskStoreError("行动参数不合法。")
     forbidden_keys = {"authorization", "token", "password", "order_sn", "orderSn", "address", "phone"}
     for key, value in arguments.items():
+        if key == 'handoffProjectionHash':
+            if not allow_generated_projection_hash or not isinstance(value,str) or len(value)!=64 or any(char not in '0123456789abcdef' for char in value):
+                raise TaskStoreError('交接投影哈希必须由服务端生成。')
+            continue
         if key == "idempotencyKey":
             if (
                 not allow_generated_idempotency_key

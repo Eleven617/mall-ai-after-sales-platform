@@ -12,6 +12,9 @@ import json
 import os
 import re
 import time
+import uuid
+from functools import wraps
+from app.services.reliability_service import reliability_governor, ConcurrentOperationError, ReliabilityBackendUnavailable
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from typing import Any, Mapping
@@ -84,6 +87,8 @@ from app.skills.commerce_gateway import (
 from app.services.trace_service import record_trace
 from app.services.identifier_extraction import extract_order_sn, extract_sku_id
 from app.services.llm_observability import capture_llm_metrics
+from app.schemas.human_handoff import HandoffContext, HandoffPrepare
+from app.services.human_handoff_client import handoff_request, HandoffUnavailable, record_handoff_event
 
 
 class TaskRuntimeError(RuntimeError):
@@ -99,6 +104,23 @@ class TaskRuntimeError(RuntimeError):
         self.code = code
         self.status_code = status_code
         self.missing_keys = list(missing_keys or [])
+
+
+def serialized_task(method):
+    """One distributed guard across all mutation entry points for a task."""
+    @wraps(method)
+    def guarded(self,*args,**kwargs):
+        request=args[0] if args else kwargs.get('request')
+        ref=kwargs.get('task_ref') or getattr(request,'task_ref',None)
+        scope=ref or 'handoff:'+str(kwargs.get('member_id'))+':'+str(getattr(request,'session_id',''))
+        try:
+            with reliability_governor.lock(scope=scope,kind='proposal',ttl_seconds=300):
+                return method(self,*args,**kwargs)
+        except ConcurrentOperationError as exc:
+            raise TaskRuntimeError('当前事项正在处理，请稍后刷新原事项。',code='task_busy',status_code=409) from exc
+        except ReliabilityBackendUnavailable as exc:
+            raise TaskRuntimeError('事项保护服务暂不可用，请稍后重试。',code='task_lock_unavailable',status_code=503) from exc
+    return guarded
 
 
 @dataclass(frozen=True)
@@ -191,6 +213,7 @@ class TaskRuntime:
         )
         return result
 
+    @serialized_task
     def continue_task(
         self,
         *,
@@ -206,7 +229,7 @@ class TaskRuntime:
             raise TaskRuntimeError(str(exc), code="task_not_found", status_code=404) from exc
         if not isinstance(message, str) or not message.strip() or len(message) > 2000:
             raise TaskRuntimeError("继续任务的消息不合法。", code="invalid_message")
-        if bundle.task.status in {"completed", "cancelled"}:
+        if bundle.task.status in {"completed", "cancelled", "waiting_human"} or (bundle.action_proposal and bundle.action_proposal.confirmation_status in {"confirmed", "unknown"}):
             raise TaskRuntimeError("该任务已经结束，不能继续。", code="task_terminal", status_code=409)
         return self._run_turn(
             bundle,
@@ -224,6 +247,65 @@ class TaskRuntime:
             raise TaskRuntimeError(str(exc), code="task_not_found", status_code=404) from exc
         return self._public_view(bundle)
 
+    @serialized_task
+    def prepare_handoff(self, request: HandoffPrepare, *, member_id: int, authorization: str, channel="button") -> TaskRuntimeResult:
+        owner, session = self._require_owner(request.session_id, member_id, authorization)
+        if request.task_ref:
+            bundle = self._store.load_owned(request.task_ref, owner)
+            if bundle.task.session_ref != session:
+                raise TaskRuntimeError("事项不属于当前会话", status_code=404)
+            if bundle.task.status in {"committing", "waiting_human"} or (bundle.action_proposal and bundle.action_proposal.confirmation_status in {"confirmed", "unknown"}):
+                return TaskRuntimeResult(self._public_view(bundle), list(bundle.events))
+        else:
+            existing = self._store.list_owned(owner, session)
+            pending = next((item for item in existing if item.handoff and item.handoff.linked_task_ref is None and item.task.status in {"ready_to_commit","waiting_human","blocked"}), None)
+            if pending and not request.new_issue:
+                return TaskRuntimeResult(self._public_view(pending), list(pending.events))
+            task_id=new_task_id()
+            bundle=TaskRecordBundle(task=AgentTask(task_id=task_id,task_ref='taskref-'+task_id.removeprefix('task-'),
+                owner_ref=owner,session_ref=session,goal_digest=hashlib.sha256(b'customer_handoff').hexdigest(),
+                normalized_goal="请求人工协助",expires_at=self._now()+settings.agent_task_ttl_seconds))
+            bundle.plans.append(build_initial_plan(bundle.task)); bundle.task.plan_version=bundle.plans[-1].version
+        if bundle.handoff and bundle.action_proposal and bundle.action_proposal.confirmation_status == 'awaiting_confirmation' and bundle.handoff.reason==request.reason and bundle.handoff.topic==request.topic:
+            return TaskRuntimeResult(self._public_view(bundle),list(bundle.events))
+        if bundle.handoff is None:
+            bundle.handoff=HandoffContext(request_ref=hashlib.sha256(uuid.uuid4().bytes).hexdigest(),
+                scope_key=hashlib.sha256((owner+':'+bundle.task.task_ref).encode()).hexdigest(),
+                channel=channel,topic=request.topic,reason=request.reason,stage=bundle.task.status,linked_task_ref=request.task_ref)
+        else:
+            bundle.handoff.reason=request.reason; bundle.handoff.topic=request.topic
+        bundle.handoff.plan_version=bundle.task.plan_version
+        bundle.handoff.completed_steps=sum(node.status=='completed' for node in bundle.plans[-1].nodes) if bundle.plans else 0
+        bundle.handoff.verified_evidence_count=sum(artifact.factuality=='verified' and artifact.expires_at>self._now() for artifact in bundle.artifacts)
+        reference='context-'+uuid.uuid4().hex[:24]
+        bundle.artifacts.append(TaskArtifact(artifact_id=new_artifact_id(),task_id=bundle.task.task_id,
+            kind='conversation_context_projection',source_skill='open_human_case',source_version='v2',
+            factuality='derived',summary='客户请求人工；业务事实尚待人工核验。',reference=reference,
+            expires_at=bundle.task.expires_at,hash=hashlib.sha256(reference.encode()).hexdigest()))
+        bundle.task.artifact_refs.append(reference)
+        self._propose_action(bundle, ExecutorDecision(decision='propose_action',action_skill='open_human_case',
+            action_arguments={'artifactRefs':[reference],'reasonCode':'manual_review','customerReason':request.reason,'businessTopic':request.topic},
+            reason_summary='确认后登记人工案件并等待领取；不代表实时客服接通，也不会申请退款。'))
+        bundle.task.waiting_question=None
+        self._save(bundle)
+        record_handoff_event(bundle.handoff,authorization,'requested')
+        return TaskRuntimeResult(self._public_view(bundle),list(bundle.events))
+
+    @serialized_task
+    def reconcile_handoff(self, *, task_ref: str, member_id: int, authorization: str) -> TaskRuntimeResult:
+        owner,_=self._require_owner('task-session',member_id,authorization,allow_session_placeholder=True)
+        bundle=self._store.load_owned(task_ref,owner)
+        if not bundle.handoff or not bundle.action_proposal:
+            raise TaskRuntimeError('没有人工交接记录',status_code=404)
+        result=handoff_request(bundle.handoff,bundle.action_proposal.content_hash,authorization,lookup=True)
+        bundle.handoff.case_ref=result.caseRef
+        bundle.action_proposal.confirmation_status='committed'
+        bundle.task.pending_action_ref=None
+        bundle.task.status='waiting_human'
+        bundle.task.final_outcome='已登记人工案件，请在人工协同进度中查看处理状态。'
+        self._save(bundle)
+        return TaskRuntimeResult(self._public_view(bundle),list(bundle.events))
+
     def list_tasks(self, *, session_id: str | None, member_id: int | None, authorization: str | None) -> list[AgentTaskPublicView]:
         owner_ref, session_ref = self._require_owner(session_id or "task-session", member_id, authorization, allow_session_placeholder=True)
         bundles = self._store.list_owned(owner_ref, session_ref if session_id else None)
@@ -236,6 +318,7 @@ class TaskRuntime:
         except TaskStoreAccessDenied as exc:
             raise TaskRuntimeError(str(exc), code="task_not_found", status_code=404) from exc
 
+    @serialized_task
     def amend_action(
         self,
         *,
@@ -320,6 +403,7 @@ class TaskRuntime:
         self._save(bundle)
         return TaskRuntimeResult(self._public_view(bundle), list(bundle.events))
 
+    @serialized_task
     def confirm_action(
         self,
         *,
@@ -336,6 +420,8 @@ class TaskRuntime:
         except TaskStoreAccessDenied as exc:
             raise TaskRuntimeError(str(exc), code="task_not_found", status_code=404) from exc
         proposal = bundle.action_proposal
+        if bundle.handoff and proposal and proposal.confirmation_status == 'committed' and proposal_ref == proposal.proposal_ref and revision == proposal.revision:
+            return TaskRuntimeResult(self._public_view(bundle), list(bundle.events))
         if proposal is None or proposal.confirmation_status != "awaiting_confirmation":
             raise TaskRuntimeError("当前任务没有有效的待确认行动。", code="action_gate_missing", status_code=409)
         if (proposal_ref is not None or revision is not None) and (
@@ -355,6 +441,8 @@ class TaskRuntime:
             self._save(bundle)
             return TaskRuntimeResult(self._public_view(bundle), list(bundle.events))
         if confirmation == "withdraw":
+            if bundle.handoff and proposal.action_skill == 'open_human_case':
+                record_handoff_event(bundle.handoff,authorization,'cancelled')
             proposal.confirmation_status = "withdrawn"
             bundle.task.pending_action_ref = None
             bundle.task.status = "executing"
@@ -433,6 +521,39 @@ class TaskRuntime:
             self._append_event(bundle, "task_blocked", "待确认行动包含非服务端生成的幂等键，未执行任何业务写入。")
             self._save(bundle)
             return TaskRuntimeResult(self._public_view(bundle), list(bundle.events))
+        if proposal.action_skill == 'open_human_case' and not bundle.handoff:
+            proposal.confirmation_status='blocked'
+            self._block(bundle,'handoff_contract_upgrade_required','交接卡需要更新，请重新点击转人工生成新卡。')
+            return TaskRuntimeResult(self._public_view(bundle),list(bundle.events))
+        if bundle.handoff and proposal.action_skill == 'open_human_case':
+            projection_hash=hashlib.sha256(bundle.handoff.model_dump_json(exclude={'case_ref'}).encode()).hexdigest()
+            if arguments.get('handoffProjectionHash') != projection_hash:
+                proposal.confirmation_status='blocked'
+                self._block(bundle,'handoff_projection_changed','交接内容已变化，请重新生成交接卡。')
+                return TaskRuntimeResult(self._public_view(bundle),list(bundle.events))
+            live_refs={artifact.reference for artifact in bundle.artifacts if artifact.expires_at>self._now()}
+            refs=arguments.get('artifactRefs')
+            if not isinstance(refs,list) or not refs or any(ref not in live_refs for ref in refs) or arguments.get('reasonCode') not in {'manual_review','insufficient_evidence','tool_failure'}:
+                self._block(bundle,'handoff_artifact_reference_invalid','交接背景已失效，请重新生成交接卡。')
+                return TaskRuntimeResult(self._public_view(bundle),list(bundle.events))
+            proposal.confirmation_status='confirmed'; bundle.task.status='committing'; self._save(bundle)
+            try:
+                result=handoff_request(bundle.handoff,proposal.content_hash,authorization)
+            except HandoffUnavailable:
+                try:
+                    result=handoff_request(bundle.handoff,proposal.content_hash,authorization,lookup=True)
+                except HandoffUnavailable:
+                    proposal.confirmation_status='unknown'; bundle.task.status='blocked'
+                    bundle.task.final_outcome='交接结果待确认，请查询原请求；不要重新创建案件。'
+                    self._save(bundle)
+                    return TaskRuntimeResult(self._public_view(bundle),list(bundle.events))
+            bundle.handoff.case_ref=result.caseRef
+            proposal.confirmation_status='committed'; bundle.task.pending_action_ref=None
+            bundle.task.status='waiting_human'
+            bundle.task.final_outcome='已登记，等待人工领取。可在人工协同进度中补充信息。'
+            self._append_event(bundle,'action_committed',bundle.task.final_outcome)
+            self._save(bundle)
+            return TaskRuntimeResult(self._public_view(bundle),list(bundle.events))
         missing_keys = [
             key
             for key in executor_skill.confirmation_required_input_keys
@@ -823,6 +944,8 @@ class TaskRuntime:
             if decision.decision == "propose_action":
                 self._propose_action(bundle, decision)
                 self._save(bundle)
+                if bundle.handoff and decision.action_skill == 'open_human_case':
+                    record_handoff_event(bundle.handoff,authorization,'suggested')
                 break
             if decision.decision == "finish":
                 task.status = "completed"
@@ -1718,6 +1841,13 @@ class TaskRuntime:
         self._append_event(bundle, "plan_updated", f"计划已修订到第 {version} 版：{decision.reason_summary}")
 
     def _propose_action(self, bundle: TaskRecordBundle, decision: ExecutorDecision) -> None:
+        if decision.action_skill == 'open_human_case' and bundle.handoff is None:
+            bundle.handoff=HandoffContext(request_ref=hashlib.sha256(uuid.uuid4().bytes).hexdigest(),
+                scope_key=hashlib.sha256((bundle.task.owner_ref+':'+bundle.task.task_ref).encode()).hexdigest(),
+                source='system_suggested_accepted',channel='chat',stage=bundle.task.status,
+                linked_task_ref=bundle.task.task_ref,plan_version=bundle.task.plan_version,
+                completed_steps=sum(node.status=='completed' for node in bundle.plans[-1].nodes) if bundle.plans else 0,
+                verified_evidence_count=sum(artifact.factuality=='verified' and artifact.expires_at>self._now() for artifact in bundle.artifacts))
         skill = get_skill(decision.action_skill or "")
         if skill is None:
             raise TaskRuntimeError("行动 Skill 不存在。", code="action_skill_denied")
@@ -1735,6 +1865,8 @@ class TaskRuntime:
             allow_generated_idempotency_key=skill.action_mode == "commit",
             allowed_opaque_references={artifact.reference for artifact in bundle.artifacts},
         )
+        if skill.skill_id == 'open_human_case' and bundle.handoff:
+            action_arguments['handoffProjectionHash']=hashlib.sha256(bundle.handoff.model_dump_json(exclude={'case_ref'}).encode()).hexdigest()
         current_proposal = bundle.action_proposal
         if current_proposal is not None:
             # A natural-language amendment must use the same immutable
@@ -1876,6 +2008,9 @@ class TaskRuntime:
                 fact_reference_retention=context.fact_reference_retention,
             )
         return AgentTaskPublicView(
+            handoff_topic=bundle.handoff.topic if bundle.handoff else None,
+            handoff_reason=bundle.handoff.reason if bundle.handoff else None,
+            handoff_case_ref=bundle.handoff.case_ref if bundle.handoff else None,
             task_ref=task.task_ref,
             goal=task.normalized_goal,
             status=task.status,

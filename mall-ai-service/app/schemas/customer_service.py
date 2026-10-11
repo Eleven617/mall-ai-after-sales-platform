@@ -1,6 +1,7 @@
 from pydantic import BaseModel, Field
 
 from app.schemas.agent import VerifiedFactCard
+from app.schemas.agent_task import AgentTaskPublicView
 from app.schemas.after_sales_application import (
     AfterSalesActionKind,
     AfterSalesApplicationView,
@@ -22,11 +23,13 @@ from app.schemas.task_orchestration import TaskPublicState
 
 
 class CustomerServiceRequest(BaseModel):
+    unified_entry: bool = False
     session_id: str = Field(min_length=1, max_length=128, examples=["chat-7f2e"])
     message: str = Field(min_length=1, examples=["帮我查订单 20240617001 的物流"])
 
 
 class CustomerServiceResponse(BaseModel):
+    agent_task: AgentTaskPublicView | None = None
     message: str
     answer: str
     intent: IntentResponse
@@ -65,6 +68,7 @@ class CustomerServicePublicResponse(BaseModel):
     """The only customer-facing response serialized by the HTTP router."""
 
     answer: str
+    agent_task: AgentTaskPublicView | None = None
     verified_facts: list[VerifiedFactCard] | None = None
     after_sales_draft: AfterSalesDraftView | None = None
     after_sales_proposal: AfterSalesProposalView | None = None
@@ -100,6 +104,7 @@ def to_public_customer_service_response(
         else None
     )
     return CustomerServicePublicResponse(
+        agent_task=response.agent_task,
         answer=response.answer,
         verified_facts=response.verified_facts,
         after_sales_draft=response.after_sales_draft,

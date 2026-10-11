@@ -287,39 +287,10 @@ def _register_diagnosis_handoff_if_needed(
     authorization: str | None,
     answer: str,
 ) -> str:
-    """Persist only existing safe handoffs; keep every internal detail private."""
-    if (
-        diagnosis is None
-        or diagnosis.handoff is None
-        or not diagnosis.verified_facts
-        or not authorization
-    ):
-        return answer
-    try:
-        register_case_handoff(
-            session_id=request.session_id,
-            diagnosis=diagnosis,
-            authorization=authorization,
-        )
-    except CaseHandoffError:
-        record_trace(
-            "case_handoff",
-            "persistence_unavailable",
-            request.session_id,
-            handoff=True,
-            diagnosis_category=diagnosis.category,
-            evidence_status=diagnosis.evidence_status,
-        )
-        return "当前已识别到需要人工跟进，但暂时无法登记，请稍后重试或联系客服。"
-    record_trace(
-        "case_handoff",
-        "persisted",
-        request.session_id,
-        handoff=True,
-        diagnosis_category=diagnosis.category,
-        evidence_status=diagnosis.evidence_status,
-    )
-    return "已为你登记人工跟进。处理人员会依据业务系统进一步核实；如有紧急情况，请直接联系商城客服。"
+    """A diagnosis can suggest handoff; only a confirmed proposal creates it."""
+    if diagnosis is not None and diagnosis.handoff is not None:
+        return answer + " 如需人工协助，请点击转人工并确认交接卡；目前尚未建案。"
+    return answer
 
 
 def _run_task_aware_investigation(

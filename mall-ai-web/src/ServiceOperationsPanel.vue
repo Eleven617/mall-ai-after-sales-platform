@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, watch } from "vue";
+import HandoffManagement from './HandoffManagement.vue';
 
 import {
   actOnServiceProcessorCase,
@@ -265,6 +266,7 @@ function stepClass(step: (typeof processorSteps)[number]["key"]): string {
           </button>
         </div>
         <div v-if="selectedCase" class="processor-detail">
+          <HandoffManagement :authorization="authorizationHeader() || ''" :processor-case="selectedCase.case_id" />
           <section class="processor-card"><p class="card-caption">案件状态</p><h3>{{ categoryLabel(selectedCase.diagnosis_category) }}</h3><div class="processor-stepper" aria-label="案件处理步骤"><div v-for="step in processorSteps" :key="step.key" class="processor-step" :class="stepClass(step.key)"><span class="processor-step-dot" aria-hidden="true"></span><span>{{ step.label }}</span></div></div><dl><div><dt>队列</dt><dd>{{ selectedCase.queue_ref }}</dd></div><div><dt>状态</dt><dd>{{ stateLabel(selectedCase.state) }}</dd></div><div><dt>客户可见状态</dt><dd>{{ selectedCase.public_status }}</dd></div><div v-if="selectedCase.assigned_to_me && selectedCase.customer_information"><dt>客户补充</dt><dd>{{ selectedCase.customer_information }}</dd></div></dl><button v-if="!selectedCase.assigned_to_me && selectedCase.state === 'QUEUED'" class="primary-button" type="button" :disabled="actionInProgress === selectedCase.case_id" @click="claim(selectedCase)">领取案件</button></section>
           <section v-if="selectedCase.assigned_to_me" class="processor-card"><p class="card-caption">受控人工操作</p><label>客户可见说明<textarea v-model="publicMessage" maxlength="500" rows="3" placeholder="客户会看到这段说明；不要填写内部系统或敏感信息"></textarea></label><label>内部备注<textarea v-model="internalNote" maxlength="500" rows="2" placeholder="仅用于审计，不会返回给客户或运营"></textarea></label><label v-if="selectedCase.state === 'CLAIMED' || selectedCase.state === 'IN_REVIEW'">补件类型<select v-model="informationType"><option value="problem_description">问题说明</option><option value="purchase_context">购买/使用背景</option></select></label><div class="processor-actions"><button v-if="selectedCase.state === 'CLAIMED' || selectedCase.state === 'IN_REVIEW'" class="secondary-button" type="button" :disabled="actionInProgress === selectedCase.case_id" @click="perform('request_information')">请求补件</button><button v-if="selectedCase.state === 'CLAIMED' || selectedCase.state === 'REOPENED'" class="secondary-button" type="button" :disabled="actionInProgress === selectedCase.case_id" @click="perform('start_review')">开始核验</button><button v-if="selectedCase.state === 'IN_REVIEW'" class="primary-button" type="button" :disabled="actionInProgress === selectedCase.case_id" @click="perform('resolve')">标记已处理</button><button v-if="selectedCase.state === 'RESOLVED'" class="primary-button" type="button" :disabled="actionInProgress === selectedCase.case_id" @click="perform('close')">结案</button></div></section>
         </div>
