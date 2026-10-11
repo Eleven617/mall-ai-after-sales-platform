@@ -12,7 +12,8 @@ def source_hash():
              if path.is_file() and '__pycache__' not in path.parts
              and path.suffix in {'.py','.java','.xml','.yml','.yaml','.sql','.vue','.ts','.css','.json'}}
     files.update(ROOT/path for path in ['docker-compose.yml','mall-ai-web/nginx.conf',
-        'mall-ai-service/Dockerfile','mall-ai-web/Dockerfile'])
+        'mall-ai-service/Dockerfile','mall-ai-web/Dockerfile','mall-ai-web/package-lock.json',
+        'mall-ai-web/package.json','mall-ai-service/requirements.txt'])
     digest=hashlib.sha256()
     for path in sorted(files,key=lambda item:item.relative_to(ROOT).as_posix()):
         digest.update(path.relative_to(ROOT).as_posix().encode()+b'\0')
