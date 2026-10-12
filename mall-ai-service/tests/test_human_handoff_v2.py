@@ -6,6 +6,8 @@ from app.services.human_handoff_client import HandoffUnavailable
 
 @pytest.fixture(autouse=True)
 def no_event_network(monkeypatch):
+    from app.services.conversation_state import reset_conversation_state_for_tests
+    reset_conversation_state_for_tests()
     monkeypatch.setattr('app.runtime.task_runtime.record_handoff_event',lambda *args:True)
 
 def runtime():

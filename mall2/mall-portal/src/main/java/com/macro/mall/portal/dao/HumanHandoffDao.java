@@ -5,6 +5,13 @@ import org.apache.ibatis.annotations.*;
 import com.macro.mall.portal.domain.HumanHandoffRequest;
 
 public interface HumanHandoffDao {
+    @Insert("INSERT INTO ai_handoff_summary(case_ref,input_hash,snapshot_json,state,created_at,updated_at) VALUES(#{ref},#{hash},#{json},#{state},UTC_TIMESTAMP(),UTC_TIMESTAMP())")
+    int summaryInput(@Param("ref") String ref,@Param("hash") String hash,@Param("json") String json,@Param("state") String state);
+    @Update("UPDATE ai_handoff_problem SET index_state=IF(#{ready},'WAITING_SUMMARY','INSUFFICIENT_CONTEXT'),quality='INSUFFICIENT_CONTEXT' WHERE case_ref=#{ref}") int waitForSummary(@Param("ref") String ref,@Param("ready") boolean ready);
+    @Insert("INSERT INTO ai_handoff_problem(case_ref,projection_json,projection_hash,quality,created_at,index_state,template_version) VALUES(#{ref},#{json},#{hash},#{quality},UTC_TIMESTAMP(),IF(#{quality}='READY','PENDING','INSUFFICIENT_CONTEXT'),'issue-v1')")
+    int problem(@Param("ref") String ref,@Param("json") String json,@Param("hash") String hash,@Param("quality") String quality);
+    @Update("UPDATE ai_handoff_record SET analysis_state='UNAVAILABLE' WHERE case_ref=#{ref}")
+    int noRedundantModel(@Param("ref") String ref);
     @Insert("INSERT INTO ai_handoff_context(case_ref,plan_version,completed_steps,verified_evidence_count) VALUES(#{ref},#{r.planVersion},#{r.completedSteps},#{r.verifiedEvidenceCount})")
     int context(@Param("ref") String ref,@Param("r") HumanHandoffRequest request);
     @Insert("INSERT IGNORE INTO ai_handoff_scope(member_id,scope_key) VALUES(#{member},#{scope})")

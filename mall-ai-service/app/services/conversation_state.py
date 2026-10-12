@@ -96,6 +96,10 @@ class ConversationManager:
             raise ConversationStateError("会话角色不合法。")
         state = self.get_state(session_id)
         state.recent_messages.append(ConversationMessage(role=role, content=content))
+        from app.services.handoff_safe_context import fragments
+        safe,omitted=fragments(content,role)
+        state.handoff_fragments=(state.handoff_fragments+safe)[-8:]
+        state.handoff_context_omitted=state.handoff_context_omitted or omitted
         if role == "user":
             _remember_identifiers(state, content)
         return self.save_state(state)

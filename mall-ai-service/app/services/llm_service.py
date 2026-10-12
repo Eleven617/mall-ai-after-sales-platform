@@ -136,6 +136,7 @@ def generate_json(
     temperature: float = 0,
     output_mode: str = "prompt_json",
     max_tokens: int | None = None,
+    extraction_mode: bool = False,
 ) -> dict:
     if output_mode not in {"prompt_json", "json_object"}:
         raise LLMServiceError(
@@ -159,6 +160,9 @@ def generate_json(
     }
     if output_mode == "json_object":
         payload["response_format"] = {"type": "json_object"}
+    if extraction_mode:
+        payload['thinking']={'type':'disabled'}
+        payload.pop('reasoning_effort',None)
     if max_tokens is not None:
         if not 1 <= max_tokens <= 8000:
             raise ValueError('Invalid output budget')

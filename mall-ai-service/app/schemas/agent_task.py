@@ -516,6 +516,8 @@ class AgentTaskPublicView(BaseModel):
     task_ref: str
     handoff_topic: str | None = None
     handoff_reason: str | None = None
+    handoff_problem: dict | None = None
+    handoff_context_preview: list[str] = Field(default_factory=list,max_length=8)
     handoff_case_ref: str | None = None
     goal: str
     status: AgentTaskStatus

@@ -11,6 +11,8 @@ import static org.assertj.core.api.Assertions.*;
 @ExtendWith(MockitoExtension.class)
 class HumanHandoffOperationsServiceTest {
  @InjectMocks HumanHandoffOperationsService service; @Mock HumanHandoffOperationsDao dao;
+ @Mock com.macro.mall.operations.dao.HandoffSemanticDao semantic;
+ @Mock com.macro.mall.operations.dao.HandoffSummaryDao summaries;
  @Test void filtersSharedByPageTotalsAndReasons(){service.list(7,2,20,"policy","customer_requested","unspecified");ArgumentCaptor<Map<String,Object>> q=ArgumentCaptor.forClass(Map.class);verify(dao).page(q.capture());verify(dao).totals(q.getValue());verify(dao).reasons(q.getValue());assertThat(q.getValue().get("offset")).isEqualTo(20);}
  @Test void reviewRequiresAssignedOwner(){Map<String,Object> c=new HashMap<>();c.put("assignee","another");when(dao.caseOwner("ref")).thenReturn(c);when(dao.processorRef("actor")).thenReturn("actor");assertThatThrownBy(()->service.review("ref","unspecified",0,"actor")).hasMessageContaining("403");verify(dao,never()).review(any(),any(),anyInt(),any());}
  @Test void closeCannotSkipVerification(){Map<String,Object> c=new HashMap<>();c.put("state","VERIFYING");when(dao.improvement("ref")).thenReturn(c);assertThatThrownBy(()->service.updateImprovement("ref","CLOSED",4,"not_verified","actor")).hasMessageContaining("400");verify(dao,never()).updateImprovement(any());}

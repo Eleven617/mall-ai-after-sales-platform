@@ -67,7 +67,7 @@ jobs:
       - name: Run service-operations tests
         run: >-
           mvn -pl mall-admin -am
-          -Dtest=HumanHandoffOperationsServiceTest,AiServiceOperationsServiceImplTest,AiServiceOperationsControllerTest
+          -Dtest=HandoffSummaryServiceTest,HandoffSemanticServiceTest,HumanHandoffOperationsServiceTest,AiServiceOperationsServiceImplTest,AiServiceOperationsControllerTest
           -DskipTests=false -Dsurefire.failIfNoSpecifiedTests=false test
 
   web:

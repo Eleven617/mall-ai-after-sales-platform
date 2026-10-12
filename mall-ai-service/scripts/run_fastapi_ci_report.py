@@ -41,6 +41,9 @@ def _commit() -> str:
 
 
 def _runtime_commit() -> str:
+    semantic_path = REPOSITORY_ROOT / 'docs/evidence/handoff-semantic-facts.json'
+    if semantic_path.is_file():
+        return json.loads(semantic_path.read_text(encoding='utf-8'))['runtimeCommit']
     upgrade_path = REPOSITORY_ROOT / 'docs/evidence/handoff-upgrade-facts.json'
     if upgrade_path.is_file():
         return json.loads(upgrade_path.read_text(encoding='utf-8'))['runtimeCommit']

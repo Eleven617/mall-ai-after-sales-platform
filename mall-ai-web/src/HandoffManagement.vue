@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import {ref,watch} from 'vue';
+import HandoffProblemGroups from './HandoffProblemGroups.vue';
 const props=defineProps<{authorization:string;processorCase?:string}>();
 type Item={caseRef:string;source:string;topic:string;customerReason:string;verifiedReason?:string;modelReason?:string;reviewVersion:number;analysisState:string;state:string;stage:string;projectionCleared?:number;context?:{planVersion:number;completedSteps:number;verifiedEvidenceCount:number};history?:Array<{source:string;reason:string;revision:number}>};
 type Improvement={improvementRef:string;caseRef:string;reason:string;team:string;state:string;version:number;verificationCode:string};
@@ -38,7 +39,8 @@ async function advance(item:Improvement){const states=['OPEN','TRIAGED','IN_PROG
 <select v-model="reviewReason"><option v-for="(label,key) in labels" :key="key" :value="key">{{label}}</option></select>
 <button v-if="processorCase" @click="review">保存人工复核（须先领取案件）</button>
 <template v-else><select v-model="team"><option value="service">客服团队</option><option value="engineering">开发团队</option><option value="policy">政策团队</option></select><button @click="create">创建改进事项</button></template></article>
-<section v-if="!processorCase"><h3>内部改进事项</h3><p>关闭需要验证结论，代码合并不自动代表改善。</p><select v-model="verification"><option value="not_verified">尚未验证</option><option value="regression_passed">回归验证通过</option><option value="manual_verified">人工复核通过</option><option value="no_change_needed">核实无需改动</option></select><article v-for="item in improvements" :key="item.improvementRef"><span>{{labels[item.reason]}} · {{item.team}} · {{item.state}} · v{{item.version}}</span><button v-if="item.state!=='CLOSED'" @click="advance(item)">推进下一状态</button></article></section>
+<HandoffProblemGroups v-if="!processorCase" :authorization="authorization" :case-ref="selected?.caseRef" />
+<section v-if="!processorCase"><h3>内部改进事项</h3><p>关闭需要验证结论和关联证据，代码合并不自动代表改善。</p><select v-model="verification"><option value="not_verified">尚未验证</option><option value="regression_passed">回归验证通过</option><option value="manual_verified">人工复核通过</option><option value="no_change_needed">核实无需改动</option></select><article v-for="item in improvements" :key="item.improvementRef"><span>{{labels[item.reason]}} · {{item.team}} · {{item.state}} · v{{item.version}} · 引用 {{item.improvementRef}}</span><button v-if="item.state!=='CLOSED'" @click="advance(item)">推进下一状态</button></article></section>
 <button :disabled="busy" @click="load">刷新</button>
 </section>
 </template>

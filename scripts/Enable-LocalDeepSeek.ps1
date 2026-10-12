@@ -1,5 +1,5 @@
 [CmdletBinding()]
-param([switch]$Offline)
+param([switch]$Offline, [switch]$GroupAnalysis)
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
@@ -15,6 +15,7 @@ $sha = (& git -C $root rev-parse HEAD).Trim()
 if ($LASTEXITCODE -ne 0 -or $sha -notmatch '^[a-f0-9]{40}$') { throw 'Cannot identify source revision.' }
 $mode = if ($Offline) { 'offline' } else { 'live' }
 $auth = if ($Offline) { '0' } else { '1' }
+$groupAnalysisEnabled = if ($GroupAnalysis -and -not $Offline) { '1' } else { '0' }
 $directory = Join-Path $root 'tmp/local-chat-usage'
 [System.IO.Directory]::CreateDirectory($directory) | Out-Null
 $ledger = Join-Path $directory 'ledger.jsonl'
@@ -37,6 +38,7 @@ services:
     environment:
       MALL_RUNTIME_PROVIDER_MODE: $mode
       MALL_PROVIDER_LIVE_AUTH: '$auth'
+      MALL_HANDOFF_GROUP_ANALYSIS_ENABLED: '$groupAnalysisEnabled'
       MALL_RUNTIME_COMMIT: $sha
       MALL_IMAGE_REVISION: $sha
       MALL_RELEASE_ID: local-chat

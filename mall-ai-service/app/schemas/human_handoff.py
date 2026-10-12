@@ -12,6 +12,7 @@ class HandoffPrepare(BaseModel):
     reason: Reason = 'unspecified'
     topic: Topic = 'general'
     new_issue: bool = False
+    problem_description: str = Field(default='', max_length=240, exclude=True, repr=False)
 
 class HandoffContext(BaseModel):
     model_config = ConfigDict(extra='forbid')
@@ -27,6 +28,8 @@ class HandoffContext(BaseModel):
     completed_steps: int = Field(default=0,ge=0,le=12)
     verified_evidence_count: int = Field(default=0,ge=0,le=1000)
     case_ref: str | None = None
+    problem_projection: dict | None = None
+    safe_input_snapshot: dict | None = None
 
 class HandoffResult(BaseModel):
     model_config = ConfigDict(extra='ignore')

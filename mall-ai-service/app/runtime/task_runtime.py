@@ -249,6 +249,8 @@ class TaskRuntime:
 
     @serialized_task
     def prepare_handoff(self, request: HandoffPrepare, *, member_id: int, authorization: str, channel="button") -> TaskRuntimeResult:
+        from app.services.handoff_projection import project
+        problem_projection = project(request.topic, request.problem_description)
         owner, session = self._require_owner(request.session_id, member_id, authorization)
         if request.task_ref:
             bundle = self._store.load_owned(request.task_ref, owner)
@@ -269,7 +271,25 @@ class TaskRuntime:
                     owner_ref=owner,session_ref=session,goal_digest=hashlib.sha256(b'customer_handoff').hexdigest(),
                     normalized_goal="请求人工协助",expires_at=self._now()+settings.agent_task_ttl_seconds))
                 bundle.plans.append(build_initial_plan(bundle.task)); bundle.task.plan_version=bundle.plans[-1].version
-        if bundle.handoff and bundle.action_proposal and bundle.action_proposal.confirmation_status == 'awaiting_confirmation' and bundle.action_proposal.expires_at>self._now() and bundle.handoff.reason==request.reason and bundle.handoff.topic==request.topic:
+        from app.services.handoff_safe_context import snapshot
+        from app.services.conversation_scope import build_conversation_state_key
+        from app.services.conversation_state import get_conversation_state
+        from app.services.conversation_store import ConversationStoreError
+        try:
+            safe_state=get_conversation_state(build_conversation_state_key(request.session_id,member_id))
+            safe_fragments=safe_state.handoff_fragments;context_omitted=safe_state.handoff_context_omitted
+        except ConversationStoreError:
+            safe_fragments=[];context_omitted=True
+        execution=[]
+        if request.task_ref:
+            safe_skills={'read_order':'查询订单','build_service_resolution':'比较处理方案','query_policy':'查询政策'}
+            for artifact in bundle.artifacts:
+                if artifact.source_skill in safe_skills and artifact.factuality=='verified' and artifact.expires_at>self._now():
+                    step=safe_skills[artifact.source_skill]+' 结果 已完成'
+                    if step not in execution:execution.append(step)
+        safe_input=snapshot(safe_fragments,request.problem_description,request.topic,request.task_ref,
+            bundle.task.normalized_goal if request.task_ref else None,execution=execution,omitted=context_omitted)
+        if bundle.handoff and bundle.action_proposal and bundle.action_proposal.confirmation_status == 'awaiting_confirmation' and bundle.action_proposal.expires_at>self._now() and bundle.handoff.reason==request.reason and bundle.handoff.topic==request.topic and bundle.handoff.problem_projection==problem_projection and bundle.handoff.safe_input_snapshot==safe_input:
             return TaskRuntimeResult(self._public_view(bundle),list(bundle.events))
         bundle.task.expires_at=max(bundle.task.expires_at,self._now()+settings.agent_task_ttl_seconds)
         if bundle.handoff is None:
@@ -279,6 +299,8 @@ class TaskRuntime:
         else:
             bundle.handoff.reason=request.reason; bundle.handoff.topic=request.topic
         bundle.handoff.plan_version=bundle.task.plan_version
+        bundle.handoff.problem_projection=problem_projection
+        bundle.handoff.safe_input_snapshot=safe_input
         bundle.handoff.completed_steps=sum(node.status=='completed' for node in bundle.plans[-1].nodes) if bundle.plans else 0
         bundle.handoff.verified_evidence_count=sum(artifact.factuality=='verified' and artifact.expires_at>self._now() for artifact in bundle.artifacts)
         reference='context-'+uuid.uuid4().hex[:24]
@@ -2014,6 +2036,8 @@ class TaskRuntime:
         return AgentTaskPublicView(
             handoff_topic=bundle.handoff.topic if bundle.handoff else None,
             handoff_reason=bundle.handoff.reason if bundle.handoff else None,
+            handoff_problem=bundle.handoff.problem_projection if bundle.handoff else None,
+            handoff_context_preview=[f['text'] for f in (bundle.handoff.safe_input_snapshot or {}).get('fragments',[])] if bundle.handoff else [],
             handoff_case_ref=bundle.handoff.case_ref if bundle.handoff else None,
             task_ref=task.task_ref,
             goal=task.normalized_goal,

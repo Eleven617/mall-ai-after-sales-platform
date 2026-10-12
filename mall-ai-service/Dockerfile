@@ -1,8 +1,5 @@
 FROM python:3.12-slim
 
-ARG RUNTIME_COMMIT=unknown
-LABEL org.opencontainers.image.revision="${RUNTIME_COMMIT}"
-
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1
@@ -14,6 +11,8 @@ RUN python -m pip install --upgrade pip \
     && python -m pip install -r requirements.txt
 
 COPY app ./app
+ARG RUNTIME_COMMIT=unknown
+LABEL org.opencontainers.image.revision="${RUNTIME_COMMIT}"
 # Build 22 has two repository-local quality suites: CI's deterministic
 # contract_mock and the manually started live-model synthetic suite. Both are
 # fixtures, never customer data, and must be present in the runtime image.

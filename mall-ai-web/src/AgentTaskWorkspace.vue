@@ -201,6 +201,8 @@ function actionStatusLabel(status: NonNullable<AgentTaskPublicView["action"]>["c
         <p v-if="task.open_question" class="agent-open-question">{{ task.open_question }}</p>
         <p v-if="task.outcome" class="agent-outcome">{{ task.outcome }}</p>
         <p v-if="task.handoff_topic">交接业务：{{handoffTopics[task.handoff_topic] || '一般咨询'}}；客户选择原因：{{handoffReasons[task.handoff_reason || 'unspecified']}}。只提交结构化事项背景，不提交原始聊天。</p>
+        <p v-if="task.handoff_problem">将保存的问题预览：{{task.handoff_problem.customer_goal}}；{{task.handoff_problem.unresolved_question || '暂未提供具体问题，仍可转人工'}}。这是客户待核实的问题描述。</p>
+        <details v-if="task.handoff_context_preview?.length"><summary>交接使用的安全背景</summary><p v-for="(text,i) in task.handoff_context_preview" :key="i">{{text}}</p><p>确认后异步生成问题摘要，人工仍需核实业务事实。</p></details>
         <p v-if="task.execution_summary" class="agent-execution-summary">{{ task.execution_summary }}</p>
 
         <section v-if="task.action" class="agent-action-card">

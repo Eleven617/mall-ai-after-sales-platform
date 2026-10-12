@@ -117,6 +117,9 @@ def fastapi_facts_match(fastapi: dict[str, object], report: dict[str, object]) -
 
 
 def main() -> int:
+    if (ROOT / 'docs/evidence/handoff-semantic-facts.json').is_file():
+        from validate_handoff_semantic import validate
+        return validate()
     # New scoped upgrades have their own evidence identity. Old live batches
     # and their frozen report counts remain historical, never upgraded in place.
     if (ROOT / 'docs/evidence/handoff-upgrade-facts.json').is_file():

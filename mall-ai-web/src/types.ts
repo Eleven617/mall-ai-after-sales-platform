@@ -84,6 +84,8 @@ export interface AgentTaskExecutionMetricsView {
 export interface AgentTaskPublicView {
   handoff_topic?: string | null;
   handoff_reason?: string | null;
+  handoff_problem?: {customer_goal:string;unresolved_question:string;content_quality:string} | null;
+  handoff_context_preview?: string[];
   handoff_case_ref?: string | null;
   /** Opaque public reference; internal task IDs and action arguments stay server-side. */
   task_ref: string;

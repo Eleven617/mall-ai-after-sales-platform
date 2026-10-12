@@ -15,6 +15,8 @@ import java.util.*;
 @RequestMapping("/ai/handoff-management")
 public class HumanHandoffOperationsController {
  @Autowired private HumanHandoffOperationsService service;
+ @Autowired private com.macro.mall.operations.service.HandoffSemanticService semantic;
+ @Autowired private com.macro.mall.operations.service.HandoffSummaryService summaries;
  @Autowired private UmsAdminService admins;
  @Value("${ai.handoff-analysis.service-key:}") private String analysisKey;
  @Value("${AI_CASE_HANDOFF_SERVICE_KEY:}") private String baseServiceKey;
@@ -44,4 +46,25 @@ public class HumanHandoffOperationsController {
  }
  @PostMapping("/internal/lease") public CommonResult<?> lease(@RequestHeader(value="X-Handoff-Analysis-Key",required=false) String key){worker(key);return CommonResult.success(service.lease());}
  @PostMapping("/internal/result") public CommonResult<?> finish(@RequestHeader(value="X-Handoff-Analysis-Key",required=false) String key,@RequestBody Analysis r){worker(key);service.finishWithProvenance(r.caseRef,r.lease,r.state,r.reason,r.inputHash,r.modelVersion);return CommonResult.success(null);}
+ @GetMapping("/semantic/coverage") public CommonResult<?> coverage(Principal p,@RequestParam(defaultValue="30") int days){actor(p,false);return CommonResult.success(semantic.coverage(days));}
+ @GetMapping("/semantic/cases/{ref}/summary") public CommonResult<?> summary(Principal p,@PathVariable String ref){actor(p,false);return CommonResult.success(summaries.detail(ref));}
+ @PostMapping("/semantic/cases/{ref}/summary") public CommonResult<?> correctSummary(Principal p,@PathVariable String ref,@RequestBody Map<String,Object> q){summaries.correct(ref,q,actor(p,false));return CommonResult.success(null);}
+ @PostMapping("/semantic/cases/{ref}/summary/retry") public CommonResult<?> retrySummary(Principal p,@PathVariable String ref,@RequestParam int version){actor(p,false);summaries.retry(ref,version);return CommonResult.success(null);}
+ @PostMapping("/internal/semantic/summary/lease") public CommonResult<?> summaryLease(@RequestHeader(value="X-Handoff-Analysis-Key",required=false) String key){worker(key);return CommonResult.success(summaries.lease());}
+ @PostMapping("/internal/semantic/summary/result") public CommonResult<?> summaryFinish(@RequestHeader(value="X-Handoff-Analysis-Key",required=false) String key,@RequestBody Map<String,Object> q){worker(key);summaries.finish(q);return CommonResult.success(null);}
+ @PostMapping("/semantic/rebuild") public CommonResult<?> rebuild(Principal p){actor(p,false);return CommonResult.success(semantic.rebuild());}
+ @GetMapping("/semantic/cases/{ref}") public CommonResult<?> problem(Principal p,@PathVariable String ref){actor(p,false);return CommonResult.success(semantic.problem(ref));}
+ @GetMapping("/semantic/cases/{ref}/candidates") public CommonResult<?> candidates(Principal p,@PathVariable String ref,@RequestParam(defaultValue="30") int days,@RequestParam(defaultValue="false") boolean crossTopic){actor(p,false);return CommonResult.success(semantic.candidates(ref,days,crossTopic));}
+ @GetMapping("/semantic/groups") public CommonResult<?> groups(Principal p){actor(p,false);return CommonResult.success(semantic.groups());}
+ @PostMapping("/semantic/groups") public CommonResult<?> createGroup(Principal p,@RequestBody Map<String,Object> q){return CommonResult.success(semantic.create(q,actor(p,false)));}
+ @GetMapping("/semantic/groups/{ref}") public CommonResult<?> group(Principal p,@PathVariable String ref){actor(p,false);return CommonResult.success(semantic.group(ref));}
+ @PostMapping("/semantic/groups/{ref}/members") public CommonResult<?> member(Principal p,@PathVariable String ref,@RequestBody Map<String,Object> q){return CommonResult.success(semantic.membership(ref,q,actor(p,false)));}
+ @PostMapping("/semantic/groups/{ref}/analyses") public CommonResult<?> analyze(Principal p,@PathVariable String ref,@RequestBody Map<String,Object> q){return CommonResult.success(semantic.requestAnalysis(ref,q,actor(p,false)));}
+ @PostMapping("/semantic/analyses/{ref}/review") public CommonResult<?> reviewDraft(Principal p,@PathVariable String ref){semantic.review(ref,actor(p,false));return CommonResult.success(null);}
+ @PostMapping("/semantic/groups/{ref}/evidence") public CommonResult<?> evidence(Principal p,@PathVariable String ref,@RequestBody Map<String,Object> q){semantic.linkEvidence(ref,q,actor(p,false));return CommonResult.success(null);}
+ @PostMapping("/internal/semantic/index/lease") public CommonResult<?> indexLease(@RequestHeader(value="X-Handoff-Analysis-Key",required=false) String key){worker(key);return CommonResult.success(semantic.lease());}
+ @PostMapping("/internal/semantic/index/result") public CommonResult<?> indexFinish(@RequestHeader(value="X-Handoff-Analysis-Key",required=false) String key,@RequestBody Map<String,Object> q){worker(key);semantic.finish(q);return CommonResult.success(null);}
+ @PostMapping("/internal/semantic/index/valid") public CommonResult<?> indexValid(@RequestHeader(value="X-Handoff-Analysis-Key",required=false) String key,@RequestBody Map<String,Object> q){worker(key);return CommonResult.success(semantic.validIndex(q));}
+ @PostMapping("/internal/semantic/analysis/lease") public CommonResult<?> groupLease(@RequestHeader(value="X-Handoff-Analysis-Key",required=false) String key){worker(key);return CommonResult.success(semantic.analysisLease());}
+ @PostMapping("/internal/semantic/analysis/result") public CommonResult<?> groupFinish(@RequestHeader(value="X-Handoff-Analysis-Key",required=false) String key,@RequestBody Map<String,Object> q){worker(key);semantic.analysisFinish(q);return CommonResult.success(null);}
 }

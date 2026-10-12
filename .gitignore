@@ -45,6 +45,7 @@ mall-ai-service/**/.mypy_cache/
 mall-ai-service/**/.claude/
 mall-ai-service/**/.langgraph-venv/
 mall-ai-service/chroma_data/
+mall-ai-service/data/handoff-case-index/
 mall-ai-service/models/
 mall-ai-service/snapshots/
 mall-ai-service/runtime-*.log

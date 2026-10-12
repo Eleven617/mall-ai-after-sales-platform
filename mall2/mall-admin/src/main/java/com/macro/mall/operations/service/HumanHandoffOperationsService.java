@@ -12,6 +12,8 @@ import java.time.*;
 @Service
 public class HumanHandoffOperationsService {
  @Autowired private HumanHandoffOperationsDao dao;
+ @Autowired private com.macro.mall.operations.dao.HandoffSemanticDao semantic;
+ @Autowired private com.macro.mall.operations.dao.HandoffSummaryDao summaries;
  public static final Set<String> REASONS=new HashSet<>(Arrays.asList("human_preference","intent_misunderstood","repeated_questions","answer_or_evidence_insufficient","tool_or_system_error","capability_or_permission_limit","business_dispute","delay_or_complex_process","unspecified"));
  private void require(boolean ok){if(!ok)throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"参数不合法");}
  public Map<String,Object> list(int days,int page,int size,String topic,String source,String reason){
@@ -44,6 +46,7 @@ public class HumanHandoffOperationsService {
   int previous=states.indexOf(String.valueOf(current.get("state"))),next=states.indexOf(state);
   require(next==previous+1 || (next==2 && previous==3));
   require(Arrays.asList("not_verified","regression_passed","manual_verified","no_change_needed").contains(verification));require(!state.equals("CLOSED")||!verification.equals("not_verified"));
+  if("CLOSED".equals(state)&&semantic.groupedImprovement(ref)>0)require(semantic.evidenceFor(ref)!=null);
   Map<String,Object> q=new HashMap<>();q.put("ref",ref);q.put("state",state);q.put("version",version);q.put("nextVersion",version+1);q.put("verification",verification);q.put("actor",actor);
   if(dao.updateImprovement(q)!=1)throw new ResponseStatusException(HttpStatus.CONFLICT,"改进版本已变化");dao.improvementAudit(q);
  }
@@ -58,7 +61,7 @@ public class HumanHandoffOperationsService {
   require(days>=90&&days<=3650&&eventDays>=365&&eventDays<=3650);
   int count=dao.retentionCount(days),cleared=0,removed=0;
   List<String> candidates=dao.retentionCandidates(days),events=dao.expiredEvents(eventDays);
-  if(!dryRun){for(String ref:candidates){cleared+=dao.clearOneProjection(ref);dao.clearContext(ref);}for(String ref:events)removed+=dao.removeEvent(ref);dao.retentionAudit(UUID.randomUUID().toString(),actor,days,eventDays,cleared,removed);}
+  if(!dryRun){for(String ref:candidates){cleared+=dao.clearOneProjection(ref);dao.clearContext(ref);semantic.clearAnalysis(ref);semantic.tombstone(ref);summaries.clear(ref);}for(String ref:events)removed+=dao.removeEvent(ref);dao.retentionAudit(UUID.randomUUID().toString(),actor,days,eventDays,cleared,removed);}
   Map<String,Object> result=new HashMap<>();result.put("dryRun",dryRun);result.put("eligible",count);result.put("batchLimit",100);result.put("expiredEventsInBatch",events.size());result.put("projectionsCleared",cleared);result.put("eventsRemoved",removed);return result;
  }
  @Transactional public void hold(String ref,boolean held,String actor){detail(ref);dao.caseOwner(ref);dao.hold(ref,held,actor);}

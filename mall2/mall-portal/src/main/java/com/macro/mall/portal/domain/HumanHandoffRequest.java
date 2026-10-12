@@ -14,4 +14,6 @@ public class HumanHandoffRequest {
     public int planVersion;
     public int completedSteps;
     public int verifiedEvidenceCount;
+    public java.util.Map<String,Object> problemProjection;
+    public java.util.Map<String,Object> safeInputSnapshot;
 }

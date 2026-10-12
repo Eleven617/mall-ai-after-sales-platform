@@ -73,7 +73,7 @@ def handle_unified_message(request: CustomerServiceRequest, context: ToolExecuti
                 return _reply(request,'请选择当前会话中的事项，或点击转人工选择一般咨询。')
             if not decision.task_ref and len(active)>1:
                 return _reply(request,'请点击转人工，选择需要交接的事项或一般咨询。')
-            result=runtime.prepare_handoff(HandoffPrepare(session_id=public_session_id,task_ref=decision.task_ref),member_id=context.member_id,authorization=context.authorization,channel='chat')
+            result=runtime.prepare_handoff(HandoffPrepare(session_id=public_session_id,task_ref=decision.task_ref,problem_description=request.message[:240]),member_id=context.member_id,authorization=context.authorization,channel='chat')
             return _reply(request,'请查看交接卡并确认；确认后将登记人工案件，等待处理人员领取。',result.view)
         if decision.route == "answer":
             return handle_customer_message(request, context)

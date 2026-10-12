@@ -26,6 +26,8 @@ def handoff_request(context: HandoffContext, content_hash: str, authorization: s
                 'triggerSource':context.source,'entryChannel':context.channel,'businessTopic':context.topic,
                 'customerReason':context.reason,'taskRef':context.linked_task_ref,'stage':context.stage,
                 'planVersion':context.plan_version,'completedSteps':context.completed_steps,'verifiedEvidenceCount':context.verified_evidence_count,
+                'problemProjection':context.problem_projection,
+                'safeInputSnapshot':context.safe_input_snapshot,
             }, timeout=settings.mall_api_timeout_seconds)
         data=response.json()
         if response.status_code != 200 or data.get('code') != 200:

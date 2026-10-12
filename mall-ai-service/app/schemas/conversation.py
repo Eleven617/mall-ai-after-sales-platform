@@ -49,6 +49,8 @@ class ConversationState(BaseModel):
     session_id: str
     summary: str = ""
     recent_messages: list[ConversationMessage] = Field(default_factory=list)
+    handoff_fragments: list[dict] = Field(default_factory=list,max_length=8)
+    handoff_context_omitted: bool = False
     facts: dict[str, str] = Field(default_factory=dict)
     pending_tool_call: ToolCall | None = None
     pending_after_sales_draft: PendingAfterSalesDraft | None = None
