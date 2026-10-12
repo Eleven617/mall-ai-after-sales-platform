@@ -1,5 +1,11 @@
 # 当前工作进度记录
 
+## 当前语义升级｜2026-10-12
+
+确认后安全上下文模型摘要、本地相似检索、人工主问题组、组分析复核及有证据的改进关闭已完成本机验证。Runtime `0adc2d8d19543e62cbcf381db473aba1dc058c60`；FastAPI 560/560（544 cases + 16 subtests），Java 44/44，现场 40/40，真实摘要开发样本 4/4。最终两项真实验证合计 8 次请求、10,799 tokens、无未结算。服务 8/8 healthy，日常 DeepSeek 与按需组分析已启用。当前发布进度以最新 SHA 的 CI 为准。
+
+新增事实包为 [handoff-semantic-facts.json](docs/evidence/handoff-semantic-facts.json)，实现与使用边界见 [语义分析实现合同](docs/HANDOFF_SEMANTIC_IMPLEMENTATION.md)。下方既有升级与历史模型评测保持原范围。
+
 ## 当前功能升级｜2026-10-11
 
 客户确认转人工、人工处理与运营改进已完成本地升级及验收。源码提交 `68bd7d138f6d9d9ef4ba9c00093a3d76617b7a7f`；FastAPI 521/521，Java 受影响套件 32/32，最终真实现场 32/32，真实模型 4 次调用成功，8 个服务健康。新版 README 为纯文字功能与技术介绍。

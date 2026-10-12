@@ -1,0 +1,221 @@
+{
+  "scope": "synthetic-summary-fidelity",
+  "fixtureSha256": "d5e4abb998bc6d0c9c5ffb6e8df9f370b273c0d67a1e2baf031d708278a9fd11",
+  "runtimeCommit": "0adc2d8d19543e62cbcf381db473aba1dc058c60",
+  "provider": {
+    "logicalProviderRequests": 4,
+    "providerHttpAttempts": 4,
+    "providerRequests": 4,
+    "providerSuccesses": 4,
+    "providerFailures": 0,
+    "successfulRequests": 4,
+    "failedRequests": 0,
+    "deniedBeforeNetwork": 0,
+    "unresolvedReservations": 0,
+    "scenarioFailures": 0,
+    "testFailures": 0,
+    "promptTokens": 4504,
+    "completionTokens": 998,
+    "totalTokens": 5502,
+    "networkRetries": 0,
+    "protocolCorrections": 0,
+    "events": 12
+  },
+  "sampleCount": 4,
+  "checks": [
+    {
+      "caseId": "summary-no-video",
+      "rubric": {
+        "goal_present": true,
+        "specific_question": true,
+        "handling_fidelity": true,
+        "no_invented_business_outcome": true,
+        "references_and_privacy": true,
+        "negation_retained": true
+      },
+      "passed": true,
+      "syntheticSummary": {
+        "customer_goal": {
+          "text": "没有开箱视频还能申请换货吗",
+          "source_refs": [
+            "src-30d25a01139909079c91a84b"
+          ]
+        },
+        "handling_steps": [
+          {
+            "text": "助手告知需要提供一般材料。",
+            "source_refs": [
+              "src-b043ea2786b45484223bd381"
+            ],
+            "result_kind": "assistant_explanation"
+          }
+        ],
+        "unresolved_question": {
+          "text": "没有开箱视频还能申请换货吗",
+          "source_refs": [
+            "src-30d25a01139909079c91a84b"
+          ]
+        },
+        "customer_statements": [
+          {
+            "text": "换货需要哪些材料",
+            "source_refs": [
+              "src-fef87b000f12b6d82cee6a2f"
+            ]
+          },
+          {
+            "text": "没有开箱视频还能申请换货吗",
+            "source_refs": [
+              "src-30d25a01139909079c91a84b"
+            ]
+          }
+        ],
+        "handoff_reason_statement": null,
+        "uncertainty_notes": [
+          "业务问题尚未得到明确答复",
+          "客户陈述尚未核实"
+        ],
+        "evidence_refs": [
+          "src-fef87b000f12b6d82cee6a2f",
+          "src-b043ea2786b45484223bd381",
+          "src-30d25a01139909079c91a84b"
+        ]
+      }
+    },
+    {
+      "caseId": "summary-paraphrase",
+      "rubric": {
+        "goal_present": true,
+        "specific_question": true,
+        "handling_fidelity": true,
+        "no_invented_business_outcome": true,
+        "references_and_privacy": true,
+        "negation_retained": true
+      },
+      "passed": true,
+      "syntheticSummary": {
+        "customer_goal": {
+          "text": "没有开箱视频是否可以申请换货",
+          "source_refs": [
+            "src-654c0cda9570869c418f023f"
+          ]
+        },
+        "handling_steps": [],
+        "unresolved_question": {
+          "text": "没有开箱视频是否可以申请换货",
+          "source_refs": [
+            "src-654c0cda9570869c418f023f"
+          ]
+        },
+        "customer_statements": [
+          {
+            "text": "没有开箱视频是否可以申请换货",
+            "source_refs": [
+              "src-654c0cda9570869c418f023f"
+            ]
+          }
+        ],
+        "handoff_reason_statement": null,
+        "uncertainty_notes": [
+          "业务问题尚未得到明确答复",
+          "客户陈述尚未核实"
+        ],
+        "evidence_refs": [
+          "src-654c0cda9570869c418f023f"
+        ]
+      }
+    },
+    {
+      "caseId": "summary-destination-negative",
+      "rubric": {
+        "goal_present": true,
+        "specific_question": true,
+        "handling_fidelity": true,
+        "no_invented_business_outcome": true,
+        "references_and_privacy": true
+      },
+      "passed": true,
+      "syntheticSummary": {
+        "customer_goal": {
+          "text": "换货应该寄到哪里",
+          "source_refs": [
+            "src-4597e3c357d98a2ad4e98a34"
+          ]
+        },
+        "handling_steps": [],
+        "unresolved_question": {
+          "text": "换货应该寄到哪里",
+          "source_refs": [
+            "src-4597e3c357d98a2ad4e98a34"
+          ]
+        },
+        "customer_statements": [
+          {
+            "text": "换货 应该 寄到 哪里",
+            "source_refs": [
+              "src-4597e3c357d98a2ad4e98a34"
+            ]
+          }
+        ],
+        "handoff_reason_statement": null,
+        "uncertainty_notes": [
+          "未提供核验结果",
+          "业务问题尚未得到明确答复"
+        ],
+        "evidence_refs": [
+          "src-4597e3c357d98a2ad4e98a34"
+        ]
+      }
+    },
+    {
+      "caseId": "summary-refund-progress",
+      "rubric": {
+        "goal_present": true,
+        "specific_question": true,
+        "handling_fidelity": true,
+        "no_invented_business_outcome": true,
+        "references_and_privacy": true
+      },
+      "passed": true,
+      "syntheticSummary": {
+        "customer_goal": {
+          "text": "退款进度仍然不清楚",
+          "source_refs": [
+            "src-f1b897dac3bb9bee8f522881"
+          ]
+        },
+        "handling_steps": [
+          {
+            "text": "退款进度需要查询",
+            "source_refs": [
+              "src-cb5c917a3834feab080b1deb"
+            ],
+            "result_kind": "assistant_explanation"
+          }
+        ],
+        "unresolved_question": {
+          "text": "退款进度仍然不清楚，需要确认退款进度",
+          "source_refs": [
+            "src-f1b897dac3bb9bee8f522881"
+          ]
+        },
+        "customer_statements": [
+          {
+            "text": "退款进度仍然不清楚",
+            "source_refs": [
+              "src-f1b897dac3bb9bee8f522881"
+            ]
+          }
+        ],
+        "handoff_reason_statement": null,
+        "uncertainty_notes": [
+          "业务问题尚未得到明确答复"
+        ],
+        "evidence_refs": [
+          "src-cb5c917a3834feab080b1deb",
+          "src-f1b897dac3bb9bee8f522881"
+        ]
+      }
+    }
+  ]
+}

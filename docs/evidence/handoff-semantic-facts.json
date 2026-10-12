@@ -1,0 +1,21 @@
+{
+  "scope": "handoff-semantic-phase1",
+  "status": "LOCAL_VERIFIED",
+  "runtimeCommit": "0adc2d8d19543e62cbcf381db473aba1dc058c60",
+  "sourceSha256": "16b39825b37def7d3a8a7541a576513d544a6dfc6a708016c0eb92213f450ba8",
+  "liveReport": "docs/evidence/handoff-semantic-20261012/live-acceptance.json",
+  "liveReportSha256": "e73f5eb87cf3c07ab547f41050747029c8225fb8d4618f9f8b88fb4ec6fe9843",
+  "liveChecks": 40,
+  "qualityReport": "docs/evidence/handoff-semantic-20261012/summary-quality.json",
+  "qualityReportSha256": "a8d68775bb1a8855202cc4e92165dbdaa83405d0af5493c341323ef6759f831c",
+  "qualityScope": "Four synthetic development cases using real DeepSeek. Not a held-out production accuracy estimate.",
+  "pythonPassed": 560,
+  "pythonSemanticSha256": "b2a48d473246c5b8dafb04f328d494c42cbdda1c44f54dc11709533857df0808",
+  "javaPortalPassed": 17,
+  "javaAdminPassed": 27,
+  "vueBuild": "passed",
+  "composeHealthy": 8,
+  "manifestPassed": 478,
+  "representativePassed": 8,
+  "historicalEvaluationsRewritten": false
+}

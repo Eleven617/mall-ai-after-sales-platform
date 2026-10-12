@@ -23,6 +23,11 @@ def validate():
     assert {'semantic-specific-unresolved-condition','semantic-same-issue-before-different','semantic-real-group-draft','semantic-verified-improvement-closure','semantic-browser-group','semantic-privacy-fallback','semantic-one-primary-group'}<=names
     assert live['provider']['providerSuccesses']>=4 and live['provider']['providerFailures']==0
     assert live['provider']['unresolvedReservations']==0
+    quality=ROOT/facts['qualityReport'];graded=read(quality)
+    assert hashlib.sha256(quality.read_bytes()).hexdigest()==facts['qualityReportSha256']
+    assert graded['runtimeCommit']==facts['runtimeCommit']
+    assert all(x['passed'] for x in graded['checks'])
+    assert graded['provider']['providerSuccesses']==graded['sampleCount'] and graded['provider']['unresolvedReservations']==0
     path=Path(os.getenv('MALL_FASTAPI_REPORT',str(ROOT/'mall-ai-service/ci-evidence/semantic-fastapi-report.json')))
     if not path.is_absolute():path=ROOT/path
     report=read(path)

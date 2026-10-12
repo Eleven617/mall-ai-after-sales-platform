@@ -1,0 +1,187 @@
+{
+  "scope": "handoff-semantic-phase1",
+  "sourceSha256": "16b39825b37def7d3a8a7541a576513d544a6dfc6a708016c0eb92213f450ba8",
+  "runtimeCommit": "0adc2d8d19543e62cbcf381db473aba1dc058c60",
+  "checks": [
+    {
+      "caseId": "semantic-preview-0",
+      "passed": true
+    },
+    {
+      "caseId": "semantic-confirm-0",
+      "passed": true
+    },
+    {
+      "caseId": "semantic-idempotent-confirm",
+      "passed": true
+    },
+    {
+      "caseId": "semantic-preview-1",
+      "passed": true
+    },
+    {
+      "caseId": "semantic-confirm-1",
+      "passed": true
+    },
+    {
+      "caseId": "semantic-preview-2",
+      "passed": true
+    },
+    {
+      "caseId": "semantic-confirm-2",
+      "passed": true
+    },
+    {
+      "caseId": "semantic-preview-3",
+      "passed": true
+    },
+    {
+      "caseId": "semantic-confirm-3",
+      "passed": true
+    },
+    {
+      "caseId": "semantic-preview-4",
+      "passed": true
+    },
+    {
+      "caseId": "semantic-confirm-4",
+      "passed": true
+    },
+    {
+      "caseId": "semantic-cases-created-independently-of-analysis",
+      "passed": true
+    },
+    {
+      "caseId": "semantic-index-0",
+      "passed": true
+    },
+    {
+      "caseId": "semantic-index-1",
+      "passed": true
+    },
+    {
+      "caseId": "semantic-index-2",
+      "passed": true
+    },
+    {
+      "caseId": "semantic-specific-unresolved-condition",
+      "passed": true
+    },
+    {
+      "caseId": "semantic-insufficient-not-indexed",
+      "passed": true
+    },
+    {
+      "caseId": "semantic-privacy-fallback",
+      "passed": true
+    },
+    {
+      "caseId": "semantic-processor-no-operations-access",
+      "passed": true
+    },
+    {
+      "caseId": "semantic-customer-no-operations-access",
+      "passed": true
+    },
+    {
+      "caseId": "semantic-same-issue-before-different",
+      "passed": true
+    },
+    {
+      "caseId": "semantic-self-excluded",
+      "passed": true
+    },
+    {
+      "caseId": "semantic-member-idempotent-0",
+      "passed": true
+    },
+    {
+      "caseId": "semantic-member-idempotent-1",
+      "passed": true
+    },
+    {
+      "caseId": "semantic-distinct-group-count",
+      "passed": true
+    },
+    {
+      "caseId": "semantic-stale-version-rejected",
+      "passed": true
+    },
+    {
+      "caseId": "semantic-one-primary-group",
+      "passed": true
+    },
+    {
+      "caseId": "semantic-real-group-draft",
+      "passed": true
+    },
+    {
+      "caseId": "semantic-draft-references",
+      "passed": true
+    },
+    {
+      "caseId": "semantic-human-review",
+      "passed": true
+    },
+    {
+      "caseId": "semantic-no-evidence-no-close",
+      "passed": true
+    },
+    {
+      "caseId": "semantic-verified-improvement-closure",
+      "passed": true
+    },
+    {
+      "caseId": "semantic-browser-operations",
+      "passed": true
+    },
+    {
+      "caseId": "semantic-browser-group",
+      "passed": true
+    },
+    {
+      "caseId": "semantic-browser-safe-preview",
+      "passed": true
+    },
+    {
+      "caseId": "semantic-human-summary-version",
+      "passed": true
+    },
+    {
+      "caseId": "semantic-stale-summary-rejected",
+      "passed": true
+    },
+    {
+      "caseId": "semantic-changed-summary-invalidates-group-draft",
+      "passed": true
+    },
+    {
+      "caseId": "semantic-corrected-summary-reindexed",
+      "passed": true
+    },
+    {
+      "caseId": "semantic-ledger-settled",
+      "passed": true
+    }
+  ],
+  "provider": {
+    "logicalProviderRequests": 4,
+    "providerHttpAttempts": 4,
+    "providerRequests": 4,
+    "providerSuccesses": 4,
+    "providerFailures": 0,
+    "successfulRequests": 4,
+    "failedRequests": 0,
+    "deniedBeforeNetwork": 0,
+    "unresolvedReservations": 0,
+    "scenarioFailures": 0,
+    "testFailures": 0,
+    "promptTokens": 4202,
+    "completionTokens": 1095,
+    "totalTokens": 5297,
+    "networkRetries": 0,
+    "protocolCorrections": 0,
+    "events": 12
+  },
+  "fixtureHash": "9330d379e1de3f1fbdc3cf7f69868ddb18107beb4f79950b77f93160c9066376"
+}
