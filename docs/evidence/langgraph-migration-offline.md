@@ -2,6 +2,8 @@
 
 日期：2026-10-12。本文件记录零模型合同；授权后的真实本机验证另见 [环境记录](langgraph-migration-environment.md)。当前整体状态为 `LOCAL_MIGRATION_VALIDATED`。
 
+后续真实 DeepSeek、候选 CI 和实际回退验证见 [补充验证](langgraph-final-validation.md)。以下未执行说明是该轮边界，不覆盖后续独立报告。
+
 执行基线 HEAD：`60d53bd1fad3af444fd017f14035961427cca2c9`，执行时为未提交修改工作区，**不是冻结发布提交**。源码指纹：`01ae7bcbe682ceac475844505761d26406818be5450c03f67533877d7b651f64`。报告生成前后源码指纹一致。
 
 | 检查 | 真实结果 |

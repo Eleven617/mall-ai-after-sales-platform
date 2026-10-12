@@ -27,7 +27,7 @@ ConversationGraph 编排会话路由与能力派发，独立 TaskGraph 管理长
 
 Java Spring Boot 是业务事实和最终写入的权威。Python 通过 API 获取事实，确认卡绑定方案引用和版本，提交经过资格重校验、幂等与事务处理。MySQL 保存业务数据，Outbox 与 RabbitMQ 支持异步业务流；Redis 提供会话、锁与短期状态，MongoDB 保存 Runtime 任务数据。
 
-统一图架构、数据归属和扩展方式见 [迁移说明](docs/architecture/LANGGRAPH_UNIFICATION.md)。本机验收覆盖 Mongo 检查点恢复、Redis 并发锁、Java 原请求对账和浏览器业务闭环，具体版本及模型替身边界见 [验证记录](docs/evidence/langgraph-migration-environment.md)。
+统一图架构、数据归属和扩展方式见 [迁移说明](docs/architecture/LANGGRAPH_UNIFICATION.md)。验证覆盖 Mongo 检查点恢复、Redis 并发锁、Java 原请求对账、浏览器业务闭环，以及真实 DeepSeek 的统一对话回归和确认写入主链；实际只读回退后可恢复新图数据。版本与各项覆盖见 [验证记录](docs/evidence/langgraph-final-validation.md)。
 
 ### 政策 RAG 与模型接入
 

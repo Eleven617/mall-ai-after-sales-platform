@@ -2,6 +2,8 @@
 
 当前源码的无外部模型合同和本机实际环境分开记录。环境报告见 [验收汇总](../evidence/langgraph-acceptance/environment.json)。所有模型边界为 scripted/deterministic，不是 DeepSeek 质量结果。
 
+该表描述初轮环境合同。后续已增加真实 DeepSeek 统一会话 9 项及确认写入主链、实际旧镜像只读回退 11 项和候选 CI；详见 [补充验证](../evidence/langgraph-final-validation.md)。没有将脚本模型结果改写为 live。
+
 | 功能 | 实现路径 | 当前合同依据 | 当前实际环境 |
 |---|---|---|---|
 | 政策咨询 | ConversationGraph → 政策检索/核验 → 回答子图 | test_rag_service、既有 RAG 合同 | policy_question：真实本地索引，脚本判定/回答 |

@@ -1,0 +1,97 @@
+{
+  "status": "passed",
+  "batchId": "langgraph-migration-live-20261012",
+  "providerMode": "live",
+  "requestedScenarios": [
+    "main_open_task_closed_loop"
+  ],
+  "durationMs": 82953,
+  "chains": [
+    {
+      "scenario": "main_open_task_closed_loop",
+      "status": "passed",
+      "completedStepCount": 9,
+      "taskContinuity": true,
+      "draftAmended": true,
+      "oldRevisionHttpStatus": 409,
+      "javaRechecked": true,
+      "confirmedWrite": true,
+      "proposalFormed": true,
+      "statusReadback": true,
+      "duplicateConfirmationWrites": 0,
+      "crossAccountLeakage": 0,
+      "modelCalls": 4,
+      "contextModelCalls": 3,
+      "criticCalls": 0,
+      "toolCalls": 3,
+      "skillSequence": [
+        "read_order",
+        "retrieve_policy",
+        "build_service_resolution"
+      ],
+      "artifactKinds": [
+        "order_fact",
+        "policy_evidence",
+        "resolution_candidate"
+      ],
+      "taskStatusTransitions": [
+        "task_created",
+        "skill_observed",
+        "skill_observed",
+        "skill_observed",
+        "action_proposed",
+        "action_revised",
+        "action_committed",
+        "action_committed"
+      ],
+      "clarificationCount": 0
+    }
+  ],
+  "frames": [
+    "tmp/langgraph-live-showcase/browser/main_open_task_closed_loop-goal.png",
+    "tmp/langgraph-live-showcase/browser/main_open_task_closed_loop-evidence.png",
+    "tmp/langgraph-live-showcase/browser/main_open_task_closed_loop-progress.png",
+    "tmp/langgraph-live-showcase/browser/main_open_task_closed_loop-status.png"
+  ],
+  "browserFrameCount": 4,
+  "frameGroups": {
+    "main_open_task_closed_loop": {
+      "frames": [
+        "tmp/langgraph-live-showcase/browser/main_open_task_closed_loop-goal.png",
+        "tmp/langgraph-live-showcase/browser/main_open_task_closed_loop-evidence.png",
+        "tmp/langgraph-live-showcase/browser/main_open_task_closed_loop-progress.png",
+        "tmp/langgraph-live-showcase/browser/main_open_task_closed_loop-status.png"
+      ],
+      "hashes": [
+        "159a423a39e894e608780a818ed56ac9fe6f58bbe8b47ce61e09855df005d56d",
+        "2a8ff6c2e61767ed7e7c7df5adec8241379e57ec03cdfb73620de4eca7ae8a7d",
+        "0d4efb030fe7e78fb3f4d660fd976bbbfa177c3114be06e0e7c250faeb5d3127",
+        "6570e5299a84af4ab8e760c4beff9009ce17ab82f6650d88988b90c521717acf"
+      ],
+      "stages": [
+        "goal",
+        "evidence",
+        "progress",
+        "status"
+      ],
+      "valid": true,
+      "frameCount": 4,
+      "adjacentDistinct": true,
+      "failureStage": null,
+      "failureCode": null
+    }
+  },
+  "crossScenarioFramesDistinct": true,
+  "gifPaths": [
+    "tmp/langgraph-live-showcase/gifs/main-open-task-closed-loop.gif"
+  ],
+  "fixture": {
+    "kind": "local_demo_synthetic",
+    "containsRawValuesInReport": false
+  },
+  "modelCalls": 4,
+  "contextModelCalls": 3,
+  "criticCalls": 0,
+  "toolCalls": 3,
+  "clarificationCount": 0
+}

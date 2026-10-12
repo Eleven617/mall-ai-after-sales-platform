@@ -65,6 +65,26 @@ def validate():
             runner_path = (ROOT / runner).resolve()
             assert runner_path.is_relative_to(ROOT.resolve())
             assert hashlib.sha256(runner_path.read_bytes().replace(b'\r\n', b'\n')).hexdigest() == digest
+    if facts.get("finalValidationReport"):
+        final_path = ROOT / facts["finalValidationReport"]
+        assert hashlib.sha256(final_path.read_bytes()).hexdigest() == facts["finalValidationReportSha256"]
+        final = json.loads(final_path.read_text(encoding="utf-8"))
+        assert final["sourceSha256"] == facts["sourceSha256"]
+        assert final["runtimeCommit"] == facts["runtimeCommit"]
+        assert final["liveConversationPassed"] == 9 and final["liveShowcasePassed"] == 1
+        assert final["rollbackAssertionsPassed"] == 11 and final["ledgerReconciled"]
+        assert final["usage"]["unresolvedReservations"] == final["usage"]["providerFailures"] == 0
+        assert final["reservations"] == final["settlements"] == final["usage"]["providerHttpAttempts"]
+        assert final["usage"]["providerHttpAttempts"] <= final["maxHttpAttempts"] == 80
+        assert final["usage"]["totalTokens"] <= final["maxTokens"] == 200000
+        for artifact in final["artifacts"]:
+            artifact_path = (ROOT / artifact["path"]).resolve()
+            assert artifact_path.is_relative_to(ROOT.resolve())
+            assert hashlib.sha256(artifact_path.read_bytes()).hexdigest() == artifact["sha256"]
+        for runner, digest in final["runnerHashes"].items():
+            runner_path = (ROOT / runner).resolve()
+            assert runner_path.is_relative_to(ROOT.resolve())
+            assert hashlib.sha256(runner_path.read_bytes().replace(b'\r\n', b'\n')).hexdigest() == digest
     print("langgraph_migration_validation PASSED status="+facts["status"]+" source="+facts["sourceSha256"][:12])
     return 0
 

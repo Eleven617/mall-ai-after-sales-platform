@@ -1,0 +1,31 @@
+{
+  "usage": {
+    "logicalProviderRequests": 0,
+    "providerHttpAttempts": 0,
+    "providerRequests": 0,
+    "providerSuccesses": 0,
+    "providerFailures": 0,
+    "successfulRequests": 0,
+    "failedRequests": 0,
+    "deniedBeforeNetwork": 0,
+    "unresolvedReservations": 0,
+    "scenarioFailures": 0,
+    "testFailures": 2,
+    "promptTokens": 0,
+    "completionTokens": 0,
+    "totalTokens": 0,
+    "networkRetries": 0,
+    "protocolCorrections": 0,
+    "events": 2
+  },
+  "checks": [
+    {
+      "case": "greeting_without_task",
+      "passed": true
+    },
+    {
+      "case": "automatic_task_clarification",
+      "passed": false
+    }
+  ]
+}

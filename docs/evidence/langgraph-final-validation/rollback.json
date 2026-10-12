@@ -1,0 +1,68 @@
+{
+  "checks": [
+    {
+      "caseId": "old_image_actual_cutover",
+      "passed": true
+    },
+    {
+      "caseId": "rollback_health",
+      "passed": true
+    },
+    {
+      "caseId": "rollback_java_identity_read",
+      "passed": true
+    },
+    {
+      "caseId": "rollback_java_business_read",
+      "passed": true
+    },
+    {
+      "caseId": "rollback_mutation_rejected",
+      "passed": true
+    },
+    {
+      "caseId": "rollback_task_executor_closed",
+      "passed": true
+    },
+    {
+      "caseId": "rollback_direct_ai_not_exposed",
+      "passed": true
+    },
+    {
+      "caseId": "rollback_model_disabled",
+      "passed": true
+    },
+    {
+      "caseId": "new_graph_storage_preserved",
+      "passed": true
+    },
+    {
+      "caseId": "new_graph_api_restored",
+      "passed": true
+    },
+    {
+      "caseId": "new_runtime_restored",
+      "passed": true
+    }
+  ],
+  "externalProviderRequests": 0,
+  "rollbackImage": "sha256:54a4c5def5567e1a9f8976d26182571de5219475b785bb11f721f3f2c251352f",
+  "storageBefore": {
+    "sha256": "93dedea39b7a72999056fdf5529e4fe123b165f24041412f2aaea6d279800007",
+    "counts": {
+      "agent_task_records": 1900,
+      "orchestration_checkpoints_v1": 307,
+      "orchestration_writes_v1": 3433
+    }
+  },
+  "storageAfter": {
+    "sha256": "93dedea39b7a72999056fdf5529e4fe123b165f24041412f2aaea6d279800007",
+    "counts": {
+      "agent_task_records": 1900,
+      "orchestration_checkpoints_v1": 307,
+      "orchestration_writes_v1": 3433
+    }
+  },
+  "volumesDeleted": false,
+  "scope": "actual old image with mutation/task endpoints closed, then new image restore"
+}

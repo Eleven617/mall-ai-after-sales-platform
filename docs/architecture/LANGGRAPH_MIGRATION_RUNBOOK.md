@@ -1,6 +1,6 @@
 # 统一图迁移、回退与扩展
 
-本文件描述本次实现及已完成的授权本机验收。AI/Web 已本地切换；尚未提交、推送或远程发布。
+本文件描述本次实现及授权验收。AI/Web 已本地切换；Runtime `c142fe1` 已提交并推送候选分支，未合并 main。真实模型、候选 CI 和实际只读回退见 [补充验证](../evidence/langgraph-final-validation.md)。
 
 ## 实现与数据归属
 
@@ -76,4 +76,6 @@ Mongo 使用独立集合 `orchestration_checkpoints_v1` / `orchestration_writes_
 
 本次临时 Compose override 为 `tmp/langgraph-acceptance.compose.yml`：deterministic、live auth=0、Key 置空、两个模型 worker 开关均关闭。该文件是本机验收配置，不应覆盖正常运行配置或提交密钥。恢复外部模型须另获授权。
 
-回退旧镜像的只读运行窗口、生产备份恢复和外部模型质量未演练。保留旧镜像不等于回退验收通过；禁止将旧二进制直接接管新图在途确认。
+`verify_graph_rollback.py` 已执行旧镜像只读运行、变更拒绝、新镜像恢复及数据哈希一致验证，11/11。临时配置 `tmp/langgraph-rollback.compose.yml` 关闭旧 AI 宿主端口，`tmp/langgraph-rollback.nginx.conf` 封闭变更和任务执行接口；必须完整应用两者，不能只切镜像。脚本 finally 恢复新版 deterministic 配置。
+
+真实 DeepSeek 统一对话 9/9、确认写入主链 1/1 已验证；没有重跑历史完整质量集。生产备份恢复仍未执行；禁止将旧二进制直接接管新图在途确认。

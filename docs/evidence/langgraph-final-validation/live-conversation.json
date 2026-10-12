@@ -1,0 +1,59 @@
+{
+  "usage": {
+    "logicalProviderRequests": 18,
+    "providerHttpAttempts": 19,
+    "providerRequests": 18,
+    "providerSuccesses": 18,
+    "providerFailures": 0,
+    "successfulRequests": 18,
+    "failedRequests": 0,
+    "deniedBeforeNetwork": 0,
+    "unresolvedReservations": 0,
+    "scenarioFailures": 0,
+    "testFailures": 0,
+    "promptTokens": 31601,
+    "completionTokens": 12785,
+    "totalTokens": 44386,
+    "networkRetries": 1,
+    "protocolCorrections": 0,
+    "events": 56
+  },
+  "checks": [
+    {
+      "case": "greeting_without_task",
+      "passed": true
+    },
+    {
+      "case": "automatic_task_clarification",
+      "passed": true
+    },
+    {
+      "case": "policy_detour_preserves_task",
+      "passed": true
+    },
+    {
+      "case": "resume_same_task_proposal",
+      "passed": true
+    },
+    {
+      "case": "text_confirmation_does_not_commit",
+      "passed": true
+    },
+    {
+      "case": "session_isolation",
+      "passed": true
+    },
+    {
+      "case": "refresh_restores_task",
+      "passed": true
+    },
+    {
+      "case": "account_isolation",
+      "passed": true
+    },
+    {
+      "case": "explicit_card_withdrawal",
+      "passed": true
+    }
+  ]
+}
