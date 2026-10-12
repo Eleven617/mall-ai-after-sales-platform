@@ -24,7 +24,7 @@ def main():
     python=read(ROOT/'mall-ai-service/ci-evidence/semantic-fastapi-report.json')
     assert python['runtimeCommit']==live['runtimeCommit']
     facts={'scope':'handoff-semantic-phase1','status':'LOCAL_VERIFIED','runtimeCommit':live['runtimeCommit'],'sourceSha256':source_hash(),
-        'liveReport':str((output/'live-acceptance.json').relative_to(ROOT)).replace('\\','/'),'liveReportSha256':digest(live_path),'liveChecks':len(live['checks']),
+        'liveReport':str((output/'live-acceptance.json').relative_to(ROOT)).replace('\\','/'),'liveReportSha256':hashlib.sha256(live_path.read_bytes().replace(b'\r\n',b'\n')).hexdigest(),'liveReportHashEncoding':'UTF-8 LF','liveChecks':len(live['checks']),
         'qualityReport':str((output/'summary-quality.json').relative_to(ROOT)).replace('\\','/'),'qualityReportSha256':digest(quality),
         'qualityScope':'Four synthetic development cases using real DeepSeek. Not a held-out production accuracy estimate.',
         'pythonPassed':python['passed'],'pythonSemanticSha256':python['semanticReportSha256'],

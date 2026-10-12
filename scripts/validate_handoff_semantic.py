@@ -15,7 +15,7 @@ def validate():
     assert facts['scope']=='handoff-semantic-phase1'
     assert facts['sourceSha256']==source_hash(),'Semantic source identity changed'
     path=ROOT/facts['liveReport'];live=read(path)
-    assert hashlib.sha256(path.read_bytes()).hexdigest()==facts['liveReportSha256']
+    assert hashlib.sha256(path.read_bytes().replace(b'\r\n',b'\n')).hexdigest()==facts['liveReportSha256']
     assert live['sourceSha256']==facts['sourceSha256'] and live['runtimeCommit']==facts['runtimeCommit']
     assert live['checks'] and all(x['passed'] for x in live['checks'])
     names={x['caseId'] for x in live['checks']}
