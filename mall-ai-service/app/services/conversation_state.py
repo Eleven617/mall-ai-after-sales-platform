@@ -16,7 +16,6 @@ from app.services.conversation_store import (
     RedisConversationStore,
 )
 from app.services.identifier_extraction import extract_order_sn, extract_sku_id
-from app.services.llm_service import LLMServiceError, generate_text
 
 
 ALLOWED_FACT_KEYS = {
@@ -61,16 +60,20 @@ class ConversationManager:
         self._recent_message_limit = recent_message_limit
         self._context_token_budget = context_token_budget
         self._summary_max_chars = summary_max_chars
-        self._summarizer = summarizer or _summarize_messages
+        # 旧 summarizer 参数仅兼容调用方；原文摘要路径已退役。
+        from app.services.conversation_memory import ConversationMemory
+        self.memory = ConversationMemory(durable=isinstance(store, RedisConversationStore), ttl=ttl_seconds)
 
     def get_state(self, session_id: str) -> ConversationState:
         _validate_session_id(session_id)
         state = self._store.load(session_id)
         if state is None:
-            return ConversationState(session_id=session_id)
+            state = ConversationState(session_id=session_id, graph_memory_version="conversation-v1",
+                                      task_orchestration_version="task_orchestration_v1")
         if state.expires_at and state.expires_at <= time.time():
             self._store.delete(session_id)
-            return ConversationState(session_id=session_id)
+            state = ConversationState(session_id=session_id, graph_memory_version="conversation-v1",
+                                      task_orchestration_version="task_orchestration_v1")
         # One-shot cutover: state serialized before task orchestration has no
         # version field in Pydantic's loaded-field set.  Old pending work cannot
         # safely be guessed into active/paused slots, so expire only that
@@ -79,27 +82,43 @@ class ConversationManager:
         if "task_orchestration_version" not in state.model_fields_set:
             _expire_legacy_pending_work(state)
             self.save_state(state)
+        if "graph_memory_version" not in state.model_fields_set:
+            if state.handoff_fragments:
+                self.memory.append_safe(session_id, state.handoff_fragments, state.handoff_context_omitted)
+            _expire_legacy_pending_work(state)
+            state.graph_memory_version = "conversation-v1"
+            self.save_state(state)
+        memory = self.memory.read(session_id)
+        state.summary = ""
+        state.recent_messages = []
+        state.handoff_fragments = memory.get("fragments", [])
+        state.handoff_context_omitted = memory.get("omitted", False)
         return state
 
     def save_state(self, state: ConversationState) -> ConversationState:
         state.updated_at = time.time()
         state.expires_at = state.updated_at + self._ttl_seconds
-        self._compact_if_needed(state)
-        self._store.save(state, self._ttl_seconds)
+        # 工作流仓只保存领域状态；安全记忆从检查点读取，不再保存双份消息。
+        stored = state.model_copy(deep=True)
+        stored.summary = ""
+        stored.recent_messages = []
+        stored.handoff_fragments = []
+        stored.handoff_context_omitted = False
+        self._store.save(stored, self._ttl_seconds)
         return state
 
     def delete_state(self, session_id: str) -> None:
+        self.memory.delete(session_id)
         self._store.delete(session_id)
 
-    def append_message(self, session_id: str, role: str, content: str) -> ConversationState:
+    def append_message(self, session_id: str, role: str, content: str, *, task_ref=None) -> ConversationState:
         if role not in {"user", "assistant"}:
             raise ConversationStateError("会话角色不合法。")
         state = self.get_state(session_id)
-        state.recent_messages.append(ConversationMessage(role=role, content=content))
-        from app.services.handoff_safe_context import fragments
-        safe,omitted=fragments(content,role)
-        state.handoff_fragments=(state.handoff_fragments+safe)[-8:]
-        state.handoff_context_omitted=state.handoff_context_omitted or omitted
+        self.memory.append(session_id, role, content, task_ref=task_ref)
+        memory = self.memory.read(session_id)
+        state.handoff_fragments = memory.get("fragments", [])
+        state.handoff_context_omitted = memory.get("omitted", False)
         if role == "user":
             _remember_identifiers(state, content)
         return self.save_state(state)
@@ -122,6 +141,8 @@ class ConversationManager:
             # payloads into a routing-model prompt.  Task snapshots are the
             # only cross-turn model reference.
             summary="",
+            safe_context=state.handoff_fragments,
+            context_omitted=state.handoff_context_omitted,
             facts=_safe_model_facts(state.facts),
             active_task=_usable_task(state.active_task),
             paused_task=_usable_task(state.paused_task),
@@ -129,19 +150,6 @@ class ConversationManager:
             recent_messages=[],
         )
 
-    def _compact_if_needed(self, state: ConversationState) -> None:
-        while _should_compact(
-            state,
-            self._recent_message_limit,
-            self._context_token_budget,
-        ):
-            if len(state.recent_messages) <= 1:
-                break
-            archive_count = max(1, len(state.recent_messages) - self._recent_message_limit)
-            archived = state.recent_messages[:archive_count]
-            state.summary = self._summarizer(state.summary, archived).strip()
-            state.summary = state.summary[: self._summary_max_chars]
-            state.recent_messages = state.recent_messages[archive_count:]
 
 
 _manager: ConversationManager | None = None
@@ -176,12 +184,12 @@ def reset_conversation_state_for_tests() -> None:
     set_conversation_manager_for_tests(ConversationManager(InMemoryConversationStore()))
 
 
-def record_user_message(session_id: str, message: str) -> ConversationState:
-    return get_conversation_manager().append_message(session_id, "user", message)
+def record_user_message(session_id: str, message: str, *, task_ref=None) -> ConversationState:
+    return get_conversation_manager().append_message(session_id, "user", message, task_ref=task_ref)
 
 
-def record_assistant_message(session_id: str, message: str) -> ConversationState:
-    return get_conversation_manager().append_message(session_id, "assistant", message)
+def record_assistant_message(session_id: str, message: str, *, task_ref=None) -> ConversationState:
+    return get_conversation_manager().append_message(session_id, "assistant", message, task_ref=task_ref)
 
 
 def remember_conversation_facts(session_id: str, **facts: str | None) -> ConversationState:
@@ -193,6 +201,7 @@ def get_conversation_model_context(session_id: str) -> str:
     context = get_conversation_manager().model_context(session_id)
     if not (
         context.summary
+        or context.safe_context
         or context.facts
         or context.active_task
         or context.paused_task
@@ -216,44 +225,6 @@ def delete_conversation_state(session_id: str) -> None:
     get_conversation_manager().delete_state(session_id)
 
 
-def _should_compact(
-    state: ConversationState,
-    recent_message_limit: int,
-    context_token_budget: int,
-) -> bool:
-    if len(state.recent_messages) > recent_message_limit:
-        return True
-    return _estimate_context_tokens(state) > context_token_budget
-
-
-def _estimate_context_tokens(state: ConversationState) -> int:
-    # A deliberately conservative estimate for Chinese/English mixed customer text.
-    text = state.summary + json.dumps(state.facts, ensure_ascii=False)
-    text += "".join(message.content for message in state.recent_messages)
-    return max(1, (len(text) + 1) // 2)
-
-
-def _summarize_messages(
-    existing_summary: str,
-    messages: list[ConversationMessage],
-) -> str:
-    transcript = "\n".join(f"{message.role}: {message.content}" for message in messages)
-    prompt = (
-        f"已有摘要：\n{existing_summary or '无'}\n\n"
-        f"需要压缩的历史对话：\n{transcript}"
-    )
-    try:
-        return generate_text(
-            message=prompt,
-            system_prompt=SUMMARY_SYSTEM_PROMPT,
-            temperature=0,
-        )
-    except LLMServiceError:
-        # Compaction must not make a customer-service request fail if the model is down.
-        fallback_lines = [
-            f"{message.role}: {message.content[:160]}" for message in messages
-        ]
-        return "\n".join(part for part in [existing_summary, *fallback_lines] if part)
 
 
 def _safe_model_facts(facts: dict[str, str]) -> dict[str, str]:

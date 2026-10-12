@@ -1,0 +1,40 @@
+{
+  "checks": [
+    {
+      "caseId": "multiple_task_selection",
+      "passed": true
+    },
+    {
+      "caseId": "conversation_request_dedup",
+      "passed": true
+    },
+    {
+      "caseId": "policy_question",
+      "passed": true
+    },
+    {
+      "caseId": "task_interruption",
+      "passed": true
+    },
+    {
+      "caseId": "task_resume",
+      "passed": true
+    },
+    {
+      "caseId": "unselected_task_unchanged",
+      "passed": true
+    },
+    {
+      "caseId": "single_query",
+      "passed": true
+    },
+    {
+      "caseId": "legacy_confirmation_rejected",
+      "passed": true
+    }
+  ],
+  "externalProviderRequests": 0,
+  "modelBoundary": "scripted",
+  "storage": "real_mongo",
+  "java": "real_local"
+}

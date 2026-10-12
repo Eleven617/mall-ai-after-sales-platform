@@ -337,6 +337,7 @@ export interface CustomerServiceCaseReopenRequest {
 
 export interface CustomerServiceRequest {
   unified_entry?: boolean;
+  request_id?: string;
   session_id: string;
   message: string;
 }

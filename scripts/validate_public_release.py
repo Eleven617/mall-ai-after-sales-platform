@@ -117,6 +117,9 @@ def fastapi_facts_match(fastapi: dict[str, object], report: dict[str, object]) -
 
 
 def main() -> int:
+    if (ROOT / 'docs/evidence/langgraph-migration-facts.json').is_file():
+        from validate_langgraph_migration import validate
+        return validate()
     if (ROOT / 'docs/evidence/handoff-semantic-facts.json').is_file():
         from validate_handoff_semantic import validate
         return validate()

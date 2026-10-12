@@ -47,6 +47,7 @@ class ConversationState(BaseModel):
     """
 
     session_id: str
+    graph_memory_version: str = "conversation-v1"
     summary: str = ""
     recent_messages: list[ConversationMessage] = Field(default_factory=list)
     handoff_fragments: list[dict] = Field(default_factory=list,max_length=8)
@@ -74,6 +75,8 @@ class ConversationModelContext(BaseModel):
     """Only the safe, useful subset of session state sent to a model."""
 
     summary: str = ""
+    safe_context: list[dict] = Field(default_factory=list, max_length=8)
+    context_omitted: bool = False
     facts: dict[str, str] = Field(default_factory=dict)
     active_task: TaskModelReference | None = None
     paused_task: TaskModelReference | None = None

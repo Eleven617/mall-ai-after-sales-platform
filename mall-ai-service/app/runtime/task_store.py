@@ -11,6 +11,8 @@ import copy
 import hashlib
 import json
 import time
+import threading
+from datetime import datetime, timezone
 from collections.abc import Mapping
 from typing import Any, Protocol
 
@@ -51,6 +53,10 @@ class TaskRecordBundle(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     task: AgentTask
+    graph_version: str | None = None
+    storage_revision: int = Field(default=0, ge=0)
+    graph_invocation_pending: bool = False
+    graph_run_ref: str | None = Field(default=None, pattern=r"^run-[a-f0-9]{32}$")
     handoff: HandoffContext | None = None
     plans: list[TaskPlan] = Field(default_factory=list, max_length=100)
     artifacts: list[TaskArtifact] = Field(default_factory=list, max_length=128)
@@ -143,9 +149,15 @@ class TaskStore(Protocol):
 class InMemoryTaskStore:
     def __init__(self) -> None:
         self._items: dict[str, TaskRecordBundle] = {}
+        self._write_lock = threading.RLock()
 
     def save(self, bundle: TaskRecordBundle) -> None:
-        self._items[bundle.task.task_ref] = copy.deepcopy(bundle)
+        with self._write_lock:
+            current = self._items.get(bundle.task.task_ref)
+            if current is not None and current.storage_revision != bundle.storage_revision:
+                raise TaskStoreError("任务修订已变化，请重新读取。")
+            bundle.storage_revision += 1
+            self._items[bundle.task.task_ref] = copy.deepcopy(bundle)
 
     def load_owned(self, task_ref: str, owner_ref: str) -> TaskRecordBundle:
         bundle = self._items.get(task_ref)
@@ -193,7 +205,7 @@ class MongoTaskStore:
             collection = client[self._database][self._collection_name]
             collection.create_index([("task.task_ref", 1)], unique=True)
             collection.create_index([("task.owner_ref", 1), ("task.updated_at", -1)])
-            collection.create_index("task.expires_at", expireAfterSeconds=0)
+            collection.create_index("record_expires_at", expireAfterSeconds=0)
         except PyMongoError as exc:
             raise TaskStoreUnavailable("任务存储暂时不可用。") from exc
         self._collection = collection
@@ -202,11 +214,19 @@ class MongoTaskStore:
     def save(self, bundle: TaskRecordBundle) -> None:
         try:
             collection = self._get_collection()
+            query = {"task.task_ref": bundle.task.task_ref, "task.owner_ref": bundle.task.owner_ref}
+            query["$or"] = [{"storage_revision": bundle.storage_revision}]
+            if bundle.storage_revision == 0:
+                query["$or"].append({"storage_revision": {"$exists": False}})
+            document = bundle.model_dump(mode="json")
+            document["record_expires_at"] = datetime.fromtimestamp(bundle.task.expires_at, timezone.utc)
+            document["storage_revision"] = bundle.storage_revision + 1
             collection.replace_one(
-                {"task.task_ref": bundle.task.task_ref},
-                bundle.model_dump(mode="json"),
+                query,
+                document,
                 upsert=True,
             )
+            bundle.storage_revision += 1
         except TaskStoreUnavailable:
             raise
         except Exception as exc:  # pragma: no cover - pymongo-specific types vary by installed version
@@ -216,7 +236,7 @@ class MongoTaskStore:
         try:
             document = self._get_collection().find_one(
                 {"task.task_ref": task_ref, "task.owner_ref": owner_ref},
-                {"_id": 0},
+                {"_id": 0, "record_expires_at": 0},
             )
         except TaskStoreUnavailable:
             raise
@@ -238,7 +258,7 @@ class MongoTaskStore:
             query["task.session_ref"] = session_ref
         try:
             rows = list(
-                self._get_collection().find(query, {"_id": 0}).sort("task.updated_at", -1)
+                self._get_collection().find(query, {"_id": 0, "record_expires_at": 0}).sort("task.updated_at", -1)
             )
             return [TaskRecordBundle.model_validate(row) for row in rows]
         except TaskStoreUnavailable:

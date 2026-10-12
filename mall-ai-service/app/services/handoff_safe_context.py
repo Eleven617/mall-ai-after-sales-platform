@@ -39,6 +39,7 @@ def fragments(text,role):
 
 def snapshot(stored,current='',topic='general',task_ref=None,task_goal=None,execution=None,omitted=False):
     pieces=[]
+    stored=[item for item in stored if item.get('task_ref')==task_ref]
     if topic not in TOPICS:
         for text in [current]+[item['text'] for item in reversed(stored) if item['kind']=='customer_statement']:
             found=[key for key,term in TOPICS.items() if term in text]
@@ -53,6 +54,7 @@ def snapshot(stored,current='',topic='general',task_ref=None,task_goal=None,exec
             pieces.insert(0,item)
             if len(pieces)>=8:break
     elif task_goal:
+        pieces.extend(stored)
         fresh,rejected=fragments(task_goal,'user');pieces.extend(fresh);omitted|=rejected
     fresh,rejected=fragments(current,'user');pieces.extend(fresh);omitted|=rejected
     for step in (execution or [])[-3:]:

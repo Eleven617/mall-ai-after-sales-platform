@@ -131,7 +131,7 @@ async function sendMessage(rawMessage = messageInput.value): Promise<void> {
 
   try {
     const response = await sendCustomerMessage(
-      { session_id: requestSessionId, message: content, unified_entry: true },
+      { session_id: requestSessionId, message: content, unified_entry: true, request_id: crypto.randomUUID() },
       buildAuthorizationHeader(accessToken.value),
     );
     if (sessionId.value !== requestSessionId || accessToken.value !== requestToken) return;

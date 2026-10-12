@@ -22,6 +22,13 @@ ROOT=Path(__file__).resolve().parents[2]
 BASE='http://127.0.0.1:5173/api'
 
 def run():
+    offline_worker = '--offline-worker' in sys.argv
+    if offline_worker:
+        assert '--live-model' not in sys.argv
+        guard = subprocess.run(['docker','compose','exec','-T','mall-ai-service','python','-c',
+            "import os; assert os.getenv('MALL_HANDOFF_SEMANTIC_ENABLED')=='0'; assert os.getenv('MALL_PROVIDER_LIVE_AUTH')=='0'"],
+            cwd=ROOT,capture_output=True)
+        assert guard.returncode == 0, 'offline_worker_not_disabled'
     checks=[];fixture=uuid.uuid4().hex[:10];password=secrets.token_urlsafe(24)
     roles={'ops_'+fixture:'订单管理员','processor_'+fixture:'售后处理人员'}
     password_hash=bcrypt.hashpw(password.encode(),bcrypt.gensalt()).decode()
@@ -59,6 +66,11 @@ def run():
             check('general_preview_revision',changed['task_ref']==task['task_ref'] and changed['action']['revision']==task['action']['revision']+1)
             task=call('POST','/human-handoffs/prepare',auth,{'session_id':session,'topic':'policy','reason':'repeated_questions'})
             check('no_case_before_confirmation',call('GET','/customer-service/service-cases',auth)==[])
+            if '--graph-capabilities' in sys.argv:
+                cancel_session=str(uuid.uuid4());call('POST','/customer-service/conversations/'+cancel_session,auth2)
+                preview=call('POST','/human-handoffs/prepare',auth2,{'session_id':cancel_session,'topic':'policy','reason':'human_preference'})
+                withdrawn=call('POST','/agent-tasks/'+preview['task_ref']+'/action',auth2,{'confirmation':'withdraw','proposal_ref':preview['action']['proposal_ref'],'revision':preview['action']['revision']})
+                check('proposal_withdraw_no_write',withdrawn['status']=='executing' and not withdrawn.get('action') and call('GET','/customer-service/service-cases',auth2)==[])
             action=task['action'];ref=task['task_ref'];payload={'confirmation':'confirm','proposal_ref':action['proposal_ref'],'revision':action['revision']}
             committed=call('POST','/agent-tasks/'+ref+'/action',auth,payload)
             check('confirmed_waiting_human',committed['status']=='waiting_human')
@@ -79,6 +91,14 @@ def run():
             detail=call('GET','/handoff-management/processor/cases/'+case,processor)
             reviewed=call('POST','/handoff-management/processor/cases/'+case+'/review',processor,{'reason':'repeated_questions','version':detail['reviewVersion']})
             check('human_review_audited',reviewed['verifiedReason']=='repeated_questions' and len(reviewed['history'])>=1)
+            if '--graph-capabilities' in sys.argv:
+                copied=subprocess.run(['docker','compose','cp',str(Path(__file__).with_name('verify_graph_capabilities.py')),'mall-ai-service:/app/verify_graph_capabilities.py'],cwd=ROOT,capture_output=True)
+                assert copied.returncode==0
+                result=subprocess.run(['docker','compose','exec','-T','mall-ai-service','python','/app/verify_graph_capabilities.py'],cwd=ROOT,
+                    input=json.dumps({'mode':'operations','authorization':ops,'case_ref':case}),text=True,encoding='utf-8',capture_output=True,timeout=90)
+                parsed=json.loads(result.stdout)
+                if result.returncode:print(json.dumps(parsed),flush=True)
+                check('operations_capability_graph',result.returncode==0 and parsed['checks'][0]['passed'])
             call('POST','/handoff-management/processor/cases/'+case+'/review',ops,{'reason':'unspecified','version':1},status=403);check('operator_cannot_review_case',True)
             metrics=call('GET','/handoff-management?days=7&page=1&size=50&topic=policy',ops)
             check('window_contains_new_case',any(x['caseRef']==case for x in metrics['items']))
@@ -106,12 +126,18 @@ def run():
                 check('natural_language_handoff_preview',answer.get('agent_task',{}).get('status')=='ready_to_commit')
                 check('language_request_no_auto_case',len(call('GET','/customer-service/service-cases',auth))==1)
             # The real worker is asynchronous; polling consumes no model itself.
-            deadline=time.time()+60
-            while time.time()<deadline:
+            if offline_worker:
                 detail=call('GET','/handoff-management/cases/'+case,ops)
-                if detail['analysisState'] in {'SUCCEEDED','FAILED','UNAVAILABLE'}:break
-                time.sleep(2)
-            check('analysis_terminal_without_blocking_case',detail['analysisState'] in {'SUCCEEDED','FAILED','UNAVAILABLE'})
+                # Current Java disables the obsolete per-case classifier; the
+                # new summary/index worker is separately disabled in this run.
+                check('legacy_analysis_disabled',detail['analysisState']=='UNAVAILABLE')
+            else:
+                deadline=time.time()+60
+                while time.time()<deadline:
+                    detail=call('GET','/handoff-management/cases/'+case,ops)
+                    if detail['analysisState'] in {'SUCCEEDED','FAILED','UNAVAILABLE'}:break
+                    time.sleep(2)
+                check('analysis_terminal_without_blocking_case',detail['analysisState'] in {'SUCCEEDED','FAILED','UNAVAILABLE'})
             if '--live-model' in sys.argv:
                 check('real_analysis_succeeded',detail['analysisState']=='SUCCEEDED' and len(detail.get('analysisVersions',[]))>=1)
             if '--browser' in sys.argv:
@@ -138,7 +164,7 @@ def run():
                 again=call('POST','/agent-tasks/'+ref+'/action',auth,payload)
                 check('restart_no_duplicate_case',again['handoff_case_ref']==case and len(call('GET','/customer-service/service-cases',auth))==1)
         finally:
-            report={'date':'2026-10-11','scope':'synthetic local HTTP / real model when enabled','checks':checks,'provider':summarize_release_events(events()[start:])}
+            report={'scope':'synthetic local HTTP / real model when enabled','offlineWorker':offline_worker,'checks':checks,'provider':summarize_release_events(events()[start:])}
             target=ROOT/'tmp'/('handoff-upgrade-'+fixture+'.json');target.write_text(json.dumps(report,ensure_ascii=False,indent=2),encoding='utf-8')
             print(json.dumps({'report':str(target),'provider':report['provider']},ensure_ascii=False),flush=True)
 

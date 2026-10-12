@@ -172,6 +172,16 @@ def list_agent_task_events(
         _handle_runtime_error(exc)
 
 
+@router.post("/{task_ref}/reconcile", response_model=AgentTaskPublicView)
+def reconcile_agent_task(task_ref: str, authorization: str | None = Header(default=None)):
+    member = _member(authorization)
+    try:
+        return get_task_runtime().reconcile_handoff(task_ref=task_ref, member_id=member.member_id,
+                                                    authorization=authorization).view
+    except TaskRuntimeError as exc:
+        _handle_runtime_error(exc)
+
+
 @router.get("/{task_ref}/events/stream")
 def stream_agent_task_events(
     task_ref: str,

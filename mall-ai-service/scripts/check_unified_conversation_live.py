@@ -1,5 +1,6 @@
 """Bounded real-model smoke check. Synthetic identities stay in memory."""
 import json
+import os
 import secrets
 import sys
 import uuid
@@ -13,7 +14,7 @@ from app.services.release_ledger import summarize_release_events
 
 
 def main():
-    ledger = Path(__file__).resolve().parents[2] / 'tmp/local-chat-usage/ledger.jsonl'
+    ledger = Path(os.getenv('MALL_VALIDATION_LEDGER', str(Path(__file__).resolve().parents[2] / 'tmp/local-chat-usage/ledger.jsonl')))
     def events():
         return [json.loads(line) for line in ledger.read_text(encoding='utf-8').splitlines() if line]
     start = len(events())
@@ -80,7 +81,10 @@ def main():
             withdrawn = call('POST', '/agent-tasks/' + ref + '/action', json={'confirmation': 'withdraw', 'proposal_ref': action['proposal_ref'], 'revision': action['revision']})
             check('explicit_card_withdrawal', withdrawn.get('action') is None and withdrawn['status'] == 'executing')
         finally:
-            print(json.dumps({'usage': summarize_release_events(events()[start:]), 'checks': checks}, ensure_ascii=False), flush=True)
+            report={'usage': summarize_release_events(events()[start:]), 'checks': checks}
+            if os.getenv('MALL_VALIDATION_REPORT'):
+                Path(os.environ['MALL_VALIDATION_REPORT']).write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+            print(json.dumps(report, ensure_ascii=False), flush=True)
 
 
 if __name__ == '__main__':

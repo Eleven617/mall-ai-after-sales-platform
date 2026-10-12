@@ -12,7 +12,8 @@ import time
 from typing import Any, Callable, Literal, TypedDict
 from uuid import uuid4
 
-from langgraph.graph import END, START, StateGraph
+from langgraph.graph import END, START
+from app.runtime.capability_graph import RequestLocalGraph as StateGraph
 
 from app.schemas.agent import AgentRunResult
 from app.schemas.after_sales_application import (

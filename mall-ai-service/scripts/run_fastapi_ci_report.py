@@ -41,6 +41,9 @@ def _commit() -> str:
 
 
 def _runtime_commit() -> str:
+    graph_path = REPOSITORY_ROOT / 'docs/evidence/langgraph-migration-facts.json'
+    if graph_path.is_file():
+        return json.loads(graph_path.read_text(encoding='utf-8')).get('runtimeCommit')
     semantic_path = REPOSITORY_ROOT / 'docs/evidence/handoff-semantic-facts.json'
     if semantic_path.is_file():
         return json.loads(semantic_path.read_text(encoding='utf-8'))['runtimeCommit']
@@ -102,6 +105,9 @@ def main() -> int:
     report_path = args.report if args.report.is_absolute() else ROOT / args.report
     junit_path.parent.mkdir(parents=True, exist_ok=True)
     report_path.parent.mkdir(parents=True, exist_ok=True)
+    sys.path.insert(0, str(REPOSITORY_ROOT / "scripts"))
+    from handoff_upgrade_identity import source_hash
+    before_source = source_hash()
     result = subprocess.run(
         [sys.executable, "-m", "pytest", "-q", f"--junitxml={junit_path}"],
         cwd=ROOT,
@@ -112,6 +118,8 @@ def main() -> int:
         "schemaVersion": "mall-fastapi-test-report.v1",
         "repositoryCommit": _commit(),
         "runtimeCommit": _runtime_commit(),
+        "sourceSha256": source_hash(),
+        "sourceStable": source_hash() == before_source,
         "junitSha256": _sha256(junit_path),
         **counts,
         "exitCode": result.returncode,

@@ -1,0 +1,68 @@
+[
+  {
+    "phase": "prepare",
+    "checks": [
+      {
+        "caseId": "mongo_wait_checkpoint",
+        "passed": true
+      },
+      {
+        "caseId": "mongo_memory_saved",
+        "passed": true
+      },
+      {
+        "caseId": "mongo_crash_receipt",
+        "passed": true
+      }
+    ],
+    "externalProviderRequests": 0,
+    "storage": "real_mongo",
+    "locks": "real_redis",
+    "time": 1791789994.452966
+  },
+  {
+    "phase": "recover",
+    "checks": [
+      {
+        "caseId": "mongo_process_restart_resume",
+        "passed": true
+      },
+      {
+        "caseId": "mongo_memory_restart",
+        "passed": true
+      },
+      {
+        "caseId": "mongo_compare_and_swap",
+        "passed": true
+      },
+      {
+        "caseId": "mongo_crash_no_model_replay",
+        "passed": true
+      },
+      {
+        "caseId": "mongo_checkpoint_credentials_absent",
+        "passed": true
+      },
+      {
+        "caseId": "mongo_memory_delete",
+        "passed": true
+      },
+      {
+        "caseId": "mongo_memory_no_resurrection",
+        "passed": true
+      },
+      {
+        "caseId": "mongo_checkpoint_ttl",
+        "passed": true
+      },
+      {
+        "caseId": "redis_cross_process_lock",
+        "passed": true
+      }
+    ],
+    "externalProviderRequests": 0,
+    "storage": "real_mongo",
+    "locks": "real_redis",
+    "time": 1791790054.4760563
+  }
+]

@@ -15,12 +15,8 @@ def restore_history_context(
     restore; the customer must restart or explicitly confirm through the normal
     deterministic workflow instead of reviving a stale write action.
     """
-    latest = messages[-6:]
+    # Java 展示历史不回灌模型记忆；旧确认、原文及摘要均不自动恢复。
     state = ConversationState(
         session_id=session_id,
-        recent_messages=[
-            ConversationMessage(role=message.role, content=message.content)
-            for message in latest
-        ],
     )
     save_conversation_state(state)

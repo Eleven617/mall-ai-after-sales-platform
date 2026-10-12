@@ -1,0 +1,134 @@
+{
+  "status": "passed",
+  "batchId": "manual",
+  "providerMode": "deterministic",
+  "requestedScenarios": [
+    "main_open_task_closed_loop",
+    "clarify_pause_resume"
+  ],
+  "durationMs": 17750,
+  "chains": [
+    {
+      "scenario": "main_open_task_closed_loop",
+      "status": "passed",
+      "completedStepCount": 7,
+      "taskContinuity": true,
+      "draftAmended": true,
+      "oldRevisionHttpStatus": 409,
+      "javaRechecked": true,
+      "confirmedWrite": true,
+      "proposalFormed": true,
+      "statusReadback": true,
+      "duplicateConfirmationWrites": 0,
+      "crossAccountLeakage": 0,
+      "modelCalls": 2,
+      "contextModelCalls": 1,
+      "criticCalls": 0,
+      "toolCalls": 1,
+      "skillSequence": [
+        "read_order"
+      ],
+      "artifactKinds": [
+        "order_fact"
+      ],
+      "taskStatusTransitions": [
+        "task_created",
+        "skill_observed",
+        "action_proposed",
+        "action_revised",
+        "action_committed",
+        "action_committed"
+      ],
+      "clarificationCount": 0
+    },
+    {
+      "scenario": "clarify_pause_resume",
+      "status": "passed",
+      "completedStepCount": 4,
+      "taskContinuity": true,
+      "waitingForInput": true,
+      "serviceRestarted": true,
+      "sameTaskHash": true,
+      "javaFactsAfterResume": true,
+      "businessWrites": 0,
+      "statusReadback": true
+    }
+  ],
+  "frames": [
+    "tmp/langgraph-migration-showcase/browser/main_open_task_closed_loop-goal.png",
+    "tmp/langgraph-migration-showcase/browser/main_open_task_closed_loop-evidence.png",
+    "tmp/langgraph-migration-showcase/browser/main_open_task_closed_loop-progress.png",
+    "tmp/langgraph-migration-showcase/browser/main_open_task_closed_loop-status.png",
+    "tmp/langgraph-migration-showcase/browser/clarify_pause_resume-goal.png",
+    "tmp/langgraph-migration-showcase/browser/clarify_pause_resume-evidence.png",
+    "tmp/langgraph-migration-showcase/browser/clarify_pause_resume-progress.png",
+    "tmp/langgraph-migration-showcase/browser/clarify_pause_resume-status.png"
+  ],
+  "browserFrameCount": 8,
+  "frameGroups": {
+    "main_open_task_closed_loop": {
+      "frames": [
+        "tmp/langgraph-migration-showcase/browser/main_open_task_closed_loop-goal.png",
+        "tmp/langgraph-migration-showcase/browser/main_open_task_closed_loop-evidence.png",
+        "tmp/langgraph-migration-showcase/browser/main_open_task_closed_loop-progress.png",
+        "tmp/langgraph-migration-showcase/browser/main_open_task_closed_loop-status.png"
+      ],
+      "hashes": [
+        "4eb7a4401ff8c58d474332406e2a41763c5013d29d592e62f9c852768324844e",
+        "33514ae40cf83b6f6195f73b96c4349414cfc8256d6b915a3b3c43290267aa07",
+        "983dded6bf6508fb07fd580262f279ee321610870b8a4a88568cbe6a7de88ed3",
+        "79cf758925dacb0349b02c35a97fde9ad0f7ba922b2c3e8ba13ed16ba7ca49be"
+      ],
+      "stages": [
+        "goal",
+        "evidence",
+        "progress",
+        "status"
+      ],
+      "valid": true,
+      "frameCount": 4,
+      "adjacentDistinct": true,
+      "failureStage": null,
+      "failureCode": null
+    },
+    "clarify_pause_resume": {
+      "frames": [
+        "tmp/langgraph-migration-showcase/browser/clarify_pause_resume-goal.png",
+        "tmp/langgraph-migration-showcase/browser/clarify_pause_resume-evidence.png",
+        "tmp/langgraph-migration-showcase/browser/clarify_pause_resume-progress.png",
+        "tmp/langgraph-migration-showcase/browser/clarify_pause_resume-status.png"
+      ],
+      "hashes": [
+        "efc189041699d5fbe919e19334ac17f43c2d60a516230a4a01c00bde7dfcf0b0",
+        "800b1ea63748a08a3227f1c07dc0097997706efb9873faf6d6cf2b62f9892d58",
+        "818559770d1eb5c42410029dddffbfae1a9a5da75ca7231fcce02cc9787164cd",
+        "cc19a677b276ab4e474f4b29dc10a9010402960a06f5777e682531ce2f2869b4"
+      ],
+      "stages": [
+        "goal",
+        "evidence",
+        "progress",
+        "status"
+      ],
+      "valid": true,
+      "frameCount": 4,
+      "adjacentDistinct": true,
+      "failureStage": null,
+      "failureCode": null
+    }
+  },
+  "crossScenarioFramesDistinct": true,
+  "gifPaths": [
+    "tmp/langgraph-migration-showcase/gifs/main-open-task-closed-loop.gif",
+    "tmp/langgraph-migration-showcase/gifs/clarify-pause-resume.gif"
+  ],
+  "fixture": {
+    "kind": "local_demo_synthetic",
+    "containsRawValuesInReport": false
+  },
+  "modelCalls": 2,
+  "contextModelCalls": 1,
+  "criticCalls": 0,
+  "toolCalls": 1,
+  "clarificationCount": 0
+}

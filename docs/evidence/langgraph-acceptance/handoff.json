@@ -1,0 +1,145 @@
+{
+  "scope": "synthetic local HTTP / real model when enabled",
+  "offlineWorker": true,
+  "checks": [
+    {
+      "caseId": "handoff-v2-button_without_model",
+      "passed": true
+    },
+    {
+      "caseId": "handoff-v2-general_preview_revision",
+      "passed": true
+    },
+    {
+      "caseId": "handoff-v2-no_case_before_confirmation",
+      "passed": true
+    },
+    {
+      "caseId": "handoff-v2-proposal_withdraw_no_write",
+      "passed": true
+    },
+    {
+      "caseId": "handoff-v2-confirmed_waiting_human",
+      "passed": true
+    },
+    {
+      "caseId": "handoff-v2-duplicate_confirmation_same_case",
+      "passed": true
+    },
+    {
+      "caseId": "handoff-v2-concurrent_confirmation_guard",
+      "passed": true
+    },
+    {
+      "caseId": "handoff-v2-agent_write_frozen",
+      "passed": true
+    },
+    {
+      "caseId": "handoff-v2-cross_account_rejected",
+      "passed": true
+    },
+    {
+      "caseId": "handoff-v2-original_request_lookup",
+      "passed": true
+    },
+    {
+      "caseId": "handoff-v2-human_claim",
+      "passed": true
+    },
+    {
+      "caseId": "handoff-v2-human_review_audited",
+      "passed": true
+    },
+    {
+      "caseId": "handoff-v2-operations_capability_graph",
+      "passed": true
+    },
+    {
+      "caseId": "handoff-v2-operator_cannot_review_case",
+      "passed": true
+    },
+    {
+      "caseId": "handoff-v2-window_contains_new_case",
+      "passed": true
+    },
+    {
+      "caseId": "handoff-v2-same_filter_totals",
+      "passed": true
+    },
+    {
+      "caseId": "handoff-v2-thirty_day_pagination_consistent",
+      "passed": true
+    },
+    {
+      "caseId": "handoff-v2-structured_context_no_raw_text",
+      "passed": true
+    },
+    {
+      "caseId": "handoff-v2-improvement_verified_closure",
+      "passed": true
+    },
+    {
+      "caseId": "handoff-v2-processor_start_review",
+      "passed": true
+    },
+    {
+      "caseId": "handoff-v2-processor_resolve",
+      "passed": true
+    },
+    {
+      "caseId": "handoff-v2-processor_close",
+      "passed": true
+    },
+    {
+      "caseId": "handoff-v2-retention_dry_run",
+      "passed": true
+    },
+    {
+      "caseId": "handoff-v2-retention_hold_authorized",
+      "passed": true
+    },
+    {
+      "caseId": "handoff-v2-legacy_analysis_disabled",
+      "passed": true
+    },
+    {
+      "caseId": "handoff-v2-browser_customer_handoff",
+      "passed": true
+    },
+    {
+      "caseId": "handoff-v2-browser_operations",
+      "passed": true
+    },
+    {
+      "caseId": "handoff-v2-browser_processor",
+      "passed": true
+    },
+    {
+      "caseId": "handoff-v2-restart_original_case_reconciled",
+      "passed": true
+    },
+    {
+      "caseId": "handoff-v2-restart_no_duplicate_case",
+      "passed": true
+    }
+  ],
+  "provider": {
+    "logicalProviderRequests": 0,
+    "providerHttpAttempts": 0,
+    "providerRequests": 0,
+    "providerSuccesses": 0,
+    "providerFailures": 0,
+    "successfulRequests": 0,
+    "failedRequests": 0,
+    "deniedBeforeNetwork": 0,
+    "unresolvedReservations": 0,
+    "scenarioFailures": 0,
+    "testFailures": 0,
+    "promptTokens": 0,
+    "completionTokens": 0,
+    "totalTokens": 0,
+    "networkRetries": 0,
+    "protocolCorrections": 0,
+    "events": 0
+  }
+}

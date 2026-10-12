@@ -22,6 +22,7 @@ from typing import Any, Mapping
 from pydantic import ValidationError
 
 from app.config import settings
+from app.runtime.graph_checkpoint import TASK_GRAPH_VERSION
 from app.schemas.agent_task import (
     ActionProposal,
     AgentTask,
@@ -159,7 +160,8 @@ class TaskRuntime:
             else:
                 provider = UnavailableRuntimeProvider()
         self._provider = provider
-        self._gateway = gateway or SafeCommerceSkillGateway()
+        from app.skills.unified_gateway import UnifiedSkillGateway
+        self._gateway = gateway or UnifiedSkillGateway()
         self._memory = memory or TaskMemory()
         self._now = now_fn
         self._reference_hints = {
@@ -198,19 +200,17 @@ class TaskRuntime:
             execution_budget=self._bounded_execution_budget(execution_budget),
             expires_at=now + settings.agent_task_ttl_seconds,
         )
-        bundle = TaskRecordBundle(task=task)
+        bundle = TaskRecordBundle(task=task, graph_version=TASK_GRAPH_VERSION)
         plan = build_initial_plan(task)
         bundle.plans.append(plan)
         task.plan_version = plan.version
         self._append_event(bundle, "task_created", "已创建电商任务，正在形成可执行计划。")
         self._save(bundle)
-        result = self._run_turn(
-            bundle,
-            transient_input=goal,
-            authorization=authorization,
-            member_id=member_id,
-            reference_hints=self._reference_hints_from_input(goal),
-        )
+        with reliability_governor.lock(scope=task.task_ref, kind="proposal", ttl_seconds=300):
+            result = self._run_turn(
+                bundle, transient_input=goal, authorization=authorization, member_id=member_id,
+                reference_hints=self._reference_hints_from_input(goal),
+            )
         return result
 
     @serialized_task
@@ -229,8 +229,19 @@ class TaskRuntime:
             raise TaskRuntimeError(str(exc), code="task_not_found", status_code=404) from exc
         if not isinstance(message, str) or not message.strip() or len(message) > 2000:
             raise TaskRuntimeError("继续任务的消息不合法。", code="invalid_message")
+        from app.runtime.task_graph import project_task
+        bundle.task.status = project_task(self, bundle).status
         if bundle.task.status in {"completed", "cancelled", "waiting_human"} or (bundle.action_proposal and bundle.action_proposal.confirmation_status in {"confirmed", "unknown"}):
             raise TaskRuntimeError("该任务已经结束，不能继续。", code="task_terminal", status_code=409)
+        if bundle.graph_version is None:
+            if bundle.action_proposal and bundle.action_proposal.confirmation_status == "awaiting_confirmation":
+                bundle.action_proposal.confirmation_status = "expired"
+                bundle.task.pending_action_ref = None
+            bundle.graph_version = TASK_GRAPH_VERSION
+            self._append_event(bundle, "plan_updated", "执行器已升级；旧确认卡失效，保留已验证事实并重新生成方案。")
+            self._save(bundle)
+        elif bundle.graph_version != TASK_GRAPH_VERSION:
+            raise TaskRuntimeError("任务图版本不兼容。", code="graph_version_mismatch", status_code=409)
         return self._run_turn(
             bundle,
             transient_input=message,
@@ -267,11 +278,16 @@ class TaskRuntime:
                     return TaskRuntimeResult(self._public_view(bundle),list(bundle.events))
             else:
                 task_id=new_task_id()
-                bundle=TaskRecordBundle(task=AgentTask(task_id=task_id,task_ref='taskref-'+task_id.removeprefix('task-'),
+                bundle=TaskRecordBundle(graph_version=TASK_GRAPH_VERSION,task=AgentTask(task_id=task_id,task_ref='taskref-'+task_id.removeprefix('task-'),
                     owner_ref=owner,session_ref=session,goal_digest=hashlib.sha256(b'customer_handoff').hexdigest(),
                     normalized_goal="请求人工协助",expires_at=self._now()+settings.agent_task_ttl_seconds))
                 bundle.plans.append(build_initial_plan(bundle.task)); bundle.task.plan_version=bundle.plans[-1].version
         from app.services.handoff_safe_context import snapshot
+        if bundle.graph_version not in {None, TASK_GRAPH_VERSION}:
+            raise TaskRuntimeError("任务图版本不兼容。", code="graph_version_mismatch", status_code=409)
+        if bundle.graph_version is None and bundle.action_proposal and bundle.action_proposal.confirmation_status == "awaiting_confirmation":
+            bundle.action_proposal.confirmation_status = "expired"
+            bundle.task.pending_action_ref = None
         from app.services.conversation_scope import build_conversation_state_key
         from app.services.conversation_state import get_conversation_state
         from app.services.conversation_store import ConversationStoreError
@@ -315,14 +331,38 @@ class TaskRuntime:
         bundle.task.waiting_question=None
         self._save(bundle)
         record_handoff_event(bundle.handoff,authorization,'requested')
+        bundle.graph_version = TASK_GRAPH_VERSION
+        self._save(bundle)
+        from app.runtime.task_graph import publish_task_checkpoint
+        publish_task_checkpoint(self, bundle)
         return TaskRuntimeResult(self._public_view(bundle),list(bundle.events))
 
     @serialized_task
     def reconcile_handoff(self, *, task_ref: str, member_id: int, authorization: str) -> TaskRuntimeResult:
+        from app.runtime.task_graph import run_task_operation
+        return run_task_operation(self, "reconcile", dict(task_ref=task_ref, member_id=member_id, authorization=authorization))
+
+    def _reconcile_domain(self, *, task_ref: str, member_id: int, authorization: str) -> TaskRuntimeResult:
         owner,_=self._require_owner('task-session',member_id,authorization,allow_session_placeholder=True)
         bundle=self._store.load_owned(task_ref,owner)
-        if not bundle.handoff or not bundle.action_proposal:
-            raise TaskRuntimeError('没有人工交接记录',status_code=404)
+        if not bundle.action_proposal:
+            raise TaskRuntimeError('没有待核对的提交记录',status_code=404)
+        if not bundle.handoff:
+            proposal = bundle.action_proposal
+            if proposal.confirmation_status not in {"confirmed", "unknown"}:
+                return TaskRuntimeResult(self._public_view(bundle), list(bundle.events))
+            if proposal.confirmation_executor_skill_id != "commit_after_sales_action":
+                raise TaskRuntimeError("该行动没有受控对账接口。", code="reconciliation_not_supported", status_code=409)
+            key = hashlib.sha256(f"{bundle.task.task_id}:{proposal.proposal_id}:{proposal.content_hash}:{proposal.confirmation_executor_skill_id}".encode()).hexdigest()[:32]
+            observation = self._gateway.reconcile(key, authorization=authorization, member_id=member_id, task_ref=task_ref)
+            if observation.status == "succeeded":
+                self._record_observation(bundle, proposal.confirmation_executor_skill_id, observation)
+                proposal.confirmation_status = "committed"
+                bundle.task.pending_action_ref = None
+                bundle.task.status = "executing"
+                self._append_event(bundle, "action_committed", "已从 Java 查回原请求结果，未重新提交。")
+                self._save(bundle)
+            return TaskRuntimeResult(self._public_view(bundle), list(bundle.events))
         result=handoff_request(bundle.handoff,bundle.action_proposal.content_hash,authorization,lookup=True)
         bundle.handoff.case_ref=result.caseRef
         bundle.action_proposal.confirmation_status='committed'
@@ -346,6 +386,12 @@ class TaskRuntime:
 
     @serialized_task
     def amend_action(
+        self, **kwargs,
+    ) -> TaskRuntimeResult:
+        from app.runtime.task_graph import run_task_operation
+        return run_task_operation(self, "amend", kwargs)
+
+    def _amend_domain(
         self,
         *,
         task_ref: str,
@@ -431,6 +477,12 @@ class TaskRuntime:
 
     @serialized_task
     def confirm_action(
+        self, **kwargs,
+    ) -> TaskRuntimeResult:
+        from app.runtime.task_graph import run_task_operation
+        return run_task_operation(self, "confirm", kwargs)
+
+    def _confirm_domain(
         self,
         *,
         task_ref: str,
@@ -737,273 +789,11 @@ class TaskRuntime:
         member_id: int | None,
         reference_hints: Mapping[str, str] | None = None,
     ) -> TaskRuntimeResult:
-        task = bundle.task
-        started = self._now()
-        deadline_at = started + task.execution_budget.max_wall_clock_seconds
-        # Identifier parsing is a syntax/ownership boundary, not intent
-        # routing.  These values are available only for this request's model
-        # turn and are never persisted in the task record, trace, or DTO.
-        turn_reference_hints = dict(self._reference_hints)
-        turn_reference_hints.update(reference_hints or {})
-        if task.expires_at <= started:
-            task.status = "blocked"
-            task.limitation_codes.append("task_expired")
-            self._append_event(bundle, "task_blocked", "任务已过期，未继续调用 Skill。")
-            self._save(bundle)
-            return TaskRuntimeResult(self._public_view(bundle), list(bundle.events))
-        task.status = "executing"
-        self._save(bundle)
-        # Discovery is deterministic, bounded metadata lookup performed by the
-        # server before each model turn.  Keep this turn-local marker explicit
-        # so the Executor cannot spend its budget repeating discovery instead
-        # of reading facts or asking a safe clarification.
-        discovery_complete = True
-        repeated_discovery = 0
-        executed_read_signatures: set[str] = set()
-        while True:
-            if self._now() >= deadline_at:
-                self._block(bundle, "wall_clock_budget_exhausted", "任务达到时间预算，已安全停止。")
-                break
-            if task.model_calls >= task.execution_budget.max_model_calls:
-                self._block(bundle, "model_call_budget_exhausted", "任务达到模型调用预算，已安全停止。")
-                break
-            plan = bundle.latest_plan()
-            discovered = self._discover_for_turn(task, transient_input, bundle)
-            missing_question = self._preflight_required_input_question(
-                task,
-                discovered,
-                bundle,
-                transient_input=transient_input,
-                reference_hints=turn_reference_hints,
-            )
-            if missing_question is not None:
-                # This is a deterministic input-contract guard, not an intent
-                # classifier.  It prevents an avoidable model call and keeps
-                # the same task/plan/context available for the next message.
-                task.status = "waiting_for_user"
-                task.waiting_question = missing_question
-                self._append_event(bundle, "waiting_for_user", missing_question)
-                self._save(bundle)
-                record_trace(
-                    "task_runtime",
-                    "waiting_for_required_input",
-                    task.task_ref,
-                    result_kind="pending",
-                    contract_violation="required_input_missing",
-                )
-                break
-            context = build_model_context(
-                task,
-                plan,
-                [artifact.summary for artifact in bundle.artifacts[-12:]],
-                discovered,
-                transient_input=transient_input,
-                context_pack=bundle.latest_context_pack(),
-                discovery_complete=discovery_complete,
-                reference_hints=turn_reference_hints,
-                artifact_details=[
-                    {
-                        "kind": artifact.kind,
-                        "sourceSkill": artifact.source_skill,
-                        "factuality": artifact.factuality,
-                        # The reference is an opaque server handle, not a
-                        # business identifier or raw tool payload. The
-                        # Executor needs it to form a safe ActionProposal.
-                        "reference": artifact.reference,
-                        "summary": artifact.summary[:320],
-                    }
-                    for artifact in bundle.artifacts[-12:]
-                ],
-                limitation_codes=list(task.limitation_codes[-8:]),
-            )
-            try:
-                remaining = self._remaining_seconds(deadline_at)
-                if remaining <= 0:
-                    self._block(bundle, "runtime_deadline_exceeded", "任务运行时间达到安全上限，已停止等待。")
-                    break
-                with capture_llm_metrics(
-                    timeout_seconds=min(settings.executor_timeout_seconds, remaining),
-                    max_attempts=1,
-                ):
-                    decision = self._provider.decide(context)
-                task.model_calls += 1
-            except RuntimeModelError as exc:
-                task.model_calls += 1
-                failure_code = (
-                    "runtime_deadline_exceeded"
-                    if self._remaining_seconds(deadline_at) <= 0
-                    else f"model_{exc.category}"
-                )
-                self._block(bundle, failure_code, "任务模型暂时不可用，任务已安全暂停；未调用业务 Skill。")
-                record_trace(
-                    "task_runtime",
-                    "model_unavailable",
-                    task.task_ref,
-                    role=exc.role,
-                    result_kind="blocked",
-                    error_category=exc.category,
-                    **exc.diagnostics,
-                )
-                break
-            except (ValidationError, TypeError, ValueError) as exc:
-                task.invalid_decisions += 1
-                self._block(bundle, "invalid_executor_decision", "任务模型返回的决策不符合契约，未执行任何 Skill。")
-                record_trace("task_runtime", "invalid_decision", task.task_ref, result_kind="blocked", contract_violation="invalid_executor_decision")
-                break
-            try:
-                duplicate_read = self._duplicate_read_decision(decision, executed_read_signatures)
-                if duplicate_read:
-                    if task.limitation_codes:
-                        task.status = "waiting_for_user"
-                        task.waiting_question = "当前事实暂时无法核验，请补充必要信息后再试。"
-                        self._append_event(bundle, "waiting_for_user", task.waiting_question)
-                        self._save(bundle)
-                        break
-                    self._append_event(
-                        bundle,
-                        "plan_updated",
-                        "相同参数的只读 Skill 已执行，未重复调用；请继续处理已有事实或安全澄清。",
-                    )
-                    self._save(bundle)
-                    transient_input = (
-                        "服务端已拒绝相同参数的重复只读 Skill；当前已有事实不会因重复调用而增加。"
-                        "下一次决策必须使用已有事实 finish，或在确实缺少信息时 ask_user；"
-                        "不得再次 call_skill，也不得把重复读取当成新的证据。"
-                    )
-                    continue
-                self._validate_decision(
-                    decision,
-                    task,
-                    discovered,
-                    bundle,
-                    reference_hints=turn_reference_hints,
-                )
-            except TaskRuntimeError as exc:
-                task.invalid_decisions += 1
-                if exc.code == "required_action_input_missing":
-                    task.status = "waiting_for_user"
-                    task.waiting_question = self._action_input_question(getattr(exc, "missing_keys", []))
-                    if exc.code not in task.limitation_codes:
-                        task.limitation_codes.append(exc.code)
-                    self._append_event(bundle, "waiting_for_user", task.waiting_question)
-                    self._save(bundle)
-                    record_trace(
-                        "task_runtime",
-                        "decision_waiting",
-                        task.task_ref,
-                        result_kind="pending",
-                        contract_violation=exc.code,
-                    )
-                else:
-                    self._block(bundle, exc.code, "任务决策未通过服务端能力校验，未执行任何业务动作。")
-                    record_trace("task_runtime", "decision_rejected", task.task_ref, result_kind="blocked", contract_violation=exc.code)
-                break
-            if decision.decision == "discover_skills":
-                discovery_complete = True
-                repeated_discovery += 1
-                self._append_event(bundle, "plan_updated", "已发现与当前目标相关的受控 Skill。")
-                self._save(bundle)
-                transient_input = (
-                    "服务端已完成本轮能力发现；不要再次发现。请直接选择一个与目标最相关的只读 Skill、"
-                    "必要的用户澄清、受控行动提案或只读完成决策。"
-                )
-                if repeated_discovery >= 2:
-                    transient_input += " 重复发现不会产生事实，必须推进到下一种决策。"
-                continue
-            if decision.decision == "call_skill":
-                if self._remaining_seconds(deadline_at) <= 0:
-                    self._block(bundle, "runtime_deadline_exceeded", "任务运行时间达到安全上限，已停止执行。")
-                    break
-                self._execute_skill_calls(bundle, decision, authorization, member_id)
-                executed_read_signatures.update(
-                    self._read_signature(call.skill_id, call.arguments)
-                    for call in decision.skill_calls
-                )
-                try:
-                    self._refresh_context(bundle, discovered, deadline_at=deadline_at)
-                except RuntimeModelError as exc:
-                    if self._auxiliary_failure_must_block(exc, deadline_at):
-                        self._block_auxiliary_failure(bundle, exc, deadline_at)
-                        break
-                    self._record_auxiliary_degradation(bundle, exc)
-                if bundle.artifacts and self._critic.should_trigger(
-                    artifacts=bundle.artifacts,
-                    skill_calls=task.tool_calls,
-                    has_action=False,
-                    has_conflict=self._has_conflict(bundle),
-                ):
-                    try:
-                        self._maybe_critic(bundle, deadline_at=deadline_at)
-                    except RuntimeModelError as exc:
-                        if self._auxiliary_failure_must_block(exc, deadline_at):
-                            self._block_auxiliary_failure(bundle, exc, deadline_at)
-                            break
-                        self._record_auxiliary_degradation(bundle, exc)
-                self._save(bundle)
-                conditional_draft = self._conditional_draft_for_insufficient_policy_evidence(
-                    bundle,
-                    discovered,
-                    transient_input,
-                )
-                if conditional_draft is not None:
-                    self._propose_action(bundle, conditional_draft)
-                    self._save(bundle)
-                    break
-                transient_input = "观察刚刚获得的事实并决定是否需要继续、重规划或结束"
-                continue
-            if decision.decision == "spawn_subtask":
-                self._execute_spawn_subtask(bundle, decision, authorization, member_id)
-                self._save(bundle)
-                transient_input = "观察子任务状态并决定下一步"
-                continue
-            if decision.decision == "revise_plan":
-                self._revise_plan(bundle, decision)
-                self._save(bundle)
-                transient_input = "根据新计划继续执行"
-                continue
-            if decision.decision == "ask_user":
-                task.status = "waiting_for_user"
-                task.waiting_question = decision.user_question
-                self._append_event(bundle, "waiting_for_user", decision.user_question or "请补充必要信息后继续。")
-                self._save(bundle)
-                break
-            if decision.decision == "propose_action":
-                self._propose_action(bundle, decision)
-                self._save(bundle)
-                if bundle.handoff and decision.action_skill == 'open_human_case':
-                    record_handoff_event(bundle.handoff,authorization,'suggested')
-                break
-            if decision.decision == "finish":
-                task.status = "completed"
-                task.final_outcome = decision.reason_summary
-                task.waiting_question = None
-                self._append_event(bundle, "task_completed", decision.reason_summary)
-                # Persist an owner-scoped episodic projection with the task
-                # bundle.  The in-process TaskMemory below is only a fast
-                # cache; this durable copy is what lets a restarted Runtime
-                # discover the safe summary without retaining raw messages.
-                if decision.reason_summary not in bundle.memory_hints:
-                    bundle.memory_hints.append(decision.reason_summary)
-                    bundle.memory_hints = bundle.memory_hints[-32:]
-                self._memory.remember(
-                    owner_ref=task.owner_ref,
-                    task_ref=task.task_ref,
-                    summary=decision.reason_summary,
-                    reference=_safe_reference("memory", task.task_ref),
-                    ttl_seconds=settings.agent_task_ttl_seconds,
-                )
-                self._save(bundle)
-                break
-        record_trace(
-            "task_runtime",
-            "turn_finished",
-            task.task_ref,
-            result_kind="success" if task.status == "completed" else "blocked" if task.status == "blocked" else "pending",
-            duration_ms=max(0, round((self._now() - started) * 1000)),
-            tool_call_count=task.tool_calls,
-            profile_version="v3_0",
+        from app.runtime.task_graph import run_task_graph
+        return run_task_graph(
+            self, bundle, transient_input=transient_input, authorization=authorization,
+            member_id=member_id, reference_hints=reference_hints,
         )
-        return TaskRuntimeResult(self._public_view(bundle), list(bundle.events))
 
     def _remaining_seconds(self, deadline_at: float) -> float:
         return deadline_at - self._now()
@@ -1405,6 +1195,9 @@ class TaskRuntime:
         """
 
         calls = list(decision.skill_calls)
+        # 预留调用计数，崩溃不回退预算；只读副作用同样不能无界重放。
+        bundle.task.tool_calls += len(calls)
+        self._save(bundle)
         if len(calls) == 1:
             call = calls[0]
             skill = get_skill(call.skill_id)
@@ -1439,7 +1232,6 @@ class TaskRuntime:
             skill = get_skill(call.skill_id)
             if skill is None:  # guarded before execution; keep future changes fail-closed.
                 continue
-            bundle.task.tool_calls += 1
             self._record_observation(bundle, call.skill_id, observation)
             self._append_event(bundle, "skill_observed", observation.summary)
             record_trace(
@@ -1683,6 +1475,8 @@ class TaskRuntime:
             "memory_hints": bundle.memory_hints[-8:],
             "available_skills": [skill.skill_id for skill in discovered],
         }
+        bundle.task.context_model_calls += 1
+        self._save(bundle)
         try:
             with capture_llm_metrics(
                 timeout_seconds=min(settings.context_timeout_seconds, remaining),
@@ -1692,13 +1486,11 @@ class TaskRuntime:
         except RuntimeModelError:
             pack = self._curator.build_pack(**curator_arguments, use_provider=False)
             bundle.context_packs.append(pack)
-            bundle.task.context_model_calls += 1
             bundle.task.context_pack_ref = pack.pack_id
             bundle.task.working_memory_ref = pack.pack_id
             bundle.memory_hints.extend(pack.memory_hints[-4:])
             raise
         bundle.context_packs.append(pack)
-        bundle.task.context_model_calls += 1
         bundle.task.context_pack_ref = pack.pack_id
         bundle.task.working_memory_ref = pack.pack_id
         bundle.memory_hints.extend(pack.memory_hints[-4:])
@@ -1775,6 +1567,8 @@ class TaskRuntime:
         remaining = self._remaining_seconds(deadline_at) if deadline_at is not None else settings.critic_timeout_seconds
         if remaining <= 0:
             raise RuntimeModelError("任务运行时间达到安全上限。", role="resolution_critic", category="runtime_deadline_exceeded")
+        bundle.task.critic_calls += 1
+        self._save(bundle)
         with capture_llm_metrics(
             timeout_seconds=min(settings.critic_timeout_seconds, remaining),
             max_attempts=1,
@@ -1782,7 +1576,6 @@ class TaskRuntime:
             critique = self._critic.evaluate(task_ref=bundle.task.task_ref, plan=plan, artifacts=bundle.artifacts[-12:])
         if critique is None:
             return
-        bundle.task.critic_calls += 1
         if critique.conflicting_artifacts:
             bundle.task.limitation_codes.append("artifact_conflict")
         if critique.unmet_success_criteria:
@@ -1817,10 +1610,12 @@ class TaskRuntime:
             plan_version=1,
             expires_at=parent.expires_at,
         )
-        child_bundle = TaskRecordBundle(task=child)
+        child_bundle = TaskRecordBundle(task=child, graph_version=TASK_GRAPH_VERSION)
         child_bundle.plans.append(build_initial_plan(child))
         self._append_event(child_bundle, "task_created", "已创建受控子任务，等待上级任务继续安排。")
         self._save(child_bundle)
+        from app.runtime.task_graph import publish_task_checkpoint
+        publish_task_checkpoint(self, child_bundle)
         observation = SkillObservation(
             status="succeeded",
             artifact_kind="async_task",
@@ -1985,7 +1780,8 @@ class TaskRuntime:
             ) from exc
 
     def _public_view(self, bundle: TaskRecordBundle) -> AgentTaskPublicView:
-        task = bundle.task
+        from app.runtime.task_graph import project_task
+        task = project_task(self, bundle)
         plan = bundle.latest_plan()
         node_views: list[AgentTaskPlanNodeView] = []
         if plan is not None:

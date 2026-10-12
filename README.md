@@ -19,11 +19,15 @@
 
 FastAPI 统一入口通过结构化模型决策选择客服回答、创建事项、继续事项、请求澄清或人工交接。任务引用只从服务端读取的当前会话事项中选择；客户在同一对话中查看进度和确认方案。
 
-TaskRuntime 管理计划、Skill 调用、事实产物、暂停恢复和版本化 ActionProposal。Executor 负责受控执行，Context Curator 管理上下文，Resolution Critic 提供方案检查。JSON Schema、工具白名单和参数校验约束模型输出。
+ConversationGraph 编排会话路由与能力派发，独立 TaskGraph 管理长任务的决策、校验、调查、提案和暂停恢复。TaskRuntime 保留领域接口，统一 Skill 网关连接既有业务能力。Executor 负责受控执行，Context Curator 管理上下文，Resolution Critic 提供方案检查；JSON Schema、工具白名单和参数校验约束模型输出。
+
+图检查点保存执行位置，Plan、Artifact 和 ActionProposal 保持独立的领域权威；客户确认与 Java 提交之间保留版本校验和结果对账。会话只保留一份安全记忆，人工交接复用同一投影；长任务使用独立线程，调查期间仍可插问政策。
 
 ### 业务执行与一致性
 
 Java Spring Boot 是业务事实和最终写入的权威。Python 通过 API 获取事实，确认卡绑定方案引用和版本，提交经过资格重校验、幂等与事务处理。MySQL 保存业务数据，Outbox 与 RabbitMQ 支持异步业务流；Redis 提供会话、锁与短期状态，MongoDB 保存 Runtime 任务数据。
+
+统一图架构、数据归属和扩展方式见 [迁移说明](docs/architecture/LANGGRAPH_UNIFICATION.md)。本机验收覆盖 Mongo 检查点恢复、Redis 并发锁、Java 原请求对账和浏览器业务闭环，具体版本及模型替身边界见 [验证记录](docs/evidence/langgraph-migration-environment.md)。
 
 ### 政策 RAG 与模型接入
 

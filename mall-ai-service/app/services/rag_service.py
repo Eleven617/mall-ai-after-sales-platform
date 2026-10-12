@@ -55,20 +55,33 @@ class RagAnswer(BaseModel):
 
 
 def answer_after_sales_question(
-    question: str,
-    *,
-    retriever: Callable[[str, int | None], PolicyRetrievalResult] | None = None,
-    retrieval_mode: str | None = None,
-    metadata_filter: PolicyMetadataFilter | dict | None = None,
+    question: str, *, retriever=None, retrieval_mode=None, metadata_filter=None,
 ) -> RagAnswer:
-    """Answer only when trusted vector evidence is available.
+    """同一证据/回答合同拆为能力子图；参数与 Prompt 保持不变。"""
+    from app.runtime.capability_graph import RequestLocalGraph
+    from langgraph.graph import START, END
+    graph = RequestLocalGraph(dict)
 
-    `no_evidence` means retrieval succeeded but no chunk passed the distance
-    gate. `retrieval_unavailable` means the trusted retrieval path could not
-    run, so no policy text is sent to the answer model.  ``metadata_filter``
-    is optional only because a trusted server caller may narrow the published
-    default with Java-derived facts; it is never constructed by a model.
-    """
+    def retrieve(state):
+        evidence = _retrieve_verified_policy(question, retriever=retriever,
+            retrieval_mode=retrieval_mode, metadata_filter=metadata_filter)
+        return {"evidence": evidence, "ready": not isinstance(evidence, RagAnswer)}
+
+    def answer_node(state):
+        policy_query, chunks = state["evidence"]
+        return {"answer": _answer_verified_policy(policy_query, chunks)}
+
+    graph.add_node("retrieve_and_verify", retrieve)
+    graph.add_node("answer", answer_node)
+    graph.add_edge(START, "retrieve_and_verify")
+    graph.add_conditional_edges("retrieve_and_verify",
+        lambda state: "answer" if state["ready"] else "end", {"answer": "answer", "end": END})
+    graph.add_edge("answer", END)
+    result = graph.compile().invoke({})
+    return result["answer"] if result["ready"] else result["evidence"]
+
+
+def _retrieve_verified_policy(question, *, retriever=None, retrieval_mode=None, metadata_filter=None):
     policy_query = project_policy_query(question)
     if not policy_query:
         return RagAnswer(
@@ -142,7 +155,10 @@ def answer_after_sales_question(
             sources=[],
             no_evidence=True,
         )
+    return policy_query, evidence_chunks
 
+
+def _answer_verified_policy(policy_query, evidence_chunks):
     context_text = "\n\n".join(
         _render_chunk_for_prompt(chunk) for chunk in evidence_chunks
     )

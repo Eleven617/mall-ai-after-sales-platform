@@ -114,7 +114,8 @@ class CustomerServiceRouterTests(unittest.TestCase):
 
         self.assertEqual(200, response.status_code)
         state = get_conversation_state(handle_message.call_args.args[0].session_id)
-        self.assertEqual(["我想查物流", "请提供订单号"], [item.content for item in state.recent_messages])
+        self.assertEqual([], state.recent_messages)
+        self.assertEqual("", state.summary)
         self.assertIsNone(state.pending_after_sales_draft)
         self.assertIsNone(state.pending_after_sales_proposal)
 

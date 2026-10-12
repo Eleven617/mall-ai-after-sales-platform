@@ -61,27 +61,42 @@ def analyze_case(
         # The window is an explicit human choice, not a model planning task.
         # It is validated both here and in the Java authority before any
         # aggregate query is made.
-        metrics = metrics_fn(preferred_window_days, authorization)
-        draft_result = generate_fn(
-            message=json.dumps(
-                {
-                    "case": safe_case,
-                    "metrics": metrics.model_dump(mode="json"),
-                },
-                ensure_ascii=False,
-            ),
-            system_prompt=(
-                "你是受控的售后运营分析 Agent。只能依据给定的人工跟进摘要和"
-                "可信聚合数字生成内部分析草稿。不得推测个人、订单、退款、仓储或通知事实；"
-                "不得声称已执行订单、售后、退款、Outbox 或通知写入；不得输出行动执行指令；"
-                "证据不足时标记 data_insufficient。只输出契约 JSON。"
-            ),
-            response_model=OperationsAnalysisDraft,
-            mode=StructuredOutputMode.JSON_OBJECT,
-            temperature=0,
-        )
-        draft = _model_value(draft_result, OperationsAnalysisDraft)
-        result = OperationsAnalysisResult(case=case, metrics=metrics, draft=draft)
+        from app.runtime.capability_graph import RequestLocalGraph
+        from langgraph.graph import START, END
+        graph = RequestLocalGraph(dict)
+
+        def read_metrics(state):
+            return {"metrics": metrics_fn(preferred_window_days, authorization)}
+
+        def draft_analysis(state):
+            metrics = state["metrics"]
+            draft_result = generate_fn(
+                message=json.dumps(
+                    {
+                        "case": safe_case,
+                        "metrics": metrics.model_dump(mode="json"),
+                    },
+                    ensure_ascii=False,
+                ),
+                system_prompt=(
+                    "你是受控的售后运营分析 Agent。只能依据给定的人工跟进摘要和"
+                    "可信聚合数字生成内部分析草稿。不得推测个人、订单、退款、仓储或通知事实；"
+                    "不得声称已执行订单、售后、退款、Outbox 或通知写入；不得输出行动执行指令；"
+                    "证据不足时标记 data_insufficient。只输出契约 JSON。"
+                ),
+                response_model=OperationsAnalysisDraft,
+                mode=StructuredOutputMode.JSON_OBJECT,
+                temperature=0,
+            )
+            draft = _model_value(draft_result, OperationsAnalysisDraft)
+            return {"result": OperationsAnalysisResult(case=case, metrics=metrics, draft=draft)}
+
+        graph.add_node("read_scoped_metrics", read_metrics)
+        graph.add_node("draft_analysis", draft_analysis)
+        graph.add_edge(START, "read_scoped_metrics")
+        graph.add_edge("read_scoped_metrics", "draft_analysis")
+        graph.add_edge("draft_analysis", END)
+        result = graph.compile().invoke({})["result"]
         record_trace(
             "operations_analysis",
             "run_finished",

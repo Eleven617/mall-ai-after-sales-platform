@@ -127,22 +127,9 @@ def call_tool(
     tool_call: ToolCall,
     context: ToolExecutionContext | None = None,
 ) -> dict:
-    """执行工具"""
-    tool = TOOLS.get(tool_call.name)
-    if tool is None:
-        raise ToolNotFoundError(f"工具未注册：{tool_call.name}")
-    effective_context = context or ToolExecutionContext()
-    if effective_context.skill_id is not None:
-        try:
-            assert_tool_allowed_for_skill(
-                effective_context.actor_role,
-                effective_context.skill_id,
-                tool_call.name,
-            )
-        except SkillPolicyError as exc:
-            raise ToolAccessDeniedError("当前受控能力不允许调用该工具。") from exc
-    _validate_tool_arguments(tool_call)
-    return tool(tool_call.arguments, effective_context)
+    """兼容接口；所有调用交给统一网关校验。"""
+    from app.skills.unified_gateway import UnifiedSkillGateway
+    return UnifiedSkillGateway.invoke_tool(tool_call, context)
 
 
 def get_tool_schemas() -> list[dict]:

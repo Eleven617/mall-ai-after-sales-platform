@@ -1,0 +1,17 @@
+{
+  "checks": [
+    {
+      "caseId": "java_timeout_original_request_reconciled",
+      "passed": true
+    },
+    {
+      "caseId": "java_no_duplicate_write",
+      "passed": true
+    }
+  ],
+  "externalProviderRequests": 0,
+  "java": "real_local",
+  "storage": "real_mongo",
+  "aiContainerRestarted": true,
+  "fault": "raise_timeout_after_real_java_success"
+}

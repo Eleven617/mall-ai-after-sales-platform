@@ -44,6 +44,7 @@ from app.services.durable_diagnosis import (
 )
 from app.services.customer_service import handle_customer_message
 from app.services.conversation_entry import handle_unified_message
+from app.services.conversation_graph import run_conversation_graph
 from app.services.feedback_governance_service import (
     FeedbackGovernanceError,
     feedback_governance_store,
@@ -100,8 +101,6 @@ def customer_service(
             raise HTTPException(status_code=exc.status_code, detail=str(exc)) from exc
 
     scoped_session_id = build_conversation_state_key(public_conversation_id, member_id)
-    if history is not None and _needs_history_restore(scoped_session_id):
-        restore_history_context(scoped_session_id, history.messages)
 
     try:
         reliability_governor.check_rate_limit(
@@ -113,12 +112,12 @@ def customer_service(
         # A single session lock prevents two simultaneous browser requests from
         # overwriting an owner-bound Redis draft or both consuming a pending
         # confirmation. Business writes remain separately protected by Java.
-        with reliability_governor.lock(scope=scoped_session_id, kind="session"):
-            context = ToolExecutionContext(authorization=authorization, member_id=member_id)
-            internal_response = (
-                handle_unified_message(scoped_request, context, public_session_id=public_conversation_id)
-                if request.unified_entry else handle_customer_message(scoped_request, context)
-            )
+        context = ToolExecutionContext(authorization=authorization, member_id=member_id)
+        internal_response = (
+            handle_unified_message(scoped_request, context, public_session_id=public_conversation_id)
+            if request.unified_entry else run_conversation_graph(scoped_request, context,
+                public_session_id=public_conversation_id, legacy_handler=handle_customer_message)
+        )
         public_response = to_public_customer_service_response(internal_response)
         if member_id is not None:
             # Only a logged-in member gets an opaque feedback reference. The store

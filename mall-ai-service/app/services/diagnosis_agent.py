@@ -9,7 +9,8 @@ import time
 from collections.abc import Callable
 from typing import Any, Literal, TypedDict
 
-from langgraph.graph import END, START, StateGraph
+from langgraph.graph import END, START
+from app.runtime.capability_graph import RequestLocalGraph as StateGraph
 
 from app.schemas.agent import AgentRunResult, VerifiedFactCard
 from app.schemas.diagnosis import (

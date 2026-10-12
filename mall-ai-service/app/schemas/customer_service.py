@@ -23,6 +23,7 @@ from app.schemas.task_orchestration import TaskPublicState
 
 
 class CustomerServiceRequest(BaseModel):
+    request_id: str | None = Field(default=None, pattern=r"^[a-zA-Z0-9_-]{8,80}$")
     unified_entry: bool = False
     session_id: str = Field(min_length=1, max_length=128, examples=["chat-7f2e"])
     message: str = Field(min_length=1, examples=["帮我查订单 20240617001 的物流"])

@@ -1,0 +1,185 @@
+{
+  "scope": "langgraph-unification-v1",
+  "sourceSha256": "01ae7bcbe682ceac475844505761d26406818be5450c03f67533877d7b651f64",
+  "executionState": "dirty_worktree",
+  "storage": "real_mongo",
+  "java": "real_local",
+  "externalProviderRequests": 0,
+  "externalProviderTokens": 0,
+  "modelBoundary": "scripted/deterministic; not model-quality evidence",
+  "checks": [
+    {
+      "caseId": "mongo_wait_checkpoint",
+      "passed": true,
+      "evidence": "docs/evidence/langgraph-acceptance/persistence.json"
+    },
+    {
+      "caseId": "mongo_memory_saved",
+      "passed": true,
+      "evidence": "docs/evidence/langgraph-acceptance/persistence.json"
+    },
+    {
+      "caseId": "mongo_crash_receipt",
+      "passed": true,
+      "evidence": "docs/evidence/langgraph-acceptance/persistence.json"
+    },
+    {
+      "caseId": "mongo_process_restart_resume",
+      "passed": true,
+      "evidence": "docs/evidence/langgraph-acceptance/persistence.json"
+    },
+    {
+      "caseId": "mongo_memory_restart",
+      "passed": true,
+      "evidence": "docs/evidence/langgraph-acceptance/persistence.json"
+    },
+    {
+      "caseId": "mongo_compare_and_swap",
+      "passed": true,
+      "evidence": "docs/evidence/langgraph-acceptance/persistence.json"
+    },
+    {
+      "caseId": "mongo_crash_no_model_replay",
+      "passed": true,
+      "evidence": "docs/evidence/langgraph-acceptance/persistence.json"
+    },
+    {
+      "caseId": "mongo_checkpoint_credentials_absent",
+      "passed": true,
+      "evidence": "docs/evidence/langgraph-acceptance/persistence.json"
+    },
+    {
+      "caseId": "mongo_memory_delete",
+      "passed": true,
+      "evidence": "docs/evidence/langgraph-acceptance/persistence.json"
+    },
+    {
+      "caseId": "mongo_memory_no_resurrection",
+      "passed": true,
+      "evidence": "docs/evidence/langgraph-acceptance/persistence.json"
+    },
+    {
+      "caseId": "mongo_checkpoint_ttl",
+      "passed": true,
+      "evidence": "docs/evidence/langgraph-acceptance/persistence.json"
+    },
+    {
+      "caseId": "redis_cross_process_lock",
+      "passed": true,
+      "evidence": "docs/evidence/langgraph-acceptance/persistence.json"
+    },
+    {
+      "caseId": "java_timeout_original_request_reconciled",
+      "passed": true,
+      "evidence": "docs/evidence/langgraph-acceptance/java-recovery.json"
+    },
+    {
+      "caseId": "java_no_duplicate_write",
+      "passed": true,
+      "evidence": "docs/evidence/langgraph-acceptance/java-recovery.json"
+    },
+    {
+      "caseId": "multiple_task_selection",
+      "passed": true,
+      "evidence": "docs/evidence/langgraph-acceptance/capabilities.json"
+    },
+    {
+      "caseId": "conversation_request_dedup",
+      "passed": true,
+      "evidence": "docs/evidence/langgraph-acceptance/capabilities.json"
+    },
+    {
+      "caseId": "policy_question",
+      "passed": true,
+      "evidence": "docs/evidence/langgraph-acceptance/capabilities.json"
+    },
+    {
+      "caseId": "task_interruption",
+      "passed": true,
+      "evidence": "docs/evidence/langgraph-acceptance/capabilities.json"
+    },
+    {
+      "caseId": "task_resume",
+      "passed": true,
+      "evidence": "docs/evidence/langgraph-acceptance/capabilities.json"
+    },
+    {
+      "caseId": "unselected_task_unchanged",
+      "passed": true,
+      "evidence": "docs/evidence/langgraph-acceptance/capabilities.json"
+    },
+    {
+      "caseId": "single_query",
+      "passed": true,
+      "evidence": "docs/evidence/langgraph-acceptance/capabilities.json"
+    },
+    {
+      "caseId": "legacy_confirmation_rejected",
+      "passed": true,
+      "evidence": "docs/evidence/langgraph-acceptance/capabilities.json"
+    },
+    {
+      "caseId": "long_task",
+      "passed": true,
+      "evidence": "docs/evidence/langgraph-acceptance/showcase.json"
+    },
+    {
+      "caseId": "browser_task_projection",
+      "passed": true,
+      "evidence": "docs/evidence/langgraph-acceptance/showcase.json"
+    },
+    {
+      "caseId": "human_handoff",
+      "passed": true,
+      "evidence": "docs/evidence/langgraph-acceptance/handoff.json"
+    },
+    {
+      "caseId": "operations_analysis",
+      "passed": true,
+      "evidence": "docs/evidence/langgraph-acceptance/handoff.json"
+    },
+    {
+      "caseId": "proposal_amend_cancel",
+      "passed": true,
+      "evidence": "docs/evidence/langgraph-acceptance/handoff.json"
+    },
+    {
+      "caseId": "offline_provider_enforced",
+      "passed": true,
+      "evidence": "docs/evidence/langgraph-acceptance/provider-guard.json"
+    }
+  ],
+  "artifacts": [
+    {
+      "path": "docs/evidence/langgraph-acceptance/persistence.json",
+      "sha256": "71f1f2954efa97568e64230e82753da3afa65d1800d19bd7efcc372f7863dada"
+    },
+    {
+      "path": "docs/evidence/langgraph-acceptance/java-recovery.json",
+      "sha256": "cdf1ac764cc75e8ba21fba7ed7e9fb76f3070f92b6eb7931947bbc3b8640dfa9"
+    },
+    {
+      "path": "docs/evidence/langgraph-acceptance/capabilities.json",
+      "sha256": "1e12bac27b3f191f0bc164755b6a34b20e0c6a97a377504a4914773f1017e69c"
+    },
+    {
+      "path": "docs/evidence/langgraph-acceptance/showcase.json",
+      "sha256": "79b63984bda1319749addf56fd5b550c1917363a7324e45b61c244b0df45897d"
+    },
+    {
+      "path": "docs/evidence/langgraph-acceptance/handoff.json",
+      "sha256": "11a1710a267d61f50f6a52040a5ec848ff96b3f123bf9b28d7fafa99b8cf004c"
+    },
+    {
+      "path": "docs/evidence/langgraph-acceptance/provider-guard.json",
+      "sha256": "bf0938345b2230cab897011cc2b76424f82cc4f5a543296275b12bc6f0f299f6"
+    }
+  ],
+  "runnerHashes": {
+    "mall-ai-service/scripts/verify_graph_persistence.py": "eca164a1dda53f2e7003480252dca6281fa368cc170465bea175d192b29d26cc",
+    "mall-ai-service/scripts/verify_graph_java_recovery.py": "bbdf471b4437e87d53dd2bfd5aff8bd7a398209bac06e4f7d0deb5e8b032bf46",
+    "mall-ai-service/scripts/verify_graph_capabilities.py": "d36bc51ffd53a0008d676b62f3f106d807db84f70457cea5bf33eac2e5bf1654",
+    "mall-ai-service/scripts/verify_handoff_upgrade_live.py": "7128c6d5bdc7e2fa0d01e0217603eada2561635977a88269ffbb4c8acc6fcf57",
+    "mall-ai-service/scripts/run_real_local_showcase.py": "b02aa5647bb181bb0b135e850aa68e496eebf0f2a4dcef36d9a4571752242a37"
+  }
+}

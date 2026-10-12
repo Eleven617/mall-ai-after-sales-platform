@@ -54,12 +54,17 @@ class ConversationStateTests(unittest.TestCase):
     def test_compacts_old_messages_without_losing_structured_facts(self) -> None:
         record_user_message("session-a", "我要查询订单 202607240001")
         record_assistant_message("session-a", "请告诉我具体想查询什么。")
-        record_user_message("session-a", "我要查物流。")
+        record_user_message("session-a", "我要查询物流。")
 
         state = get_conversation_state("session-a")
 
         self.assertLessEqual(len(state.recent_messages), 2)
-        self.assertIn("我要查询订单", state.summary)
+        self.assertEqual("", state.summary)
+        self.assertEqual([], state.recent_messages)
+        memory = self.manager.memory.read("session-a")
+        self.assertTrue(any("物流" in item["text"] for item in memory["fragments"]))
+        self.assertNotIn("202607240001", str(memory))
+        self.assertEqual([], self.store.load("session-a").handoff_fragments)
         self.assertEqual("202607240001", state.facts["order_sn"])
 
     def test_sessions_are_isolated(self) -> None:

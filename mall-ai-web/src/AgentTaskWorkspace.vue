@@ -95,11 +95,14 @@ function messageFor(reason: unknown, fallback: string): string {
 }
 
 async function reconcile(task: AgentTaskPublicView): Promise<void> {
+  if (busyTaskRef.value || props.sending) return;
+  busyTaskRef.value = task.task_ref;
   const current=generation;
-  try { const response=await fetch('/api/human-handoffs/'+encodeURIComponent(task.task_ref)+'/result',{headers:{Authorization:props.authorization}});
+  try { const response=await fetch('/api/agent-tasks/'+encodeURIComponent(task.task_ref)+'/reconcile',{method:'POST',headers:{Authorization:props.authorization}});
     if(!response.ok)throw new Error();
     const value=await response.json();if(current===generation)upsert(value);
-  } catch { if(current===generation)error.value='交接结果仍待确认，请稍后查询；无需重新建案。'; }
+  } catch { if(current===generation)error.value='原提交结果仍待确认，请稍后查询；无需重新提交。'; }
+  finally { busyTaskRef.value = ''; }
 }
 const handoffReasons: Record<string,string>={human_preference:'希望人工帮助',intent_misunderstood:'意图未理解',repeated_questions:'重复追问',answer_or_evidence_insufficient:'回答或证据不足',tool_or_system_error:'工具或系统异常',capability_or_permission_limit:'能力或权限限制',business_dispute:'业务争议',delay_or_complex_process:'等待或流程复杂',unspecified:'未填写'};
 const handoffTopics: Record<string,string>={general:'一般咨询',unknown:'未知',policy:'政策咨询',logistics:'物流',refund:'退款',return:'退货',exchange:'换货',repair:'维修',application_follow_up:'申请进度'};
@@ -206,7 +209,7 @@ function actionStatusLabel(status: NonNullable<AgentTaskPublicView["action"]>["c
         <p v-if="task.execution_summary" class="agent-execution-summary">{{ task.execution_summary }}</p>
 
         <section v-if="task.action" class="agent-action-card">
-          <button v-if="task.action.action_skill==='open_human_case' && task.action.confirmation_status==='unknown'" class="secondary-button" @click="reconcile(task)">查询原交接结果</button>
+          <button v-if="task.action.confirmation_status==='unknown' || task.action.confirmation_status==='confirmed'" class="secondary-button" :disabled="sending || !!busyTaskRef" @click="reconcile(task)">查询原提交结果</button>
           <div class="agent-action-heading"><p class="card-caption">行动方案</p><span class="status-badge" :class="task.action.confirmation_status === 'awaiting_confirmation' ? 'warning' : task.action.confirmation_status === 'committed' ? 'success' : 'agent'">{{ actionStatusLabel(task.action.confirmation_status) }}</span></div>
           <strong>{{ task.action.expected_effect }}</strong>
           <p>{{ task.action.user_explanation }}</p>

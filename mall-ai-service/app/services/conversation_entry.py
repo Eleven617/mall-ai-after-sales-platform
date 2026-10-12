@@ -50,61 +50,60 @@ continue_task：明确补充某个已有任务所问的信息、继续此前调�
 
 def handle_unified_message(request: CustomerServiceRequest, context: ToolExecutionContext,
                            *, public_session_id: str) -> CustomerServiceResponse:
-    runtime = get_task_runtime() if context.member_id is not None else None
-    try:
-        tasks = runtime.list_tasks(session_id=public_session_id, member_id=context.member_id,
-                                   authorization=context.authorization) if runtime else []
-        active = [task for task in tasks if task.status not in {"completed", "cancelled"}]
-        decision = generate_structured_output(
-            message=json.dumps({
-                "message": request.message,
-                "history": get_conversation_model_context(request.session_id),
-                "tasks": [{"task_ref": task.task_ref, "goal": task.goal,
-                           "status": task.status, "question": task.open_question,
-                           "awaiting_confirmation": bool(task.action and task.action.confirmation_status == "awaiting_confirmation")}
-                          for task in active[:8]],
-            }, ensure_ascii=False),
-            system_prompt=ROUTING_PROMPT, response_model=ConversationRoute,
-        ).value
-        if decision.route == 'handoff':
-            if runtime is None:
-                return _reply(request,'请先登录，再点击转人工即可登记。')
-            if decision.task_ref and not any(task.task_ref==decision.task_ref for task in active):
-                return _reply(request,'请选择当前会话中的事项，或点击转人工选择一般咨询。')
-            if not decision.task_ref and len(active)>1:
-                return _reply(request,'请点击转人工，选择需要交接的事项或一般咨询。')
-            result=runtime.prepare_handoff(HandoffPrepare(session_id=public_session_id,task_ref=decision.task_ref,problem_description=request.message[:240]),member_id=context.member_id,authorization=context.authorization,channel='chat')
-            return _reply(request,'请查看交接卡并确认；确认后将登记人工案件，等待处理人员领取。',result.view)
-        if decision.route == "answer":
-            return handle_customer_message(request, context)
-        if decision.route == "clarify":
-            return _reply(request, "请说明要继续处理的事项；如需提交或撤回方案，请使用下方对应的确认卡。")
+    from app.services.conversation_graph import run_conversation_graph
+    return run_conversation_graph(request, context, public_session_id=public_session_id)
+
+
+def choose_conversation_route(request, active):
+    return generate_structured_output(
+        message=json.dumps({
+            "message": request.message,
+            "history": get_conversation_model_context(request.session_id),
+            "tasks": [{"task_ref": task.task_ref, "goal": task.goal,
+                       "status": task.status, "question": task.open_question,
+                       "awaiting_confirmation": bool(task.action and task.action.confirmation_status == "awaiting_confirmation")}
+                      for task in active[:8]],
+        }, ensure_ascii=False),
+        system_prompt=ROUTING_PROMPT, response_model=ConversationRoute,
+    ).value
+
+
+def dispatch_conversation_route(request, context, public_session_id, runtime, active, decision):
+    if decision.route == 'handoff':
         if runtime is None:
-            return _reply(request, "请先登录商城账号，我才能查询你的订单并继续处理。")
-        if decision.route == "continue_task":
-            selected = next((task for task in active if task.task_ref == decision.task_ref), None)
-            if selected is None:
-                return _reply(request, "没有找到本次会话中对应的事项，请明确要继续处理的内容。")
-            if selected.action and selected.action.confirmation_status == "awaiting_confirmation":
-                return _reply(request, "当前方案尚未提交。请查看下方确认卡，可修改方案、确认提交或暂不提交。", selected)
-            result = runtime.continue_task(task_ref=selected.task_ref, message=request.message,
-                                           member_id=context.member_id, authorization=context.authorization)
-        else:
-            if decision.task_ref is not None or len(active) >= 8:
-                return _reply(request, "请先完成已有事项，或明确要继续处理哪一项。")
-            result = runtime.create_task(session_id=public_session_id, goal=request.message,
-                                         member_id=context.member_id, authorization=context.authorization)
-        view = result.view
-        return _reply(request, view.open_question or view.outcome or view.execution_summary
-                      or "已为你调查当前事项，请查看下方处理详情。", view)
-    except (LLMServiceError, StructuredOutputError):
-        return _reply(request, "智能客服暂时不可用，请稍后再试；没有提交业务操作。")
-    except (TaskRuntimeError, TaskStoreUnavailable):
-        return _reply(request, "当前事项暂时无法继续，请刷新处理详情后再试；没有通过对话提交业务操作。")
+            return _reply(request,'请先登录，再点击转人工即可登记。')
+        if decision.task_ref and not any(task.task_ref==decision.task_ref for task in active):
+            return _reply(request,'请选择当前会话中的事项，或点击转人工选择一般咨询。')
+        if not decision.task_ref and len(active)>1:
+            return _reply(request,'请点击转人工，选择需要交接的事项或一般咨询。')
+        result=runtime.prepare_handoff(HandoffPrepare(session_id=public_session_id,task_ref=decision.task_ref,problem_description=request.message[:240]),member_id=context.member_id,authorization=context.authorization,channel='chat')
+        return _reply(request,'请查看交接卡并确认；确认后将登记人工案件，等待处理人员领取。',result.view)
+    if decision.route == "answer":
+        return handle_customer_message(request, context)
+    if decision.route == "clarify":
+        return _reply(request, "请说明要继续处理的事项；如需提交或撤回方案，请使用下方对应的确认卡。")
+    if runtime is None:
+        return _reply(request, "请先登录商城账号，我才能查询你的订单并继续处理。")
+    if decision.route == "continue_task":
+        selected = next((task for task in active if task.task_ref == decision.task_ref), None)
+        if selected is None:
+            return _reply(request, "没有找到本次会话中对应的事项，请明确要继续处理的内容。")
+        if selected.action and selected.action.confirmation_status == "awaiting_confirmation":
+            return _reply(request, "当前方案尚未提交。请查看下方确认卡，可修改方案、确认提交或暂不提交。", selected)
+        result = runtime.continue_task(task_ref=selected.task_ref, message=request.message,
+                                       member_id=context.member_id, authorization=context.authorization)
+    else:
+        if decision.task_ref is not None or len(active) >= 8:
+            return _reply(request, "请先完成已有事项，或明确要继续处理哪一项。")
+        result = runtime.create_task(session_id=public_session_id, goal=request.message,
+                                     member_id=context.member_id, authorization=context.authorization)
+    view = result.view
+    return _reply(request, view.open_question or view.outcome or view.execution_summary
+                  or "已为你调查当前事项，请查看下方处理详情。", view)
 
 
 def _reply(request, answer, task=None):
-    record_user_message(request.session_id, request.message)
-    record_assistant_message(request.session_id, answer)
+    record_user_message(request.session_id, request.message, task_ref=task.task_ref if task else None)
+    record_assistant_message(request.session_id, answer, task_ref=task.task_ref if task else None)
     return CustomerServiceResponse(message=request.message, answer=answer, agent_task=task,
                                    intent=IntentResponse(intent="unknown", route="chat", need_tool=False, source="system"))
