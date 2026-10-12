@@ -61,7 +61,7 @@ def run():
                 deadline=time.time()+150
                 while time.time()<deadline:
                     p=call('GET',prefix+'/cases/'+ref,ops)
-                    if p['indexState'] in {'READY','FAILED'}:break
+                    if p['indexState'] in {'READY','FAILED','SUMMARY_FAILED'}:break
                     time.sleep(2)
                 check('index-'+str(refs.index(ref)),p['indexState']=='READY')
             summary=call('GET',prefix+'/cases/'+refs[0]+'/summary',ops)

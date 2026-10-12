@@ -27,7 +27,7 @@ public class HandoffSummaryService {
  }
  public Map<String,Object> detail(String ref){Map<String,Object> s=dao.get(ref);if(s==null)throw new ResponseStatusException(HttpStatus.NOT_FOUND,"summary_unavailable");s.remove("snapshot");if(s.get("summary")!=null)s.put("summary",decode(s.get("summary")));return s;}
  @Transactional public Map<String,Object> lease(){dao.exhausted();Map<String,Object> s=dao.next();if(s==null)return null;String lease=UUID.randomUUID().toString();dao.lease(String.valueOf(s.get("caseRef")),lease);s.put("lease",lease);s.put("snapshot",decode(s.get("snapshot")));return s;}
- @Transactional public void retry(String ref,int version){conflict(dao.get(ref)!=null);conflict(dao.retry(ref,version)==1);}
+ @Transactional public void retry(String ref,int version){conflict(dao.get(ref)!=null);conflict(dao.retry(ref,version)==1);dao.indexWaiting(ref,"WAITING_SUMMARY");}
  private void validate(Map<String,Object> q,Map<String,Object> s){
   require(q.get("summary") instanceof Map&&q.get("projection") instanceof Map);
   Map<String,Object> summary=(Map<String,Object>)q.get("summary"),snapshot=decode(s.get("snapshot"));
@@ -51,6 +51,7 @@ public class HandoffSummaryService {
   if("SUCCEEDED".equals(q.get("state")))validate(q,s);else q.put("summary",null);
   conflict(dao.finish(q)==1);
   if("SUCCEEDED".equals(q.get("state"))){require(Arrays.asList("READY","INSUFFICIENT_CONTEXT").contains(q.get("quality")));conflict(dao.publish(q)==1);dao.invalidate(String.valueOf(q.get("ref")));}
+  else dao.indexWaiting(String.valueOf(q.get("ref")),"SUMMARY_FAILED");
   dao.audit(String.valueOf(q.get("ref")),"model","summary-worker");
  }
  @Transactional public void correct(String ref,Map<String,Object> q,String actor){Map<String,Object> s=dao.get(ref);conflict(s!=null);q.put("ref",ref);validate(q,s);conflict(dao.correct(q)==1);conflict(dao.publish(q)==1);dao.invalidate(ref);dao.audit(ref,"human",actor);}

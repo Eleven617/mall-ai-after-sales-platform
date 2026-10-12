@@ -37,13 +37,13 @@ def test_foreign_reference_rejected():
     with pytest.raises(ValueError,match='unapproved_evidence'):validate_summary(summary,data)
 
 def test_generic_address_gap_is_not_personal_address():
-    data,summary=fixture();summary['uncertainty_notes']=['寄回地址尚未明确']
+    data,summary=fixture();summary['unresolved_question']['text']='寄回地址尚未明确'
     assert validate_summary(summary,data)==summary
 
 @pytest.mark.parametrize('location',['北京市朝阳区','幸福路小区','电话19900000000'])
 def test_concrete_location_in_model_prose_is_rejected(location):
     data,summary=fixture();summary['uncertainty_notes']=[location]
-    with pytest.raises(ValueError,match='unsafe_uncertainty'):validate_summary(summary,data)
+    with pytest.raises(ValueError):validate_summary(summary,data)
 
 def test_task_does_not_borrow_unbound_chat():
     rows,_=fragments('退款进度不清楚','user')

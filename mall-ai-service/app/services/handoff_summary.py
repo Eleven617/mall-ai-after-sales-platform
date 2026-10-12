@@ -23,7 +23,7 @@ class ProblemSummary(BaseModel):
     unresolved_question:Statement|None
     customer_statements:list[Statement]=Field(max_length=4)
     handoff_reason_statement:Statement|None
-    uncertainty_notes:list[str]=Field(max_length=5)
+    uncertainty_notes:list[Literal['缺少必要背景','未提供核验结果','输入存在省略或截断','客户陈述尚未核实','交接原因未明确','业务问题尚未得到明确答复']]=Field(max_length=5)
     evidence_refs:list[str]=Field(max_length=8)
 
 def validate_summary(value,snapshot):
@@ -67,7 +67,8 @@ customer_goal和unresolved_question必须引用customer_statement，缺少则nul
 输入中已有的助手解释应归入handling_steps，包括“需要查询”这类告知；这只表示曾解释，不表示已查询成功。不要遗漏到uncertainty_notes替代处理过程。
 客户陈述未经核验；询问“能否申请”不等于资格不通过，不等于系统拒绝或客户不满意。
 handoff_reason_statement只记明确原因，否则null。引用复制src引用，所有引用汇总到evidence_refs。
-缺失、截断、尚未核实在uncertainty_notes中说明。用简短中文，输出严格JSON，不添加Schema之外字段。
+uncertainty_notes只能选Schema给定的缺口类别，不扩写可能缺少的身份、地址或业务资料；具体问题保留在目标和未解决问题中。
+用简短中文，输出严格JSON，不添加Schema之外字段。
 '''
 
 def summary_once():
@@ -93,6 +94,6 @@ def summary_once():
         error=str(exc) if type(exc) is ValueError and str(exc) in allowed else 'model_contract_invalid'
     except Exception:state='FAILED';error='provider_unavailable'
     call('/summary/result',{'ref':item['caseRef'],'hash':item['inputHash'],'inputVersion':item['inputVersion'],'lease':item['lease'],
-         'state':state,'error':error,'model':settings.deepseek_model+':extraction-v1','summary':value,'projection':p,
+         'state':state,'error':error,'model':settings.deepseek_model+':summary-v2','summary':value,'projection':p,
          'projectionHash':p['projection_hash'] if p else None,'quality':p['content_quality'] if p else 'INSUFFICIENT_CONTEXT'})
     return True
