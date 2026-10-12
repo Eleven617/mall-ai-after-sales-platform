@@ -8,3 +8,6 @@
 *.jpg binary
 *.jpeg binary
 *.gif binary
+# Preserve exact bytes for hashed migration evidence across platforms.
+docs/evidence/langgraph-acceptance/*.json -text
+mall-ai-service/ci-evidence/langgraph-fastapi-junit.xml -text
