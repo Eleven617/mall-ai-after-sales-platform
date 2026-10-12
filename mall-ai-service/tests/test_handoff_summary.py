@@ -70,3 +70,13 @@ def test_new_turns_generate_separate_safe_context():
     state=manager.append_message('safe','user','没有开箱视频还能申请换货吗')
     assert state.handoff_fragments[0]['kind']=='customer_statement'
     assert '没有 开箱 视频' in state.handoff_fragments[0]['text']
+
+@pytest.mark.parametrize('text,invalid',[
+    ('不能推断资格不通过或系统拒绝。',False),
+    ('未提及系统是否已拒绝。',False),
+    ('系统已拒绝。',True),
+    ('未说明原因。系统已拒绝。',True),
+])
+def test_quality_grader_distinguishes_denials_from_disclaimers(text,invalid):
+    from scripts.evaluate_handoff_summaries_live import unsupported_outcome
+    assert unsupported_outcome({'uncertainty_notes':[text]}) is invalid

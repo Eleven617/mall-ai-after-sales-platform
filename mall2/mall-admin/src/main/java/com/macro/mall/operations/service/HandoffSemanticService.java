@@ -68,12 +68,32 @@ public class HandoffSemanticService {
   if(samples.size()<2)for(Map<String,Object> p:members)if(!samples.contains(p)&&"READY".equals(p.get("quality"))&&samples.size()<2)samples.add(p);
   require(samples.size()>=2,"two_ready_cases_required");
   List<Map<String,Object>> safeSamples=new ArrayList<>();
-  for(Map<String,Object> p:samples){Map<String,Object> safe=new LinkedHashMap<>();for(String key:Arrays.asList("caseRef","version","projectionHash","projection","topic","source","customerReason","stage"))safe.put(key,p.get(key));safeSamples.add(safe);}
+  for(Map<String,Object> p:samples){
+   Map<String,Object> safe=new LinkedHashMap<>();for(String key:Arrays.asList("caseRef","version","projectionHash","topic","source","customerReason","stage"))safe.put(key,p.get(key));
+   Map<String,Object> projection=(Map<String,Object>)p.get("projection"),prose=new LinkedHashMap<>();
+   for(String key:Arrays.asList("customer_goal","unresolved_question","content_quality"))prose.put(key,projection.get(key));
+   safe.put("projection",prose);safeSamples.add(safe);
+  }
   Map<String,Object> snapshot=new LinkedHashMap<>();snapshot.put("title",g.get("title"));snapshot.put("caseCount",members.size());snapshot.put("sampleCount",samples.size());snapshot.put("samples",safeSamples);snapshot.put("selectionVersion","diverse-hash-v1");
   q.put("snapshot",encode(snapshot));q.put("snapshotHash",hash(snapshot));dao.analysis(q);for(Map<String,Object> p:samples)dao.analysisSource(String.valueOf(q.get("analysisRef")),String.valueOf(p.get("caseRef")));dao.audit(q);return Collections.singletonMap("analysisRef",q.get("analysisRef"));
  }
  @Transactional public Map<String,Object> analysisLease(){Map<String,Object> a=dao.nextAnalysis();if(a==null)return null;String lease=UUID.randomUUID().toString();dao.analysisLease(String.valueOf(a.get("analysisRef")),lease);a.put("lease",lease);a.put("snapshot",decode(a.get("snapshot")));return a;}
- @Transactional public void analysisFinish(Map<String,Object> q){require(Arrays.asList("DRAFT","FAILED").contains(q.get("state")),"invalid_analysis_state");Map<String,Object> a=dao.analysisByRef(String.valueOf(q.get("analysisRef")));conflict(a!=null);if("DRAFT".equals(q.get("state"))){require(q.get("result") instanceof Map,"invalid_draft");Map<String,Object> result=(Map<String,Object>)q.get("result");require(result.keySet().equals(new HashSet<>(Arrays.asList("shared_issue","evidence_refs","hypotheses","suggested_actions","limitations"))),"invalid_draft_fields");Map<String,Object> snapshot=(Map<String,Object>)decode(a.get("snapshot"));Set<String> refs=new HashSet<>();for(Map<String,Object> p:(List<Map<String,Object>>)snapshot.get("samples"))refs.add(String.valueOf(p.get("caseRef")));require(result.get("evidence_refs") instanceof List&&refs.containsAll((List<?>)result.get("evidence_refs"))&&!((List<?>)result.get("evidence_refs")).isEmpty(),"unapproved_evidence");require(encode(result).length()<=10000,"draft_too_large");q.put("result",encode(result));}else q.put("result",null);conflict(dao.analysisFinish(q)==1);}
+ @Transactional public void analysisFinish(Map<String,Object> q){
+  require(Arrays.asList("DRAFT","FAILED").contains(q.get("state")),"invalid_analysis_state");
+  Map<String,Object> a=dao.analysisByRef(String.valueOf(q.get("analysisRef")));conflict(a!=null);
+  require(q.get("result") instanceof Map,"invalid_draft");Map<String,Object> result=(Map<String,Object>)q.get("result");
+  if("DRAFT".equals(q.get("state"))){
+   require(result.keySet().equals(new HashSet<>(Arrays.asList("shared_issue","evidence_refs","hypotheses","suggested_actions","limitations"))),"invalid_draft_fields");
+   Map<String,Object> snapshot=(Map<String,Object>)decode(a.get("snapshot"));Set<String> refs=new HashSet<>();
+   for(Map<String,Object> p:(List<Map<String,Object>>)snapshot.get("samples"))refs.add(String.valueOf(p.get("caseRef")));
+   require(result.get("evidence_refs") instanceof List&&refs.containsAll((List<?>)result.get("evidence_refs"))&&!((List<?>)result.get("evidence_refs")).isEmpty(),"unapproved_evidence");
+   require(encode(result).length()<=10000,"draft_too_large");
+  }else{
+   require(result.keySet().equals(Collections.singleton("errorCode")),"invalid_error_fields");
+   require(Arrays.asList("model_contract_invalid","unapproved_evidence","unsafe_draft","provider_unavailable").contains(result.get("errorCode")),"invalid_error_code");
+  }
+  q.put("result",encode(result));conflict(dao.analysisFinish(q)==1);
+ }
  @Transactional public void review(String ref,String actor){Map<String,Object> a=dao.analysisByRef(ref);conflict(a!=null);Map<String,Object> g=dao.group(String.valueOf(a.get("groupRef")));conflict(g!=null&&Objects.equals(g.get("version"),a.get("groupVersion")));conflict(dao.reviewAnalysis(ref,actor)==1);}
  @Transactional public void linkEvidence(String ref,Map<String,Object> q,String actor){
   Map<String,Object> g=group(ref);conflict(Objects.equals(g.get("version"),q.get("version")));

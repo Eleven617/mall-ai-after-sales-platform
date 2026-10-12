@@ -7,12 +7,12 @@ const groups=ref<Group[]>([]),group=ref<Group|null>(null),problem=ref<Problem|nu
 type SummaryStatement={text:string;source_refs:string[]};
 type SummaryDetail={state:string;reviewState:string;summaryVersion:number;errorCode?:string;summary?:{customer_goal:SummaryStatement|null;unresolved_question:SummaryStatement|null;handling_steps:Array<SummaryStatement&{result_kind:string}>;uncertainty_notes:string[]}};
 const summary=ref<SummaryDetail|null>(null),editGoal=ref(''),editQuestion=ref('');
-async function api(path:string,method='GET',body?:unknown){const r=await fetch('/api/handoff-management/semantic'+path,{method,headers:{Authorization:props.authorization,'Content-Type':'application/json'},body:body?JSON.stringify(body):undefined});if(!r.ok){const data=await r.json().catch(()=>({}));throw new Error(data.detail||'操作未完成，请刷新并核对权限、内容或版本。');}return r.json();}
+async function api(path:string,method='GET',body?:unknown){const authorization=props.authorization;const r=await fetch('/api/handoff-management/semantic'+path,{method,headers:{Authorization:authorization,'Content-Type':'application/json'},body:body?JSON.stringify(body):undefined});const data=await r.json().catch(()=>({}));if(authorization!==props.authorization)throw new Error('登录身份已变化，请刷新。');if(r.status===404&&method==='GET'&&/^\/cases\/[^/]+(?:\/summary)?$/.test(path))return null;if(!r.ok)throw new Error(data.detail||'操作未完成，请刷新并核对权限、内容或版本。');return data;}
 async function run(work:()=>Promise<void>){busy.value=true;error.value='';try{await work();}catch(e){error.value=(e as Error).message;}finally{busy.value=false;}}
 async function load(){await run(async()=>{groups.value=await api('/groups');coverage.value=await api('/coverage?days='+days.value);});}
-watch(()=>props.authorization,()=>{group.value=null;problem.value=null;candidates.value=[];void load();},{immediate:true});
+watch(()=>props.authorization,()=>{group.value=null;problem.value=null;summary.value=null;editGoal.value='';editQuestion.value='';groups.value=[];candidates.value=[];void load();},{immediate:true});
 watch(()=>props.caseRef,()=>{problem.value=null;summary.value=null;candidates.value=[];void refreshProblem();},{immediate:true});
-async function refreshProblem(){if(!props.caseRef)return;await run(async()=>{problem.value=await api('/cases/'+props.caseRef);const loaded:SummaryDetail=await api('/cases/'+props.caseRef+'/summary');summary.value=loaded;editGoal.value=loaded.summary?.customer_goal?.text||'';editQuestion.value=loaded.summary?.unresolved_question?.text||'';});}
+async function refreshProblem(){if(!props.caseRef)return;const selected=props.caseRef;await run(async()=>{const p=await api('/cases/'+selected);if(props.caseRef!==selected)return;problem.value=p;if(!p)return;const loaded:SummaryDetail|null=await api('/cases/'+selected+'/summary');if(props.caseRef!==selected)return;summary.value=loaded;editGoal.value=loaded?.summary?.customer_goal?.text||'';editQuestion.value=loaded?.summary?.unresolved_question?.text||'';});}
 async function correctSummary(){if(!props.caseRef||!summary.value)return;const version=summary.value.summaryVersion;await run(async()=>{await api('/cases/'+props.caseRef+'/summary','POST',{version,customer_goal:editGoal.value,unresolved_question:editQuestion.value});summary.value=await api('/cases/'+props.caseRef+'/summary');problem.value=await api('/cases/'+props.caseRef);});}
 async function retrySummary(){if(!props.caseRef||!summary.value)return;await run(async()=>{await api('/cases/'+props.caseRef+'/summary/retry?version='+summary.value!.summaryVersion,'POST');summary.value=await api('/cases/'+props.caseRef+'/summary');});}
 async function search(){if(!problem.value)return;await run(async()=>{const data=await api('/cases/'+problem.value!.caseRef+'/similar?days='+days.value+'&crossTopic='+crossTopic.value);candidates.value=data.candidates;});}
@@ -28,6 +28,7 @@ function draft(value?:string){try{return JSON.parse(value||'{}');}catch{return {
 <template>
 <section class="problem-groups"><h3>发现重复问题</h3><p>先看相似候选，再人工确认共同的主要问题。相似分数不是概率，关联问题不必归入同一组。</p>
 <p v-if="error" role="alert">{{error}}</p>
+<p v-if="props.caseRef&&!problem&&!busy&&!error">此历史案件没有新版问题摘要，仍可在案件详情中处理和复核。</p>
 <label>窗口 <select v-model="days" @change="load"><option :value="7">近7天</option><option :value="30">近30天</option></select></label>
 <p>记录案件 {{coverage.total||0}} · 内容足够 {{coverage.contentReady||0}} · 已索引 {{coverage.indexed||0}} · 已归组 {{coverage.grouped||0}} · 待归组 {{(coverage.total||0)-(coverage.grouped||0)}}</p>
 <details><summary>索引维护</summary><p>索引缺失或更新后可从有效问题记录重建，不重新创建案件。</p><button :disabled="busy" @click="rebuild">重建相似索引</button></details>

@@ -30,5 +30,6 @@ class HandoffSemanticServiceTest {
   Map<String,Object> q=new HashMap<>();q.put("requestRef",UUID.randomUUID().toString());q.put("version",1);service.requestAnalysis(ref,q,"ops");
   ArgumentCaptor<Map<String,Object>> capture=ArgumentCaptor.forClass(Map.class);verify(dao).analysis(capture.capture());
   assertThat(String.valueOf(capture.getValue().get("snapshot"))).doesNotContain("createdAt").contains("sampleCount");
+  assertThat(String.valueOf(capture.getValue().get("snapshot"))).doesNotContain("evidence_refs");
  }
 }
